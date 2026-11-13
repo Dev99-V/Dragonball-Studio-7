@@ -674,6 +674,7 @@
           <button class="btn" id="btnMoveLeft">◀ Trái</button>
           <button class="btn" id="btnJump">⬆ Nhảy</button>
           <button class="btn" id="btnMoveRight">Phải ▶</button>
+          <button class="btn" id="btnPatrol" style="display:none;" title="Bật/tắt bay tuần tra 2 đầu (Shift+Click để chạy run)">🔁 Tuần tra 2 đầu</button>
           <span id="arenaSkillButtons" style="display:inline-flex; gap:5px; flex-wrap:wrap;"></span>
         </div>
       </div>
@@ -859,6 +860,7 @@
       state.activeChar = ch;
       arena.actionClip=null; arena.turnTargetFlip=null; arena.clip='idle'; arena.step=0; arena.elapsed=0;
       arena.chiloPatrol=false;arena.chiloPatrolDir=1;arena.chiloInputDir=0;arena.chiloAction=null;
+      arena.patrolEnabled=false;arena.patrolDir=1;arena.patrolRun=false;
       state.archMode = 'combined_1layer';
       const independent = getCharBundle(ch)?.render_contract;
       const hasAura = Boolean(independent?.aura?.loop_clip && getCharBundle(ch)?.animations[independent.aura.loop_clip]);
@@ -867,8 +869,9 @@
       document.getElementById('chkIndependentAura').checked=Boolean(hasAura && state.auraEnabled);
       document.getElementById('attachmentRuntimeNote').textContent=independent ? 'Thân và FX độc lập • chung một atlas • có thêm quad khi bật FX. Tab Stress hiện vẽ riêng sprite thân.' : '';
       document.getElementById('btnJump').disabled=!getCharBundle(ch)?.animations.jump;
-      document.getElementById('arenaControlHint').textContent=independent ? (independent.locomotion?.kind==='flight' ? 'A/D: bay ngang • E: bật/tắt Ki • nút kỹ năng bên phải' : (hasAura ? 'A/D: di chuyển • E: bật/tắt Ki • nút kỹ năng bên phải' : (getCharBundle(ch)?.animations.run ? 'A/D: đi bộ • Shift: chạy • nút kỹ năng bên phải' : 'A/D: đi bộ • nút kỹ năng bên phải'))) : 'A/D: đi bộ • Shift: chạy • W/Space: nhảy';
+      document.getElementById('arenaControlHint').textContent=independent ? (independent.locomotion?.kind==='flight' ? (independent.turning?.clip ? 'A/D: bay & xoay đầu 2 chiều • Shift: bay nhanh • Tuần tra 2 đầu • E: Ki • nút kỹ năng' : 'A/D: bay ngang • E: bật/tắt Ki • nút kỹ năng bên phải') : (hasAura ? 'A/D: di chuyển • E: bật/tắt Ki • nút kỹ năng bên phải' : (getCharBundle(ch)?.animations.run ? 'A/D: đi bộ • Shift: chạy • nút kỹ năng bên phải' : 'A/D: đi bộ • nút kỹ năng bên phải'))) : 'A/D: đi bộ • Shift: chạy • W/Space: nhảy';
       if(independent?.chilopoda)document.getElementById('arenaControlHint').textContent='A/D: bắt đầu bò • đến cuối đường tự quay đầu đi lại • dùng kỹ năng để dừng bò';
+      updatePatrolButtonUI();
 
       const [cw, chPx] = getCanvasSize(ch);
       ensureOffscreenSize(cw, chPx);
@@ -2008,15 +2011,50 @@
       popups: [],
       keys: {},
       chiloPatrol:false,chiloPatrolDir:1,chiloInputDir:0,chiloAction:null,
+      patrolEnabled:false,patrolDir:1,patrolRun:false,
       holdLeft: false,
       holdRight: false,
     };
+
+    function updatePatrolButtonUI() {
+      const btn = document.getElementById('btnPatrol');
+      if (!btn) return;
+      const b = getCharBundle();
+      const hasTurnPatrol = Boolean(b?.render_contract?.turning?.clip && b?.animations?.[b.render_contract.turning.clip] && (b?.render_contract?.locomotion?.patrol || b?.render_contract?.chilopoda));
+      btn.style.display = hasTurnPatrol ? '' : 'none';
+      btn.disabled = !hasTurnPatrol;
+      const active = b?.render_contract?.chilopoda ? arena.chiloPatrol : arena.patrolEnabled;
+      btn.classList.toggle('btn-gold', Boolean(active));
+      btn.textContent = active ? '🔁 Tuần tra: BẬT' : '🔁 Tuần tra 2 đầu';
+    }
+
+    function toggleArenaPatrol(useRun = false) {
+      const b = getCharBundle();
+      if (!b || arena.turnTargetFlip !== null) return;
+      if (b.render_contract?.chilopoda) {
+        arena.chiloPatrol = !arena.chiloPatrol;
+        if (arena.chiloPatrol) arena.chiloPatrolDir = arena.flip ? -1 : 1;
+        updatePatrolButtonUI();
+        return;
+      }
+      const turnClip = b.render_contract?.turning?.clip;
+      if (!turnClip || !b.animations[turnClip]) return;
+      arena.patrolEnabled = !arena.patrolEnabled;
+      if (arena.patrolEnabled) {
+        arena.patrolDir = arena.flip ? -1 : 1;
+        arena.patrolRun = Boolean(useRun && b.animations['run']);
+      } else {
+        arena.patrolRun = false;
+      }
+      updatePatrolButtonUI();
+    }
 
     function triggerArenaAction(clipName) {
       if (arena.turnTargetFlip !== null) return;
       const b = getCharBundle();
       if (!b || !b.animations[clipName]) return;
       if(b.render_contract?.chilopoda&&arena.actionClip)return;
+      if (arena.patrolEnabled) { arena.patrolEnabled = false; arena.patrolRun = false; updatePatrolButtonUI(); }
       arena.actionClip = clipName;
       arena.clip = clipName;
       arena.step = 0;
@@ -2024,6 +2062,7 @@
       if(b.render_contract?.chilopoda) {
         const c=b.render_contract.chilopoda,sign=arena.flip?-1:1;
         arena.chiloPatrol=false;
+        updatePatrolButtonUI();
         arena.chiloAction={startX:arena.x,sign,target:[c.anchor_px[0]+(arena.dummyX-arena.x)/2/sign,c.ground_y],biteHit:false,laserHits:[false,false]};
         arena.hitstop=0;return;
       }
@@ -2134,12 +2173,15 @@
       } else {
         const goRight = arena.keys['ArrowRight'] || arena.keys['KeyD'] || arena.holdRight;
         const goLeft = arena.keys['ArrowLeft'] || arena.keys['KeyA'] || arena.holdLeft;
-        const isRun = Boolean((arena.keys['ShiftLeft'] || arena.keys['ShiftRight']) && b.animations['run']);
+        const isRun = Boolean((arena.keys['ShiftLeft'] || arena.keys['ShiftRight'] || (arena.patrolEnabled && arena.patrolRun)) && b.animations['run']);
         let dir = (goRight ? 1 : 0) - (goLeft ? 1 : 0);
         const chilo=b.render_contract?.chilopoda;
         if(chilo) {
-          if(dir!==0&&dir!==arena.chiloInputDir&&!arena.actionClip){arena.chiloPatrol=true;arena.chiloPatrolDir=dir}
+          if(dir!==0&&dir!==arena.chiloInputDir&&!arena.actionClip){arena.chiloPatrol=true;arena.chiloPatrolDir=dir;updatePatrolButtonUI();}
           arena.chiloInputDir=dir;dir=arena.chiloPatrol&&!arena.actionClip?arena.chiloPatrolDir:0;
+        } else if (arena.patrolEnabled && !arena.actionClip) {
+          if (dir !== 0) arena.patrolDir = dir;
+          else dir = arena.patrolDir;
         }
         const turnClip=b.render_contract?.turning?.clip;
         if (dir !== 0 && !arena.actionClip && arena.flip !== (dir < 0)) {
@@ -2148,10 +2190,16 @@
             arena.actionClip=turnClip; arena.clip=turnClip; arena.step=0; arena.elapsed=0;
           } else arena.flip=dir<0;
         }
-        const moveSpeed = arena.turnTargetFlip !== null ? 0 : (chilo?(arena.actionClip?0:b.render_contract.locomotion.patrol.speed_px_per_second*2/1000):(arena.actionClip ? 0.08 : (isRun ? 0.44 : 0.27)));
+        const patrolCfg = b.render_contract?.locomotion?.patrol;
+        const patrolMinX = patrolCfg?.min_x ?? 80;
+        const patrolMaxX = patrolCfg?.max_x ?? 880;
+        const moveSpeed = arena.turnTargetFlip !== null ? 0 : (chilo?(arena.actionClip?0:b.render_contract.locomotion.patrol.speed_px_per_second*2/1000):(arena.actionClip ? 0.08 : (isRun ? 0.44 : (arena.patrolEnabled && patrolCfg?.speed_px_per_second ? patrolCfg.speed_px_per_second * 2 / 1000 : 0.27))));
         arena.x = Math.max(80, Math.min(880, arena.x + dir * moveSpeed * dtMs));
         if(chilo&&arena.chiloPatrol&&!arena.actionClip&&((dir>0&&arena.x>=880)||(dir<0&&arena.x<=80))) {
           arena.turnTargetFlip=dir>0;arena.chiloPatrolDir=-dir;
+          arena.actionClip=turnClip;arena.clip=turnClip;arena.step=0;arena.elapsed=0;
+        } else if(!chilo&&arena.patrolEnabled&&turnClip&&b.animations[turnClip]&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
+          arena.turnTargetFlip=dir>0;arena.patrolDir=-dir;
           arena.actionClip=turnClip;arena.clip=turnClip;arena.step=0;arena.elapsed=0;
         }
 
@@ -2197,7 +2245,12 @@
               arena.flip=arena.turnTargetFlip; arena.turnTargetFlip=null;
             }
             arena.actionClip = null;
-            arena.clip = (!b.render_contract && arena.rageMode && b.animations['aura_loop']) ? 'aura_loop' : 'idle';
+            if (!chilo && (dir !== 0 || arena.patrolEnabled)) {
+              const motion = b.render_contract?.locomotion?.clip || 'walk';
+              arena.clip = (isRun && b.animations['run']) ? 'run' : (b.animations[motion] ? motion : 'idle');
+            } else {
+              arena.clip = (!b.render_contract && arena.rageMode && b.animations['aura_loop']) ? 'aura_loop' : 'idle';
+            }
             arena.step = 0;
           } else if (curAnim.loop) {
             arena.step = 0;
@@ -2518,6 +2571,7 @@
       bindHold('btnMoveLeft', 'holdLeft');
       bindHold('btnMoveRight', 'holdRight');
       document.getElementById('btnJump').onclick = triggerArenaJump;
+      document.getElementById('btnPatrol').onclick = (ev) => toggleArenaPatrol(Boolean(ev && ev.shiftKey));
 
       window.addEventListener('keydown', ev => {
         arena.keys[ev.code] = true;

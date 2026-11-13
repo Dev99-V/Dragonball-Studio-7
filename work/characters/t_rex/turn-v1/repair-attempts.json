@@ -1,0 +1,16 @@
+{
+  "character_id": "t_rex",
+  "revision": "turn-v1",
+  "max_attempts_per_issue": 5,
+  "issues": {
+    "t_rex_turn_imagegen_quota_exhausted": {
+      "attempts_used": 0,
+      "max_attempts": 5,
+      "resolved": false,
+      "blocker_type": "external_quota_exhausted",
+      "cause": "Built-in image-generator (gemini-3.1-flash-image) returned 429 RESOURCE_EXHAUSTED at 2026-11-13T10:58:33Z (quotaResetTimeStamp: 2026-11-13T14:42:06Z); forge_doctor confirms no external API key and no local Codex/Grok CLI configured.",
+      "action": "Stopped without faking card-flip or warping sprites; live assets/t_rex/ preserved untouched at d78b3b75... and snapshot-before saved."
+    }
+  },
+  "history": []
+}

@@ -1,0 +1,41 @@
+{
+  "character_id": "t_rex",
+  "revision": "turn-v1",
+  "recorded_at": "2026-11-13T11:01:02+00:00",
+  "status": "blocked_on_image_gen_quota",
+  "snapshot_manifest": "work/characters/t_rex/turn-v1/snapshot-before/baseline-manifest.json",
+  "canonical_master_path": "work/characters/t_rex/walk-style-v4/walk-00-reference.png",
+  "canonical_master_sha256": "d4dc74e198774a0af2097962967492e3d2f909831b40b7c811ea7b5aa3208e69",
+  "front_proportion_guide_path": "assets/t_rex/clips/frames/frame-38.png",
+  "baseline_runtime_modified": false,
+  "subagent": {
+    "conversation_id": "dc30b46d-0b6d-4686-a8c7-858de8e2c737",
+    "type": "image-generator",
+    "target_output": "/home/codespace/.gemini/antigravity-cli/brain/a89aca56-4567-494d-9ede-565b0ad2c184/scratch/trex_turn_sheet_2x2.png",
+    "error_timestamp": "2026-11-13T10:58:33Z",
+    "http_status": 429,
+    "rpc_status": "RESOURCE_EXHAUSTED",
+    "reason": "QUOTA_EXHAUSTED",
+    "model": "gemini-3.1-flash-image",
+    "message": "You have exhausted your capacity on this model. Your quota will reset after 3h43m31s.",
+    "quota_reset_delay": "3h43m31.594428155s",
+    "quota_reset_timestamp": "2026-11-13T14:42:06Z",
+    "retry_delay": "13411.594428155s"
+  },
+  "forge_doctor": {
+    "command": "python3 .agent/skills/generate2dmedia/scripts/forge_doctor.py",
+    "exit_code": 0,
+    "summary": "overall WARN: 0 FAIL, 1 WARN, 9 MISSING (83 ms)",
+    "api_keys": {
+      "openai": false,
+      "gemini": false,
+      "xai": false,
+      "byteplus": false,
+      "fal": false
+    },
+    "user_config_present": false,
+    "cli_codex": false,
+    "cli_grok": false
+  },
+  "policy_compliance": "Per AGENTS.md (no card flip, no cut-part/warp collage, no fallback codeart2d likeness sprites, do not commit past unmeasured quota), live assets/t_rex/, scenes/TRex.tscn, and peer characters remain untouched pending quota reset or Owner-supplied key/sheet."
+}

@@ -192,7 +192,7 @@ const sandbox = {
   },
 };
 
-const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { initApp, state, stress, arena, selectCharacter, stepInspectorAnimation, renderInspector, stepAndRenderStressArena, stepAndRenderArena, triggerArenaAction, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, offCtx };';
+const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { initApp, state, stress, arena, selectCharacter, stepInspectorAnimation, renderInspector, stepAndRenderStressArena, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, offCtx };';
 vm.createContext(sandbox);
 vm.runInContext(instrumentedJs, sandbox);
 
@@ -399,6 +399,45 @@ if(chiloCharacter){
   for(let t=0;t<38;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')leftSeen.add(T.arena.step)}
   assert.equal(leftSeen.size,b.animations.turn.frames.length);assert.equal(T.arena.flip,false);assert.equal(T.arena.chiloPatrolDir,1);
   Object.assign(T.arena,{x:280,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,dummyX:640,dummyHp:2000,chiloPatrol:false,chiloAction:null});
+}
+
+// Bat - Chiroptera two-endpoint walk->turn->walk and run->turn->run transitions + lock mid-turn.
+const batChar=apiPayload.roster.characters.find(ch=>ch.character_id==='bat_chiroptera');
+if(batChar){
+  T.selectCharacter(batChar.character_id);
+  const b=T.state.bundlesById[batChar.modes.combined_1layer.bundle_id];
+  Object.assign(T.arena,{x:879,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,patrolEnabled:false,patrolRun:false});
+  T.toggleArenaPatrol(false);
+  assert.equal(T.arena.patrolEnabled,true);
+  T.stepAndRenderArena(1000/60);
+  assert.equal(T.arena.clip,'turn','Bat right endpoint triggers turn');
+  assert.equal(T.arena.flip,false,'Bat holds +X facing until turn poses complete');
+  T.arena.keys={KeyD:true}; T.stepAndRenderArena(1000/60); T.arena.keys={};
+  assert.equal(T.arena.clip,'turn','Bat turn cannot be interrupted mid-spin');
+  const seenR2L=new Set([T.arena.step]);
+  for(let t=0;t<25;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')seenR2L.add(T.arena.step);}
+  assert.equal(seenR2L.size,b.animations.turn.frames.length);
+  assert.equal(T.arena.flip,true);
+  assert.equal(T.arena.clip,'walk','Bat resumes walk immediately after R->L turn');
+  Object.assign(T.arena,{x:81,patrolDir:-1});
+  T.stepAndRenderArena(1000/60);
+  assert.equal(T.arena.clip,'turn','Bat left endpoint triggers L->R turn');
+  assert.equal(T.arena.flip,true,'Bat holds -X facing during L->R turn');
+  const seenL2R=new Set([T.arena.step]);
+  for(let t=0;t<25;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')seenL2R.add(T.arena.step);}
+  assert.equal(seenL2R.size,b.animations.turn.frames.length);
+  assert.equal(T.arena.flip,false);
+  assert.equal(T.arena.clip,'walk');
+  // Test run->turn->run endpoint patrol cleanly
+  Object.assign(T.arena,{x:879,flip:false,patrolEnabled:false,patrolRun:false,actionClip:null,turnTargetFlip:null});
+  T.toggleArenaPatrol(true);
+  assert.equal(T.arena.patrolRun,true);
+  T.stepAndRenderArena(1000/60);
+  assert.equal(T.arena.clip,'turn');
+  for(let t=0;t<25;t++)T.stepAndRenderArena(1000/60);
+  assert.equal(T.arena.flip,true);
+  assert.equal(T.arena.clip,'run','Bat resumes run immediately after endpoint turn');
+  Object.assign(T.arena,{x:280,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,patrolEnabled:false,patrolRun:false});
 }
 
 // Phase B: Inject synthetic 1-Layer Combined characters to verify dynamic multi-character pipeline

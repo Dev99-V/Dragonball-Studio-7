@@ -80,6 +80,7 @@ class GovernanceAndPreviewTests(unittest.TestCase):
         sk_entries = re.findall(r"^###\s+\[([^]]+)\]", m_sk.group(1), re.M)
         workflows = json.loads((REPO_ROOT / "state.json").read_text()).get("approved_workflows", [])
         self.assertEqual(set(sk_entries), {w["id"] for w in workflows}, "Every workflow needs recorded Owner acceptance")
+        by_id = {w["id"]: w for w in workflows}
         for workflow in workflows:
             receipt = json.loads((REPO_ROOT / workflow["approval_file"]).read_text())
             self.assertEqual(receipt["status"], "owner_approved")
@@ -89,14 +90,23 @@ class GovernanceAndPreviewTests(unittest.TestCase):
             approved_atlas = REPO_ROOT / workflow["approved_atlas_path"] if workflow.get("approved_atlas_path") else atlas
             self.assertEqual(hashlib.sha256(approved_atlas.read_bytes()).hexdigest(), receipt["atlas_sha256"])
             if approved_atlas != atlas:
-                # An accepted historical revision must not approve unseen new art.
                 ch = next(c for c in json.loads((REPO_ROOT / "assets/roster.json").read_text())["characters"]
                           if c["character_id"] == receipt["character_id"])
                 review = ch["motion_quality"]
-                self.assertEqual(review["status"], "reviewed_pending_owner")
-                self.assertEqual(review["atlas_sha256"], hashlib.sha256(atlas.read_bytes()).hexdigest())
-                self.assertFalse(review["owner_approved"])
-                self.assertEqual(review["previous_revision_atlas_sha256"], receipt["atlas_sha256"])
+                sup_id = workflow.get("superseded_by")
+                if sup_id:
+                    sup = by_id[sup_id]
+                    sup_receipt = json.loads((REPO_ROOT / sup["approval_file"]).read_text())
+                    self.assertEqual(sup["character_id"], receipt["character_id"])
+                    self.assertEqual(sup_receipt["status"], "owner_approved")
+                    self.assertEqual(sup_receipt["atlas_sha256"], hashlib.sha256(atlas.read_bytes()).hexdigest())
+                    self.assertTrue(review["owner_approved"])
+                else:
+                    # An accepted historical revision must not approve unseen new art.
+                    self.assertEqual(review["status"], "reviewed_pending_owner")
+                    self.assertEqual(review["atlas_sha256"], hashlib.sha256(atlas.read_bytes()).hexdigest())
+                    self.assertFalse(review["owner_approved"])
+                    self.assertEqual(review["previous_revision_atlas_sha256"], receipt["atlas_sha256"])
 
         lerning_txt = (REPO_ROOT / "lerning.md").read_text(encoding="utf-8")
         m_lr = re.search(r"<!-- LERNING_ENTRIES_START -->(.*?)<!-- LERNING_ENTRIES_END -->", lerning_txt, re.S)

@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-13T08:49:58.701962+00:00",
+  "updated_at": "2026-11-13T11:57:30+00:00",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.11.1",
+    "version": "0.11.2",
     "version_history": [
       {
         "version": "0.1.0",
@@ -84,6 +84,11 @@
         "version": "0.11.1",
         "date": "2026-11-13T08:13:07.867147+00:00",
         "summary": "Owner-selected Chilopoda power_up1 promoted as exact canonical; all body actions regenerated to match, old master removed from ready poses. Gameplay timing/FX/turn contracts preserved."
+      },
+      {
+        "version": "0.11.2",
+        "date": "2026-11-13T10:50:00+00:00",
+        "summary": "Owner-approved Bat turn-v1 (PIPE-009): 5 whole-body perspective turn poses (ticks [5,4,3,4,5]), outer white rim & turn_01 pocket cleanup, bidirectional & two-endpoint runtime while preserving v0.10.0 61 frames/FX and Chilopoda v0.11.1. Turn TODO 1/4 complete; starting T-rex audit."
       }
     ],
     "genre": "2D Dragon Ball Real-Time Mass Action / RPG",
@@ -124,17 +129,11 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "TASK-074",
-    "status": "completed",
-    "summary": "Published Owner-approvedv0.11.1 source19da17b62aad8262229e9447f7a54113bb4e3ff5 toorigin/main; GitHubActions43396006048 completed/success. Local51Python/E2E+8Godot+5action+2Rust/WASM andcleancheckout51tests exit0. AGYhandoff included,turntodo0/4. Following documentation checkpoint records verification, without art/timing changes.",
-    "character_id": "chilopoda",
-    "concept_file": "work/characters/chilopoda/demo-v1/spec.json",
-    "review_image": "work/characters/chilopoda/identity-v2/review/filmstrip-power_up.png",
-    "master_image": "work/characters/chilopoda/identity-v2/canonical/master.png",
-    "qa_report": "docs/characters/chilopoda-identity-v2-qa.json",
-    "atlas_plan": "work/characters/chilopoda/identity-v2/plan.json",
-    "preview_url": "http://localhost:8080/?character=chilopoda&clip=power_up&frame=0&paused=1",
-    "repair_ledger": "work/characters/chilopoda/identity-v2/repair-attempts.json"
+    "active_task_id": "TURN-002",
+    "status": "blocked_on_image_gen_quota",
+    "summary": "Bat turn-v1 Owner-approved (PIPE-009 / v0.11.2, 100/100; turn TODO 1/4 complete). For #2 T-rex (t_rex): immutable snapshot-before + baseline-manifest (73 frames + 1887 peer hashes) and canonical/tick/runtime audit complete, but image-generator (gemini-3.1-flash-image) hit 429 RESOURCE_EXHAUSTED at 2026-11-13T10:58:33Z (reset 2026-11-13T14:42:06Z) and forge_doctor shows 0 external API keys and no local Codex/Grok CLI. Stopped without modifying live assets/t_rex/ or TRex.tscn; see work/characters/t_rex/turn-v1/quota-blocker.json.",
+    "character_id": "t_rex",
+    "master_image": "work/characters/t_rex/walk-style-v4/walk-00-reference.png"
   },
   "open_issues": [
     {
@@ -627,6 +626,24 @@
       "status": "completed",
       "summary": "Pushedv0.11.1 source19da17b62aad8262229e9447f7a54113bb4e3ff5 toorigin/main. CI43396006048success. Local51tests+Godot/Rust/WASM0 andclean stagedcheckout51tests0; approvedBat+Chilopoda andAGYguideincluded,turntodo0/4. RegenerableZIP/extractedtestprojects excluded,canonical/source/frozen/evidence retained.",
       "completed_at": "2026-11-13T08:49:58.701962+00:00"
+    },
+    {
+      "id": "TASK-075",
+      "timestamp": "2026-11-13T10:50:00+00:00",
+      "status": "completed",
+      "summary": "Bat turn-v1 Owner-approved (PIPE-009 / v0.11.2, 100/100): archived PIPE-007/v0.10.0 receipt+frozen frames, froze 164 runtime files & 66 clips, cleaned 220 byte-identical stage PNG copies (8,463,320 bytes), updated skills.md/lerning.md LRN-048/TODO 1 of 4; verified Godot/Rust/WASM/loop.sh/parity before advancing to T-rex."
+    },
+    {
+      "id": "TASK-076",
+      "timestamp": "2026-11-13T11:01:02+00:00",
+      "status": "blocked_on_image_gen_quota",
+      "summary": "TURN-002 (T-rex turn-v1): saved immutable snapshot-before (73 T-rex frames + 1887 peers, baseline atlas d78b3b75...) and verified canonical walk-00-reference.png == frame-08.png (d4dc74e1..., 188x122, Sobel 230.524). Invoked image-generator for 2x2 turn sheet, which failed with 429 RESOURCE_EXHAUSTED on gemini-3.1-flash-image at 10:58:33Z (quotaResetTimeStamp 2026-11-13T14:42:06Z); forge_doctor confirmed 0 API keys and no codex/grok CLI. Stopped cleanly with live assets/t_rex/ and TRex.tscn untouched; recorded in work/characters/t_rex/turn-v1/quota-blocker.json."
+    },
+    {
+      "id": "TASK-077",
+      "timestamp": "2026-11-13T11:57:30+00:00",
+      "status": "completed",
+      "summary": "Owner plan alignment: Chốt duy nhất Bat (1/4 turn retrofit, PIPE-009 / v0.11.2, 100/100). Ghi nhận kế hoạch vào docs/turn-retrofit-todo.md: T-rex, Pteranodon và Sarcosuchus tạm hoãn chờ reset quota (sau 2026-11-13T14:42:06Z) để tiếp tục tuần tự; snapshot T-rex đã sẵn sàng."
     }
   ],
   "quick_resume_commands": [
@@ -635,11 +652,11 @@
     "./loop.sh test"
   ],
   "session_resume": {
-    "next_action": "v0.11.1 source andAGYhandoff published/CIgreen. Next itemBat turn,thenT-rex/Pteranodon/Sarcosuchus serially perdocs/AGY-TURN-HANDOFF.md;0/4stillnotstarted. Preserveall8approvedcharacters andsnapshot eachtarget before addingturn.",
-    "asset_status": "8 nhân vật Owner-approved; Chilopoda identity-v2/v0.11.1 frozen at approved-final-frames.",
-    "approval_file": "assets/chilopoda/owner_approval.json",
-    "cleanup_report": "docs/releases/v0.11.1-chilopoda-finalization.json",
-    "verification": "docs/releases/v0.11.1-chilopoda-finalization.json",
+    "next_action": "Waiting on Owner after gemini-3.1-flash-image 429 quota exhaustion (resets 2026-11-13T14:42:06Z) or alternative API key/CLI/reference sheet before generating T-rex turn_00..04 poses from snapshot-before.",
+    "asset_status": "8 nhân vật Owner-approved (T-rex, Pteranodon, Spinosaurus, Tasmanian King Crab, Sarcosuchus, Dilophosaurus, Bat - Chiroptera turn-v1/v0.11.2, Chilopoda identity-v2/v0.11.1); live assets/t_rex/ unchanged during T-rex turn-v1 quota pause.",
+    "approval_file": "assets/bat_chiroptera/owner_approval.json",
+    "cleanup_report": "docs/releases/v0.11.2-bat-turn-finalization.json",
+    "verification": "work/characters/t_rex/turn-v1/quota-blocker.json",
     "git_checkpoint": {
       "branch": "main",
       "remote": "origin",
@@ -648,13 +665,13 @@
       "ci_status": "success",
       "ci_run_url": "https://github.com/pquangvinh1999-arch/DR7-Studio/actions/runs/43396006048",
       "verified_at": "2026-11-13T08:49:58.701962+00:00",
-      "note": "Source release commit published and CI verified. Following documentation commit records this handoff; no asset/timing changes."
+      "note": "Source release commit published and CI verified. Local working tree now includes Owner-approved Bat turn-v1 (v0.11.2)."
     },
-    "active_character_concept": "work/characters/chilopoda/identity-v2/plan.json",
-    "review_evidence": "work/characters/chilopoda/identity-v2/verification/identity-frame-proof.json",
-    "latest_delivery": "assets/chilopoda/godot_bundle",
-    "preview_url": "http://localhost:8080/?character=chilopoda&clip=power_up&frame=0&paused=1",
-    "local_version": "0.11.1",
+    "active_character_concept": "work/characters/bat_chiroptera/turn-v1/source/",
+    "review_evidence": "work/characters/bat_chiroptera/turn-v1/review/keyframe-review.json",
+    "latest_delivery": "assets/bat_chiroptera/godot_bundle",
+    "preview_url": "http://localhost:8080/?character=bat_chiroptera&clip=turn&frame=0&paused=1",
+    "local_version": "0.11.2",
     "handoff_guide": "docs/AGY-TURN-HANDOFF.md",
     "previous_git_checkpoint": {
       "branch": "main",
@@ -720,8 +737,11 @@
       "character_id": "bat_chiroptera",
       "display_name": "Bat - Chiroptera",
       "approved_at": "2026-11-13T06:34:45.229155+00:00",
-      "approval_file": "assets/bat_chiroptera/owner_approval.json",
-      "atlas_sha256": "6312e1806453c4879fa683dfbd8f7fec4d180a6b803e0a7d513943c84f01e67a"
+      "approval_file": "docs/releases/bat_chiroptera-v0.10.0-approval.json",
+      "atlas_sha256": "6312e1806453c4879fa683dfbd8f7fec4d180a6b803e0a7d513943c84f01e67a",
+      "approved_atlas_path": "work/characters/bat_chiroptera/turn-v1/snapshot-before/bat_chiroptera-atlas-00.png",
+      "revision": "atlas-v1 / v0.10.0",
+      "superseded_by": "PIPE-009"
     },
     {
       "id": "PIPE-008",
@@ -730,6 +750,15 @@
       "approved_at": "2026-11-13T08:22:39.853349+00:00",
       "approval_file": "assets/chilopoda/owner_approval.json",
       "atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d"
+    },
+    {
+      "id": "PIPE-009",
+      "character_id": "bat_chiroptera",
+      "display_name": "Bat - Chiroptera",
+      "approved_at": "2026-11-13T10:50:00+00:00",
+      "approval_file": "assets/bat_chiroptera/owner_approval.json",
+      "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
+      "revision": "turn-v1 / v0.11.2"
     }
   ],
   "owner_defaults": {
@@ -784,7 +813,7 @@
       "pteranodon",
       "sarcosuchus"
     ],
-    "retrofit_gate": "Chilopoda Owner-approved and finalchecks exit0; Bat gate open. Still serialOwneracceptance before advancing eachcharacter.",
+    "retrofit_gate": "Bat turn-v1 Owner-approved (PIPE-009 / v0.11.2, 1/4 TODO done). T-rex turn-v1 snapshot/audit ready, paused at 429 RESOURCE_EXHAUSTED (gemini-3.1-flash-image resets 2026-11-13T14:42:06Z); Pteranodon/Sarcosuchus remain blocked behind T-rex.",
     "score": "10evidencegates x10points,100/100 onlyallgates+Owneraccepted; not AIpercentidentity",
     "chilopoda_exception": "Owner-authorized burrow/reorient while fully hidden/emerge in opposite direction; both endpoints and directions independently verified. Future retrofit list remains gated on Chilopoda final approval."
   },
