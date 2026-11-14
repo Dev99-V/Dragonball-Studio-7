@@ -26,8 +26,14 @@ func set_facing_left(target_left: bool) -> bool:
 	var meta = JSON.parse_string(FileAccess.get_file_as_string(engine_export_json))
 	if not meta is Dictionary:
 		return false
-	_turn_clip = StringName(String(meta.get("render_contract", {}).get("turning", {}).get("clip", "")))
+	var turning = meta.get("render_contract", {}).get("turning", {})
+	var raw_clip = turning.get("clip", "") if turning is Dictionary else ""
+	_turn_clip = StringName(raw_clip if raw_clip is String else "")
 	if _turn_clip == &"" or not has_clip(_turn_clip):
+		if turning is Dictionary and str(turning.get("method", "")) == "instant_flip":
+			var mag_x := absf(scale.x) if not is_zero_approx(scale.x) else 1.0
+			scale.x = -mag_x if target_left else mag_x
+			return true
 		return false
 	_turn_target_left = target_left
 	_turn_pending = true
@@ -98,5 +104,15 @@ func _on_skill_finished(clip_name: StringName) -> void:
 	if _turn_pending and clip_name == _turn_clip:
 		scale.x = -absf(scale.x) if _turn_target_left else absf(scale.x)
 		_turn_pending = false
+		var arena_resume := String(get_meta("_arena_turn_resume_clip", ""))
+		if not arena_resume.is_empty():
+			set_meta("_arena_turn_resume_clip", "")
+			var r_clip := StringName(arena_resume)
+			if has_clip(r_clip):
+				play_clip(r_clip)
+				if sprite != null and (r_clip == &"walk" or r_clip == &"run" or r_clip == &"fly") and sprite.sprite_frames.get_frame_count(r_clip) > 1:
+					sprite.frame = 1
+				action_finished.emit(clip_name)
+				return
 		play_clip(&"idle")
 	action_finished.emit(clip_name)

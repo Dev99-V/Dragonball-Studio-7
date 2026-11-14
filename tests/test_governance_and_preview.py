@@ -100,7 +100,12 @@ class GovernanceAndPreviewTests(unittest.TestCase):
                     self.assertEqual(sup["character_id"], receipt["character_id"])
                     self.assertEqual(sup_receipt["status"], "owner_approved")
                     self.assertEqual(sup_receipt["atlas_sha256"], hashlib.sha256(atlas.read_bytes()).hexdigest())
-                    self.assertTrue(review["owner_approved"])
+                    if sup.get("approved_atlas_path"):
+                        self.assertEqual(review["status"], "reviewed_pending_owner")
+                        self.assertFalse(review["owner_approved"])
+                        self.assertEqual(review["previous_revision_atlas_sha256"], sup_receipt["atlas_sha256"])
+                    else:
+                        self.assertTrue(review["owner_approved"])
                 else:
                     # An accepted historical revision must not approve unseen new art.
                     self.assertEqual(review["status"], "reviewed_pending_owner")
@@ -181,7 +186,7 @@ class GovernanceAndPreviewTests(unittest.TestCase):
             self.assertIn("tests/SkillAnimator2D.gd", names)
             self.assertNotIn("scenes/Trunks_Rage.tscn", names)
 
-    def test_frontend_js_wasm_exports_3tabs_and_n_character_roster(self) -> None:
+    def test_frontend_js_wasm_exports_2tabs_and_n_character_roster(self) -> None:
         res = subprocess.run(
             ["node", str(REPO_ROOT / "tests" / "test_frontend_wasm_e2e.mjs")],
             capture_output=True,

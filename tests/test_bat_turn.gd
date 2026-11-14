@@ -35,7 +35,7 @@ func run_test() -> void:
 	if sprite.sprite_frames.get_animation_loop(&"turn"):
 		fail("turn clip must not loop")
 		return
-	var expected_ticks := [5.0, 4.0, 3.0, 4.0, 5.0]
+	var expected_ticks := [2.0, 3.0, 4.0, 3.0, 3.0]
 	for i in range(5):
 		var dur := sprite.sprite_frames.get_frame_duration(&"turn", i)
 		if dur != expected_ticks[i]:
@@ -98,5 +98,5 @@ func run_test() -> void:
 		fail("Manual reversal did not finish facing right in run")
 		return
 
-	print("[OK] Bat turn: 5 perspective frames [5,4,3,4,5], lock during spin, R->L & L->R two-endpoint walk/run transitions verified")
+	print("[OK] Bat turn: 5 perspective frames [2,3,4,3,3], lock during spin, R->L & L->R two-endpoint walk/run transitions verified")
 	quit(0)

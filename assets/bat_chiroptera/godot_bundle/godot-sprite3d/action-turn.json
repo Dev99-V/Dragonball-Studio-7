@@ -20,8 +20,8 @@
   "scale_source": "Godot default pixel size",
   "billboard": "enabled",
   "texture_filter": "nearest",
-  "duration_ms": 70,
-  "fps": 14.285714285714286,
+  "duration_ms": 50,
+  "fps": 20.0,
   "frames": [
     "frames/frame-061.png",
     "frames/frame-062.png",
@@ -37,11 +37,11 @@
     "22301a46f36ad48e266667003cf9ade8d04d770e6a7aa11800b03424306487f9"
   ],
   "durations_ms": [
-    83,
-    67,
+    33,
     50,
     67,
-    83
+    50,
+    50
   ],
   "loop": false,
   "loop_policy": "oneshot",
@@ -54,7 +54,7 @@
     },
     {
       "name": "end",
-      "at_ms": 267,
+      "at_ms": 200,
       "at": 4,
       "position": 4
     }

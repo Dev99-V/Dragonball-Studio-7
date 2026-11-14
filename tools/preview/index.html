@@ -365,41 +365,6 @@
     .kv-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
     .kv-table td { padding: 4px 2px; border-bottom: 1px solid rgba(40,50,76,0.55); }
     .kv-table td:last-child { text-align: right; font-family: ui-monospace, monospace; color: #fff; }
-
-    .bench-layout { display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; }
-    @media (max-width: 1100px) { .bench-layout { grid-template-columns: 1fr; } }
-    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
-    .kpi { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
-    .kpi .label { font-size: 11px; color: var(--muted); }
-    .kpi .val { font-size: 18px; font-weight: 800; color: var(--gold); font-family: ui-monospace, monospace; }
-    .bench-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 6px; }
-    .bench-table th, .bench-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-    .bench-table th { color: var(--cyan); background: #0f1524; }
-    .stress-stage {
-      position: relative;
-      background: #070a11;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    #aoiOverlayBox {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 40%;
-      height: 40%;
-      transform: translate(-50%, -50%);
-      border: 2px dashed rgba(56, 189, 248, 0.85);
-      background: rgba(56, 189, 248, 0.05);
-      pointer-events: none;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-      padding: 4px 6px;
-      font-size: 10.5px;
-      font-family: ui-monospace, monospace;
-      color: #7dd3fc;
-    }
   </style>
 </head>
 <body>
@@ -410,8 +375,7 @@
     </div>
     <div class="tabs">
       <button class="tab-btn active" data-tab="tab-human">🎯 1. Human Test &amp; Thước Đo Gửi Agent</button>
-      <button class="tab-btn" data-tab="tab-stress">⚡ 2. Stress Test &gt;2,000 User @ 60FPS (Godot + Rust)</button>
-      <button class="tab-btn" data-tab="tab-arena">⚔️ 3. Sân Tập Gameplay Thực Chiến</button>
+      <button class="tab-btn" data-tab="tab-arena">⚔️ 2. Sân Tập Gameplay Thực Chiến</button>
     </div>
     <div>
       <a class="btn" href="/api/download-godot-pack.zip">📦 Tải Gói Godot 4 (.zip)</a>
@@ -594,92 +558,93 @@
   </section>
 
   <!-- ===================================================================== -->
-  <!-- TAB 2: >2,000 REAL-TIME COMBAT @ 60FPS STRESS TEST & ENGINE BENCHMARK -->
-  <!-- ===================================================================== -->
-  <section id="tab-stress" class="tab-view">
-    <div class="bench-layout">
-      <div class="card">
-        <h2>
-          <span>⚡ Đấu Trường Thời Gian Thực &gt;2,000 User (Chạy Thật <code>rust_combat_sim.wasm</code> + WebGL2)</span>
-          <span class="badge badge-ok" id="wasmRendererBadge">Đang khởi tạo WASM...</span>
-        </h2>
-        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; align-items:center;">
-          <button class="btn stress-count-btn" data-count="500">500 User</button>
-          <button class="btn btn-gold stress-count-btn" data-count="2000">2,000 User (Mục tiêu)</button>
-          <button class="btn stress-count-btn" data-count="3500">3,500 User</button>
-          <button class="btn stress-count-btn" data-count="5000">5,000 User (Cực hạn)</button>
-          <label style="margin-left:auto; font-size:11.5px;"><input type="checkbox" id="chkShowAoI" checked /> Hiển thị Khung Camera Mobile AoI (960×540)</label>
-        </div>
-
-        <div class="kpi-row">
-          <div class="kpi"><div class="label">FPS Trình Duyệt</div><div class="val" id="kpiFps">60</div></div>
-          <div class="kpi"><div class="label">Rust WASM Sim + Grid</div><div class="val" id="kpiSimMs">0.61 ms</div></div>
-          <div class="kpi"><div class="label">GPU Draw Calls</div><div class="val" id="kpiDraws">1</div></div>
-          <div class="kpi"><div class="label">User Trong AoI / Băng Thông</div><div class="val" id="kpiAoI" style="font-size:13.5px;">—</div></div>
-        </div>
-
-        <div class="stress-stage">
-          <canvas id="stressCanvas" width="880" height="495" style="width:100%; height:auto; display:block;"></canvas>
-          <div id="aoiOverlayBox">📱 Mobile Camera AoI (960×540 px) — Chỉ đồng bộ mạng các User trong vùng này</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="card">
-          <h2><span>📊 Số Liệu Đo Thực Nghiệm: Godot 4.7.2 + Rust 1.99.1 (Ngân Sách 60FPS = 16.67ms)</span></h2>
-          <table class="bench-table" id="benchCompareTable">
-            <thead>
-              <tr>
-                <th>Engine &amp; Kiến trúc Render</th>
-                <th>Số User</th>
-                <th>CPU / Frame</th>
-                <th>% Quỹ 60FPS</th>
-                <th>Draw Calls</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div class="card">
-          <h2><span>🧭 Kiến Trúc Chính Thức Đã Chốt Cho Mobile APK/iOS + Supabase (&gt;2,000 CCU)</span></h2>
-          <div style="font-size:12px; color:var(--text); display:flex; flex-direction:column; gap:8px;">
-            <div>
-              <b style="color:var(--gold);">1. Kiến trúc Lớp Duy Nhất — Gộp Chung 1 Lớp Nguyên Bản (<code>Combined 1-Layer</code>):</b><br/>
-              Mỗi nhân vật đóng gói vào <b>1 trang PNG Atlas duy nhất (&le; 4096×4096, lọc Nearest 1:1)</b> và vẽ trên <b>1 Quad duy nhất</b>. Giữ nguyên 100% chi tiết hào quang, kiếm khí, tia chưởng từ sheet gốc và gom toàn bộ <code>2,000–5,000</code> thực thể vào đúng <b>1 lệnh vẽ GPU (<code>1 Draw Call</code>)</b>.
-            </div>
-            <div>
-              <b style="color:var(--cyan);">2. Phân vai tối ưu giữa Godot 4 + Rust Core + Supabase:</b><br/>
-              • <b>Godot 4 (Client Chính Thức)</b>: Dựng Scene, Map, UI cảm ứng, âm thanh, xuất thẳng Android <code>.apk/.aab</code> &amp; iOS <code>.ipa</code> và vẽ đám đông bằng <code>MultiMeshInstance2D</code>.<br/>
-              • <b>Rust Core (GDExtension + Authoritative Server)</b>: Xử lý <code>2,000</code> thực thể giao tranh chỉ tốn <b><code>0.61 ms/frame</code></b> (<b><code>3.69%</code></b> quỹ 60FPS) và lọc mạng Spatial-Grid AoI (~614 kbps @ 20Hz).<br/>
-              • <b>Supabase</b>: Xác thực tài khoản (Auth), lưu trữ Hồ sơ nhân vật, Trang bị &amp; Lịch sử chiến đấu.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================================================================== -->
-  <!-- TAB 3: INTERACTIVE 2D GAMEPLAY SANDBOX                                -->
+  <!-- TAB 2: INTERACTIVE 2D GAMEPLAY SANDBOX                                -->
   <!-- ===================================================================== -->
   <section id="tab-arena" class="tab-view">
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
         <div>
-          <b>⚔️ Sân Tập Thực Chiến (<span id="arenaCharLabel">Chưa có nhân vật</span>):</b>
+          <b>⚔️ Sân Tập Thực Chiến Mobile 16:9 (<span id="arenaCharLabel">Chưa có nhân vật</span>):</b>
           <span id="arenaControlHint"><code>A/D</code> Đi bộ • <code>Shift+A/D</code> Chạy nhanh • <code>W/Space</code> Nhảy • <code>J/U/I/K/L/O/P</code> Tuyệt chiêu nhân vật</span>
         </div>
         <div id="arenaActionButtons" style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
           <button class="btn" id="btnMoveLeft">◀ Trái</button>
           <button class="btn" id="btnJump">⬆ Nhảy</button>
+          <button class="btn" id="btnFlyDown" style="display:none;">⬇ Hạ xuống</button>
           <button class="btn" id="btnMoveRight">Phải ▶</button>
           <button class="btn" id="btnPatrol" style="display:none;" title="Bật/tắt bay tuần tra 2 đầu (Shift+Click để chạy run)">🔁 Tuần tra 2 đầu</button>
+          <span id="arenaSpawnFacingControls" style="display:none; gap:4px; align-items:center;">
+            <button class="btn" id="btnSpawnRight" title="Hồi sinh nhìn Phải (+X) — mặc định và khóa suốt vòng đời">↪ Hồi sinh Phải (+X)</button>
+            <button class="btn" id="btnSpawnLeft" title="Hồi sinh nhìn Trái (-X) và khóa suốt vòng đời">↩ Hồi sinh Trái (-X)</button>
+          </span>
           <span id="arenaSkillButtons" style="display:inline-flex; gap:5px; flex-wrap:wrap;"></span>
         </div>
       </div>
-      <div style="background:#080c14; border:1px solid var(--border); border-radius:8px; text-align:center; overflow:hidden;">
-        <canvas id="arenaCanvas" width="960" height="470" style="width:100%; max-width:960px; height:auto; image-rendering:pixelated; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; margin-bottom:6px; background:#0b1220; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;" id="arenaScaleControls">
+          <span style="color:var(--muted);">Tỷ lệ nhân vật (Nearest):</span>
+          <button class="btn" id="btnScale1" data-scale="1">1×</button>
+          <button class="btn" id="btnScale125" data-scale="1.25">1.25×</button>
+          <button class="btn" id="btnScale15" data-scale="1.5">1.5×</button>
+          <button class="btn" id="btnScale175" data-scale="1.75">1.75×</button>
+          <button class="btn btn-gold" id="btnScale2" data-scale="2">2× (Mặc định)</button>
+          <button class="btn" id="btnScale25" data-scale="2.5">2.5×</button>
+          <button class="btn" id="btnScale3" data-scale="3">3×</button>
+          <input type="range" id="rngArenaScale" min="0.5" max="3.0" step="0.05" value="2" style="width:96px;" title="Kéo chỉnh tỷ lệ tự do (không sửa asset)" />
+          <input type="number" id="numArenaScale" min="0.5" max="3.0" step="0.05" value="2" style="width:62px; padding:3px 5px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;" />
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkPhoneBezel" checked /> 📱 Khung ĐT 16:9</label>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="Hiển thị đúng 1920×1080 CSS pixel thật không co nhỏ"><input type="checkbox" id="chkNative1to1" /> 🖥️ Pixel thật 1:1 (1920×1080)</label>
+          <button class="btn" id="btnFullscreenArena" title="Mở rộng toàn màn hình để soi thực chiến">⛶ Toàn màn hình</button>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkSampleMap" checked /> 🏔️ Map Mẫu</label>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkArenaGrid" checked /> 📐 Thước &amp; Khung</label>
+          <span id="arenaStageBadge" style="color:var(--gold); font-weight:600;">1920×1080 • 16:9 • PPU 64</span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:6px 10px; margin-bottom:10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="color:var(--muted);">🏃 Tốc độ di chuyển (px/s):</span>
+          <input type="range" id="rngArenaSpeed" min="20" max="600" step="5" value="270" style="width:120px;" />
+          <input type="number" id="numArenaSpeed" min="10" max="1000" step="5" value="270" style="width:68px; padding:3px 5px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;" />
+          <span id="arenaSpeedReadout" style="color:#67e8f9; font-family:monospace;">270 px/s (~6.1s hết sân)</span>
+          <button class="btn" id="btnResetSpeed">↺ Mặc định loài</button>
+        </div>
+        <div id="arenaFlightControls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="color:var(--muted);">🦇 Tầm bay Y (60..840):</span>
+          <input type="range" id="rngFlyAltY" min="60" max="840" step="10" value="250" style="width:110px;" />
+          <span id="arenaFlyAltLabel" style="color:#93c5fd; font-family:monospace;">Spawn Y=250 (Giữa -290px | Cách sàn 590px)</span>
+          <button class="btn" id="btnResetFlyAlt">↺ Y=250</button>
+        </div>
+        <div id="arenaDustControls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="color:var(--muted);">💨 Bụi độn thổ FX:</span>
+          <button class="btn" id="btnDust1" data-dust-scale="1">1× Gốc</button>
+          <button class="btn" id="btnDust15" data-dust-scale="1.5">1.5× (+50%)</button>
+          <button class="btn" id="btnDust225" data-dust-scale="2.25">2.25× (50% thân)</button>
+          <button class="btn btn-gold" id="btnDust265" data-dust-scale="2.65">2.65× (Mặc định)</button>
+          <input type="range" id="rngBurrowDustScale" min="1.0" max="4.0" step="0.05" value="2.65" style="width:90px;" />
+          <span id="arenaDustScaleLabel" style="color:#fde047; font-family:monospace;">2.65×</span>
+        </div>
+      </div>
+      <div id="arenaAiControls" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; margin-bottom:10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; font-weight:600; color:#f59e0b;">
+            <input type="checkbox" id="chkUtilityAI" /> 🤖 Utility AI Địch (≤500px)
+          </label>
+          <span style="color:var(--muted);">Quái AI:</span>
+          <select id="selEnemyChar" style="padding:3px 7px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;"></select>
+          <button class="btn" id="btnPullIntoZone" title="Đưa nhân vật vào vùng AI [zoneMin..zoneMax] để test cận chiến/chưởng ngay">⚡ Vào vùng AI</button>
+          <button class="btn" id="btnResetEnemyAi" title="Đưa quái AI về tâm vùng ban đầu & reset chuỗi 2 nhẹ -> nặng">↺ Reset Quái AI</button>
+        </div>
+        <span id="arenaAiStatus" style="color:#fcd34d; font-family:monospace;">AI TẮT • Zone [1120..1600] • &lt;50px nhẹ / 50..200px đuổi / ≥200px power_up</span>
+      </div>
+      <div id="arenaViewportOuter" style="background:#05080f; border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; justify-content:center; align-items:center; overflow:auto;">
+        <div id="arenaPhoneFrame" style="position:relative; width:100%; max-width:1180px; aspect-ratio:2096/1166; margin:0 auto;">
+          <div id="arenaScreenSlot" style="position:absolute; left:4.198473%; top:4.545455%; width:91.603053%; height:92.624357%; overflow:hidden; border-radius:2.2%; background:#080c14;">
+            <canvas id="arenaCanvas" width="1920" height="1080" style="width:100%; height:100%; image-rendering:pixelated; display:block;"></canvas>
+          </div>
+          <img id="arenaPhoneBezelImg" src="/preview-assets/phone-frame-landscape-16x9.png" alt="Landscape 16:9 Phone Frame" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none;" />
+        </div>
       </div>
     </div>
   </section>
@@ -691,10 +656,10 @@
     const RULER_PAD = 28;
     const state = {
       api: null,
-      bench: null,
       wasmExports: null,
       bundlesById: {},
       images: {},
+      imagePromises: {},
       rosterFilter: 'all',
       rosterSearch: '',
       activeChar: null,
@@ -750,12 +715,22 @@
 
     function loadImage(url) {
       if (state.images[url]) return Promise.resolve(state.images[url]);
-      return new Promise((resolve, reject) => {
+      if (state.imagePromises[url]) return state.imagePromises[url];
+      const p = new Promise((resolve, reject) => {
         const img = new Image();
-        img.onload = () => { state.images[url] = img; resolve(img); };
-        img.onerror = () => reject(new Error(`Không tải được ảnh ${url}`));
+        img.onload = () => {
+          state.images[url] = img;
+          delete state.imagePromises[url];
+          resolve(img);
+        };
+        img.onerror = () => {
+          delete state.imagePromises[url];
+          reject(new Error(`Không tải được ảnh ${url}`));
+        };
         img.src = url;
       });
+      state.imagePromises[url] = p;
+      return p;
     }
 
     function getCharBundle(ch = state.activeChar) {
@@ -766,37 +741,42 @@
 
     async function initApp() {
       try {
-        const [bRes, benchRes, wasmBytes] = await Promise.all([
+        const [bRes, wasmBytes] = await Promise.all([
           fetch('/api/bundles').then(r => r.json()),
-          fetch('/api/benchmarks').then(r => r.ok ? r.json() : null),
           fetch('/rust_combat_sim.wasm').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null),
         ]);
         state.api = bRes;
-        state.bench = benchRes;
+        applyArenaStageConfig(bRes.arena_stage);
 
         if (wasmBytes) {
           const mod = await WebAssembly.instantiate(wasmBytes, {});
           state.wasmExports = mod.instance.exports;
         }
 
+        const preloadUrlSet = new Set();
+        if (arena.mapWebPath) preloadUrlSet.add(arena.mapWebPath);
         for (const b of bRes.bundles) {
           state.bundlesById[b.id] = b;
           for (const anim of Object.values(b.animations)) {
             for (const f of anim.frames) {
-              await loadImage(f.atlas_url);
+              if (f.atlas_url) preloadUrlSet.add(f.atlas_url);
             }
           }
         }
+        const preloadUrls = Array.from(preloadUrlSet).map(u =>
+          u === arena.mapWebPath ? loadImage(u).catch(() => null) : loadImage(u)
+        );
+        await Promise.all(preloadUrls);
 
         setupEventListeners();
         renderParityHeader();
-        renderBenchmarkTable();
 
         const reviewQuery = typeof URLSearchParams === 'function'
           ? new URLSearchParams(globalThis.location?.search || '') : null;
         const firstChar = bRes.roster.characters.find(c => c.character_id === reviewQuery?.get('character'))
           || bRes.roster.characters[0] || null;
         if (firstChar) {
+          populateEnemySelectOptions();
           selectCharacter(firstChar.character_id);
           const reviewClip = reviewQuery?.get('clip');
           const reviewAnimation = getCharBundle(firstChar)?.animations[reviewClip];
@@ -813,10 +793,8 @@
         } else {
           renderEmptyStateUI();
         }
-        initStressRenderer();
 
         renderInspector();
-        stepAndRenderStressArena(16.67);
         stepAndRenderArena(16.67);
 
         requestAnimationFrame(mainLoop);
@@ -858,20 +836,50 @@
       const ch = (state.api.roster.characters || []).find(c => c.character_id === charId);
       if (!ch) return;
       state.activeChar = ch;
+      const selectedBundle = getCharBundle(ch);
+      const isFlight = isFlyingBundle(selectedBundle);
       arena.actionClip=null; arena.turnTargetFlip=null; arena.clip='idle'; arena.step=0; arena.elapsed=0;
+      arena.turnElapsedMs = 0; arena.turnDurationMs = 0; arena.turnBoostMs = 0;
+      arena.charScale = getDefaultCharScale(selectedBundle);
+      arena.spawnFacing = getDefaultSpawnFacing(selectedBundle);
+      arena.flip = arena.spawnFacing === 'left';
+      arena.x = arena.flip ? arena.playerSpawnLeftX : arena.playerSpawnX;
+      arena.y = isFlight ? arena.flyDefaultY : arena.groundY;
+      arena.vy = 0;
+      arena.customSpeedPxPerSec = null;
       arena.chiloPatrol=false;arena.chiloPatrolDir=1;arena.chiloInputDir=0;arena.chiloAction=null;
-      arena.patrolEnabled=false;arena.patrolDir=1;arena.patrolRun=false;
+      arena.patrolEnabled=false;arena.patrolDir=arena.flip?-1:1;arena.patrolRun=false;
       state.archMode = 'combined_1layer';
-      const independent = getCharBundle(ch)?.render_contract;
-      const hasAura = Boolean(independent?.aura?.loop_clip && getCharBundle(ch)?.animations[independent.aura.loop_clip]);
+      const independent = selectedBundle?.render_contract;
+      const hasAura = Boolean(independent?.aura?.loop_clip && selectedBundle?.animations[independent.aura.loop_clip]);
       if(independent) { state.activeClipName='idle'; state.auraEnabled=false; state.fxTicks=0; arena.rageMode=false; }
       document.getElementById('chkIndependentAura').disabled=!hasAura;
       document.getElementById('chkIndependentAura').checked=Boolean(hasAura && state.auraEnabled);
-      document.getElementById('attachmentRuntimeNote').textContent=independent ? 'Thân và FX độc lập • chung một atlas • có thêm quad khi bật FX. Tab Stress hiện vẽ riêng sprite thân.' : '';
-      document.getElementById('btnJump').disabled=!getCharBundle(ch)?.animations.jump;
-      document.getElementById('arenaControlHint').textContent=independent ? (independent.locomotion?.kind==='flight' ? (independent.turning?.clip ? 'A/D: bay & xoay đầu 2 chiều • Shift: bay nhanh • Tuần tra 2 đầu • E: Ki • nút kỹ năng' : 'A/D: bay ngang • E: bật/tắt Ki • nút kỹ năng bên phải') : (hasAura ? 'A/D: di chuyển • E: bật/tắt Ki • nút kỹ năng bên phải' : (getCharBundle(ch)?.animations.run ? 'A/D: đi bộ • Shift: chạy • nút kỹ năng bên phải' : 'A/D: đi bộ • nút kỹ năng bên phải'))) : 'A/D: đi bộ • Shift: chạy • W/Space: nhảy';
+      document.getElementById('attachmentRuntimeNote').textContent=independent ? 'Thân và FX độc lập • chung một atlas • có thêm quad khi bật FX.' : '';
+      const btnJump = document.getElementById('btnJump');
+      const btnFlyDown = document.getElementById('btnFlyDown');
+      if (btnJump) {
+        btnJump.textContent = isFlight ? '⬆ Bay lên' : '⬆ Nhảy';
+        btnJump.disabled = isFlight ? false : !selectedBundle?.animations.jump;
+      }
+      if (btnFlyDown) btnFlyDown.style.display = isFlight ? '' : 'none';
+      const flightWrap = document.getElementById('arenaFlightControls');
+      if (flightWrap) flightWrap.style.display = isFlight ? 'flex' : 'none';
+      const dustWrap = document.getElementById('arenaDustControls');
+      if (dustWrap) dustWrap.style.display = independent?.chilopoda ? 'flex' : 'none';
+      document.getElementById('arenaControlHint').textContent=independent ? (independent.locomotion?.kind==='flight' ? (independent.turning?.clip ? 'A/D: bay ngang & xoay đầu • W/S (↑/↓): bay lên/xuống • Shift: bay nhanh • Tuần tra • nút kỹ năng' : 'A/D: bay ngang • W/S (↑/↓): bay lên/xuống • Shift: bay nhanh • nút kỹ năng bên phải') : (isSidewaysLocked(selectedBundle) ? 'A/D: bò ngang tiến/lùi (không xoay, giữ mặt khi spawn) • Mặt mặc định: Phải (+X) • nút kỹ năng bên phải' : (hasAura ? 'A/D: di chuyển • E: bật/tắt Ki • nút kỹ năng bên phải' : (selectedBundle?.animations.run ? 'A/D: đi bộ • Shift: chạy • nút kỹ năng bên phải' : (canFlipPatrolWithoutTurn(selectedBundle) ? 'A/D: đi bộ & xoay hướng • Tuần tra • nút kỹ năng bên phải' : 'A/D: đi bộ • nút kỹ năng bên phải'))))) : 'A/D: đi bộ • Shift: chạy • W/Space: nhảy';
       if(independent?.chilopoda)document.getElementById('arenaControlHint').textContent='A/D: bắt đầu bò • đến cuối đường tự quay đầu đi lại • dùng kỹ năng để dừng bò';
       updatePatrolButtonUI();
+      updateSpawnFacingUI();
+      updateArenaScaleUI();
+      updateArenaSpeedUI();
+      updateArenaFlightUI();
+      updateArenaDustScaleUI();
+
+      if (!arena.enemyAi.pinned || !arena.enemyAi.charId) {
+        selectEnemyCharacter(ch.character_id, false);
+      }
+      updateEnemyAiStatusUI();
 
       const [cw, chPx] = getCanvasSize(ch);
       ensureOffscreenSize(cw, chPx);
@@ -895,17 +903,6 @@
       renderArenaControls();
       updatePlayButtonUI();
       updateAgentSpecText();
-
-      if (stress.gl) {
-        uploadStressCharacterTexture();
-      } else {
-        const info = getActiveCombinedAtlasInfo();
-        if (info && info.atlasImg) {
-          initStressRenderer();
-          return;
-        }
-      }
-      resetStressCount(stress.count);
     }
 
     function renderRosterList() {
@@ -1224,9 +1221,21 @@
       }
       return anim.frames[anim.frames.length-1];
     }
+    function fireballFlightTiming(c, target) {
+      const f = c.fireball;
+      const origin = f.mouth_anchors_by_frame[f.release_frame];
+      const targetHit = [target[0], target[1] - c.target_hit_height_px];
+      const dx = targetHit[0] - origin[0], dy = targetHit[1] - origin[1];
+      const dist = Math.hypot(dx, dy);
+      const rawTicks = Math.max(0, (dist - f.target_radius_px) / f.speed_px_per_tick);
+      const minTicks = Number(f.min_flight_ticks ?? 14);
+      const maxTicks = Number(f.max_flight_ticks ?? 25.5);
+      const flightTicks = Math.max(minTicks, Math.min(maxTicks, Math.max(minTicks, rawTicks)));
+      return { origin, targetHit, dx, dy, dist, flightTicks, hitTick: f.release_tick + flightTicks };
+    }
     function chilopodaActionState(contract, clip, tick, targetGround) {
       const c=contract.chilopoda,a=c.anchor_px,target=targetGround||c.target_ground_canvas_px;
-      const result={bodyVisible:true,bodyDx:0,bodyDy:0,groundY:c.ground_y,dust:[],lasers:[],glows:[]};
+      const result={bodyVisible:true,bodyDx:0,bodyDy:0,groundY:c.ground_y,dust:[],fireball:null};
       const q=c.burrow_turn&&clip===c.burrow_turn.body_clip?c.burrow_turn:c.burrow;
       if(clip===q.body_clip) {
         let pose=0,left=tick;while(pose<q.frame_ticks.length-1&&left>=q.frame_ticks[pose])left-=q.frame_ticks[pose++];
@@ -1238,14 +1247,14 @@
         const entryPoint=q.relocate===false?[a[0],c.ground_y]:[a[0]+q.bite_offset_x_px,c.ground_y],exitPoint=q.relocate===false?entryPoint:target;
         for(const [start,point]of [[q.entry_fx_start_tick,entryPoint],[q.exit_fx_start_tick,exitPoint]])if(tick>=start&&tick<start+q.dust_lifetime_ticks)result.dust.push({tick:tick-start,point});
       }
-      const l=c.laser;
-      if(clip===l.body_clip&&tick>=l.release_tick) {
-        const releaseIndex=l.release_frame;
-        const targetHit=[target[0],target[1]-c.target_hit_height_px];
-        for(const [index,origin]of l.tip_anchors_by_frame[releaseIndex].entries()) {
-          const dx=targetHit[0]-origin[0],dy=targetHit[1]-origin[1],distance=Math.hypot(dx,dy),elapsed=tick-l.release_tick;
-          const hitTick=l.release_tick+Math.max(0,(distance-l.target_radius_px)/l.speed_px_per_tick);
-          if(tick<hitTick){const travel=l.speed_px_per_tick*elapsed;result.lasers.push({index,point:[origin[0]+dx/Math.max(distance,1)*travel,origin[1]+dy/Math.max(distance,1)*travel],angle:Math.atan2(dy,dx),tick:elapsed,hitTick})}
+      const f=c.fireball;
+      if(f&&clip===f.body_clip&&tick>=f.release_tick) {
+        const ft=fireballFlightTiming(c,target),elapsed=tick-f.release_tick;
+        if(elapsed<ft.flightTicks) {
+          const t=Math.max(0,Math.min(1,elapsed/Math.max(1,ft.flightTicks)));
+          const flightFrames=f.flight_frames||[3,4,5,6,7,8,9];
+          const frameIdx=flightFrames[Math.min(flightFrames.length-1,Math.floor(t*flightFrames.length))];
+          result.fireball={point:[ft.origin[0]+ft.dx*t,ft.origin[1]+ft.dy*t],angle:Math.atan2(ft.dy,ft.dx),frameIdx,hitTick:ft.hitTick};
         }
       }
       return result;
@@ -1259,17 +1268,22 @@
       const burrowed=[c.burrow.body_clip,c.burrow_turn?.body_clip].includes(clipName);
       const turnMirror=c.burrow_turn&&clipName===c.burrow_turn.body_clip&&!options.turnFacingHandled?Boolean(options.initialFacingLeft)!==(tick>=c.burrow_turn.hidden_start_tick):false;
       if(q.bodyVisible)layers.push({layer:'Body',bundle:b.id,frame:body.frames[index],point:point([a[0]+q.bodyDx,a[1]+q.bodyDy]),pivot:a,angle:0,mirror:turnMirror,clipBelowY:burrowed?c.ground_y:null});
-      for(const dust of q.dust)layers.push({layer:'BurrowDust',bundle:b.id,frame:sampleFxFrame(b.animations[c.burrow.dust_clip],dust.tick),point:point(dust.point),pivot:fxPivot,angle:0});
-      const l=c.laser;
-      if(clipName===l.body_clip&&tick<l.glow_end_tick) {
-        const phase=tick<l.release_tick?Math.min(3,Math.floor(tick/4)):Math.min(5,4+Math.floor((tick-l.release_tick)/4));
-        for(const tip of l.tip_anchors_by_frame[index])layers.push({layer:'AntennaGlow',bundle:b.id,frame:b.animations[l.glow_clip].frames[phase],point:point(tip),pivot:fxPivot,angle:0});
+      for(const dust of q.dust)layers.push({layer:'BurrowDust',bundle:b.id,frame:sampleFxFrame(b.animations[c.burrow.dust_clip],dust.tick),point:point(dust.point),pivot:fxPivot,angle:0,layerScale:options.dustScale||1});
+      const f=c.fireball,fbFrames=f?b.animations[f.projectile_clip]?.frames:null;
+      if(f&&fbFrames&&clipName===f.body_clip) {
+        if(tick<f.release_tick) {
+          const chargeFrames=f.charge_frames||[0,1,2];
+          const cIdx=chargeFrames[Math.min(index,chargeFrames.length-1)];
+          const mPos=f.mouth_anchors_by_frame[Math.min(index,f.mouth_anchors_by_frame.length-1)];
+          layers.push({layer:'FireballFX',bundle:b.id,frame:fbFrames[cIdx],point:point(mPos),pivot:fxPivot,angle:0});
+        } else if(q.fireball) {
+          layers.push({layer:'FireballFX',bundle:b.id,frame:fbFrames[q.fireball.frameIdx],point:point(q.fireball.point),pivot:fxPivot,angle:q.fireball.angle});
+        }
       }
-      for(const laser of q.lasers)layers.push({layer:'Laser'+laser.index,bundle:b.id,frame:b.animations[l.projectile_clip].frames[Math.floor(laser.tick)%b.animations[l.projectile_clip].frames.length],point:point(laser.point),pivot:fxPivot,angle:laser.angle});
       return layers;
     }
     function getLayerFramesForStep(clipName, stepIdx, options={}) {
-      const b=getCharBundle();
+      const b = options.bundle || getCharBundle();
       if(!b) return [];
       const contract=b.render_contract;
       if(!contract) {
@@ -1340,13 +1354,14 @@
     }
     function drawCompositeStep(ctx,clipName,stepIdx,scaleX=1,scaleY=scaleX,options={}) {
       const layers=getLayerFramesForStep(clipName,stepIdx,options);
-      const [cw,ch]=getCanvasSize();ctx.imageSmoothingEnabled=false;
+      const [cw,ch]=getCanvasSize(options.character || state.activeChar);ctx.imageSmoothingEnabled=false;
       for(const item of layers) {
         const f=item.frame,img=state.images[f.atlas_url];if(!img)continue;
         if(item.clipBelowY!=null){ctx.save();ctx.beginPath();ctx.rect(0,0,cw*scaleX,item.clipBelowY*scaleY);ctx.clip()}
         if(item.point) {
           ctx.save();ctx.translate(item.point[0]*scaleX,item.point[1]*scaleY);ctx.rotate(item.angle);
           if(item.mirror)ctx.scale(-1,1);
+          if(item.layerScale&&item.layerScale!==1)ctx.scale(item.layerScale,item.layerScale);
           ctx.drawImage(img,f.x,f.y,f.w,f.h,-item.pivot[0]*scaleX,-item.pivot[1]*scaleY,cw*scaleX,ch*scaleY);ctx.restore();
         } else ctx.drawImage(img,f.x,f.y,f.w,f.h,0,0,cw*scaleX,ch*scaleY);
         if(item.clipBelowY!=null)ctx.restore();
@@ -1501,10 +1516,6 @@
         ctx.fillText('Gửi file sheet/Atlas cho Agent để setup nhân vật mới', Math.max(20, viewW * 0.5 - 155), viewH * 0.5 + 14);
       } else {
         const m = state.activeChar.map_sync_metrics;
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.beginPath();
-        ctx.ellipse(m.foot_anchor_px[0] * z, m.foot_anchor_px[1] * z, 18 * z, 5 * z, 0, 0, Math.PI * 2);
-        ctx.fill();
         ctx.drawImage(offscreenCanvas, 0, 0, viewW, viewH);
 
         if (state.showBBox) {
@@ -1680,274 +1691,14 @@
     }
 
     // =========================================================================
-    // TAB 2: RUST WASM + WEBGL2 INSTANCED >2,000 USER REAL-TIME STRESS TEST
-    // =========================================================================
-    const stress = {
-      gl: null,
-      ctx2d: null,
-      prog: null,
-      vao: null,
-      instBuf: null,
-      tex: null,
-      count: 2000,
-      fpsSmooth: 60,
-      simMsSmooth: 0.61,
-    };
-
-    function getActiveCombinedAtlasInfo() {
-      const b = getCharBundle();
-      if (!b) return null;
-      // Combine energetic combat & aura frames for lively 2,000-fighter clashes!
-      const clipPool = b.render_contract ? ['idle','attack_light',b.render_contract.locomotion?.clip||'walk'] : ['aura_loop','attack_light','walk'];
-      let frames = [];
-      for (const cname of clipPool) {
-        if (b.animations[cname]) {
-          frames.push(...b.animations[cname].frames);
-        }
-      }
-      if (!frames.length) {
-        frames = Object.values(b.animations)[0].frames;
-      }
-      const atlasImg = state.images[frames[0].atlas_url];
-      return { bundle: b, frames, atlasImg };
-    }
-
-    function initStressRenderer() {
-      const canvas = document.getElementById('stressCanvas');
-      const info = getActiveCombinedAtlasInfo();
-      if (!info || !info.atlasImg) {
-        stress.gl = null;
-        stress.ctx2d = canvas.getContext('2d');
-        const badge = document.getElementById('wasmRendererBadge');
-        if (badge) badge.textContent = '🦀 Rust WASM + Canvas2D (Chế độ Roster trống)';
-        resetStressCount(stress.count);
-        return;
-      }
-
-      const gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
-      if (gl) {
-        stress.gl = gl;
-        setupWebGL2Instancer(gl, info.atlasImg);
-        document.getElementById('wasmRendererBadge').textContent = '🦀 Rust WASM + WebGL2 Instanced (thân: 1 Draw Call)';
-      } else {
-        stress.ctx2d = canvas.getContext('2d');
-        document.getElementById('wasmRendererBadge').textContent = '🦀 Rust WASM + Canvas2D Batch';
-      }
-      resetStressCount(stress.count);
-    }
-
-    function uploadStressCharacterTexture() {
-      const info = getActiveCombinedAtlasInfo();
-      if (!stress.gl || !stress.tex || !info || !info.atlasImg) return;
-      const gl = stress.gl;
-      gl.bindTexture(gl.TEXTURE_2D, stress.tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, info.atlasImg);
-    }
-
-    function resetStressCount(n) {
-      stress.count = n;
-      if (!state.wasmExports) return;
-      const info = getActiveCombinedAtlasInfo();
-      if (!info || !info.atlasImg) {
-        state.wasmExports.wasm_init_world(n, 8);
-        for (let idx = 0; idx < 8; idx++) {
-          state.wasmExports.wasm_set_frame_uv(idx, (idx % 4) * 0.25, Math.floor(idx / 4) * 0.5, 0.25, 0.5, 83.33);
-        }
-        return;
-      }
-      const aw = info.atlasImg.naturalWidth, ah = info.atlasImg.naturalHeight;
-      state.wasmExports.wasm_init_world(n, info.frames.length);
-      info.frames.forEach((f, idx) => {
-        state.wasmExports.wasm_set_frame_uv(idx, f.x / aw, f.y / ah, f.w / aw, f.h / ah, f.duration_ms || 83.33);
-      });
-    }
-
-    function setupWebGL2Instancer(gl, atlasImg) {
-      const vsSrc = `#version 300 es
-        layout(location=0) in vec2 aQuad;
-        layout(location=1) in vec2 iPos;
-        layout(location=2) in vec4 iUv;
-        layout(location=3) in float iFlip;
-        layout(location=4) in float iFlash;
-        uniform vec2 uArena;
-        uniform vec2 uQuadSize;
-        uniform vec2 uAnchorNorm;
-        out vec2 vUv;
-        out float vFlash;
-        void main() {
-          float qx = iFlip < 0.0 ? (1.0 - aQuad.x) : aQuad.x;
-          vUv = vec2(iUv.x + qx * iUv.z, iUv.y + aQuad.y * iUv.w);
-          vFlash = iFlash;
-          float localX = iFlip < 0.0 ? ((1.0 - uAnchorNorm.x) - aQuad.x) : (aQuad.x - uAnchorNorm.x);
-          vec2 worldPx = iPos + vec2(localX * uQuadSize.x, (aQuad.y - uAnchorNorm.y) * uQuadSize.y);
-          vec2 ndc = (worldPx / uArena) * 2.0 - 1.0;
-          gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0);
-        }`;
-      const fsSrc = `#version 300 es
-        precision mediump float;
-        uniform sampler2D uTex;
-        in vec2 vUv;
-        in float vFlash;
-        out vec4 fragColor;
-        void main() {
-          vec4 c = texture(uTex, vUv);
-          if (c.a < 0.05) discard;
-          vec3 rgb = mix(c.rgb, vec3(1.0, 0.98, 0.80), clamp(vFlash, 0.0, 1.0) * 0.55);
-          fragColor = vec4(rgb, c.a);
-        }`;
-      const compile = (type, src) => {
-        const s = gl.createShader(type);
-        gl.shaderSource(s, src);
-        gl.compileShader(s);
-        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-          throw new Error(gl.getShaderInfoLog(s));
-        }
-        return s;
-      };
-      const prog = gl.createProgram();
-      gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
-      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
-      gl.linkProgram(prog);
-      stress.prog = prog;
-
-      const quad = new Float32Array([0,0, 1,0, 0,1, 0,1, 1,0, 1,1]);
-      const vao = gl.createVertexArray();
-      gl.bindVertexArray(vao);
-      const qBuf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, qBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(0);
-      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-
-      stress.instBuf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, stress.instBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, 5000 * 32, gl.DYNAMIC_DRAW);
-      const stride = 32;
-      gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, stride, 0);  gl.vertexAttribDivisor(1, 1);
-      gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, stride, 8);  gl.vertexAttribDivisor(2, 1);
-      gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 1, gl.FLOAT, false, stride, 24); gl.vertexAttribDivisor(3, 1);
-      gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 1, gl.FLOAT, false, stride, 28); gl.vertexAttribDivisor(4, 1);
-
-      const tex = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlasImg);
-      stress.tex = tex;
-      stress.vao = vao;
-    }
-
-    function stepAndRenderStressArena(dtMs) {
-      if (!state.wasmExports) return;
-      const t0 = performance.now();
-      state.wasmExports.wasm_step_world(Math.min(dtMs, 33.33));
-      const simMs = performance.now() - t0;
-      stress.simMsSmooth = stress.simMsSmooth * 0.9 + simMs * 0.1;
-      stress.fpsSmooth = stress.fpsSmooth * 0.92 + (1000 / Math.max(1, dtMs)) * 0.08;
-
-      const ptr = state.wasmExports.wasm_get_instance_ptr();
-      const floats = new Float32Array(state.wasmExports.memory.buffer, ptr, stress.count * 8);
-      const aoiCount = state.wasmExports.wasm_count_aoi(1200, 675, 480, 270);
-      const kbps = ((aoiCount * 10 * 20 * 8) / 1000).toFixed(0);
-
-      document.getElementById('kpiFps').textContent = Math.round(stress.fpsSmooth);
-      document.getElementById('kpiSimMs').textContent = `${stress.simMsSmooth.toFixed(2)} ms`;
-      document.getElementById('kpiAoI').textContent = `${aoiCount} user (${kbps} kbps)`;
-
-      const [cellW, cellH] = getCanvasSize();
-      const anc = (state.activeChar && state.activeChar.map_sync_metrics && state.activeChar.map_sync_metrics.foot_anchor_px) || [96, 220];
-      const normAx = anc[0] / cellW;
-      const normAy = anc[1] / cellH;
-      const quadH = 112.0;
-      const quadW = quadH * (cellW / cellH);
-
-      if (stress.gl) {
-        const gl = stress.gl;
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-        gl.clearColor(0.06, 0.09, 0.15, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        gl.useProgram(stress.prog);
-        gl.uniform2f(gl.getUniformLocation(stress.prog, 'uArena'), 2400.0, 1350.0);
-        gl.uniform2f(gl.getUniformLocation(stress.prog, 'uQuadSize'), quadW, quadH);
-        gl.uniform2f(gl.getUniformLocation(stress.prog, 'uAnchorNorm'), normAx, normAy);
-        gl.bindVertexArray(stress.vao);
-        gl.bindBuffer(gl.ARRAY_BUFFER, stress.instBuf);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, floats);
-        gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, stress.count);
-      } else if (stress.ctx2d) {
-        const ctx = stress.ctx2d;
-        const cw = ctx.canvas.width, ch = ctx.canvas.height;
-        ctx.fillStyle = '#0d1422';
-        ctx.fillRect(0, 0, cw, ch);
-        const info = getActiveCombinedAtlasInfo();
-        if (info && info.atlasImg) {
-          const aw = info.atlasImg.naturalWidth, ah = info.atlasImg.naturalHeight;
-          const dw = 40 * (cellW / cellH), dh = 40;
-          for (let i = 0; i < stress.count; i++) {
-            const base = i * 8;
-            const sx = (floats[base] / 2400) * cw;
-            const sy = (floats[base + 1] / 1350) * ch;
-            const u = floats[base + 2] * aw, v = floats[base + 3] * ah;
-            const uw = floats[base + 4] * aw, vh = floats[base + 5] * ah;
-            ctx.drawImage(info.atlasImg, u, v, uw, vh, sx - dw * normAx, sy - dh * normAy, dw, dh);
-          }
-        } else {
-          for (let i = 0; i < stress.count; i++) {
-            const base = i * 8;
-            const sx = (floats[base] / 2400) * cw;
-            const sy = (floats[base + 1] / 1350) * ch;
-            const facing = floats[base + 6];
-            const flash = floats[base + 7];
-            ctx.fillStyle = flash > 0.2 ? '#ffffff' : (facing >= 0 ? '#38bdf8' : '#facc15');
-            ctx.fillRect(sx - 2, sy - 4, 4, 6);
-          }
-        }
-      }
-    }
-
-    function renderBenchmarkTable() {
-      if (!state.bench) return;
-      const tbody = document.querySelector('#benchCompareTable tbody');
-      const rows = [];
-      for (const r of state.bench.rust_engine.benchmarks) {
-        rows.push(`
-          <tr style="background:rgba(34,197,94,0.08);">
-            <td><b>🦀 Rust 1.99.1 Core (SoA + SpatialHash + Instanced)</b></td>
-            <td><b>${r.fighters.toLocaleString()}</b></td>
-            <td style="color:#4ade80; font-weight:700;">${r.avg_frame_cpu_ms.toFixed(3)} ms</td>
-            <td>${r.budget_60fps_pct.toFixed(2)}%</td>
-            <td>${r.gpu_draw_calls}</td>
-          </tr>
-        `);
-      }
-      for (const g of state.bench.godot_engine.benchmarks) {
-        const warnColor = g.budget_60fps_pct > 30 ? '#fbbf24' : '#e6ecff';
-        rows.push(`
-          <tr>
-            <td>🤖 ${g.mode}</td>
-            <td>${g.fighters.toLocaleString()}</td>
-            <td style="color:${warnColor};">${g.avg_frame_cpu_ms.toFixed(3)} ms</td>
-            <td>${g.budget_60fps_pct.toFixed(1)}%</td>
-            <td>${g.gpu_draw_calls_est.toLocaleString()}</td>
-          </tr>
-        `);
-      }
-      tbody.innerHTML = rows.join('');
-    }
-
-    // =========================================================================
-    // TAB 3: PLAYABLE 2D GAMEPLAY SANDBOX (FULL LOCOMOTION + DYNAMIC SKILLS)
+    // TAB 2: PLAYABLE 2D GAMEPLAY SANDBOX (FULL LOCOMOTION + DYNAMIC SKILLS)
     // =========================================================================
     const SKILL_SPECS = {
-      attack_light: { dmg: 120, range: 170, label: '-120 LIGHT ATTACK!', shake: 5 },
-      attack_nomal: { dmg: 120, range: 170, label: '-120 CLAW ATTACK!', shake: 5 },
-      attack_heavy: { dmg: 220, range: 185, label: '-220 HEAVY SMASH!', shake: 7 },
-      power_up:     { dmg: 250, range: 380, label: '-250 POWER SURGE!', shake: 12 },
-      ki_blast:     { dmg: 280, range: 440, label: '-280 KI BLAST!', shake: 10 },
+      attack_light: { dmg: 120, range: 220, label: '-120 LIGHT ATTACK!', shake: 0 },
+      attack_nomal: { dmg: 120, range: 220, label: '-120 CLAW ATTACK!', shake: 0 },
+      attack_heavy: { dmg: 220, range: 250, label: '-220 HEAVY SMASH!', shake: 0 },
+      power_up:     { dmg: 250, range: 920, label: '-250 POWER SURGE!', shake: 0 },
+      ki_blast:     { dmg: 280, range: 1000, label: '-280 KI BLAST!', shake: 0 },
     };
 
     const ARENA_HOTKEYS = [
@@ -1991,18 +1742,42 @@
     }
 
     const arena = {
-      x: 280, y: 396, groundY: 396, vy: 0,
+      viewportWidth: 1920, viewportHeight: 1080,
+      x: 560, y: 840, groundY: 840, vy: 0,
+      minX: 140, maxX: 1780,
+      flyMinY: 60, flyDefaultY: 250, flyVerticalSpeedPxPerS: 240,
+      playerSpawnX: 560, playerSpawnLeftX: 1240,
+      defaultCharScale: 2,
+      charScale: 2,
+      enemyScale: 2,
+      customSpeedPxPerSec: null,
+      burrowDustScale: 2.65,
+      native1to1: false,
+      showPhoneBezel: true,
+      showSampleMap: true,
+      showGridOverlay: true,
+      mapWebPath: '/assets/maps/rocky_plateau/rocky-plateau-bg.jpg',
+      bezelWebPath: '/preview-assets/phone-frame-landscape-16x9.png',
+      bezelImageSize: [2096, 1166],
+      bezelHoleRect: [88, 53, 1920, 1080],
+      jumpVelocityPxPerMs: -0.78,
+      gravityPxPerMs2: 0.0020,
       fxTicks:0,
       rageMode: true,
+      spawnFacing: 'right',
       flip: false,
       actionClip: null,
       turnTargetFlip: null,
+      turnElapsedMs: 0,
+      turnDurationMs: 0,
+      turnPrevDir: 1,
+      turnBoostMs: 0,
       clip: 'idle',
       step: 0,
       elapsed: 0,
       shake: 0,
       hitstop: 0,
-      dummyX: 640,
+      dummyX: 1360,
       dummyHp: 2000,
       dummyMaxHp: 2000,
       dummyFlash: 0,
@@ -2014,18 +1789,759 @@
       patrolEnabled:false,patrolDir:1,patrolRun:false,
       holdLeft: false,
       holdRight: false,
+      holdFlyUp: false,
+      holdFlyDown: false,
+      utilityAiCfg: {
+        close_edge_px: 50,
+        mid_max_edge_px: 200,
+        heavy_max_edge_px: 200,
+        attack_cooldown_s: 1.0,
+        light_hits_before_heavy: 2,
+        zone_width_max_px: 500,
+        zone_width_default_px: 480,
+      },
+      enemyAi: {
+        enabled: false,
+        charId: '',
+        pinned: false,
+        x: 1360,
+        y: 840,
+        flip: true,
+        spawnFacing: 'right',
+        clip: 'idle',
+        step: 0,
+        elapsed: 0,
+        actionClip: null,
+        turnTargetFlip: null,
+        turnElapsedMs: 0,
+        turnDurationMs: 0,
+        turnPrevDir: -1,
+        turnBoostMs: 0,
+        chiloAction: null,
+        homeX: 1360,
+        zoneMinX: 1120,
+        zoneMaxX: 1600,
+        patrolDir: -1,
+        cooldownRemaining: 0,
+        lightChainCount: 0,
+        lastIntent: 'idle',
+        lastReason: 'ai_off',
+        lastAttackClip: '',
+        lastEdgeDist: -1,
+      },
     };
+
+    function getBodyDims(ch = state.activeChar) {
+      const bb = ch?.map_sync_metrics?.body_only_bbox_px;
+      if (!bb) return [0, 0];
+      if (Array.isArray(bb)) return [Number(bb[0]) || 0, Number(bb[1]) || 0];
+      return [Number(bb.w) || 0, Number(bb.h) || 0];
+    }
+
+    function isFlyingBundle(b = getCharBundle()) {
+      return b?.render_contract?.locomotion?.kind === 'flight';
+    }
+
+    function getDefaultCharScale(b = getCharBundle()) {
+      return Number(b?.render_contract?.locomotion?.default_scale) || arena.defaultCharScale || 2;
+    }
+
+    function getTurnSpeedMultiplier(b = getCharBundle()) {
+      return Math.max(1.0, Number(b?.render_contract?.turning?.turn_speed_multiplier) || 1.0);
+    }
+
+    function clipTotalDurationMs(anim) {
+      if (!anim || !Array.isArray(anim.frames) || !anim.frames.length) return 0;
+      return anim.frames.reduce((acc, f) => acc + Math.max(16.0, Number(f?.duration_ms) || (Number(f?.duration_ticks || 5) * 1000 / 60)), 0);
+    }
+
+    function turnMomentumFactor(elapsedMs, durationMs, prevDir, targetDir) {
+      if (!durationMs || durationMs <= 0) return targetDir;
+      const p = Math.max(0, Math.min(1, elapsedMs / durationMs));
+      if (p < 0.38) return prevDir * (1 - p / 0.38) * 0.45;
+      return targetDir * ((p - 0.38) / 0.62);
+    }
+
+    function getContractWalkSpeedPxPerS(b = getCharBundle(), scale = arena.charScale, patrolActive = arena.patrolEnabled) {
+      const loc = b?.render_contract?.locomotion;
+      if (loc?.speed_px_per_second) {
+        return Number(loc.speed_px_per_second) * scale;
+      }
+      const patrolCfg = loc?.patrol;
+      if (patrolCfg?.speed_px_per_second) {
+        return Number(patrolCfg.speed_px_per_second) * scale;
+      }
+      return 270 * (scale / 2.0);
+    }
+
+    function getEffectiveWalkSpeedPxPerS(b = getCharBundle(), scale = arena.charScale, patrolActive = arena.patrolEnabled) {
+      if (arena.customSpeedPxPerSec !== null && Number.isFinite(arena.customSpeedPxPerSec)) {
+        return Math.max(10, arena.customSpeedPxPerSec);
+      }
+      return getContractWalkSpeedPxPerS(b, scale, patrolActive);
+    }
+
+    function applyArenaStageConfig(stage) {
+      if (!stage || typeof stage !== 'object') return;
+      const vp = stage.viewport || {};
+      const gp = stage.gameplay || {};
+      const mp = stage.map || {};
+      const bz = stage.phone_bezel || {};
+      const fl = gp.flight || {};
+      arena.viewportWidth = Number(vp.width) || 1920;
+      arena.viewportHeight = Number(vp.height) || 1080;
+      arena.groundY = Number(gp.ground_y) || 840;
+      arena.flyMinY = Number(fl.min_y) || 60;
+      arena.flyDefaultY = Number(fl.default_y) || 250;
+      arena.flyVerticalSpeedPxPerS = Number(fl.vertical_speed_px_per_s) || 240;
+      if (typeof gp.burrow_dust_scale_default === 'number') arena.burrowDustScale = gp.burrow_dust_scale_default;
+      arena.y = isFlyingBundle() ? arena.flyDefaultY : arena.groundY;
+      if (Array.isArray(gp.walkable_bounds_x) && gp.walkable_bounds_x.length >= 2) {
+        arena.minX = Number(gp.walkable_bounds_x[0]);
+        arena.maxX = Number(gp.walkable_bounds_x[1]);
+      }
+      arena.playerSpawnX = Number(gp.player_spawn_x) || 560;
+      arena.playerSpawnLeftX = Number(gp.player_spawn_facing_left_x) || 1240;
+      arena.x = arena.playerSpawnX;
+      arena.dummyX = Number(gp.dummy_spawn_x) || 1360;
+      if (gp.utility_ai && typeof gp.utility_ai === 'object') {
+        arena.utilityAiCfg = {
+          close_edge_px: Number(gp.utility_ai.close_edge_px ?? 50),
+          mid_max_edge_px: Number(gp.utility_ai.mid_max_edge_px ?? 200),
+          heavy_max_edge_px: Number(gp.utility_ai.heavy_max_edge_px ?? 200),
+          attack_cooldown_s: Number(gp.utility_ai.attack_cooldown_s ?? 1.0),
+          light_hits_before_heavy: Number(gp.utility_ai.light_hits_before_heavy ?? 2),
+          zone_width_max_px: Number(gp.utility_ai.zone_width_max_px ?? 500),
+          zone_width_default_px: Number(gp.utility_ai.zone_width_default_px ?? 480),
+        };
+      }
+      resetEnemyAiZone(arena.dummyX);
+      arena.defaultCharScale = Number(gp.character_scale_default) || 2;
+      arena.charScale = getDefaultCharScale(getCharBundle());
+      arena.enemyScale = getDefaultCharScale(getCharBundle(getEnemyRosterEntry()));
+      if (typeof gp.jump_velocity_px_per_s === 'number') {
+        arena.jumpVelocityPxPerMs = gp.jump_velocity_px_per_s / 1000.0;
+      }
+      if (typeof gp.gravity_px_per_s2 === 'number') {
+        arena.gravityPxPerMs2 = gp.gravity_px_per_s2 / 1000000.0;
+      }
+      if (mp.background_web_path) arena.mapWebPath = mp.background_web_path;
+      if (bz.web_path) arena.bezelWebPath = bz.web_path;
+      if (Array.isArray(bz.image_size_px) && bz.image_size_px.length === 2) arena.bezelImageSize = bz.image_size_px;
+      if (Array.isArray(bz.screen_hole_px) && bz.screen_hole_px.length === 4) arena.bezelHoleRect = bz.screen_hole_px;
+      if (typeof bz.default_enabled === 'boolean') arena.showPhoneBezel = bz.default_enabled;
+
+      const c = document.getElementById('arenaCanvas');
+      if (c && (c.width !== arena.viewportWidth || c.height !== arena.viewportHeight)) {
+        c.width = arena.viewportWidth;
+        c.height = arena.viewportHeight;
+      }
+      const bezelImg = document.getElementById('arenaPhoneBezelImg');
+      if (bezelImg && arena.bezelWebPath) bezelImg.src = arena.bezelWebPath;
+      updateArenaFrameLayout();
+      updateArenaScaleUI();
+      updateArenaSpeedUI();
+      updateArenaFlightUI();
+      updateArenaDustScaleUI();
+      updateEnemyAiStatusUI();
+    }
+
+    function computeBodyRect(posX, footY, bodyW, bodyH, scale = 1) {
+      const bw = Math.max(16, (Number(bodyW) || 140) * scale);
+      const bh = Math.max(16, (Number(bodyH) || 140) * scale);
+      return { x: posX - bw * 0.5, y: footY - bh, w: bw, h: bh };
+    }
+
+    function computeEdgeDistance(selfRect, targetRect) {
+      const dx = Math.max(0, selfRect.x - (targetRect.x + targetRect.w), targetRect.x - (selfRect.x + selfRect.w));
+      const dy = Math.max(0, selfRect.y - (targetRect.y + targetRect.h), targetRect.y - (selfRect.y + selfRect.h));
+      return Math.hypot(dx, dy);
+    }
+
+    function resetEnemyAiZone(centerX = arena.dummyX) {
+      const cfg = arena.utilityAiCfg || {};
+      const maxW = Number(cfg.zone_width_max_px ?? 500);
+      const defW = Number(cfg.zone_width_default_px ?? 480);
+      const span = Math.max(40, Math.min(maxW, defW));
+      const home = Math.max(arena.minX + span * 0.5, Math.min(arena.maxX - span * 0.5, centerX));
+      arena.enemyAi.homeX = home;
+      arena.enemyAi.zoneMinX = Math.max(arena.minX, home - span * 0.5);
+      arena.enemyAi.zoneMaxX = Math.min(arena.maxX, Math.max(arena.enemyAi.zoneMinX + 40, home + span * 0.5));
+      arena.enemyAi.cooldownRemaining = 0;
+      arena.enemyAi.lightChainCount = 0;
+      arena.enemyAi.patrolDir = -1;
+      arena.enemyAi.lastIntent = 'patrol';
+      arena.enemyAi.lastReason = 'zone_init';
+      arena.enemyAi.lastAttackClip = '';
+      arena.enemyAi.lastEdgeDist = -1;
+    }
+
+    function evaluateUtilityAI(aiState, params, cfg = arena.utilityAiCfg) {
+      const closeEdge = Number(cfg.close_edge_px ?? 50);
+      const midMaxEdge = Number(cfg.mid_max_edge_px ?? 200);
+      const heavyMaxEdge = Number(cfg.heavy_max_edge_px ?? 200);
+      const attackCd = Number(cfg.attack_cooldown_s ?? 1.0);
+      const hitsBeforeHeavy = Number(cfg.light_hits_before_heavy ?? 2);
+
+      const cid = String(params.character_id || '');
+      const isFlying = Boolean(params.is_flying);
+      const hasHeavy = Boolean(params.has_heavy);
+      const lightClip = String(params.light_clip || 'attack_light');
+      const selfRect = params.self_rect;
+      const targetRect = params.target_rect;
+      const selfX = Number(params.self_x ?? aiState.homeX);
+      const targetX = Number(params.target_x ?? 0);
+      const isBusy = Boolean(params.is_busy);
+
+      const patrolStep = () => {
+        if (selfX <= aiState.zoneMinX + 4) aiState.patrolDir = 1;
+        else if (selfX >= aiState.zoneMaxX - 4) aiState.patrolDir = -1;
+        aiState.lastIntent = 'patrol';
+        aiState.lastReason = 'target_outside_zone';
+        return {
+          intent: 'patrol',
+          move_dir: aiState.patrolDir,
+          attack_clip: '',
+          desired_face_left: aiState.patrolDir < 0,
+          edge_dist: -1,
+          reason: aiState.lastReason,
+        };
+      };
+
+      const zoneActive = targetX >= aiState.zoneMinX && targetX <= aiState.zoneMaxX;
+      if (!zoneActive) {
+        if (aiState.lightChainCount > 0) aiState.lightChainCount = 0;
+        if (isBusy) {
+          return { intent: 'busy', move_dir: 0, attack_clip: '', desired_face_left: targetX < selfX, edge_dist: -1, reason: 'busy' };
+        }
+        return patrolStep();
+      }
+
+      const edgeDist = computeEdgeDistance(selfRect, targetRect);
+      const faceLeft = targetX < selfX;
+
+      if (isBusy) {
+        aiState.lastIntent = 'busy';
+        aiState.lastReason = 'executing_action';
+        return { intent: 'busy', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      // Special Case 1: Chilopoda reverses range roles (<50px -> power_up laser, >=50px -> attack_light burrow)
+      if (cid === 'chilopoda') {
+        aiState.lightChainCount = 0;
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'chilopoda_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        const chosen = edgeDist < closeEdge ? 'power_up' : lightClip;
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = edgeDist < closeEdge ? 'chilopoda_close_laser' : 'chilopoda_far_burrow';
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: chosen, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      // Special Case 2: Flying mobs hover & patrol in air without chasing; >=50px ranged power_up, <50px melee light
+      if (isFlying) {
+        if (edgeDist >= closeEdge) {
+          aiState.lightChainCount = 0;
+          if (aiState.cooldownRemaining > 0) {
+            const pat = patrolStep();
+            pat.edge_dist = edgeDist;
+            pat.reason = 'flying_hover_cooldown';
+            aiState.lastReason = pat.reason;
+            return pat;
+          }
+          aiState.lastIntent = 'attack';
+          aiState.lastReason = 'flying_ranged_far';
+          aiState.cooldownRemaining = attackCd;
+          return { intent: 'attack', move_dir: 0, attack_clip: 'power_up', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'flying_melee_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = 'flying_melee_close';
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: lightClip, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      // Standard Ground Utility AI:
+      if (edgeDist >= midMaxEdge) {
+        aiState.lightChainCount = 0;
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'far_power_up_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = 'far_power_up';
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: 'power_up', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      if (hasHeavy && aiState.lightChainCount >= hitsBeforeHeavy && edgeDist < heavyMaxEdge) {
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'heavy_ready_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        aiState.lightChainCount = 0;
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = 'combo_heavy_followup';
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: 'attack_heavy', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      if (edgeDist < closeEdge) {
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'close_light_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        aiState.lightChainCount += 1;
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = `close_light_${aiState.lightChainCount}`;
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: lightClip, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      let chaseDir = 0;
+      if (targetX > selfX + 2 && selfX < aiState.zoneMaxX) chaseDir = 1;
+      else if (targetX < selfX - 2 && selfX > aiState.zoneMinX) chaseDir = -1;
+      aiState.lastIntent = 'chase';
+      aiState.lastReason = 'mid_range_chase';
+      return { intent: 'chase', move_dir: chaseDir, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+    }
+
+    function getEnemyRosterEntry() {
+      const chars = state.api?.roster?.characters || [];
+      return chars.find(c => c.character_id === arena.enemyAi.charId) || state.activeChar;
+    }
+
+    function populateEnemySelectOptions() {
+      const sel = document.getElementById('selEnemyChar');
+      if (!sel || !state.api?.roster?.characters) return;
+      sel.innerHTML = '';
+      for (const ch of state.api.roster.characters) {
+        const opt = document.createElement('option');
+        opt.value = ch.character_id;
+        opt.textContent = ch.display_name || ch.character_id;
+        sel.appendChild(opt);
+      }
+      if (arena.enemyAi.charId) sel.value = arena.enemyAi.charId;
+    }
+
+    function selectEnemyCharacter(charId, pin = true) {
+      const ch = (state.api?.roster?.characters || []).find(c => c.character_id === charId);
+      if (!ch) return false;
+      const eb = getCharBundle(ch);
+      arena.enemyAi.charId = ch.character_id;
+      arena.enemyAi.pinned = pin;
+      arena.enemyScale = getDefaultCharScale(eb);
+      arena.enemyAi.x = arena.dummyX;
+      arena.enemyAi.y = isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY;
+      arena.enemyAi.spawnFacing = getDefaultSpawnFacing(eb);
+      arena.enemyAi.flip = isSidewaysLocked(eb) ? (arena.enemyAi.spawnFacing === 'left') : true;
+      arena.enemyAi.clip = 'idle';
+      arena.enemyAi.step = 0;
+      arena.enemyAi.elapsed = 0;
+      arena.enemyAi.actionClip = null;
+      arena.enemyAi.turnTargetFlip = null;
+      arena.enemyAi.turnElapsedMs = 0;
+      arena.enemyAi.turnDurationMs = 0;
+      arena.enemyAi.turnBoostMs = 0;
+      arena.enemyAi.chiloAction = null;
+      resetEnemyAiZone(arena.dummyX);
+      const sel = document.getElementById('selEnemyChar');
+      if (sel && sel.value !== ch.character_id) sel.value = ch.character_id;
+      updateEnemyAiStatusUI();
+      return true;
+    }
+
+    function setUtilityAiEnabled(enabled) {
+      arena.enemyAi.enabled = Boolean(enabled);
+      arena.enemyAi.actionClip = null;
+      arena.enemyAi.turnTargetFlip = null;
+      arena.enemyAi.chiloAction = null;
+      arena.enemyAi.clip = 'idle';
+      arena.enemyAi.step = 0;
+      arena.enemyAi.elapsed = 0;
+      resetEnemyAiZone(arena.dummyX);
+      const eCh = getEnemyRosterEntry();
+      const eb = getCharBundle(eCh);
+      arena.enemyAi.x = arena.dummyX;
+      arena.enemyAi.y = isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY;
+      if (eb && isSidewaysLocked(eb)) {
+        arena.enemyAi.flip = arena.enemyAi.spawnFacing === 'left';
+      }
+      const chk = document.getElementById('chkUtilityAI');
+      if (chk && chk.checked !== arena.enemyAi.enabled) chk.checked = arena.enemyAi.enabled;
+      if (!arena.enemyAi.enabled) {
+        arena.enemyAi.lastIntent = 'idle';
+        arena.enemyAi.lastReason = 'ai_off';
+      }
+      updateEnemyAiStatusUI();
+    }
+
+    function updateEnemyAiStatusUI() {
+      const lbl = document.getElementById('arenaAiStatus');
+      if (!lbl) return;
+      const zMin = Math.round(arena.enemyAi.zoneMinX);
+      const zMax = Math.round(arena.enemyAi.zoneMaxX);
+      if (!arena.enemyAi.enabled) {
+        lbl.textContent = `AI TẮT • Zone [${zMin}..${zMax}] • Bật để quái tự tuần tra & giao chiến 1:1 Godot`;
+        return;
+      }
+      const gapTxt = arena.enemyAi.lastEdgeDist >= 0 ? `${Math.round(arena.enemyAi.lastEdgeDist)}px` : 'Ngoài vùng';
+      lbl.textContent = `AI[${arena.enemyAi.charId}] ${arena.enemyAi.lastReason} • Rìa=${gapTxt} • Chain=${arena.enemyAi.lightChainCount}/${arena.utilityAiCfg.light_hits_before_heavy} • CD=${arena.enemyAi.cooldownRemaining.toFixed(1)}s • Zone [${zMin}..${zMax}]`;
+    }
+
+    function stepEnemyAiFrame(dtMs) {
+      const eCh = getEnemyRosterEntry();
+      const eb = getCharBundle(eCh);
+      if (!eCh || !eb) return null;
+      const ai = arena.enemyAi;
+      const eScale = arena.enemyScale || getDefaultCharScale(eb);
+      const eChilo = eb.render_contract?.chilopoda;
+      if (ai.enabled) {
+        ai.cooldownRemaining = Math.max(0, ai.cooldownRemaining - dtMs / 1000.0);
+        ai.turnBoostMs = Math.max(0, (ai.turnBoostMs || 0) - dtMs);
+        if (ai.turnTargetFlip !== null && !eChilo && ai.turnDurationMs > 0) {
+          ai.turnElapsedMs = (ai.turnElapsedMs || 0) + dtMs;
+          const mom = turnMomentumFactor(ai.turnElapsedMs, ai.turnDurationMs, ai.turnPrevDir || -1, ai.turnTargetFlip ? -1 : 1);
+          const turnSpdPerMs = getContractWalkSpeedPxPerS(eb, eScale, true) / 1000.0;
+          ai.x = Math.max(ai.zoneMinX, Math.min(ai.zoneMaxX, ai.x + mom * turnSpdPerMs * dtMs));
+        }
+        const [pW, pH] = getBodyDims(state.activeChar);
+        const [eW, eH] = getBodyDims(eCh);
+        const targetRect = computeBodyRect(arena.x, arena.y, pW || 140, pH || 140, arena.charScale);
+        const selfRect = computeBodyRect(ai.x, ai.y, eW || 140, eH || 140, eScale);
+        const caps = {
+          character_id: eCh.character_id,
+          is_flying: isFlyingBundle(eb),
+          sideways_locked: isSidewaysLocked(eb),
+          has_heavy: Boolean(eb.animations?.attack_heavy),
+          light_clip: eb.animations?.attack_light ? 'attack_light' : (eb.animations?.attack_nomal ? 'attack_nomal' : 'attack_light'),
+          locomotion_clip: eb.animations?.fly ? 'fly' : 'walk',
+        };
+        const res = evaluateUtilityAI(ai, {
+          character_id: caps.character_id,
+          is_flying: caps.is_flying,
+          has_heavy: caps.has_heavy,
+          light_clip: caps.light_clip,
+          self_rect: selfRect,
+          target_rect: targetRect,
+          self_x: ai.x,
+          target_x: arena.x,
+          is_busy: Boolean(ai.actionClip || ai.turnTargetFlip !== null),
+        });
+        ai.lastEdgeDist = res.edge_dist;
+        ai.lastAttackClip = res.attack_clip || '';
+
+        if (res.intent !== 'busy') {
+          if (caps.sideways_locked) {
+            ai.flip = ai.spawnFacing === 'left';
+          } else if (ai.flip !== res.desired_face_left) {
+            const eTurnClip = eb.render_contract?.turning?.clip;
+            if (eTurnClip && eb.animations?.[eTurnClip]) {
+              ai.turnPrevDir = ai.flip ? -1 : 1;
+              ai.turnTargetFlip = res.desired_face_left;
+              ai.turnElapsedMs = 0;
+              ai.turnDurationMs = clipTotalDurationMs(eb.animations[eTurnClip]);
+              ai.actionClip = eTurnClip;
+              ai.clip = eTurnClip;
+              ai.step = 0;
+              ai.elapsed = 0;
+              updateEnemyAiStatusUI();
+              return { eCh, eb, res };
+            }
+            ai.flip = res.desired_face_left;
+            ai.turnBoostMs = 260;
+          }
+
+          if (res.intent === 'attack' && res.attack_clip && eb.animations?.[res.attack_clip]) {
+            ai.actionClip = res.attack_clip;
+            ai.clip = res.attack_clip;
+            ai.step = 0;
+            ai.elapsed = 0;
+            if (eb.render_contract?.chilopoda) {
+              const cc = eb.render_contract.chilopoda;
+              const sign = ai.flip ? -1 : 1;
+              const clampedTx = Math.max(arena.minX, Math.min(arena.maxX, arena.x));
+              ai.chiloAction = {
+                startX: ai.x,
+                sign,
+                target: [cc.anchor_px[0] + (clampedTx - ai.x) / eScale / sign, cc.ground_y],
+              };
+            } else {
+              arena.popups.push({ x: ai.x, y: ai.y - 110 * eScale, text: `AI ${res.attack_clip.toUpperCase()}`, life: 650 });
+            }
+          } else if ((res.intent === 'patrol' || res.intent === 'chase') && res.move_dir !== 0) {
+            const turnMult = (ai.turnBoostMs || 0) > 0 ? getTurnSpeedMultiplier(eb) : 1.0;
+            const spdPerMs = (getContractWalkSpeedPxPerS(eb, eScale, true) * turnMult) / 1000.0;
+            ai.x = Math.max(ai.zoneMinX, Math.min(ai.zoneMaxX, ai.x + res.move_dir * spdPerMs * dtMs));
+            if (caps.is_flying) ai.y = Math.max(arena.flyMinY, Math.min(arena.groundY, ai.y));
+            const targetLoco = eb.animations?.[caps.locomotion_clip] ? caps.locomotion_clip : 'idle';
+            if (ai.clip !== targetLoco) {
+              ai.clip = targetLoco;
+              ai.step = 0;
+              ai.elapsed = 0;
+            }
+          } else if (res.intent === 'wait_cooldown') {
+            if (ai.clip !== 'idle') {
+              ai.clip = 'idle';
+              ai.step = 0;
+              ai.elapsed = 0;
+            }
+          }
+        }
+      }
+
+      const activeClip = ai.enabled ? ai.clip : (arena.dummyClip || 'idle');
+      let eAnim = eb.animations?.[activeClip] || Object.values(eb.animations)[0];
+      if (ai.enabled && eAnim && eAnim.frames.length) {
+        ai.elapsed += dtMs;
+        if (eChilo?.burrow_turn && ai.clip === eChilo.burrow_turn.body_clip && ai.turnTargetFlip !== null) {
+          const tick = animationFrameTick(eAnim, ai.step) + ai.elapsed * 0.06;
+          if (tick >= eChilo.burrow_turn.hidden_start_tick) ai.flip = ai.turnTargetFlip;
+        }
+        if (eChilo && ai.chiloAction && ai.actionClip === eChilo.burrow.body_clip) {
+          const tick = animationFrameTick(eAnim, ai.step) + ai.elapsed * 0.06;
+          const q = chilopodaActionState(eb.render_contract, ai.clip, tick, ai.chiloAction.target);
+          if (tick >= eChilo.burrow.emerge_start_tick) {
+            ai.x = Math.max(ai.zoneMinX, Math.min(ai.zoneMaxX, ai.chiloAction.startX + ai.chiloAction.sign * q.bodyDx * eScale));
+          }
+        }
+        while (eAnim && eAnim.frames.length) {
+          const ef = eAnim.frames[Math.min(ai.step, eAnim.frames.length - 1)];
+          const eDur = Math.max(16.0, (ef && ef.duration_ms) || 83.33);
+          if (ai.elapsed < eDur) break;
+          ai.elapsed -= eDur;
+          if (ai.step + 1 < eAnim.frames.length) {
+            ai.step += 1;
+          } else if (ai.actionClip) {
+            const finishedAiTurn = ai.turnTargetFlip !== null;
+            if (finishedAiTurn) {
+              ai.flip = ai.turnTargetFlip;
+              ai.turnTargetFlip = null;
+              ai.turnElapsedMs = 0;
+              ai.turnDurationMs = 0;
+            }
+            ai.actionClip = null;
+            ai.chiloAction = null;
+            if (finishedAiTurn && !eChilo) {
+              const loco = eb.animations?.fly ? 'fly' : 'walk';
+              ai.clip = eb.animations?.[loco] ? loco : 'idle';
+              eAnim = eb.animations?.[ai.clip] || eAnim;
+              ai.step = (eAnim && eAnim.frames.length > 1) ? 1 : 0;
+            } else {
+              ai.clip = 'idle';
+              eAnim = eb.animations?.['idle'] || eAnim;
+              ai.step = 0;
+            }
+          } else if (eAnim.loop) {
+            ai.step = 0;
+          } else {
+            ai.elapsed = 0;
+            break;
+          }
+        }
+      }
+      if (ai.enabled) updateEnemyAiStatusUI();
+      return { eCh, eb };
+    }
+
+    function updateArenaFrameLayout() {
+      const frame = document.getElementById('arenaPhoneFrame');
+      const slot = document.getElementById('arenaScreenSlot');
+      const bezelImg = document.getElementById('arenaPhoneBezelImg');
+      const chkBezel = document.getElementById('chkPhoneBezel');
+      const chkNative = document.getElementById('chkNative1to1');
+      if (chkBezel) chkBezel.checked = arena.showPhoneBezel;
+      if (chkNative) chkNative.checked = arena.native1to1;
+      if (!frame || !slot) return;
+      const [bw, bh] = arena.bezelImageSize;
+      const [hx, hy, hw, hh] = arena.bezelHoleRect;
+      if (arena.showPhoneBezel) {
+        if (bezelImg) bezelImg.style.display = 'block';
+        frame.style.aspectRatio = `${bw} / ${bh}`;
+        if (arena.native1to1) {
+          frame.style.width = `${bw}px`;
+          frame.style.minWidth = `${bw}px`;
+          frame.style.maxWidth = 'none';
+        } else {
+          frame.style.width = '100%';
+          frame.style.minWidth = '';
+          frame.style.maxWidth = '1180px';
+        }
+        slot.style.left = `${(hx / bw * 100).toFixed(6)}%`;
+        slot.style.top = `${(hy / bh * 100).toFixed(6)}%`;
+        slot.style.width = `${(hw / bw * 100).toFixed(6)}%`;
+        slot.style.height = `${(hh / bh * 100).toFixed(6)}%`;
+        slot.style.borderRadius = '2.2%';
+      } else {
+        if (bezelImg) bezelImg.style.display = 'none';
+        frame.style.aspectRatio = `${arena.viewportWidth} / ${arena.viewportHeight}`;
+        if (arena.native1to1) {
+          frame.style.width = `${arena.viewportWidth}px`;
+          frame.style.minWidth = `${arena.viewportWidth}px`;
+          frame.style.maxWidth = 'none';
+        } else {
+          frame.style.width = '100%';
+          frame.style.minWidth = '';
+          frame.style.maxWidth = '1140px';
+        }
+        slot.style.left = '0%';
+        slot.style.top = '0%';
+        slot.style.width = '100%';
+        slot.style.height = '100%';
+        slot.style.borderRadius = '8px';
+      }
+    }
+
+    function formatScaleLabel(s) {
+      return Number(s).toFixed(2).replace(/\.?0+$/, '');
+    }
+
+    function setArenaCharacterScale(newScale) {
+      const raw = Number(newScale);
+      const clamped = Number.isFinite(raw) ? Math.max(0.5, Math.min(3.5, Math.round(raw * 20) / 20)) : 2;
+      arena.charScale = clamped;
+      arena.enemyScale = clamped;
+      updateArenaScaleUI();
+      updateArenaSpeedUI();
+    }
+
+    function updateArenaScaleUI() {
+      document.querySelectorAll('#arenaScaleControls button[data-scale]').forEach(btn => {
+        btn.classList.toggle('btn-gold', Math.abs(Number(btn.dataset.scale) - arena.charScale) < 0.001);
+      });
+      const rng = document.getElementById('rngArenaScale');
+      const num = document.getElementById('numArenaScale');
+      if (rng) rng.value = String(arena.charScale);
+      if (num) num.value = String(arena.charScale);
+      const badge = document.getElementById('arenaStageBadge');
+      if (badge) {
+        const [bodyW, bodyH] = getBodyDims(state.activeChar);
+        const sLabel = formatScaleLabel(arena.charScale);
+        const sizeNote = bodyH ? ` • Thân ${sLabel}× ≈ ${Math.round(bodyW * arena.charScale)}×${Math.round(bodyH * arena.charScale)}px (${(bodyH * arena.charScale / arena.viewportHeight * 100).toFixed(1)}% 1080p)` : '';
+        badge.textContent = `${arena.viewportWidth}×${arena.viewportHeight} • 16:9 • ${sLabel}× Nearest${sizeNote}`;
+      }
+    }
+
+    function updateArenaSpeedUI() {
+      const b = getCharBundle();
+      const eff = getEffectiveWalkSpeedPxPerS(b, arena.charScale);
+      const base1x = eff / Math.max(0.1, arena.charScale);
+      const rng = document.getElementById('rngArenaSpeed');
+      const num = document.getElementById('numArenaSpeed');
+      const lbl = document.getElementById('arenaSpeedReadout');
+      if (rng) rng.value = String(Math.min(600, Math.max(20, Math.round(eff))));
+      if (num) num.value = String(Math.round(eff));
+      if (lbl) {
+        const crossSec = (1640 / Math.max(1, eff)).toFixed(1);
+        const isCustom = arena.customSpeedPxPerSec !== null;
+        lbl.textContent = `${Math.round(eff)} px/s (~${crossSec}s hết sân | Base 1×: ${Math.round(base1x)} px/s${isCustom ? ' • Tùy chỉnh' : ''})`;
+      }
+    }
+
+    function updateArenaFlightUI() {
+      const rng = document.getElementById('rngFlyAltY');
+      const lbl = document.getElementById('arenaFlyAltLabel');
+      const val = Math.round(arena.flyDefaultY);
+      if (rng) rng.value = String(val);
+      if (lbl) {
+        const diffMid = val - Math.round(arena.viewportHeight / 2);
+        const floorDist = Math.round(arena.groundY - val);
+        lbl.textContent = `Spawn Y=${val} (Giữa ${diffMid >= 0 ? '+' : ''}${diffMid}px | Cách sàn ${floorDist}px)`;
+      }
+    }
+
+    function updateArenaDustScaleUI() {
+      document.querySelectorAll('#arenaDustControls button[data-dust-scale]').forEach(btn => {
+        btn.classList.toggle('btn-gold', Math.abs(Number(btn.dataset.dustScale) - arena.burrowDustScale) < 0.01);
+      });
+      const rng = document.getElementById('rngBurrowDustScale');
+      const lbl = document.getElementById('arenaDustScaleLabel');
+      if (rng) rng.value = String(arena.burrowDustScale);
+      if (lbl) {
+        const wPx = Math.round(35 * arena.burrowDustScale);
+        const hPx = Math.round(32 * arena.burrowDustScale);
+        lbl.textContent = `${formatScaleLabel(arena.burrowDustScale)}× (~${wPx}×${hPx}px gốc | ~${Math.round(wPx * arena.charScale)}px trên sân)`;
+      }
+    }
+
+    function isSidewaysLocked(b) {
+      const loc = b?.render_contract?.locomotion;
+      return Boolean(loc?.sideways_strafe || loc?.lock_spawn_facing || loc?.allow_turn_or_flip === false);
+    }
+
+    function canFlipPatrolWithoutTurn(b) {
+      const loc = b?.render_contract?.locomotion;
+      const locClip = loc?.clip || 'walk';
+      const turnClip = b?.render_contract?.turning?.clip;
+      return Boolean(
+        !isSidewaysLocked(b) &&
+        loc?.allow_turn_or_flip !== false &&
+        loc?.patrol?.enabled &&
+        !(turnClip && b?.animations?.[turnClip]) &&
+        b?.animations?.[locClip]
+      );
+    }
+
+    function getDefaultSpawnFacing(b) {
+      return b?.render_contract?.locomotion?.default_spawn_facing === 'left' ? 'left' : 'right';
+    }
+
+    function updateSpawnFacingUI() {
+      const wrap = document.getElementById('arenaSpawnFacingControls');
+      if (!wrap) return;
+      const b = getCharBundle();
+      const locked = isSidewaysLocked(b);
+      wrap.style.display = locked ? 'inline-flex' : 'none';
+      if (!locked) return;
+      const isLeft = arena.spawnFacing === 'left';
+      document.getElementById('btnSpawnRight')?.classList.toggle('btn-gold', !isLeft);
+      document.getElementById('btnSpawnLeft')?.classList.toggle('btn-gold', isLeft);
+    }
+
+    function respawnArenaCharacter(facingOverride, posX) {
+      const b = getCharBundle();
+      const nextFacing = (facingOverride === 'left' || facingOverride === 'right')
+        ? facingOverride
+        : getDefaultSpawnFacing(b);
+      arena.spawnFacing = nextFacing;
+      arena.flip = nextFacing === 'left';
+      arena.x = typeof posX === 'number' ? posX : (nextFacing === 'left' ? arena.playerSpawnLeftX : arena.playerSpawnX);
+      arena.y = isFlyingBundle(b) ? arena.flyDefaultY : arena.groundY;
+      arena.vy = 0;
+      arena.actionClip = null;
+      arena.turnTargetFlip = null;
+      arena.clip = 'idle';
+      arena.step = 0;
+      arena.elapsed = 0;
+      arena.patrolDir = nextFacing === 'left' ? -1 : 1;
+      updateSpawnFacingUI();
+      updatePatrolButtonUI();
+    }
 
     function updatePatrolButtonUI() {
       const btn = document.getElementById('btnPatrol');
       if (!btn) return;
       const b = getCharBundle();
+      const locClip = b?.render_contract?.locomotion?.clip || 'walk';
       const hasTurnPatrol = Boolean(b?.render_contract?.turning?.clip && b?.animations?.[b.render_contract.turning.clip] && (b?.render_contract?.locomotion?.patrol || b?.render_contract?.chilopoda));
-      btn.style.display = hasTurnPatrol ? '' : 'none';
-      btn.disabled = !hasTurnPatrol;
+      const hasSidewaysPatrol = Boolean(isSidewaysLocked(b) && b?.render_contract?.locomotion?.patrol?.enabled && b?.animations?.[locClip]);
+      const hasFlipPatrol = canFlipPatrolWithoutTurn(b);
+      const hasPatrol = hasTurnPatrol || hasSidewaysPatrol || hasFlipPatrol;
+      btn.style.display = hasPatrol ? '' : 'none';
+      btn.disabled = !hasPatrol;
       const active = b?.render_contract?.chilopoda ? arena.chiloPatrol : arena.patrolEnabled;
       btn.classList.toggle('btn-gold', Boolean(active));
-      btn.textContent = active ? '🔁 Tuần tra: BẬT' : '🔁 Tuần tra 2 đầu';
+      btn.textContent = active ? '🔁 Tuần tra: BẬT' : (hasSidewaysPatrol ? '🔁 Tuần tra tiến/lùi' : '🔁 Tuần tra 2 đầu');
     }
 
     function toggleArenaPatrol(useRun = false) {
@@ -2037,12 +2553,15 @@
         updatePatrolButtonUI();
         return;
       }
+      const locClip = b.render_contract?.locomotion?.clip || 'walk';
+      const sidewaysPatrol = Boolean(isSidewaysLocked(b) && b.render_contract?.locomotion?.patrol?.enabled && b.animations[locClip]);
+      const flipPatrol = canFlipPatrolWithoutTurn(b);
       const turnClip = b.render_contract?.turning?.clip;
-      if (!turnClip || !b.animations[turnClip]) return;
+      if (!sidewaysPatrol && !flipPatrol && (!turnClip || !b.animations[turnClip])) return;
       arena.patrolEnabled = !arena.patrolEnabled;
       if (arena.patrolEnabled) {
         arena.patrolDir = arena.flip ? -1 : 1;
-        arena.patrolRun = Boolean(useRun && b.animations['run']);
+        arena.patrolRun = Boolean(!sidewaysPatrol && !flipPatrol && useRun && b.animations['run']);
       } else {
         arena.patrolRun = false;
       }
@@ -2063,7 +2582,7 @@
         const c=b.render_contract.chilopoda,sign=arena.flip?-1:1;
         arena.chiloPatrol=false;
         updatePatrolButtonUI();
-        arena.chiloAction={startX:arena.x,sign,target:[c.anchor_px[0]+(arena.dummyX-arena.x)/2/sign,c.ground_y],biteHit:false,laserHits:[false,false]};
+        arena.chiloAction={startX:arena.x,sign,target:[c.anchor_px[0]+(arena.dummyX-arena.x)/arena.charScale/sign,c.ground_y],biteHit:false,fireballHit:false};
         arena.hitstop=0;return;
       }
       const hasAuraLoop = Boolean(b.render_contract?.aura?.loop_clip && b.animations[b.render_contract.aura.loop_clip]);
@@ -2075,29 +2594,34 @@
         dmg: 350,
         range: 380,
         label: `-350 ${clipName.toUpperCase()}!`,
-        shake: 11,
+        shake: 0,
       };
-      arena.shake = sp.shake;
+      arena.shake = 0;
       arena.hitstop = 45;
       const dist = Math.abs(arena.x - arena.dummyX);
       const facingDummy = arena.x <= arena.dummyX ? !arena.flip : arena.flip;
       const powerUpIsPassiveAura = Boolean(hasAuraLoop && b.render_contract?.projectile?.body_clip !== 'power_up');
-      if (!(powerUpIsPassiveAura && clipName==='power_up') && dist <= sp.range && (clipName === 'power_up' || facingDummy)) {
+      const scaledRange = (sp.range || 420) * (arena.charScale / 2.0);
+      if (!(powerUpIsPassiveAura && clipName==='power_up') && dist <= scaledRange && (clipName === 'power_up' || facingDummy)) {
         arena.dummyHp = arena.dummyHp <= sp.dmg ? arena.dummyMaxHp : arena.dummyHp - sp.dmg;
         arena.dummyFlash = 1.0;
         arena.dummyClip = b.animations['hit'] ? 'hit' : 'idle';
         arena.dummyStep = 0;
-        arena.popups.push({ x: arena.dummyX, y: arena.groundY - 165, text: sp.label, life: 950 });
+        arena.popups.push({ x: arena.dummyX, y: arena.groundY - 110 * arena.charScale, text: sp.label, life: 950 });
       } else {
-        arena.popups.push({ x: arena.x, y: arena.y - 165, text: clipName.toUpperCase() + '!', life: 700 });
+        arena.popups.push({ x: arena.x, y: arena.y - 110 * arena.charScale, text: clipName.toUpperCase() + '!', life: 700 });
       }
     }
 
     function triggerArenaJump() {
-      if(!getCharBundle()?.animations.jump)return;
+      const b = getCharBundle();
+      if (isFlyingBundle(b)) {
+        arena.y = Math.max(arena.flyMinY, arena.y - 60);
+        return;
+      }
+      if(!b?.animations.jump)return;
       if (arena.y >= arena.groundY - 1) {
-        arena.vy = -0.64;
-        const b = getCharBundle();
+        arena.vy = arena.jumpVelocityPxPerMs;
         if (!arena.actionClip && b && b.animations['jump']) {
           arena.clip = 'jump';
           arena.step = 0;
@@ -2109,7 +2633,7 @@
     function applyChilopodaArenaHit(amount,label) {
       arena.dummyHp=arena.dummyHp<=amount?arena.dummyMaxHp:arena.dummyHp-amount;
       arena.dummyFlash=1;arena.dummyClip='hit';arena.dummyStep=0;
-      arena.popups.push({x:arena.dummyX,y:arena.groundY-100,text:label,life:950});
+      arena.popups.push({x:arena.dummyX,y:arena.groundY-90*arena.charScale,text:label,life:950});
     }
     function updateChilopodaArenaAction(b) {
       const c=b.render_contract?.chilopoda,s=arena.chiloAction;
@@ -2117,15 +2641,13 @@
       const anim=b.animations[arena.clip],tick=animationFrameTick(anim,arena.step)+arena.elapsed*.06;
       const q=chilopodaActionState(b.render_contract,arena.clip,tick,s.target);
       if(arena.clip===c.burrow.body_clip) {
-        if(tick>=c.burrow.emerge_start_tick)arena.x=s.startX+s.sign*q.bodyDx*2;
+        if(tick>=c.burrow.emerge_start_tick)arena.x=s.startX+s.sign*q.bodyDx*arena.charScale;
         if(tick>=c.burrow.bite_tick&&!s.biteHit){s.biteHit=true;applyChilopodaArenaHit(120,'-120 BURROW BITE!')}
       }
-      if(arena.clip===c.laser.body_clip&&tick>=c.laser.release_tick) {
-        const target=[s.target[0],s.target[1]-c.target_hit_height_px];
-        for(const [i,origin]of c.laser.tip_anchors_by_frame[c.laser.release_frame].entries()) {
-          const arrival=c.laser.release_tick+Math.max(0,(Math.hypot(target[0]-origin[0],target[1]-origin[1])-c.laser.target_radius_px)/c.laser.speed_px_per_tick);
-          if(tick>=arrival&&!s.laserHits[i]){s.laserHits[i]=true;applyChilopodaArenaHit(125,'-125 RED LASER!')}
-        }
+      const f=c.fireball;
+      if(f&&arena.clip===f.body_clip&&tick>=f.release_tick) {
+        const ft=fireballFlightTiming(c,s.target);
+        if(tick>=ft.hitTick&&!s.fireballHit){s.fireballHit=true;applyChilopodaArenaHit(250,'-250 FIREBALL!')}
       }
     }
 
@@ -2136,17 +2658,57 @@
       ctx.imageSmoothingEnabled = false;
 
       const drawStageBackdrop = () => {
-        const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        g.addColorStop(0, '#0a192f');
-        g.addColorStop(0.74, '#155e75');
-        g.addColorStop(0.76, '#365314');
-        g.addColorStop(1, '#1a2e05');
-        ctx.fillStyle = g;
+        ctx.fillStyle = '#070d18';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const mapImg = arena.mapWebPath ? state.images[arena.mapWebPath] : null;
+        if (arena.showSampleMap && mapImg && mapImg.width > 0) {
+          ctx.save();
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(mapImg, 0, 0, canvas.width, canvas.height);
+          ctx.restore();
+        } else {
+          const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+          g.addColorStop(0, '#0a192f');
+          g.addColorStop(arena.groundY / canvas.height - 0.04, '#155e75');
+          g.addColorStop(arena.groundY / canvas.height, '#365314');
+          g.addColorStop(1, '#1a2e05');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        for (let gx = 0; gx < canvas.width; gx += 64) {
-          ctx.beginPath(); ctx.moveTo(gx, 355); ctx.lineTo(gx, canvas.height); ctx.stroke();
+        if (arena.showGridOverlay) {
+          ctx.save();
+          // Walkable ground baseline y = arena.groundY and [minX, maxX] boundary posts
+          ctx.strokeStyle = 'rgba(250, 204, 21, 0.72)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(arena.minX, arena.groundY);
+          ctx.lineTo(arena.maxX, arena.groundY);
+          ctx.stroke();
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+          ctx.lineWidth = 1;
+          for (let gx = arena.minX; gx <= arena.maxX; gx += 64) {
+            const major = ((gx - arena.minX) % 256) === 0;
+            ctx.beginPath();
+            ctx.moveTo(gx, arena.groundY - (major ? 14 : 7));
+            ctx.lineTo(gx, arena.groundY + (major ? 14 : 7));
+            ctx.stroke();
+          }
+
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
+          ctx.setLineDash([8, 6]);
+          ctx.beginPath();
+          ctx.moveTo(arena.minX, arena.groundY - 220);
+          ctx.lineTo(arena.minX, arena.groundY + 40);
+          ctx.moveTo(arena.maxX, arena.groundY - 220);
+          ctx.lineTo(arena.maxX, arena.groundY + 40);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(250, 204, 21, 0.9)';
+          ctx.font = 'bold 16px monospace';
+          ctx.fillText(`ground_y=${arena.groundY} | bounds=[${arena.minX}, ${arena.maxX}]`, arena.minX + 12, arena.groundY + 34);
+          ctx.restore();
         }
       };
 
@@ -2154,23 +2716,19 @@
       arena.fxTicks += dtMs*0.06;
       if (!state.activeChar || !b) {
         drawStageBackdrop();
-        ctx.fillStyle = 'rgba(11,14,23,0.78)';
-        ctx.fillRect(10, 10, 680, 26);
+        ctx.fillStyle = 'rgba(11,14,23,0.82)';
+        ctx.fillRect(18, 18, 960, 42);
         ctx.fillStyle = '#e6ecff';
-        ctx.font = '12px monospace';
-        ctx.fillText('Nhân vật: Chưa có nhân vật (Roster rỗng) | Sẵn sàng nhận Atlas mới', 18, 27);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.font = 'bold 16px sans-serif';
-        ctx.fillText('Chưa có nhân vật nào trong Roster (0 nhân vật)', canvas.width * 0.5 - 175, canvas.height * 0.45);
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '13px sans-serif';
-        ctx.fillText('Sân tập thực chiến sẽ tự động kích hoạt khi có nhân vật đầu tiên.', canvas.width * 0.5 - 195, canvas.height * 0.45 + 26);
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText('Khung: 1920×1080 (16:9 Mobile) | Chưa có nhân vật (Roster rỗng)', 32, 46);
         return;
       }
 
+      let enemyInfo = null;
       if (arena.hitstop > 0) {
         arena.hitstop -= dtMs;
       } else {
+        enemyInfo = stepEnemyAiFrame(dtMs);
         const goRight = arena.keys['ArrowRight'] || arena.keys['KeyD'] || arena.holdRight;
         const goLeft = arena.keys['ArrowLeft'] || arena.keys['KeyA'] || arena.holdLeft;
         const isRun = Boolean((arena.keys['ShiftLeft'] || arena.keys['ShiftRight'] || (arena.patrolEnabled && arena.patrolRun)) && b.animations['run']);
@@ -2183,40 +2741,93 @@
           if (dir !== 0) arena.patrolDir = dir;
           else dir = arena.patrolDir;
         }
+        arena.turnBoostMs = Math.max(0, (arena.turnBoostMs || 0) - dtMs);
+        const sidewaysLocked = isSidewaysLocked(b);
         const turnClip=b.render_contract?.turning?.clip;
-        if (dir !== 0 && !arena.actionClip && arena.flip !== (dir < 0)) {
+        if (sidewaysLocked) {
+          // Sideways crab locomotion keeps initial spawn facing locked; never turn or flip_h on advance/retreat.
+          arena.flip = arena.spawnFacing === 'left';
+        } else if (dir !== 0 && !arena.actionClip && arena.flip !== (dir < 0)) {
           if (turnClip && b.animations[turnClip]) {
+            arena.turnPrevDir = arena.flip ? -1 : 1;
             arena.turnTargetFlip=dir<0;
+            arena.turnElapsedMs = 0;
+            arena.turnDurationMs = clipTotalDurationMs(b.animations[turnClip]);
             arena.actionClip=turnClip; arena.clip=turnClip; arena.step=0; arena.elapsed=0;
-          } else arena.flip=dir<0;
+          } else {
+            arena.flip=dir<0;
+            arena.turnBoostMs = 260;
+          }
         }
         const patrolCfg = b.render_contract?.locomotion?.patrol;
-        const patrolMinX = patrolCfg?.min_x ?? 80;
-        const patrolMaxX = patrolCfg?.max_x ?? 880;
-        const moveSpeed = arena.turnTargetFlip !== null ? 0 : (chilo?(arena.actionClip?0:b.render_contract.locomotion.patrol.speed_px_per_second*2/1000):(arena.actionClip ? 0.08 : (isRun ? 0.44 : (arena.patrolEnabled && patrolCfg?.speed_px_per_second ? patrolCfg.speed_px_per_second * 2 / 1000 : 0.27))));
-        arena.x = Math.max(80, Math.min(880, arena.x + dir * moveSpeed * dtMs));
-        if(chilo&&arena.chiloPatrol&&!arena.actionClip&&((dir>0&&arena.x>=880)||(dir<0&&arena.x<=80))) {
+        const patrolMinX = arena.minX ?? 140;
+        const patrolMaxX = arena.maxX ?? 1780;
+        const scaleFactor = arena.charScale / 2.0;
+        const isFlight = isFlyingBundle(b);
+        const effWalkPxPerS = getEffectiveWalkSpeedPxPerS(b, arena.charScale, arena.patrolEnabled);
+        const customActive = arena.customSpeedPxPerSec !== null && Number.isFinite(arena.customSpeedPxPerSec);
+        const turnMult = (arena.turnBoostMs || 0) > 0 ? getTurnSpeedMultiplier(b) : 1.0;
+        const movePxPerMs = isRun ? (customActive ? (effWalkPxPerS * 1.6) / 1000 : (effWalkPxPerS * 1.6) / 1000) : effWalkPxPerS / 1000;
+        let dxPx = 0;
+        if (arena.turnTargetFlip !== null) {
+          if (!chilo && arena.turnDurationMs > 0) {
+            arena.turnElapsedMs = (arena.turnElapsedMs || 0) + dtMs;
+            const mom = turnMomentumFactor(arena.turnElapsedMs, arena.turnDurationMs, arena.turnPrevDir || 1, arena.turnTargetFlip ? -1 : 1);
+            dxPx = mom * movePxPerMs * dtMs;
+          }
+        } else {
+          const baseMove = chilo
+            ? (arena.actionClip ? 0 : movePxPerMs)
+            : (arena.actionClip ? 0.08 * scaleFactor : movePxPerMs * turnMult);
+          dxPx = dir * baseMove * dtMs;
+        }
+        arena.x = Math.max(patrolMinX, Math.min(patrolMaxX, arena.x + dxPx));
+        if(chilo&&arena.chiloPatrol&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
+          arena.turnPrevDir = arena.flip ? -1 : 1;
           arena.turnTargetFlip=dir>0;arena.chiloPatrolDir=-dir;
+          arena.turnElapsedMs = 0;
+          arena.turnDurationMs = clipTotalDurationMs(b.animations[turnClip]);
           arena.actionClip=turnClip;arena.clip=turnClip;arena.step=0;arena.elapsed=0;
-        } else if(!chilo&&arena.patrolEnabled&&turnClip&&b.animations[turnClip]&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
-          arena.turnTargetFlip=dir>0;arena.patrolDir=-dir;
-          arena.actionClip=turnClip;arena.clip=turnClip;arena.step=0;arena.elapsed=0;
+        } else if(sidewaysLocked&&arena.patrolEnabled&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
+          arena.patrolDir=-dir;
+        } else if(!chilo&&arena.patrolEnabled&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
+          if (turnClip && b.animations[turnClip]) {
+            arena.turnPrevDir = arena.flip ? -1 : 1;
+            arena.turnTargetFlip=dir>0;arena.patrolDir=-dir;
+            arena.turnElapsedMs = 0;
+            arena.turnDurationMs = clipTotalDurationMs(b.animations[turnClip]);
+            arena.actionClip=turnClip;arena.clip=turnClip;arena.step=0;arena.elapsed=0;
+          } else if (canFlipPatrolWithoutTurn(b)) {
+            arena.patrolDir=-dir;
+            arena.flip=arena.patrolDir<0;
+            arena.turnBoostMs = 260;
+          }
         }
 
-        arena.y += arena.vy * dtMs;
-        if (arena.y < arena.groundY) {
-          arena.vy += 0.0018 * dtMs;
-        } else {
-          arena.y = arena.groundY;
+        let flyDirY = 0;
+        if (isFlight) {
+          const flyUp = arena.keys['KeyW'] || arena.keys['ArrowUp'] || arena.holdFlyUp;
+          const flyDown = arena.keys['KeyS'] || arena.keys['ArrowDown'] || arena.holdFlyDown;
+          flyDirY = (flyDown ? 1 : 0) - (flyUp ? 1 : 0);
+          const flySpeedY = (arena.flyVerticalSpeedPxPerS || 240) * scaleFactor / 1000;
+          arena.y = Math.max(arena.flyMinY, Math.min(arena.groundY, arena.y + flyDirY * flySpeedY * dtMs));
           arena.vy = 0;
+        } else {
+          arena.y += arena.vy * dtMs;
+          if (arena.y < arena.groundY) {
+            arena.vy += arena.gravityPxPerMs2 * dtMs;
+          } else {
+            arena.y = arena.groundY;
+            arena.vy = 0;
+          }
         }
 
         // Auto locomotion clip when not executing an active skill
         if (!arena.actionClip) {
           let desired = !b.render_contract && arena.rageMode && b.animations['aura_loop'] ? 'aura_loop' : 'idle';
-          if (arena.y < arena.groundY - 2 && b.animations['jump']) {
+          if (!isFlight && arena.y < arena.groundY - 2 && b.animations['jump']) {
             desired = 'jump';
-          } else if (dir !== 0) {
+          } else if (dir !== 0 || (isFlight && flyDirY !== 0)) {
             const motion=b.render_contract?.locomotion?.clip||'walk';
             desired = (isRun && b.animations['run']) ? 'run' : (b.animations[motion] ? motion : desired);
           }
@@ -2227,33 +2838,42 @@
           }
         }
 
-        const curAnim = b.animations[arena.clip] || Object.values(b.animations)[0];
-        const curF = curAnim.frames[Math.min(arena.step, curAnim.frames.length - 1)];
-        const dur = Math.max(16.0, (curF && curF.duration_ms) || 83.33);
+        let curAnim = b.animations[arena.clip] || Object.values(b.animations)[0];
         arena.elapsed += dtMs;
         if(chilo?.burrow_turn&&arena.clip===chilo.burrow_turn.body_clip&&arena.turnTargetFlip!==null) {
           const tick=animationFrameTick(curAnim,arena.step)+arena.elapsed*.06;
           if(tick>=chilo.burrow_turn.hidden_start_tick)arena.flip=arena.turnTargetFlip;
         }
         if(chilo)updateChilopodaArenaAction(b);
-        if (arena.elapsed >= dur) {
+        while (curAnim && curAnim.frames.length) {
+          const curF = curAnim.frames[Math.min(arena.step, curAnim.frames.length - 1)];
+          const dur = Math.max(16.0, (curF && curF.duration_ms) || 83.33);
+          if (arena.elapsed < dur) break;
           arena.elapsed -= dur;
           if (arena.step + 1 < curAnim.frames.length) {
             arena.step++;
           } else if (arena.actionClip) {
-            if (arena.turnTargetFlip !== null) {
+            const finishedTurn = arena.turnTargetFlip !== null;
+            if (finishedTurn) {
               arena.flip=arena.turnTargetFlip; arena.turnTargetFlip=null;
+              arena.turnElapsedMs = 0; arena.turnDurationMs = 0;
             }
             arena.actionClip = null;
             if (!chilo && (dir !== 0 || arena.patrolEnabled)) {
               const motion = b.render_contract?.locomotion?.clip || 'walk';
               arena.clip = (isRun && b.animations['run']) ? 'run' : (b.animations[motion] ? motion : 'idle');
+              curAnim = b.animations[arena.clip] || curAnim;
+              arena.step = (finishedTurn && curAnim && curAnim.frames.length > 1) ? 1 : 0;
             } else {
               arena.clip = (!b.render_contract && arena.rageMode && b.animations['aura_loop']) ? 'aura_loop' : 'idle';
+              curAnim = b.animations[arena.clip] || curAnim;
+              arena.step = 0;
             }
-            arena.step = 0;
           } else if (curAnim.loop) {
             arena.step = 0;
+          } else {
+            arena.elapsed = 0;
+            break;
           }
         }
 
@@ -2262,7 +2882,7 @@
         }
       }
 
-      arena.shake = Math.max(0, arena.shake - dtMs * 0.035);
+      arena.shake = 0;
       arena.dummyFlash = Math.max(0, arena.dummyFlash - dtMs * 0.004);
       arena.popups = arena.popups.filter(p => {
         p.life -= dtMs;
@@ -2272,65 +2892,166 @@
 
       drawStageBackdrop();
 
-      ctx.save();
-      if (arena.shake > 0) {
-        ctx.translate((Math.random() - 0.5) * arena.shake, (Math.random() - 0.5) * arena.shake);
+      if (arena.showGridOverlay && isFlyingBundle(b)) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(147, 197, 253, 0.55)';
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(arena.minX, arena.flyMinY);
+        ctx.lineTo(arena.maxX, arena.flyMinY);
+        ctx.moveTo(arena.minX, arena.flyDefaultY);
+        ctx.lineTo(arena.maxX, arena.flyDefaultY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(147, 197, 253, 0.85)';
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText(`Trần bay Y=${arena.flyMinY}`, arena.minX + 12, arena.flyMinY + 18);
+        const flyDiffMid = Math.round(arena.flyDefaultY - arena.viewportHeight / 2);
+        ctx.fillText(`Tầm bay mặc định Y=${arena.flyDefaultY} (Giữa màn ${flyDiffMid >= 0 ? '+' : ''}${flyDiffMid}px)`, arena.minX + 12, arena.flyDefaultY - 8);
+        ctx.restore();
       }
+
+      ctx.save();
 
       const [cw, chPx] = getCanvasSize();
       ensureOffscreenSize(cw, chPx);
-      const scale = 2.0;
+      const scale = arena.charScale;
+      const scaleLabel = formatScaleLabel(scale);
       const m = state.activeChar.map_sync_metrics;
       const ax = m.foot_anchor_px[0], ay = m.foot_anchor_px[1];
+      const [bodyW, bodyH] = getBodyDims(state.activeChar);
 
-      // 1. Draw Sparring Dummy on the right
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      ctx.beginPath(); ctx.ellipse(arena.dummyX, arena.groundY, 32, 8, 0, 0, Math.PI * 2); ctx.fill();
-      offCtx.clearRect(0, 0, cw, chPx);
-      drawCompositeStep(offCtx, arena.dummyClip, arena.dummyStep, 1.0, 1.0, {auraEnabled:false,fxTicks:arena.fxTicks});
+      // 1. Draw Sparring Dummy / Utility AI Enemy on the right (No artificial ellipse shadow)
+      const eCh = enemyInfo?.eCh || getEnemyRosterEntry() || state.activeChar;
+      const eb = enemyInfo?.eb || getCharBundle(eCh) || b;
+      const eScale = arena.enemyScale || getDefaultCharScale(eb);
+      const [eCw, eChPx] = getCanvasSize(eCh);
+      const em = eCh.map_sync_metrics || m;
+      const eAx = em.foot_anchor_px[0], eAy = em.foot_anchor_px[1];
+      const [eBodyW, eBodyH] = getBodyDims(eCh);
+      const enemyDrawX = arena.enemyAi.enabled ? arena.enemyAi.x : arena.dummyX;
+      const enemyDrawY = arena.enemyAi.enabled ? arena.enemyAi.y : (isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY);
+      const enemyFlip = arena.enemyAi.enabled ? arena.enemyAi.flip : (isSidewaysLocked(eb) ? (arena.enemyAi.spawnFacing === 'left') : true);
+      const enemyClip = arena.enemyAi.enabled ? arena.enemyAi.clip : arena.dummyClip;
+      const enemyStep = arena.enemyAi.enabled ? arena.enemyAi.step : arena.dummyStep;
+      const enemyChiloOpts = eb.render_contract?.chilopoda
+        ? {
+            turnFacingHandled: true,
+            dustScale: arena.burrowDustScale,
+            ...(arena.enemyAi.enabled && arena.enemyAi.chiloAction && arena.enemyAi.actionClip
+              ? {
+                  targetGroundCanvasPx: arena.enemyAi.chiloAction.target,
+                  sceneOriginShift: [(arena.enemyAi.x - arena.enemyAi.chiloAction.startX) / eScale / arena.enemyAi.chiloAction.sign, 0],
+                }
+              : {}),
+          }
+        : {};
+      ensureOffscreenSize(eCw, eChPx);
+      offCtx.clearRect(0, 0, eCw, eChPx);
+      drawCompositeStep(offCtx, enemyClip, enemyStep, 1.0, 1.0, {
+        bundle: eb,
+        character: eCh,
+        auraEnabled: false,
+        fxTicks: arena.fxTicks,
+        elapsedMs: arena.enemyAi.enabled ? arena.enemyAi.elapsed : 0,
+        ...enemyChiloOpts,
+      });
       ctx.save();
-      ctx.translate(arena.dummyX, arena.groundY);
-      ctx.scale(-1, 1);
+      ctx.imageSmoothingEnabled = false;
+      ctx.translate(enemyDrawX, enemyDrawY);
+      if (enemyFlip) ctx.scale(-1, 1);
       if (arena.dummyFlash > 0) ctx.filter = 'brightness(2.2)';
-      ctx.drawImage(offscreenCanvas, -ax * scale, -ay * scale, cw * scale, chPx * scale);
+      ctx.drawImage(offscreenCanvas, -eAx * eScale, -eAy * eScale, eCw * eScale, eChPx * eScale);
       ctx.restore();
 
-      // Dummy HP bar
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(arena.dummyX - 60, arena.groundY - 145, 120, 10);
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(arena.dummyX - 59, arena.groundY - 144, 118 * (arena.dummyHp / arena.dummyMaxHp), 8);
-      ctx.fillStyle = '#cbd5e1';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.fillText(`Mục tiêu Tập (${arena.dummyHp} HP)`, arena.dummyX - 60, arena.groundY - 150);
+      // Ensure offscreen buffer returns to active player canvas size before drawing player
+      ensureOffscreenSize(cw, chPx);
 
-      // 2. Draw Player Controlled Character
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.beginPath(); ctx.ellipse(arena.x, arena.groundY, 34, 9, 0, 0, Math.PI * 2); ctx.fill();
+      // Enemy / Dummy HP bar & Utility AI zone / body-edge overlay
+      const hpTop = enemyDrawY - Math.max(96, (eBodyH ? eBodyH * eScale + 28 : 150));
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(enemyDrawX - 90, hpTop, 180, 14);
+      ctx.fillStyle = arena.enemyAi.enabled ? '#f59e0b' : '#ef4444';
+      ctx.fillRect(enemyDrawX - 88, hpTop + 2, 176 * (arena.dummyHp / arena.dummyMaxHp), 10);
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 14px sans-serif';
+      const enemyTitle = arena.enemyAi.enabled ? `AI ${eCh.display_name} (${arena.enemyAi.lastIntent})` : `Mục tiêu Tập (${arena.dummyHp} HP)`;
+      ctx.fillText(enemyTitle, enemyDrawX - 90, hpTop - 8);
+
+      if (arena.showGridOverlay && arena.enemyAi.enabled) {
+        const zY = arena.groundY + 12;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.90)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 6]);
+        ctx.beginPath();
+        ctx.moveTo(arena.enemyAi.zoneMinX, zY);
+        ctx.lineTo(arena.enemyAi.zoneMaxX, zY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(arena.enemyAi.zoneMinX, zY - 16);
+        ctx.lineTo(arena.enemyAi.zoneMinX, zY + 8);
+        ctx.moveTo(arena.enemyAi.zoneMaxX, zY - 16);
+        ctx.lineTo(arena.enemyAi.zoneMaxX, zY + 8);
+        ctx.stroke();
+        if (eBodyW > 0 && eBodyH > 0) {
+          const er = computeBodyRect(enemyDrawX, enemyDrawY, eBodyW, eBodyH, eScale);
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.85)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(er.x, er.y, er.w, er.h);
+        }
+        ctx.restore();
+      }
+
+      // 2. Draw Player Controlled Character (1:1 Nearest pixel parity with Godot 4, no ellipse shadow)
       offCtx.clearRect(0, 0, cw, chPx);
-      const chiOptions=b.render_contract?.chilopoda?{turnFacingHandled:true,...(arena.chiloAction&&arena.actionClip?{targetGroundCanvasPx:arena.chiloAction.target,sceneOriginShift:[(arena.x-arena.chiloAction.startX)/2/arena.chiloAction.sign,0]}:{})}:{};
+      const chiOptions=b.render_contract?.chilopoda?{turnFacingHandled:true,dustScale:arena.burrowDustScale,...(arena.chiloAction&&arena.actionClip?{targetGroundCanvasPx:arena.chiloAction.target,sceneOriginShift:[(arena.x-arena.chiloAction.startX)/scale/arena.chiloAction.sign,0]}:{})}:{};
       drawCompositeStep(offCtx, arena.clip, arena.step, 1.0, 1.0, {auraEnabled:arena.rageMode,fxTicks:arena.fxTicks,elapsedMs:arena.elapsed,...chiOptions});
       ctx.save();
+      ctx.imageSmoothingEnabled = false;
       ctx.translate(arena.x, arena.y);
       if (arena.flip) ctx.scale(-1, 1);
       ctx.drawImage(offscreenCanvas, -ax * scale, -ay * scale, cw * scale, chPx * scale);
       ctx.restore();
 
+      if (arena.showGridOverlay && bodyW > 0 && bodyH > 0) {
+        const bwPx = bodyW * scale;
+        const bhPx = bodyH * scale;
+        const boxLeft = arena.x - bwPx * 0.5;
+        const boxTop = arena.y - bhPx;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxLeft, boxTop, bwPx, bhPx);
+        ctx.fillStyle = 'rgba(11, 14, 23, 0.78)';
+        ctx.fillRect(boxLeft, boxTop - 26, Math.max(240, bwPx), 24);
+        ctx.fillStyle = '#67e8f9';
+        ctx.font = 'bold 14px monospace';
+        const pctH = (bhPx / canvas.height * 100).toFixed(1);
+        ctx.fillText(`Thân ${scaleLabel}×: ${Math.round(bwPx)}×${Math.round(bhPx)}px (${pctH}% 1080p)`, boxLeft + 6, boxTop - 9);
+        ctx.restore();
+      }
+
       // 3. Floating Damage / Burst Popups
       for (const p of arena.popups) {
         ctx.fillStyle = '#facc15';
-        ctx.font = 'bold 15px monospace';
-        ctx.fillText(p.text, p.x - 75, p.y);
+        ctx.font = 'bold 22px monospace';
+        ctx.fillText(p.text, p.x - 95, p.y);
       }
       ctx.restore();
 
-      ctx.fillStyle = 'rgba(11,14,23,0.78)';
-      ctx.fillRect(10, 10, 680, 26);
+      ctx.fillStyle = 'rgba(11,14,23,0.84)';
+      ctx.fillRect(16, 16, 1888, 38);
       ctx.fillStyle = '#e6ecff';
-      ctx.font = '12px monospace';
+      ctx.font = 'bold 17px monospace';
+      const hudDir = (arena.keys['ArrowRight'] || arena.keys['KeyD'] || arena.holdRight ? 1 : 0) - (arena.keys['ArrowLeft'] || arena.keys['KeyA'] || arena.holdLeft ? 1 : 0) || (arena.patrolEnabled ? arena.patrolDir : 0);
+      const hudLock = isSidewaysLocked(b) ? ` | Mặt khóa: ${arena.flip ? 'Trái (-X)' : 'Phải (+X)'} (${hudDir === 0 ? 'Đứng' : ((hudDir > 0) !== arena.flip ? 'Tiến' : 'Lùi')})` : '';
+      const screenSizeNote = bodyW > 0 ? ` | Thân ${scaleLabel}×: ${Math.round(bodyW * scale)}×${Math.round(bodyH * scale)}px (${(bodyH * scale / canvas.height * 100).toFixed(1)}% màn)` : '';
+      const effSpeedNow = Math.round(getEffectiveWalkSpeedPxPerS(b, scale, arena.patrolEnabled));
       ctx.fillText(
-        `Nhân vật: ${state.activeChar.character_id} | ${b.render_contract?'Thân + FX độc lập':'1-Layer Combined'} | Clip: ${arena.clip} (#${arena.step}) | Pos: (${Math.round(arena.x)}, ${Math.round(arena.y)})`,
-        18, 27
+        `1920×1080 (16:9) | ${state.activeChar.character_id} | ${scaleLabel}× Nearest${screenSizeNote} | Speed: ${effSpeedNow} px/s | Clip: ${arena.clip} (#${arena.step}) | Pos: (${Math.round(arena.x)}, ${Math.round(arena.y)})${hudLock}`,
+        28, 41
       );
     }
 
@@ -2347,8 +3068,6 @@
         if (state.activeTab === 'tab-human') {
           stepInspectorAnimation(dtMs);
           renderInspector();
-        } else if (state.activeTab === 'tab-stress') {
-          stepAndRenderStressArena(dtMs);
         } else if (state.activeTab === 'tab-arena') {
           stepAndRenderArena(dtMs);
         }
@@ -2367,7 +3086,6 @@
           state.activeTab = btn.dataset.tab;
           document.getElementById(state.activeTab).classList.add('active');
           if (state.activeTab === 'tab-human') renderInspector();
-          if (state.activeTab === 'tab-stress') stepAndRenderStressArena(16.67);
           if (state.activeTab === 'tab-arena') stepAndRenderArena(16.67);
         };
       });
@@ -2552,26 +3270,80 @@
         };
       };
 
-      document.querySelectorAll('.stress-count-btn').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('.stress-count-btn').forEach(b => b.classList.remove('btn-gold'));
-          btn.classList.add('btn-gold');
-          resetStressCount(Number(btn.dataset.count));
-        };
-      });
-      document.getElementById('chkShowAoI').onchange = e => {
-        document.getElementById('aoiOverlayBox').style.display = e.target.checked ? 'flex' : 'none';
-      };
-
       const bindHold = (id, prop) => {
         const el = document.getElementById(id);
+        if (!el) return;
         el.onmousedown = el.ontouchstart = () => { arena[prop] = true; };
         el.onmouseup = el.onmouseleave = el.ontouchend = () => { arena[prop] = false; };
       };
       bindHold('btnMoveLeft', 'holdLeft');
       bindHold('btnMoveRight', 'holdRight');
-      document.getElementById('btnJump').onclick = triggerArenaJump;
+      bindHold('btnFlyDown', 'holdFlyDown');
+      const jumpEl = document.getElementById('btnJump');
+      if (jumpEl) {
+        jumpEl.onmousedown = jumpEl.ontouchstart = () => { if (isFlyingBundle()) arena.holdFlyUp = true; };
+        jumpEl.onmouseup = jumpEl.onmouseleave = jumpEl.ontouchend = () => { arena.holdFlyUp = false; };
+        jumpEl.onclick = () => { if (!isFlyingBundle()) triggerArenaJump(); };
+      }
       document.getElementById('btnPatrol').onclick = (ev) => toggleArenaPatrol(Boolean(ev && ev.shiftKey));
+      document.getElementById('btnSpawnRight').onclick = () => respawnArenaCharacter('right');
+      document.getElementById('btnSpawnLeft').onclick = () => respawnArenaCharacter('left');
+      document.querySelectorAll('#arenaScaleControls button[data-scale]').forEach(btn => {
+        btn.onclick = () => setArenaCharacterScale(Number(btn.dataset.scale));
+      });
+      const rngScale = document.getElementById('rngArenaScale');
+      if (rngScale) rngScale.oninput = e => setArenaCharacterScale(Number(e.target.value));
+      const numScale = document.getElementById('numArenaScale');
+      if (numScale) numScale.onchange = e => setArenaCharacterScale(Number(e.target.value));
+      const rngSpeed = document.getElementById('rngArenaSpeed');
+      if (rngSpeed) rngSpeed.oninput = e => { arena.customSpeedPxPerSec = Math.max(10, Number(e.target.value) || 270); updateArenaSpeedUI(); };
+      const numSpeed = document.getElementById('numArenaSpeed');
+      if (numSpeed) numSpeed.onchange = e => { arena.customSpeedPxPerSec = Math.max(10, Number(e.target.value) || 270); updateArenaSpeedUI(); };
+      const btnResetSpeed = document.getElementById('btnResetSpeed');
+      if (btnResetSpeed) btnResetSpeed.onclick = () => { arena.customSpeedPxPerSec = null; updateArenaSpeedUI(); };
+      const rngFlyAlt = document.getElementById('rngFlyAltY');
+      if (rngFlyAlt) rngFlyAlt.oninput = e => {
+        arena.flyDefaultY = Math.max(arena.flyMinY, Math.min(arena.groundY, Number(e.target.value) || 250));
+        if (isFlyingBundle()) arena.y = arena.flyDefaultY;
+        updateArenaFlightUI();
+      };
+      const btnResetFlyAlt = document.getElementById('btnResetFlyAlt');
+      if (btnResetFlyAlt) btnResetFlyAlt.onclick = () => {
+        arena.flyDefaultY = 250;
+        if (isFlyingBundle()) arena.y = 250;
+        updateArenaFlightUI();
+      };
+      document.querySelectorAll('#arenaDustControls button[data-dust-scale]').forEach(btn => {
+        btn.onclick = () => { arena.burrowDustScale = Number(btn.dataset.dustScale) || 2.65; updateArenaDustScaleUI(); };
+      });
+      const rngDust = document.getElementById('rngBurrowDustScale');
+      if (rngDust) rngDust.oninput = e => { arena.burrowDustScale = Math.max(1.0, Math.min(4.0, Number(e.target.value) || 2.65)); updateArenaDustScaleUI(); };
+      const chkBezel = document.getElementById('chkPhoneBezel');
+      if (chkBezel) chkBezel.onchange = e => { arena.showPhoneBezel = e.target.checked; updateArenaFrameLayout(); };
+      const chkNative = document.getElementById('chkNative1to1');
+      if (chkNative) chkNative.onchange = e => { arena.native1to1 = Boolean(e.target.checked); updateArenaFrameLayout(); };
+      const btnFs = document.getElementById('btnFullscreenArena');
+      if (btnFs) btnFs.onclick = () => {
+        const target = document.getElementById('arenaPhoneFrame') || document.getElementById('arenaCanvas');
+        if (target && target.requestFullscreen) target.requestFullscreen().catch(() => {});
+      };
+      const chkMap = document.getElementById('chkSampleMap');
+      if (chkMap) chkMap.onchange = e => { arena.showSampleMap = e.target.checked; };
+      const chkGrid = document.getElementById('chkArenaGrid');
+      if (chkGrid) chkGrid.onchange = e => { arena.showGridOverlay = e.target.checked; };
+      const chkAi = document.getElementById('chkUtilityAI');
+      if (chkAi) chkAi.onchange = e => setUtilityAiEnabled(e.target.checked);
+      const selEnemy = document.getElementById('selEnemyChar');
+      if (selEnemy) selEnemy.onchange = e => selectEnemyCharacter(e.target.value, true);
+      const btnPullZone = document.getElementById('btnPullIntoZone');
+      if (btnPullZone) btnPullZone.onclick = () => {
+        arena.x = Math.max(arena.minX, Math.min(arena.maxX, arena.enemyAi.zoneMinX + 40));
+        if (!arena.enemyAi.enabled) setUtilityAiEnabled(true);
+      };
+      const btnResetAi = document.getElementById('btnResetEnemyAi');
+      if (btnResetAi) btnResetAi.onclick = () => {
+        selectEnemyCharacter(arena.enemyAi.charId || state.activeChar?.character_id, arena.enemyAi.pinned);
+      };
 
       window.addEventListener('keydown', ev => {
         arena.keys[ev.code] = true;
@@ -2579,9 +3351,12 @@
         if (ev.code === 'Space' && state.activeTab === 'tab-human') {
           ev.preventDefault();
           document.getElementById('btnPlayPause').click();
-        } else if ((ev.code === 'Space' || ev.code === 'KeyW' || ev.code === 'ArrowUp') && state.activeTab === 'tab-arena') {
+        } else if (state.activeTab === 'tab-arena' && (ev.code === 'ArrowUp' || ev.code === 'ArrowDown')) {
           ev.preventDefault();
-          triggerArenaJump();
+          if (!isFlyingBundle() && ev.code === 'ArrowUp') triggerArenaJump();
+        } else if ((ev.code === 'Space' || ev.code === 'KeyW') && state.activeTab === 'tab-arena') {
+          ev.preventDefault();
+          if (!isFlyingBundle()) triggerArenaJump();
         } else if (ev.code === 'KeyE') {
           arena.rageMode = !arena.rageMode;
           state.auraEnabled=arena.rageMode;document.getElementById('chkIndependentAura').checked=state.auraEnabled;
@@ -2591,6 +3366,18 @@
       });
       window.addEventListener('keyup', ev => { arena.keys[ev.code] = false; });
     }
+
+    globalThis.__TEST__ = {
+      arena,
+      state,
+      computeBodyRect,
+      computeEdgeDistance,
+      resetEnemyAiZone,
+      evaluateUtilityAI,
+      selectEnemyCharacter,
+      setUtilityAiEnabled,
+      stepEnemyAiFrame,
+    };
 
     initApp();
   </script>

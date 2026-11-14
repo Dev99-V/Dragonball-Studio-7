@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips/animation-clips.json",
-    "sha256": "7bad8af0a175531ba98b2b4f739935869575c942b93a0ffa2300a1e252d96bae",
-    "bytes": 100864,
+    "sha256": "7331b39b1bd6be9b89df7722349f51cab75eb19f965be4c5a4aa850cae1b1e59",
+    "bytes": 102138,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -872,8 +872,8 @@
   "files": [
     {
       "path": "aseprite/tasmanian_king_crab.png",
-      "sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
-      "bytes": 831368
+      "sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c",
+      "bytes": 834856
     },
     {
       "path": "aseprite/tasmanian_king_crab.json",
@@ -882,8 +882,8 @@
     },
     {
       "path": "godot/tasmanian_king_crab-atlas-00.png",
-      "sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
-      "bytes": 831368
+      "sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c",
+      "bytes": 834856
     },
     {
       "path": "godot/tasmanian_king_crab.tres",
@@ -902,38 +902,38 @@
     },
     {
       "path": "godot-sprite3d/frames/frame-001.png",
-      "sha256": "22a9b0d10a5220e2fad7da281bebdd36c04bc772c4a12d8dbba3e0f1d59d104e",
-      "bytes": 18831
+      "sha256": "a638f3ff576ad8047619fa1099c989d95f043cf9d9dadd40aa3973c81bf2d2a6",
+      "bytes": 19293
     },
     {
       "path": "godot-sprite3d/frames/frame-002.png",
-      "sha256": "7dcd2d25094ee3902ecf12171ab99ede5c25210daf2e2a4a7240102727ed5f8c",
-      "bytes": 19581
+      "sha256": "4dfdf4ff5cbe12d0a30f2639fa1da78cb4b71678d8f15823395c55e0029f024c",
+      "bytes": 20110
     },
     {
       "path": "godot-sprite3d/frames/frame-003.png",
-      "sha256": "a6840c07c64bc2f66b616fdfd0deb39c776496ab6888e1e589525d3fca21d0eb",
-      "bytes": 19835
+      "sha256": "72c8b2058093a24bfdb85e8193e25148d1c56bbdf1b3a28c92786e0f4efa004e",
+      "bytes": 20409
     },
     {
       "path": "godot-sprite3d/frames/frame-004.png",
-      "sha256": "bb0cc3c73edc78b675a524698cb06ce3c104e75dca6a26829d190be933aff4bc",
-      "bytes": 19412
+      "sha256": "4999ddcb134539445f9814466f8adb025f1dfc4a6a41b5f5429eb345003ddcc8",
+      "bytes": 19858
     },
     {
       "path": "godot-sprite3d/frames/frame-005.png",
-      "sha256": "ef19ffe7a60d6a56aa7524815070d8af89d5c004f811cb4d6719097b1e23e929",
-      "bytes": 18551
+      "sha256": "21ab13fe280700ae7edaf55473bb17b8c41230d4788c34c6b2b56fda08fa779a",
+      "bytes": 19060
     },
     {
       "path": "godot-sprite3d/frames/frame-006.png",
-      "sha256": "0c49486f84dae6fd1295e6f80bb7eb37b4c116541761873ea15c508cfdee12f0",
-      "bytes": 19016
+      "sha256": "a1db69943e164617495c3dccca01e1832e98404580724c2f2fe0643ecd1c750c",
+      "bytes": 19479
     },
     {
       "path": "godot-sprite3d/frames/frame-007.png",
-      "sha256": "be3066e78568bba2b0afc02b8fcbff6fade63a5424bc23e760edf8f010592402",
-      "bytes": 19082
+      "sha256": "b6f63e663375378a400326953f5c8f3a987dc8408bc88096d4d5ef179988896c",
+      "bytes": 19570
     },
     {
       "path": "godot-sprite3d/frames/frame-008.png",
@@ -942,7 +942,7 @@
     },
     {
       "path": "godot-sprite3d/frames/frame-009.png",
-      "sha256": "594e43ecd82456a705371231f881a187dd4a8da67b7796370c725155c76682ff",
+      "sha256": "1453aadb8bc4ae6875522afcad359535290f38385983b54d96ec14c089545ce4",
       "bytes": 16677
     },
     {
@@ -1167,12 +1167,12 @@
     },
     {
       "path": "godot-sprite3d/action-idle.json",
-      "sha256": "2deb1d867b55ff0f364fc833e687a8eb3b7c62d156227ecc3c098cc13afadb9c",
+      "sha256": "f1811c9212863fd14cbad9bd0ef2bca499555a127f7cf5bfa2f128f128647902",
       "bytes": 1494
     },
     {
       "path": "godot-sprite3d/action-walk.json",
-      "sha256": "81b6a92e3a44f040ac55e5f0df5e4569a405e7b0edeafec343c4d44a1f5f351f",
+      "sha256": "cafb7ae00a1167f7de9f0361b007ad6a32e3e763ccb1080d5524193756b1d098",
       "bytes": 1494
     },
     {
@@ -1299,277 +1299,277 @@
     ],
     "inputs": [
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/animation-clips.json",
-        "sha256": "7bad8af0a175531ba98b2b4f739935869575c942b93a0ffa2300a1e252d96bae",
-        "bytes": 100864
+        "path": "../stage-clips/animation-clips.json",
+        "sha256": "7331b39b1bd6be9b89df7722349f51cab75eb19f965be4c5a4aa850cae1b1e59",
+        "bytes": 102138
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-00.png",
+        "path": "../stage-clips/frames/frame-00.png",
         "sha256": "5c93785ff07a1578c9c504cd5ca683da0df50bb9075bb877301efc38b62722ea",
         "bytes": 18325
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-01.png",
-        "sha256": "22a9b0d10a5220e2fad7da281bebdd36c04bc772c4a12d8dbba3e0f1d59d104e",
-        "bytes": 18831
+        "path": "../stage-clips/frames/frame-01.png",
+        "sha256": "a638f3ff576ad8047619fa1099c989d95f043cf9d9dadd40aa3973c81bf2d2a6",
+        "bytes": 19293
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-02.png",
-        "sha256": "7dcd2d25094ee3902ecf12171ab99ede5c25210daf2e2a4a7240102727ed5f8c",
-        "bytes": 19581
+        "path": "../stage-clips/frames/frame-02.png",
+        "sha256": "4dfdf4ff5cbe12d0a30f2639fa1da78cb4b71678d8f15823395c55e0029f024c",
+        "bytes": 20110
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-03.png",
-        "sha256": "a6840c07c64bc2f66b616fdfd0deb39c776496ab6888e1e589525d3fca21d0eb",
-        "bytes": 19835
+        "path": "../stage-clips/frames/frame-03.png",
+        "sha256": "72c8b2058093a24bfdb85e8193e25148d1c56bbdf1b3a28c92786e0f4efa004e",
+        "bytes": 20409
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-04.png",
-        "sha256": "bb0cc3c73edc78b675a524698cb06ce3c104e75dca6a26829d190be933aff4bc",
-        "bytes": 19412
+        "path": "../stage-clips/frames/frame-04.png",
+        "sha256": "4999ddcb134539445f9814466f8adb025f1dfc4a6a41b5f5429eb345003ddcc8",
+        "bytes": 19858
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-05.png",
-        "sha256": "ef19ffe7a60d6a56aa7524815070d8af89d5c004f811cb4d6719097b1e23e929",
-        "bytes": 18551
+        "path": "../stage-clips/frames/frame-05.png",
+        "sha256": "21ab13fe280700ae7edaf55473bb17b8c41230d4788c34c6b2b56fda08fa779a",
+        "bytes": 19060
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-06.png",
-        "sha256": "0c49486f84dae6fd1295e6f80bb7eb37b4c116541761873ea15c508cfdee12f0",
-        "bytes": 19016
+        "path": "../stage-clips/frames/frame-06.png",
+        "sha256": "a1db69943e164617495c3dccca01e1832e98404580724c2f2fe0643ecd1c750c",
+        "bytes": 19479
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-07.png",
-        "sha256": "be3066e78568bba2b0afc02b8fcbff6fade63a5424bc23e760edf8f010592402",
-        "bytes": 19082
+        "path": "../stage-clips/frames/frame-07.png",
+        "sha256": "b6f63e663375378a400326953f5c8f3a987dc8408bc88096d4d5ef179988896c",
+        "bytes": 19570
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-08.png",
+        "path": "../stage-clips/frames/frame-08.png",
         "sha256": "96519a5f5b14cc858a6f0489769cc4b758c44b6cf8e0d46509a2f3fc36593843",
         "bytes": 17155
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-09.png",
-        "sha256": "594e43ecd82456a705371231f881a187dd4a8da67b7796370c725155c76682ff",
+        "path": "../stage-clips/frames/frame-09.png",
+        "sha256": "1453aadb8bc4ae6875522afcad359535290f38385983b54d96ec14c089545ce4",
         "bytes": 16677
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-10.png",
+        "path": "../stage-clips/frames/frame-10.png",
         "sha256": "c0e2e4c2b6e82b414be503508b35e9686d37a1fa2fd433b2532c3cf33e0b5abb",
         "bytes": 16448
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-11.png",
+        "path": "../stage-clips/frames/frame-11.png",
         "sha256": "3ec1c0e2e555346cf327a7d126acdd5ef480dac1cf0f29d0817a26d34586a286",
         "bytes": 17000
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-12.png",
+        "path": "../stage-clips/frames/frame-12.png",
         "sha256": "3a277df01ee6c65dfb2a79e3145fa05571694d09e92adfd21224276e555d411a",
         "bytes": 16888
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-13.png",
+        "path": "../stage-clips/frames/frame-13.png",
         "sha256": "b0ffe3bc86286be681149c1a0b84c72c1e771e4228bfa8a0be29a34f446ae1fc",
         "bytes": 16866
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-14.png",
+        "path": "../stage-clips/frames/frame-14.png",
         "sha256": "6f1cba749bd65a7e9893e41598d83fb03a6e4297644439b69482012c909829c8",
         "bytes": 17030
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-15.png",
+        "path": "../stage-clips/frames/frame-15.png",
         "sha256": "e9a54bd732200010b72d2ec2d49e689c7495fa8d97e1c924ea1ad1b5b0a0c9e7",
         "bytes": 17151
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-16.png",
+        "path": "../stage-clips/frames/frame-16.png",
         "sha256": "2b46fa2e3525017977b6e9f9c888ed62f2f3a79154972a300c8c68b6afe0dc58",
         "bytes": 17984
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-17.png",
+        "path": "../stage-clips/frames/frame-17.png",
         "sha256": "dac2e7428e0580b758b3d49d139ab4a4871ceca913e4552f89bba22534ad4ed5",
         "bytes": 17844
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-18.png",
+        "path": "../stage-clips/frames/frame-18.png",
         "sha256": "3914072b720e07947bd640fe4e429a21f38817a9d1f49f3a984cdd409af01956",
         "bytes": 18234
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-19.png",
+        "path": "../stage-clips/frames/frame-19.png",
         "sha256": "91fa3efa51523bf69256afe16e15eff48be698e055bd4cb897725dda4175d819",
         "bytes": 18563
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-20.png",
+        "path": "../stage-clips/frames/frame-20.png",
         "sha256": "3d4d12d208af171a27c1a8de86cf4cb8fee06103b61568e9c451cc2a08209935",
         "bytes": 18888
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-21.png",
+        "path": "../stage-clips/frames/frame-21.png",
         "sha256": "b772544e6021c00aec847c57a7487001d2b0950d543ecc40251787a476132908",
         "bytes": 18002
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-22.png",
+        "path": "../stage-clips/frames/frame-22.png",
         "sha256": "90a31316994bb519dc44bbb49202725d2f2012f19ba5864810a9157a8406a4bf",
         "bytes": 17935
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-23.png",
+        "path": "../stage-clips/frames/frame-23.png",
         "sha256": "051816331f20f27fcc6d9ddce6dcb1f0974b551380dd0b4b57fb2c9ee3d9bc74",
         "bytes": 17970
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-24.png",
+        "path": "../stage-clips/frames/frame-24.png",
         "sha256": "92a60fd958cf303d7f7a113cc3d51e42fc5a75f83418e6b9130f91730e6f9616",
         "bytes": 16566
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-25.png",
+        "path": "../stage-clips/frames/frame-25.png",
         "sha256": "26de15a67e4c9633253f5a1b461e7fb4276b6ff9c205511c5705cff0d7193c51",
         "bytes": 19433
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-26.png",
+        "path": "../stage-clips/frames/frame-26.png",
         "sha256": "4a84f4d23cedabf18f850199175289a5657f58211443cf69fb82fee742ece871",
         "bytes": 20033
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-27.png",
+        "path": "../stage-clips/frames/frame-27.png",
         "sha256": "5da96e68ab2064d6cf9f30613f891288fee46a6fe3f6e9b1a482976966eb8e04",
         "bytes": 20019
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-28.png",
+        "path": "../stage-clips/frames/frame-28.png",
         "sha256": "c324e5c764b2e683db4baa3aae949ec6d81247d089013106733b5f2e9be72673",
         "bytes": 19928
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-29.png",
+        "path": "../stage-clips/frames/frame-29.png",
         "sha256": "581ec98f7ad5adbccfe3f3efcaa2f4aa37c76365aed9dfba8520994aeda2d8bc",
         "bytes": 17803
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-30.png",
+        "path": "../stage-clips/frames/frame-30.png",
         "sha256": "5f78032a565a007b346f12631db1c080c918de0bc71bfe44af5d02612f8f7f7c",
         "bytes": 17243
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-31.png",
+        "path": "../stage-clips/frames/frame-31.png",
         "sha256": "9c52408dcec2dfedf744814cfe976b1f5a93e2dc171f34782f0f18c59b75c06a",
         "bytes": 17170
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-32.png",
+        "path": "../stage-clips/frames/frame-32.png",
         "sha256": "fd4c260ec40df1bfb886098c685540e46f4dee90d373854fdbe661c7feeb0a68",
         "bytes": 18746
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-33.png",
+        "path": "../stage-clips/frames/frame-33.png",
         "sha256": "84a1e1d2043869189e635466884ea8c27a9e73378d1f3ef533be82461c579f3e",
         "bytes": 18010
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-34.png",
+        "path": "../stage-clips/frames/frame-34.png",
         "sha256": "bcc7e764f6dc5497cd3dd5ac32ef71cc2ef2d82fd7322ac56331dc5e10149946",
         "bytes": 17237
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-35.png",
+        "path": "../stage-clips/frames/frame-35.png",
         "sha256": "29ef3209c6770444789356802bc659aa9bfcb7c14ed502aabe3e4afcf1a97822",
         "bytes": 16678
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-36.png",
+        "path": "../stage-clips/frames/frame-36.png",
         "sha256": "a4053d2d023dab7081d3d63862f9ae88c7386942073ce54361b1bfacb7e8f0a4",
         "bytes": 17530
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-37.png",
+        "path": "../stage-clips/frames/frame-37.png",
         "sha256": "2a739642e8fac4b20a64bedaf68f675bd3180451f6725de1f296e5649fd331e4",
         "bytes": 17759
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-38.png",
+        "path": "../stage-clips/frames/frame-38.png",
         "sha256": "20c0289d711cf4bf260a9e0dcb72edfe97690e31807124425d9ec5e6e1e35c8e",
         "bytes": 20918
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-39.png",
+        "path": "../stage-clips/frames/frame-39.png",
         "sha256": "80f493448adb675c4131905c505d47518f6660cc499dfed56f6e002c15645570",
         "bytes": 20292
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-40.png",
+        "path": "../stage-clips/frames/frame-40.png",
         "sha256": "91850436bb9795cc47e563a7b4e24cf4d01d8b0f97b1591d5e59b9633409aa1e",
         "bytes": 19203
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-41.png",
+        "path": "../stage-clips/frames/frame-41.png",
         "sha256": "9d151c57e781da1c3dceb15b111a271c51a3be224f89b2999126b89cf2ff69af",
         "bytes": 17370
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-42.png",
+        "path": "../stage-clips/frames/frame-42.png",
         "sha256": "2d9d2363c6150fc785083b469e1e22c80b6d1e0e06a26cb7162b7ee76db21329",
         "bytes": 17413
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-43.png",
+        "path": "../stage-clips/frames/frame-43.png",
         "sha256": "a1906c8bfafd2ec052921b29b50bf6c5941cc377bdc93a701e6d9b0a1c0d99b8",
         "bytes": 16763
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-44.png",
+        "path": "../stage-clips/frames/frame-44.png",
         "sha256": "260959782174174ca26d3374599d40cfbf10d5eb8f9d877ec58f847f5cdca770",
         "bytes": 15942
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-45.png",
+        "path": "../stage-clips/frames/frame-45.png",
         "sha256": "d3501c25f7d62f2868a8b1001fff2e4435ca2328f57d60dabd72ce19c4adcb43",
         "bytes": 15643
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-46.png",
+        "path": "../stage-clips/frames/frame-46.png",
         "sha256": "57014f069e778e0b68480d314c9995e117e96c03ca1bb47a1517a9dc928953db",
         "bytes": 1001
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-47.png",
+        "path": "../stage-clips/frames/frame-47.png",
         "sha256": "2e35e9b8bcf8853f09c003cb4f7f10927568396a8031f19cd58aff0d25ca1c98",
         "bytes": 2276
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-48.png",
+        "path": "../stage-clips/frames/frame-48.png",
         "sha256": "8c488651823e807791b1c5c12829d2a14a3b6a8d04d741aba3b725c598e10ac2",
         "bytes": 3829
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-49.png",
+        "path": "../stage-clips/frames/frame-49.png",
         "sha256": "72f520b08b897472aedc0319aff593c8fcc291a93289e1ba763bd1a71e50a7ab",
         "bytes": 3904
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-50.png",
+        "path": "../stage-clips/frames/frame-50.png",
         "sha256": "ac86eda4d1d9dd610b15c15e36adc46c759218e96838e5f10886090a2ab813bd",
         "bytes": 3548
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-51.png",
+        "path": "../stage-clips/frames/frame-51.png",
         "sha256": "12469482162a1623314c55226ae3b8fc3c7a4a3c76f696cc7aa87c8c426e32d5",
         "bytes": 2556
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-52.png",
+        "path": "../stage-clips/frames/frame-52.png",
         "sha256": "305aa98f07896a573097033522c48be54cd888c87d08b7314d8ebabd8b890b7f",
         "bytes": 2490
       },
       {
-        "path": "../../../../../../assets/tasmanian_king_crab/clips/frames/frame-53.png",
+        "path": "../stage-clips/frames/frame-53.png",
         "sha256": "12e3cfd8966b79bf6b00713661abc98c03f4c755d651ff1b6b9aa71b66835d2f",
         "bytes": 1167
       }
@@ -1577,7 +1577,7 @@
     "outputs": [
       {
         "path": "aseprite/tasmanian_king_crab.png",
-        "sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1"
+        "sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c"
       },
       {
         "path": "aseprite/tasmanian_king_crab.json",
@@ -1585,7 +1585,7 @@
       },
       {
         "path": "godot/tasmanian_king_crab-atlas-00.png",
-        "sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1"
+        "sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c"
       },
       {
         "path": "godot/tasmanian_king_crab.tres",
@@ -1601,31 +1601,31 @@
       },
       {
         "path": "godot-sprite3d/frames/frame-001.png",
-        "sha256": "22a9b0d10a5220e2fad7da281bebdd36c04bc772c4a12d8dbba3e0f1d59d104e"
+        "sha256": "a638f3ff576ad8047619fa1099c989d95f043cf9d9dadd40aa3973c81bf2d2a6"
       },
       {
         "path": "godot-sprite3d/frames/frame-002.png",
-        "sha256": "7dcd2d25094ee3902ecf12171ab99ede5c25210daf2e2a4a7240102727ed5f8c"
+        "sha256": "4dfdf4ff5cbe12d0a30f2639fa1da78cb4b71678d8f15823395c55e0029f024c"
       },
       {
         "path": "godot-sprite3d/frames/frame-003.png",
-        "sha256": "a6840c07c64bc2f66b616fdfd0deb39c776496ab6888e1e589525d3fca21d0eb"
+        "sha256": "72c8b2058093a24bfdb85e8193e25148d1c56bbdf1b3a28c92786e0f4efa004e"
       },
       {
         "path": "godot-sprite3d/frames/frame-004.png",
-        "sha256": "bb0cc3c73edc78b675a524698cb06ce3c104e75dca6a26829d190be933aff4bc"
+        "sha256": "4999ddcb134539445f9814466f8adb025f1dfc4a6a41b5f5429eb345003ddcc8"
       },
       {
         "path": "godot-sprite3d/frames/frame-005.png",
-        "sha256": "ef19ffe7a60d6a56aa7524815070d8af89d5c004f811cb4d6719097b1e23e929"
+        "sha256": "21ab13fe280700ae7edaf55473bb17b8c41230d4788c34c6b2b56fda08fa779a"
       },
       {
         "path": "godot-sprite3d/frames/frame-006.png",
-        "sha256": "0c49486f84dae6fd1295e6f80bb7eb37b4c116541761873ea15c508cfdee12f0"
+        "sha256": "a1db69943e164617495c3dccca01e1832e98404580724c2f2fe0643ecd1c750c"
       },
       {
         "path": "godot-sprite3d/frames/frame-007.png",
-        "sha256": "be3066e78568bba2b0afc02b8fcbff6fade63a5424bc23e760edf8f010592402"
+        "sha256": "b6f63e663375378a400326953f5c8f3a987dc8408bc88096d4d5ef179988896c"
       },
       {
         "path": "godot-sprite3d/frames/frame-008.png",
@@ -1633,7 +1633,7 @@
       },
       {
         "path": "godot-sprite3d/frames/frame-009.png",
-        "sha256": "594e43ecd82456a705371231f881a187dd4a8da67b7796370c725155c76682ff"
+        "sha256": "1453aadb8bc4ae6875522afcad359535290f38385983b54d96ec14c089545ce4"
       },
       {
         "path": "godot-sprite3d/frames/frame-010.png",
@@ -1813,11 +1813,11 @@
       },
       {
         "path": "godot-sprite3d/action-idle.json",
-        "sha256": "2deb1d867b55ff0f364fc833e687a8eb3b7c62d156227ecc3c098cc13afadb9c"
+        "sha256": "f1811c9212863fd14cbad9bd0ef2bca499555a127f7cf5bfa2f128f128647902"
       },
       {
         "path": "godot-sprite3d/action-walk.json",
-        "sha256": "81b6a92e3a44f040ac55e5f0df5e4569a405e7b0edeafec343c4d44a1f5f351f"
+        "sha256": "cafb7ae00a1167f7de9f0361b007ad6a32e3e763ccb1080d5524193756b1d098"
       },
       {
         "path": "godot-sprite3d/action-attack_nomal.json",
@@ -1886,7 +1886,21 @@
         5,
         6,
         7
-      ]
+      ],
+      "sideways_strafe": false,
+      "lock_spawn_facing": false,
+      "default_spawn_facing": "right",
+      "allow_turn_or_flip": true,
+      "reverse_playback_mode": "forward_cycle",
+      "patrol": {
+        "enabled": true,
+        "min_x": 80,
+        "max_x": 880,
+        "speed_px_per_second": 92.0
+      },
+      "default_scale": 1.25,
+      "screen_speed_px_per_second": 115,
+      "speed_px_per_second": 92.0
     },
     "aura": {
       "loop_clip": null,
@@ -1927,6 +1941,12 @@
         4,
         0
       ]
+    },
+    "turning": {
+      "clip": null,
+      "method": "instant_flip",
+      "turn_speed_multiplier": 1.3,
+      "owner_instruction": "No turn clip needed; horizontal flip responsiveness +30%."
     }
   },
   "provenance": {
@@ -1939,11 +1959,15 @@
     "new_bridge_pose_count": 2,
     "body_part_cut_warp": false,
     "registration": "Fixed whole-frame scale peraction, shared row ground;2Dcomponent ownership includes dissolve islands. Original idle0 retained exactly.",
-    "owner_approved": true,
+    "owner_approved": false,
     "atlas_demo_only": false,
     "timing_fix": "Export automatic tick basis at60Hz, not rounded integer-ms fixedFPS. Authored ticks unchanged.",
-    "owner_approval_file": "assets/tasmanian_king_crab/owner_approval.json",
     "approved_at": "2026-11-12T09:51:08.495780+00:00",
-    "release_version": "0.7.0"
+    "release_version": "0.7.0",
+    "owner_animation_approved": false,
+    "step2_visual_fix_at": "2026-11-14T09:26:26.764136+00:00",
+    "step2_visual_fix_summary": "Step-2 visual fix: match idle_01..07 tonal curve/alignment to idle_00 (master.png) to eliminate frame-0 flash, and ground idle_02, idle_03, walk_01 feet onto y=223 (y224 baseline).",
+    "previous_owner_approval_file": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json",
+    "previous_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1"
   }
 }

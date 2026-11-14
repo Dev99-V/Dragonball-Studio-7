@@ -8,7 +8,7 @@ extends "res://scenes/CharacterFighter2D.gd"
 var _patrol_active := false
 var _patrol_min_x := 80.0
 var _patrol_max_x := 880.0
-var _patrol_speed := 135.0
+var _patrol_speed := 104.545455
 var _patrol_clip: StringName = &"walk"
 var _patrol_dir := 1
 var _post_turn_clip: StringName = &""
@@ -29,7 +29,7 @@ func is_turning() -> bool:
 func is_facing_left() -> bool:
 	return scale.x < 0.0
 
-func start_patrol(min_x: float = 80.0, max_x: float = 880.0, speed: float = 135.0, clip_name: StringName = &"walk") -> bool:
+func start_patrol(min_x: float = 80.0, max_x: float = 880.0, speed: float = 104.545455, clip_name: StringName = &"walk") -> bool:
 	_ensure_nodes()
 	if not has_clip(clip_name):
 		return false
@@ -90,8 +90,13 @@ func _on_skill_finished(clip_name: StringName) -> void:
 		var resume_clip: StringName = _post_turn_clip
 		_post_turn_clip = &""
 		if resume_clip == &"":
+			resume_clip = StringName(String(get_meta("_arena_turn_resume_clip", "")))
+		set_meta("_arena_turn_resume_clip", "")
+		if resume_clip == &"":
 			resume_clip = _patrol_clip if _patrol_active else &"idle"
 		play_clip(resume_clip)
+		if sprite != null and (resume_clip == &"walk" or resume_clip == &"run") and sprite.sprite_frames != null and sprite.sprite_frames.get_frame_count(resume_clip) > 1:
+			sprite.frame = 1
 		action_finished.emit(clip_name)
 		return
 	super._on_skill_finished(clip_name)

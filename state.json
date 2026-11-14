@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-13T11:57:30+00:00",
+  "updated_at": "2026-11-14T15:35:00Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.11.2",
@@ -129,21 +129,13 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "TURN-002",
-    "status": "blocked_on_image_gen_quota",
-    "summary": "Bat turn-v1 Owner-approved (PIPE-009 / v0.11.2, 100/100; turn TODO 1/4 complete). For #2 T-rex (t_rex): immutable snapshot-before + baseline-manifest (73 frames + 1887 peer hashes) and canonical/tick/runtime audit complete, but image-generator (gemini-3.1-flash-image) hit 429 RESOURCE_EXHAUSTED at 2026-11-13T10:58:33Z (reset 2026-11-13T14:42:06Z) and forge_doctor shows 0 external API keys and no local Codex/Grok CLI. Stopped without modifying live assets/t_rex/ or TRex.tscn; see work/characters/t_rex/turn-v1/quota-blocker.json.",
-    "character_id": "t_rex",
-    "master_image": "work/characters/t_rex/walk-style-v4/walk-00-reference.png"
+    "active_task_id": "CRAB-003",
+    "status": "ready_for_owner_human_test",
+    "summary": "Hoàn tất gỡ khóa bò ngang CRAB-002 cho tasmanian_king_crab theo yêu cầu Owner (2026-11-14): khôi phục xoay hướng ngang flip_h / scale.x không cần clip turn (sideways_strafe=false, lock_spawn_facing=false, allow_turn_or_flip=true) trên engine-export.json, roster.json, TasmanianFighter2D.gd, ArenaSandbox.gd và tools/preview/index.html (bao gồm Utility AI tự xoay mặt về phía địch sau lưng trước khi bắn power_up/attack_nomal và Tuần tra 2 đầu); giữ nguyên 100% 54 PNG Bước 2 & Sarcosuchus turn. TURN-003 Pteranodon đã cập nhật TODO/blocker (v1..v3 + turn_anchor_ref_3pose.png) chờ quota reset 2026-11-14T18:36:31Z.",
+    "character_id": "tasmanian_king_crab",
+    "master_image": "work/characters/tasmanian_king_crab/size-master/master.png"
   },
-  "open_issues": [
-    {
-      "id": "ISS-TREX-TICK-LEGACY",
-      "status": "recorded_out_of_scope",
-      "character_id": "t_rex",
-      "evidence": "assets/t_rex/godot_bundle/engine-export.json:idle.godot.relative_durations[7.02,6.96,...] vsassets/t_rex/clips/animation-clips.json:idle.ticks[7,...].",
-      "action": "Do not alter approved T-rex outside Owner scope; discuss exacttick re-export separately. PNG/hashparity unchanged."
-    }
-  ],
+  "open_issues": [],
   "resolved_issues": [
     {
       "id": "ISS-001",
@@ -159,6 +151,12 @@
       "id": "ISS-003",
       "resolved_at": "2026-11-07T06:52:17Z",
       "resolution": "Loại bỏ hoàn toàn kiến trúc tách đa lớp (Hướng 2) sai cấu trúc và các nhân vật test cũ; bóc tách sạch 100% 20 clip của Trunks Rage bằng 2D Component Ownership Masking + khử viền olive_fringe trên nền #2B3772 + sửa khởi tạo trễ _ensure_nodes() trong CharacterFighter2D.gd (LRN-006)."
+    },
+    {
+      "id": "ISS-TREX-TICK-LEGACY",
+      "resolved_at": "2026-11-14T06:57:17Z",
+      "character_id": "t_rex",
+      "resolution": "Owner chose --godot-fps auto re-export for T-rex turn-v1: aligns godot.relative_durations 1:1 with authored 60Hz ticks (attack_heavy frame 5 fixed 0.96 -> 1.00 tick so 12/12 poses play cleanly at 60Hz), preserving all 73 original frames, clip order, duration_ms, events, and keys."
     }
   ],
   "task_history": [
@@ -644,6 +642,66 @@
       "timestamp": "2026-11-13T11:57:30+00:00",
       "status": "completed",
       "summary": "Owner plan alignment: Chốt duy nhất Bat (1/4 turn retrofit, PIPE-009 / v0.11.2, 100/100). Ghi nhận kế hoạch vào docs/turn-retrofit-todo.md: T-rex, Pteranodon và Sarcosuchus tạm hoãn chờ reset quota (sau 2026-11-13T14:42:06Z) để tiếp tục tuần tự; snapshot T-rex đã sẵn sàng."
+    },
+    {
+      "id": "TURN-002",
+      "timestamp": "2026-11-14T07:12:14+00:00",
+      "status": "completed",
+      "summary": "T-rex turn-v1 Owner-approved (PIPE-010 / v0.11.2, 100/100): archived PIPE-001/v0.6.0 receipt+frozen snapshot, froze runtime files & 78 clips, cleaned duplicate stage PNGs, resolved ISS-TREX-TICK-LEGACY via --godot-fps auto; verified Godot/Rust/WASM/Chromium/HTTP before advancing to #3 Pteranodon."
+    },
+    {
+      "id": "TURN-003",
+      "timestamp": "2026-11-14T07:33:32Z",
+      "status": "blocked_on_image_gen_quota",
+      "summary": "3/4 TODO turn-retrofit hoàn tất (Bat PIPE-009, T-rex PIPE-010, Sarcosuchus TURN-004/PIPE-005 giữ nguyên theo chốt Owner); chỉ còn lại duy nhất #3 Pteranodon (TURN-003) đang tạm dừng chờ quota gemini-3.1-flash-image reset lúc 2026-11-14T11:38:24Z (hoặc API key/sheet ngoài)."
+    },
+    {
+      "id": "CRAB-002",
+      "timestamp": "2026-11-14T07:31:05Z",
+      "status": "completed",
+      "summary": "Triển khai contract khóa spawn_facing (mặc định right +X, hỗ trợ right/left khi hồi sinh) & di chuyển cua bò ngang tiến/lùi không flip_h (walk 0->7->0) trên assets/roster.json, assets/tasmanian_king_crab/godot_bundle/engine-export.json, scenes/TasmanianFighter2D.gd, tools/preview/index.html và test; giữ nguyên 100% 54 PNG & atlas SHA."
+    },
+    {
+      "id": "TURN-004",
+      "timestamp": "2026-11-14T07:33:32Z",
+      "status": "completed",
+      "summary": "Owner xác nhận 2026-11-14T07:32Z hiệu ứng turn 4 pose ticks [6,4,4,6] của Sarcosuchus đã chuẩn và chốt giữ nguyên bản PIPE-005 / v0.8.1 (71 PNG + atlas SHA 4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951 bảo toàn 100%). Tiến độ TODO turn-retrofit đạt 3/4."
+    },
+    {
+      "id": "MAP-001",
+      "timestamp": "2026-11-14T07:54:11Z",
+      "status": "done",
+      "summary": "Setup Landscape 16:9 1920x1080 mobile viewport + rocky_plateau sample map + watermark-free phone bezel + Godot 4 ArenaSandbox.tscn/project.godot 1:1 APK/iOS parity (default 2x Nearest, 1x/2x/3x scale, zero drift)."
+    },
+    {
+      "id": "ARENA-CAL-001",
+      "timestamp": "2026-11-14T09:00:00Z",
+      "status": "step1_done",
+      "summary": "Triển khai Bước 1 trên localhost:8080 & Godot ArenaSandbox.gd (zero asset mutation): bỏ shake & bóng elip, sửa bug body_only_bbox_px, thêm chỉnh Scale lẻ 0.5-3.0x, Speed px/s live HUD, Burrow Dust 1.5x runtime, xem 1:1 1920x1080, bay Y=[60..840] spawn Y=340 cho Bat & Pteranodon."
+    },
+    {
+      "id": "UI-OPT-001",
+      "timestamp": "2026-11-14T09:10:00Z",
+      "status": "completed",
+      "summary": "Xóa tab ⚡ 2. Stress Test >2,000 User @ 60FPS (Godot + Rust) khỏi tools/preview/index.html (CSS, HTML, WebGL2 setup, texImage2D upload mỗi lần chọn tướng, 2000-fighter WASM loop, fetch /api/benchmarks) & dedup in-flight loadImage để giảm tải UI localhost:8080; giữ Tab 1 (Human Test, giữ rust_wasm stepper) và Tab 2 (Sân Tập Gameplay Thực Chiến), cập nhật AGENTS.md & E2E/governance tests."
+    },
+    {
+      "id": "ARENA-CAL-002",
+      "timestamp": "2026-11-14T09:50:00Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Triển khai 3 trụ cột Owner chốt: (1) burrow_dust_scale = 2.65 trên arena-stage.json, ChilopodaFighter2D.gd & tools/preview/index.html; (2) Bước 2 sửa lỗi pixel có kiểm soát cho tasmanian_king_crab, sarcosuchus, dilophosaurus, spinosaurus (re-pack atlas + Nearest + re-import Godot, giữ bản gốc tại snapshot-before/, chuyển owner_approved=false / reviewed_pending_owner); (3) Shared 1:1 Utility AI (UtilityAIController.gd + ArenaSandbox.gd + tools/preview/index.html + test_arena_sandbox.gd + test_arena_stage_parity.py + test_frontend_wasm_e2e.mjs) dùng body_edge_2d, zone patrol, 1s cooldown, Light->Light->Heavy (<200px) / PowerUp+reset (>=200px), Chilopoda burrow+attack, Flying hover Y=340."
+    },
+    {
+      "id": "CRAB-003",
+      "timestamp": "2026-11-14T13:57:00Z",
+      "status": "completed",
+      "summary": "Bỏ khóa bò ngang CRAB-002 cho tasmanian_king_crab theo chỉ đạo Owner: khôi phục xoay hướng trái/phải bằng flip_h/scale.x không cần clip turn (sideways_strafe=false, lock_spawn_facing=false, allow_turn_or_flip=true) trong roster.json, engine-export.json, TasmanianFighter2D.gd và tools/preview/index.html (bao gồm tự xoay mặt về phía địch sau lưng trước power_up & Tuần tra 2 đầu); giữ nguyên 54 PNG Bước 2 và Sarcosuchus turn."
+    },
+    {
+      "id": "ARENA-CAL-003",
+      "timestamp": "2026-11-14T15:35:00Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoàn tất đồng bộ cân chỉnh 8 nhân vật 1:1 Godot 4 <-> localhost:8080 theo bảng thông số Owner chốt: Chilopoda (scale 1.35, speed 140 px/s, dust 2.65x, thay 2 tia laser bằng 1 cầu lửa fireball_fx 10 frame tụ tại miệng & phóng lớn dần khi bay tới mục tiêu gây 250 sát thương), Bat (scale 1.1, 115 px/s, Y=250, turn [2,3,4,3,3] +40%), Spinosaurus (scale 2.0, 130 px/s, walk upscale khớp idle/turn, turn [2,6,5,3] +25%), T-rex (scale 1.75, 120 px/s), Pteranodon (scale 1.5, 140 px/s, Y=250, hủy TURN-003 & instant flip +20%), King Crab (scale 1.25, 115 px/s, instant flip +30%), Sarcosuchus (scale 2.0, 135 px/s, turn [2,5,6,3] +25%), Dilophosaurus (scale 1.75, 155 px/s, turn downscale khớp idle/walk, turn [2,5,5,2] +43%). Khử khựng nối walk<->turn (momentum êm + nối mid-stride frame 1 không chớp idle); cập nhật toàn bộ contract/action/arena/E2E/governance tests."
     }
   ],
   "quick_resume_commands": [
@@ -652,11 +710,11 @@
     "./loop.sh test"
   ],
   "session_resume": {
-    "next_action": "Waiting on Owner after gemini-3.1-flash-image 429 quota exhaustion (resets 2026-11-13T14:42:06Z) or alternative API key/CLI/reference sheet before generating T-rex turn_00..04 poses from snapshot-before.",
-    "asset_status": "8 nhân vật Owner-approved (T-rex, Pteranodon, Spinosaurus, Tasmanian King Crab, Sarcosuchus, Dilophosaurus, Bat - Chiroptera turn-v1/v0.11.2, Chilopoda identity-v2/v0.11.1); live assets/t_rex/ unchanged during T-rex turn-v1 quota pause.",
-    "approval_file": "assets/bat_chiroptera/owner_approval.json",
-    "cleanup_report": "docs/releases/v0.11.2-bat-turn-finalization.json",
-    "verification": "work/characters/t_rex/turn-v1/quota-blocker.json",
+    "next_action": "Chờ Owner Human Test trên http://localhost:8080: kiểm tra 8 nhân vật đã cân chỉnh (scale, speed, Y=250 cho bay, độ mượt walk<->turn, hiệu ứng cầu lửa Chilopoda power_up + 2.65x bụi độn thổ, cỡ walk Spinosaurus, cỡ turn Dilophosaurus, tốc độ xoay instant flip Pteranodon/King Crab); nếu đạt, xác nhận nghiệm thu cho 6 nhân vật đang reviewed_pending_owner (chilopoda, bat_chiroptera, spinosaurus, tasmanian_king_crab, sarcosuchus, dilophosaurus).",
+    "asset_status": "8/8 nhân vật pass kiểm định kỹ thuật & parity 1:1 Godot <-> localhost; t_rex & pteranodon đang owner_approved (cùng locomotion mới), 6 nhân vật còn lại đang finalized_pending_owner_reapproval / reviewed_pending_owner chờ Owner nghiệm thu cuối.",
+    "approval_file": "assets/t_rex/owner_approval.json",
+    "cleanup_report": "docs/releases/v0.11.2-t_rex-turn-finalization.json",
+    "verification": "work/characters/pteranodon/turn-v1/quota-blocker.json",
     "git_checkpoint": {
       "branch": "main",
       "remote": "origin",
@@ -668,9 +726,9 @@
       "note": "Source release commit published and CI verified. Local working tree now includes Owner-approved Bat turn-v1 (v0.11.2)."
     },
     "active_character_concept": "work/characters/bat_chiroptera/turn-v1/source/",
-    "review_evidence": "work/characters/bat_chiroptera/turn-v1/review/keyframe-review.json",
-    "latest_delivery": "assets/bat_chiroptera/godot_bundle",
-    "preview_url": "http://localhost:8080/?character=bat_chiroptera&clip=turn&frame=0&paused=1",
+    "review_evidence": "work/characters/t_rex/turn-v1/review/keyframe-review.json",
+    "latest_delivery": "assets/t_rex/godot_bundle",
+    "preview_url": "http://localhost:8080/?character=t_rex&clip=turn&frame=0&paused=1",
     "local_version": "0.11.2",
     "handoff_guide": "docs/AGY-TURN-HANDOFF.md",
     "previous_git_checkpoint": {
@@ -689,8 +747,11 @@
       "character_id": "t_rex",
       "display_name": "T-rex",
       "approved_at": "2026-11-12T07:38:36.605057+00:00",
-      "approval_file": "assets/t_rex/owner_approval.json",
-      "atlas_sha256": "d78b3b750c51793de4eafe3532c2350fff52bce9d54ecd40b879fc6e44c1d1b7"
+      "approval_file": "docs/releases/t_rex-v0.6.0-approval.json",
+      "atlas_sha256": "d78b3b750c51793de4eafe3532c2350fff52bce9d54ecd40b879fc6e44c1d1b7",
+      "approved_atlas_path": "work/characters/t_rex/turn-v1/snapshot-before/t_rex-atlas-00.png",
+      "revision": "walk-style-v4 / v0.6.0",
+      "superseded_by": "PIPE-010"
     },
     {
       "id": "PIPE-002",
@@ -705,32 +766,36 @@
       "character_id": "spinosaurus",
       "display_name": "Spinosaurus",
       "approved_at": "2026-11-12T07:38:36.605057+00:00",
-      "approval_file": "assets/spinosaurus/owner_approval.json",
-      "atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4"
+      "approval_file": "work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+      "atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
+      "approved_atlas_path": "work/characters/spinosaurus/step2-visual-fix/snapshot-before/spinosaurus-atlas-00.png"
     },
     {
       "id": "PIPE-004",
       "character_id": "tasmanian_king_crab",
       "display_name": "Tasmanian King Crab",
       "approved_at": "2026-11-12T09:51:08.495780+00:00",
-      "approval_file": "assets/tasmanian_king_crab/owner_approval.json",
-      "atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1"
+      "approval_file": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json",
+      "atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
+      "approved_atlas_path": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/tasmanian_king_crab-atlas-00.png"
     },
     {
       "id": "PIPE-005",
       "character_id": "sarcosuchus",
       "display_name": "Sarcosuchus",
       "approved_at": "2026-11-13T02:57:36.459561+00:00",
-      "approval_file": "assets/sarcosuchus/owner_approval.json",
-      "atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951"
+      "approval_file": "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/owner_approval.json",
+      "atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951",
+      "approved_atlas_path": "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/sarcosuchus-atlas-00.png"
     },
     {
       "id": "PIPE-006",
       "character_id": "dilophosaurus",
       "display_name": "Dilophosaurus",
       "approved_at": "2026-11-13T04:57:15.924909+00:00",
-      "approval_file": "assets/dilophosaurus/owner_approval.json",
-      "atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157"
+      "approval_file": "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+      "atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157",
+      "approved_atlas_path": "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/dilophosaurus-atlas-00.png"
     },
     {
       "id": "PIPE-007",
@@ -749,7 +814,8 @@
       "display_name": "Chilopoda",
       "approved_at": "2026-11-13T08:22:39.853349+00:00",
       "approval_file": "assets/chilopoda/owner_approval.json",
-      "atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d"
+      "atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d",
+      "approved_atlas_path": "work/characters/chilopoda/fireball-v1/snapshot-before/godot_bundle/godot/chilopoda-atlas-00.png"
     },
     {
       "id": "PIPE-009",
@@ -758,6 +824,16 @@
       "approved_at": "2026-11-13T10:50:00+00:00",
       "approval_file": "assets/bat_chiroptera/owner_approval.json",
       "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
+      "approved_atlas_path": "work/characters/bat_chiroptera/calibration-v1/snapshot-before/godot_bundle/godot/bat_chiroptera-atlas-00.png",
+      "revision": "turn-v1 / v0.11.2"
+    },
+    {
+      "id": "PIPE-010",
+      "character_id": "t_rex",
+      "display_name": "T-rex",
+      "approved_at": "2026-11-14T07:12:14+00:00",
+      "approval_file": "assets/t_rex/owner_approval.json",
+      "atlas_sha256": "ee46c57864381ba0e4511e2d1ffa943ad7c1639f5bbe604448600653d57ff55c",
       "revision": "turn-v1 / v0.11.2"
     }
   ],
@@ -802,8 +878,8 @@
     "instruction_precedence": "Hiến pháp Owner cung cấp trong phiên hiện tại ưu tiên ghi chép engine_evaluation cũ trong state.json; chưa thay đổi kiến trúc hoặc asset."
   },
   "turn_policy": {
-    "default": "Required for all newcharacteratlases unless Owner explicitly exempts",
-    "exception": "KingCrab sidewayslocomotion,no turn",
+    "default": "Giữ nguyên clip turn ở các nhân vật đã có; nhân vật không có turn (Pteranodon, King Crab) và các nhân vật mới không bắt buộc thêm clip turn nếu xoay hướng ngang nhanh mượt không gây cảm giác lật bìa.",
+    "exception": "Owner 2026-11-14 hủy TURN-003 Pteranodon (+20% flip burst) và giữ King Crab (+30% flip burst); các nhân vật đã có turn giữ nguyên.",
     "contract": "docs/art-standards/turn-contract.md",
     "bidirectional_gate": "Independently verify right-to-left and left-to-right, bothendpoints, actualperspective wholebodyposes; no cardflip",
     "backlog": "docs/turn-retrofit-todo.md",
@@ -813,7 +889,7 @@
       "pteranodon",
       "sarcosuchus"
     ],
-    "retrofit_gate": "Bat turn-v1 Owner-approved (PIPE-009 / v0.11.2, 1/4 TODO done). T-rex turn-v1 snapshot/audit ready, paused at 429 RESOURCE_EXHAUSTED (gemini-3.1-flash-image resets 2026-11-13T14:42:06Z); Pteranodon/Sarcosuchus remain blocked behind T-rex.",
+    "retrofit_gate": "Bat (PIPE-009), T-rex (PIPE-010) & Sarcosuchus (TURN-004) đã có turn; Owner 2026-11-14 xác nhận hủy TURN-003 Pteranodon (dùng flip nhanh +20%) và không bắt buộc thêm turn cho nhân vật tương lai.",
     "score": "10evidencegates x10points,100/100 onlyallgates+Owneraccepted; not AIpercentidentity",
     "chilopoda_exception": "Owner-authorized burrow/reorient while fully hidden/emerge in opposite direction; both endpoints and directions independently verified. Future retrofit list remains gated on Chilopoda final approval."
   },

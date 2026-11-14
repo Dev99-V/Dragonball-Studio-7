@@ -277,7 +277,9 @@ PY
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_dilophosaurus_power.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_bat_sonic.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_bat_turn.gd
+      "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_trex_turn.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_chilopoda_actions.gd
+      "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_arena_sandbox.gd
     fi
     if [ -f "$ROOT_DIR/engines/rust_combat_sim/Cargo.toml" ] && command -v cargo >/dev/null 2>&1; then
       echo "[loop.sh] Đang chạy Rust 1.99.1 Real-Time >2,000 Combat Engine Unit Tests..."

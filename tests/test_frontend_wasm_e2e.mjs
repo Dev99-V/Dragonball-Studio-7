@@ -32,6 +32,11 @@ assert.equal(
   'Frontend JS must NOT contain deprecated layered_3d_depth (Hướng 2) logic!'
 );
 
+// 1b. Verify removed Stress Test tab is completely absent from localhost UI
+assert.equal(html.includes('tab-stress'), false, 'Frontend HTML/JS must NOT retain removed tab-stress panel');
+assert.equal(html.includes('stressCanvas'), false, 'Frontend HTML/JS must NOT retain removed stressCanvas renderer');
+assert.equal(jsCode.includes('/api/benchmarks'), false, 'Frontend JS must NOT fetch /api/benchmarks on startup');
+
 // 2. Verify every wasmExports.<fn> call in index.html actually exists in compiled rust_combat_sim.wasm!
 const wasmBytes = fs.readFileSync(WASM_PATH);
 const wasmMod = await WebAssembly.instantiate(wasmBytes, {});
@@ -47,21 +52,21 @@ for (const fnName of new Set(calledWasmFns)) {
   );
 }
 
-// 3. Load real /api/bundles and /api/benchmarks payloads directly from Python server module
+// 3. Load real /api/bundles payload directly from Python server module
 const apiJsonStr = execFileSync(
   'python3',
   [
     '-c',
-    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'parity': server.verify_engine_localhost_parity()}))`,
+    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'parity': server.verify_engine_localhost_parity()}))`,
   ],
   { cwd: REPO_ROOT, encoding: 'utf8' }
 );
 const apiPayload = JSON.parse(apiJsonStr);
-const benchPayload = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'engines/benchmark_report.json'), 'utf8'));
 
 // 4. Execute the entire frontend application inside a Mock DOM + Canvas2D + WASM VM!
 function makeMockCtx2d(canvas) {
   let drawCalls = 0;
+  let ellipseCalls = 0;
   return {
     canvas,
     imageSmoothingEnabled: false,
@@ -71,6 +76,7 @@ function makeMockCtx2d(canvas) {
     font: '',
     filter: 'none',
     get _drawCalls() { return drawCalls; },
+    get _ellipseCalls() { return ellipseCalls; },
     clearRect() {},
     fillRect() { drawCalls++; },
     strokeRect() { drawCalls++; },
@@ -82,7 +88,7 @@ function makeMockCtx2d(canvas) {
     lineTo() {},
     stroke() { drawCalls++; },
     fill() { drawCalls++; },
-    ellipse() {},
+    ellipse() { ellipseCalls++; drawCalls++; },
     save() {},
     restore() {},
     translate() {},
@@ -145,9 +151,10 @@ const getEl = (id) => {
 };
 
 const tabHumanBtn = new MockElement('', 'BUTTON'); tabHumanBtn.dataset.tab = 'tab-human';
-const tabStressBtn = new MockElement('', 'BUTTON'); tabStressBtn.dataset.tab = 'tab-stress';
 const tabArenaBtn = new MockElement('', 'BUTTON'); tabArenaBtn.dataset.tab = 'tab-arena';
-const tbodyBench = new MockElement('benchTbody', 'TBODY');
+getEl('btnScale1').dataset.scale = '1';
+getEl('btnScale2').dataset.scale = '2';
+getEl('btnScale3').dataset.scale = '3';
 
 const sandbox = {
   console,
@@ -173,7 +180,6 @@ const sandbox = {
   },
   fetch: async (url) => {
     if (url === '/api/bundles') return { ok: true, json: async () => structuredClone(apiPayload) };
-    if (url === '/api/benchmarks') return { ok: true, json: async () => structuredClone(benchPayload) };
     if (url === '/rust_combat_sim.wasm') {
       return { ok: true, arrayBuffer: async () => wasmBytes.buffer.slice(wasmBytes.byteOffset, wasmBytes.byteOffset + wasmBytes.byteLength) };
     }
@@ -183,16 +189,17 @@ const sandbox = {
   document: {
     createElement: (tag) => new MockElement('', tag.toUpperCase()),
     getElementById: (id) => getEl(id),
-    querySelector: (sel) => sel === '#benchCompareTable tbody' ? tbodyBench : getEl(sel),
+    querySelector: (sel) => getEl(sel),
     querySelectorAll: (sel) => {
-      if (sel === '.tab-btn') return [tabHumanBtn, tabStressBtn, tabArenaBtn];
-      if (sel === '.tab-view') return [getEl('tab-human'), getEl('tab-stress'), getEl('tab-arena')];
+      if (sel === '.tab-btn') return [tabHumanBtn, tabArenaBtn];
+      if (sel === '.tab-view') return [getEl('tab-human'), getEl('tab-arena')];
+      if (sel === '#arenaScaleControls button[data-scale]') return [getEl('btnScale1'), getEl('btnScale2'), getEl('btnScale3')];
       return [];
     },
   },
 };
 
-const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { initApp, state, stress, arena, selectCharacter, stepInspectorAnimation, renderInspector, stepAndRenderStressArena, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, offCtx };';
+const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { initApp, state, arena, selectCharacter, setArenaCharacterScale, updateArenaFrameLayout, stepInspectorAnimation, renderInspector, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, respawnArenaCharacter, isSidewaysLocked, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, computeBodyRect, computeEdgeDistance, resetEnemyAiZone, evaluateUtilityAI, selectEnemyCharacter, setUtilityAiEnabled, stepEnemyAiFrame, offCtx };';
 vm.createContext(sandbox);
 vm.runInContext(instrumentedJs, sandbox);
 
@@ -208,18 +215,9 @@ if (apiPayload.roster.characters.length === 0) {
   assert.equal(getEl('clipCountBadge').textContent, '0 clips');
   assert.equal(getEl('arenaCharLabel').textContent, 'Chưa có nhân vật');
 
-  tabStressBtn.click();
-  assert.equal(T.state.activeTab, 'tab-stress');
-  for (let i = 0; i < 5; i++) {
-    T.stepAndRenderStressArena(16.67);
-  }
-  assert.equal(getEl('runtimeErrorBanner').textContent, '', 'Tab 2 Stress Test with 0 characters must have ZERO runtime errors');
-  assert.ok(getEl('stressCanvas')._ctx2d._drawCalls > 2000, 'Tab 2 Stress Canvas must draw all 2,000 Rust WASM entities even when roster is empty');
-  assert.match(getEl('kpiAoI').textContent, /\d+ user \(\d+ kbps\)/, 'Tab 2 AoI KPI must report live user count & kbps');
-
   tabArenaBtn.click();
   T.stepAndRenderArena(16.67);
-  assert.equal(getEl('runtimeErrorBanner').textContent, '', 'Tab 3 Arena with 0 characters must have ZERO runtime errors');
+  assert.equal(getEl('runtimeErrorBanner').textContent, '', 'Tab 2 Arena with 0 characters must have ZERO runtime errors');
   tabHumanBtn.click();
 }
 
@@ -331,7 +329,11 @@ for (const ch of apiPayload.roster.characters) {
     T.stepAndRenderArena(1000/60);
     assert.equal(T.arena.clip,contract.turning.clip);
     assert.equal(T.arena.flip,false,'Keep orientation until perspective poses finish');
-    assert.equal(T.arena.x,beforeX,'Plant the turn pivot');
+    if (ch.character_id === 'chilopoda') {
+      assert.equal(T.arena.x,beforeX,'Plant the burrow turn pivot');
+    } else {
+      assert.ok(Math.abs(T.arena.x - beforeX) <= 15, `${ch.character_id} smooth turnaround momentum stays bounded`);
+    }
     T.triggerArenaAction('attack_light');
     assert.equal(T.arena.clip,contract.turning.clip,'Do not interrupt pending orientation');
     const visited=new Set([T.arena.step]);
@@ -345,6 +347,18 @@ for (const ch of apiPayload.roster.characters) {
     for(let i=0;i<contract.turning.duration_ticks+2;i++)T.stepAndRenderArena(1000/60);
     assert.equal(T.arena.flip,false);
     T.arena.keys={};
+  }
+  if (ch.render_contract?.locomotion?.kind === 'flight') {
+    assert.equal(T.arena.y, 250, `${ch.character_id} must spawn at hover altitude Y=250`);
+    T.arena.keys = { KeyW: true };
+    T.stepAndRenderArena(100);
+    assert.ok(T.arena.y < 250 && T.arena.y >= T.arena.flyMinY, `${ch.character_id} KeyW flies upward without gravity snap`);
+    const highY = T.arena.y;
+    T.arena.keys = { KeyS: true };
+    T.stepAndRenderArena(200);
+    assert.ok(T.arena.y > highY && T.arena.y <= T.arena.groundY, `${ch.character_id} KeyS flies downward`);
+    T.arena.keys = {};
+    T.arena.y = 250;
   }
   T.renderInspector();
   assert.equal(getEl('runtimeErrorBanner').textContent,'');
@@ -375,69 +389,136 @@ if(chiloCharacter){
     else {assert.ok(body);assert.equal(body.point[0],176,'Burrow turn does not relocate');assert.equal(body.mirror,initialFacingLeft!==(tick>=16));}
   }
 
-  assert.equal(layersAt('power_up',15).filter(l=>l.layer.startsWith('Laser')).length,0);
-  const bolts=layersAt('power_up',16).filter(l=>l.layer.startsWith('Laser'));
-  assert.equal(bolts.length,2);assert.notDeepEqual(Array.from(bolts[0].point),Array.from(bolts[1].point));
-  assert.equal(layersAt('power_up',41).filter(l=>l.layer.startsWith('Laser')).length,0);
-  assert.equal(layersAt('power_up',18,{targetGroundCanvasPx:[370,224]}).filter(l=>l.layer.startsWith('Laser')).length,2,'Farther target extends physical flight');
-  Object.assign(T.arena,{x:280,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,dummyX:640,dummyHp:2000,popups:[]});
+  const fbFrames = c.fireball ? b.animations[c.fireball.projectile_clip].frames : [];
+  assert.equal(fbFrames.length, 10, 'Single 10-frame fireball_fx progression');
+  const charge0 = layersAt('power_up',0).filter(l=>l.layer==='FireballFX');
+  const charge15 = layersAt('power_up',15).filter(l=>l.layer==='FireballFX');
+  assert.equal(charge0.length, 1); assert.equal(charge15.length, 1);
+  assert.ok(fbFrames.indexOf(charge15[0].frame) > fbFrames.indexOf(charge0[0].frame) && fbFrames.indexOf(charge15[0].frame) <= 2, 'Mouth charge condenses across frames 0..2');
+  const bolts=layersAt('power_up',16).filter(l=>l.layer==='FireballFX');
+  const flight20=layersAt('power_up',20).filter(l=>l.layer==='FireballFX');
+  assert.equal(bolts.length,1); assert.equal(flight20.length,1);
+  assert.ok(flight20[0].point[0] > bolts[0].point[0], 'Fireball launches toward target');
+  assert.ok(fbFrames.indexOf(flight20[0].frame) >= fbFrames.indexOf(bolts[0].frame), 'Fireball grows in flight');
+  assert.equal(layersAt('power_up',41).filter(l=>l.layer==='FireballFX').length,0);
+  assert.equal(layersAt('power_up',18,{targetGroundCanvasPx:[370,224]}).filter(l=>l.layer==='FireballFX').length,1,'Farther target extends physical flight');
+  Object.assign(T.arena,{x:560,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,dummyX:920,dummyHp:2000,popups:[]});
   T.triggerArenaAction('attack_light');assert.equal(T.arena.dummyHp,2000,'No hit before burrow or bite');
   for(let tick=0;tick<92;tick++)T.stepAndRenderArena(1000/60);
-  assert.equal(T.arena.dummyHp,1880);assert.ok(Math.abs(T.arena.x-544)<.001,'Remain at target after bite');assert.equal(T.arena.clip,'idle');assert.equal(T.arena.chiloPatrol,false);
-  Object.assign(T.arena,{x:280,flip:false,keys:{},hitstop:0,actionClip:null,dummyHp:2000,popups:[]});
+  const expectedBiteX = 920 - c.burrow.bite_offset_x_px * T.arena.charScale;
+  assert.equal(T.arena.dummyHp,1880);assert.ok(Math.abs(T.arena.x - expectedBiteX) < .001, `Remain at target ${expectedBiteX} after bite, got ${T.arena.x}`);assert.equal(T.arena.clip,'idle');assert.equal(T.arena.chiloPatrol,false);
+  Object.assign(T.arena,{x:560,flip:false,keys:{},hitstop:0,actionClip:null,dummyHp:2000,popups:[]});
   T.triggerArenaAction('power_up');assert.equal(T.arena.dummyHp,2000);
   for(let tick=0;tick<44;tick++)T.stepAndRenderArena(1000/60);
-  assert.equal(T.arena.dummyHp,1750,'Two125damage hits at projectile arrivals, not cast start');
+  assert.equal(T.arena.dummyHp,1750,'Single 250-damage fireball hit on projectile arrival, not cast start');
   T.selectCharacter(chiloCharacter.character_id);
-  Object.assign(T.arena,{x:879,flip:false,keys:{KeyD:true},hitstop:0});
+  Object.assign(T.arena,{x:1779,flip:false,keys:{KeyD:true},hitstop:0});
   T.stepAndRenderArena(1000/60);assert.equal(T.arena.clip,'turn');assert.equal(T.arena.flip,false);
   const rightSeen=new Set([T.arena.step]);
   for(let t=0;t<38;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')rightSeen.add(T.arena.step)}
   assert.equal(rightSeen.size,b.animations.turn.frames.length);assert.equal(T.arena.flip,true);assert.equal(T.arena.chiloPatrolDir,-1);
-  Object.assign(T.arena,{x:81,keys:{}});T.stepAndRenderArena(1000/60);assert.equal(T.arena.clip,'turn');assert.equal(T.arena.flip,true);
+  Object.assign(T.arena,{x:141,keys:{}});T.stepAndRenderArena(1000/60);assert.equal(T.arena.clip,'turn');assert.equal(T.arena.flip,true);
   const leftSeen=new Set([T.arena.step]);
   for(let t=0;t<38;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')leftSeen.add(T.arena.step)}
   assert.equal(leftSeen.size,b.animations.turn.frames.length);assert.equal(T.arena.flip,false);assert.equal(T.arena.chiloPatrolDir,1);
-  Object.assign(T.arena,{x:280,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,dummyX:640,dummyHp:2000,chiloPatrol:false,chiloAction:null});
+  Object.assign(T.arena,{x:560,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,dummyX:1360,dummyHp:2000,chiloPatrol:false,chiloAction:null});
 }
 
-// Bat - Chiroptera two-endpoint walk->turn->walk and run->turn->run transitions + lock mid-turn.
-const batChar=apiPayload.roster.characters.find(ch=>ch.character_id==='bat_chiroptera');
-if(batChar){
-  T.selectCharacter(batChar.character_id);
-  const b=T.state.bundlesById[batChar.modes.combined_1layer.bundle_id];
-  Object.assign(T.arena,{x:879,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,patrolEnabled:false,patrolRun:false});
+// Two-endpoint walk->turn->walk and run->turn->run transitions + lock mid-turn for retrofitted turn fighters.
+for (const turnCharId of ['bat_chiroptera', 't_rex']) {
+  const ch = apiPayload.roster.characters.find(c => c.character_id === turnCharId);
+  if (!ch) continue;
+  T.selectCharacter(ch.character_id);
+  const b = T.state.bundlesById[ch.modes.combined_1layer.bundle_id];
+  const turnTicks = (ch.render_contract?.turning?.duration_ticks ?? 21) + 4;
+  Object.assign(T.arena,{x:1779,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,patrolEnabled:false,patrolRun:false});
   T.toggleArenaPatrol(false);
-  assert.equal(T.arena.patrolEnabled,true);
+  assert.equal(T.arena.patrolEnabled,true, `${turnCharId}: patrol toggle`);
   T.stepAndRenderArena(1000/60);
-  assert.equal(T.arena.clip,'turn','Bat right endpoint triggers turn');
-  assert.equal(T.arena.flip,false,'Bat holds +X facing until turn poses complete');
-  T.arena.keys={KeyD:true}; T.stepAndRenderArena(1000/60); T.arena.keys={};
-  assert.equal(T.arena.clip,'turn','Bat turn cannot be interrupted mid-spin');
+  assert.equal(T.arena.clip,'turn', `${turnCharId} right endpoint triggers turn`);
+  assert.equal(T.arena.flip,false, `${turnCharId} holds +X facing until turn poses complete`);
   const seenR2L=new Set([T.arena.step]);
-  for(let t=0;t<25;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')seenR2L.add(T.arena.step);}
-  assert.equal(seenR2L.size,b.animations.turn.frames.length);
+  T.arena.keys={KeyD:true}; T.stepAndRenderArena(1000/60); T.arena.keys={};
+  assert.equal(T.arena.clip,'turn', `${turnCharId} turn cannot be interrupted mid-spin`);
+  seenR2L.add(T.arena.step);
+  for(let t=0;t<turnTicks;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')seenR2L.add(T.arena.step);}
+  assert.equal(seenR2L.size,b.animations.turn.frames.length, `${turnCharId} visits all R->L turn poses`);
   assert.equal(T.arena.flip,true);
-  assert.equal(T.arena.clip,'walk','Bat resumes walk immediately after R->L turn');
-  Object.assign(T.arena,{x:81,patrolDir:-1});
+  assert.equal(T.arena.clip,'walk', `${turnCharId} resumes walk immediately after R->L turn`);
+  Object.assign(T.arena,{x:141,patrolDir:-1});
   T.stepAndRenderArena(1000/60);
-  assert.equal(T.arena.clip,'turn','Bat left endpoint triggers L->R turn');
-  assert.equal(T.arena.flip,true,'Bat holds -X facing during L->R turn');
+  assert.equal(T.arena.clip,'turn', `${turnCharId} left endpoint triggers L->R turn`);
+  assert.equal(T.arena.flip,true, `${turnCharId} holds -X facing during L->R turn`);
   const seenL2R=new Set([T.arena.step]);
-  for(let t=0;t<25;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')seenL2R.add(T.arena.step);}
-  assert.equal(seenL2R.size,b.animations.turn.frames.length);
+  for(let t=0;t<turnTicks;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')seenL2R.add(T.arena.step);}
+  assert.equal(seenL2R.size,b.animations.turn.frames.length, `${turnCharId} visits all L->R turn poses`);
   assert.equal(T.arena.flip,false);
   assert.equal(T.arena.clip,'walk');
   // Test run->turn->run endpoint patrol cleanly
-  Object.assign(T.arena,{x:879,flip:false,patrolEnabled:false,patrolRun:false,actionClip:null,turnTargetFlip:null});
+  Object.assign(T.arena,{x:1779,flip:false,patrolEnabled:false,patrolRun:false,actionClip:null,turnTargetFlip:null});
   T.toggleArenaPatrol(true);
   assert.equal(T.arena.patrolRun,true);
   T.stepAndRenderArena(1000/60);
   assert.equal(T.arena.clip,'turn');
-  for(let t=0;t<25;t++)T.stepAndRenderArena(1000/60);
+  for(let t=0;t<turnTicks;t++)T.stepAndRenderArena(1000/60);
   assert.equal(T.arena.flip,true);
-  assert.equal(T.arena.clip,'run','Bat resumes run immediately after endpoint turn');
-  Object.assign(T.arena,{x:280,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,patrolEnabled:false,patrolRun:false});
+  assert.equal(T.arena.clip,'run', `${turnCharId} resumes run immediately after endpoint turn`);
+  Object.assign(T.arena,{x:560,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,patrolEnabled:false,patrolRun:false});
+}
+
+// Verify King Crab horizontal flip rotation WITHOUT a turn clip (left/right movement, patrol endpoints)
+const crabChar = apiPayload.roster.characters.find(c => c.character_id === 'tasmanian_king_crab');
+if (crabChar) {
+  T.selectCharacter('tasmanian_king_crab');
+  const cb = T.state.bundlesById[crabChar.modes.combined_1layer.bundle_id];
+  assert.equal(T.isSidewaysLocked(cb), false, 'King Crab must NOT be locked to sideways strafe');
+  assert.equal(cb.render_contract?.turning?.clip ?? null, null, 'King Crab remains exempt from turn clip');
+  assert.equal(cb.animations.turn, undefined, 'King Crab has no turn animation clip');
+  assert.equal(T.arena.spawnFacing, 'right', 'King Crab default spawn facing must be right (+X)');
+  assert.equal(T.arena.flip, false);
+  assert.equal(getEl('arenaSpawnFacingControls').style.display, 'none');
+  assert.notEqual(getEl('btnPatrol').style.display, 'none', 'Patrol button must stay visible for unlocked no-turn King Crab');
+
+  // Move left (KeyA): flips left immediately without turn clip and plays walk forward 0..7->0
+  const startX = T.arena.x;
+  T.arena.keys = { KeyA: true }; T.arena.hitstop = 0; T.arena.actionClip = null;
+  const walkStepsSeen = [];
+  const totalWalkTicks = cb.animations.walk.frames.reduce((s, f) => s + f.duration_ticks, 0);
+  for (let i = 0; i < totalWalkTicks + 6; i++) {
+    T.stepAndRenderArena(1000 / 60);
+    assert.equal(T.arena.flip, true, 'Moving left rotates King Crab left without needing a turn clip');
+    assert.equal(T.arena.clip, 'walk');
+    if (walkStepsSeen.at(-1) !== T.arena.step) walkStepsSeen.push(T.arena.step);
+  }
+  assert.ok(T.arena.x < startX, 'Moving left must decrease X');
+  walkStepsSeen.forEach((stepIdx, idx) => assert.equal(stepIdx, idx % cb.animations.walk.frames.length, 'Walk cycle stays forward 0->7->0'));
+
+  // Move right (KeyD): flips back right cleanly
+  const leftX = T.arena.x;
+  T.arena.keys = { KeyD: true };
+  for (let i = 0; i < 6; i++) T.stepAndRenderArena(1000 / 60);
+  assert.ok(T.arena.x > leftX, 'Moving right must increase X');
+  assert.equal(T.arena.flip, false, 'Moving right rotates King Crab right');
+  T.arena.keys = {};
+
+  // Bidirectional flip patrol reverses direction AND facing at bounds without turn clip
+  Object.assign(T.arena, { x: 1779, patrolEnabled: false, flip: false });
+  T.toggleArenaPatrol(false);
+  assert.equal(T.arena.patrolEnabled, true);
+  assert.equal(T.arena.patrolDir, 1);
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.patrolDir, -1, 'Right bound reverses patrol direction');
+  assert.equal(T.arena.flip, true, 'Right bound patrol reversal flips King Crab left');
+  assert.equal(T.arena.clip, 'walk');
+
+  Object.assign(T.arena, { x: 141 });
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.patrolDir, 1, 'Left bound reverses patrol direction');
+  assert.equal(T.arena.flip, false, 'Left bound patrol reversal flips King Crab right');
+
+  T.toggleArenaPatrol(false);
+  T.selectCharacter('t_rex');
+  assert.equal(getEl('arenaSpawnFacingControls').style.display, 'none');
 }
 
 // Phase B: Inject synthetic 1-Layer Combined characters to verify dynamic multi-character pipeline
@@ -543,38 +624,55 @@ assert.equal(T.state.stepIdx, 0, 'Clicking Play after oneshot ends MUST rewind s
 T.stepInspectorAnimation(120.0);
 assert.ok(T.state.stepIdx >= 1, 'Animation must advance past frame 0 after clicking Play');
 
-// Test 2: Switch to Tab 2 (>2,000 User Stress Test) with character texture & verify draws + AoI telemetry
-tabStressBtn.click();
-assert.equal(T.state.activeTab, 'tab-stress');
-for (let i = 0; i < 5; i++) {
-  T.stepAndRenderStressArena(16.67);
-}
-assert.equal(getEl('runtimeErrorBanner').textContent, '', 'Tab 2 Stress Test must run with ZERO runtime errors');
-assert.ok(getEl('stressCanvas')._ctx2d._drawCalls > 2000, 'Tab 2 Stress Canvas must draw all 2,000 fighters');
-assert.match(getEl('kpiAoI').textContent, /\d+ user \(\d+ kbps\)/, 'Tab 2 AoI KPI must report live user count & kbps');
-
-// Test 3: Switch to Tab 3 (Sân Tập Gameplay) & verify dynamic skill buttons deal DMG to sparring dummy!
+// Test 2: Switch to Tab 2 (Landscape 16:9 1920x1080 Mobile Arena) & verify bezel/map/scale parity!
 tabArenaBtn.click();
 assert.equal(T.state.activeTab, 'tab-arena');
+assert.equal(getEl('arenaCanvas').width, 1920, 'Arena canvas must be 1920px wide (16:9 Landscape)');
+assert.equal(getEl('arenaCanvas').height, 1080, 'Arena canvas must be 1080px tall (16:9 Landscape)');
+assert.equal(T.arena.groundY, 840);
+assert.equal(T.arena.charScale, 2, 'Arena default character scale must be 2x Nearest');
+getEl('btnScale3').click();
+assert.equal(T.arena.charScale, 3);
+getEl('btnScale1').click();
+assert.equal(T.arena.charScale, 1);
+T.setArenaCharacterScale(1.5);
+assert.equal(T.arena.charScale, 1.5, 'Arena must support fractional character scale (1.5x)');
+assert.ok(getEl('arenaStageBadge').textContent.includes('1.5× Nearest'), 'Stage badge must show fractional scale readout');
+getEl('btnScale2').click();
+assert.equal(T.arena.charScale, 2);
+getEl('chkPhoneBezel').onchange({ target: { checked: false } });
+assert.equal(getEl('arenaPhoneBezelImg').style.display, 'none');
+getEl('chkNative1to1').onchange({ target: { checked: true } });
+assert.equal(getEl('arenaPhoneFrame').style.width, '1920px', 'Native 1:1 toggle must render exact 1920px CSS width');
+getEl('chkNative1to1').onchange({ target: { checked: false } });
+getEl('chkPhoneBezel').onchange({ target: { checked: true } });
+assert.equal(getEl('arenaPhoneBezelImg').style.display, 'block');
+assert.equal(T.arena.burrowDustScale, 2.65, 'Burrow dust FX runtime scale must default to 2.65x');
+
+T.arena.x = 560; T.arena.dummyX = 1360;
 const hpBefore = T.arena.dummyHp;
 const burstBtn = getEl('arenaSkillButtons').children.find(b => b.dataset.clip === 'power_up');
 assert.ok(burstBtn, 'Tab 3 must dynamically render power_up skill button');
 burstBtn.click();
+assert.equal(T.arena.shake, 0, 'Screen shake must be completely disabled on attack');
 for (let i = 0; i < 6; i++) {
   T.stepAndRenderArena(20.0);
 }
 assert.equal(T.arena.dummyHp, hpBefore - 250, 'power_up in Tab 3 must deal 250 DMG to dummy');
 
-T.arena.x = 520;
+T.arena.x = 1220;
 const atkBtn = getEl('arenaSkillButtons').children.find(b => b.dataset.clip === 'attack_light');
 assert.ok(atkBtn, 'Tab 3 must dynamically render attack_light skill button');
 atkBtn.click();
+assert.equal(T.arena.shake, 0, 'Screen shake must stay 0 on melee attack');
 for (let i = 0; i < 6; i++) {
   T.stepAndRenderArena(20.0);
 }
 assert.equal(getEl('runtimeErrorBanner').textContent, '', 'Tab 3 Gameplay Arena must run with ZERO runtime errors');
 assert.equal(T.arena.dummyHp, hpBefore - 250 - 120, 'attack_light at melee range in Tab 3 must deal 120 DMG to dummy');
 assert.ok(getEl('arenaCanvas')._ctx2d._drawCalls > 10, 'Tab 3 Arena Canvas must actively draw stage, dummy, and player');
+assert.equal(getEl('arenaCanvas')._ctx2d._ellipseCalls, 0, 'Tab 3 Arena must NOT draw circular ground shadows');
+assert.equal(getEl('inspectorCanvas')._ctx2d._ellipseCalls, 0, 'Tab 1 Inspector must NOT draw circular ground shadows');
 
 // Test 4: Switch to 2nd character & verify dynamic canvas resize + roster list count
 T.selectCharacter('hero_beta_test');
@@ -669,4 +767,162 @@ if (reviewCharacter) {
   assert.equal(getEl('runtimeErrorBanner').textContent,'');
 }
 
-console.log('[OK] Frontend E2E + Rust WASM + 3-Tab Dynamic Canvas (Empty Roster + Multi-Character) PASSED 100%!');
+// Phase G: Shared 1:1 Utility AI Verification (Mirror of Godot UtilityAIController.gd + ArenaSandbox.gd)
+if (apiPayload.roster.characters.length > 0) {
+  tabArenaBtn.click();
+  assert.equal(T.arena.utilityAiCfg.close_edge_px, 50);
+  assert.equal(T.arena.utilityAiCfg.mid_max_edge_px, 200);
+  assert.equal(T.arena.utilityAiCfg.heavy_max_edge_px, 200);
+  assert.equal(T.arena.utilityAiCfg.attack_cooldown_s, 1.0);
+  assert.equal(T.arena.utilityAiCfg.light_hits_before_heavy, 2);
+  assert.equal(T.arena.utilityAiCfg.zone_width_max_px, 500);
+
+  const rA = T.computeBodyRect(1000, 840, 100, 100, 1);
+  const rB = T.computeBodyRect(1140, 840, 100, 100, 1);
+  assert.ok(Math.abs(T.computeEdgeDistance(rA, rB) - 40) < 0.01, 'Body edge distance must subtract body half-widths');
+
+  // T-Rex: Patrol outside zone -> Chase [50,200) -> Light1 -> Cooldown -> Light2 -> Heavy (<200px) -> Far PowerUp reset
+  T.selectCharacter('t_rex');
+  T.setArenaCharacterScale(1.0);
+  T.setUtilityAiEnabled(true);
+  assert.ok(T.arena.enemyAi.zoneMaxX - T.arena.enemyAi.zoneMinX <= 500, 'Zone width must stay <=500px');
+  T.arena.x = 560; T.arena.y = 840;
+  let stepRes = T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastIntent, 'patrol');
+
+  T.arena.enemyAi.x = 1500;
+  T.arena.x = 1200; // edge gap = 300 - 186 = 114px in [50, 200)
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastIntent, 'chase');
+
+  T.arena.x = 1285; // edge gap = 215 - 186 = 29px < 50px
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'attack_light');
+  assert.equal(T.arena.enemyAi.lightChainCount, 1);
+
+  T.stepEnemyAiFrame(16.67); // busy while executing Light 1
+  assert.equal(T.arena.enemyAi.lastIntent, 'busy');
+
+  T.arena.enemyAi.actionClip = null;
+  T.arena.enemyAi.cooldownRemaining = 0;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'attack_light');
+  assert.equal(T.arena.enemyAi.lightChainCount, 2);
+
+  T.arena.enemyAi.actionClip = null;
+  T.arena.enemyAi.cooldownRemaining = 0;
+  T.arena.x = 1210; // still in [1120,1600], edge gap = 104px < 200px -> Heavy follow-up!
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'attack_heavy');
+  assert.equal(T.arena.enemyAi.lightChainCount, 0);
+
+  // Run out to >=200px after 2 lights -> PowerUp + Reset Chain
+  T.setUtilityAiEnabled(true);
+  T.arena.enemyAi.x = 1550;
+  T.arena.x = 1335;
+  T.stepEnemyAiFrame(16.67);
+  T.arena.enemyAi.actionClip = null; T.arena.enemyAi.cooldownRemaining = 0;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lightChainCount, 2);
+  T.arena.enemyAi.actionClip = null; T.arena.enemyAi.cooldownRemaining = 0;
+  T.arena.x = 1140; // edge gap >= 200px within zone [1120, 1600]
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'power_up');
+  assert.equal(T.arena.enemyAi.lightChainCount, 0);
+
+  // Dilophosaurus (no heavy) stays on attack_light after 2 lights
+  T.selectCharacter('dilophosaurus');
+  T.setArenaCharacterScale(1.0);
+  T.setUtilityAiEnabled(true);
+  T.arena.enemyAi.x = 1500;
+  T.arena.x = 1330;
+  T.arena.enemyAi.lightChainCount = 2;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'attack_light');
+
+  // Flying mob (bat_chiroptera): hover y=250, no chase >=50px -> power_up, close <50px -> attack_light
+  T.selectCharacter('bat_chiroptera');
+  assert.ok(Math.abs(T.arena.charScale - 1.1) < 1e-4);
+  T.setArenaCharacterScale(1.0);
+  T.setUtilityAiEnabled(true);
+  assert.equal(T.arena.enemyAi.y, 250);
+  T.arena.x = 1160; T.arena.y = 840;
+  const fStartX = T.arena.enemyAi.x;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'power_up');
+  assert.equal(T.arena.enemyAi.x, fStartX);
+  T.arena.enemyAi.actionClip = null; T.arena.enemyAi.cooldownRemaining = 0;
+  T.arena.x = 1340; T.arena.y = 250;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'attack_light');
+
+  // Verify calibrated default scales + pteranodon/crab instant flip burst + smooth bat walk->turn->walk
+  const expectedScales = {
+    chilopoda: 1.35, bat_chiroptera: 1.1, spinosaurus: 2.0, t_rex: 1.75,
+    pteranodon: 1.5, tasmanian_king_crab: 1.25, sarcosuchus: 2.0, dilophosaurus: 1.75,
+  };
+  for (const [cid, scl] of Object.entries(expectedScales)) {
+    T.selectCharacter(cid);
+    assert.ok(Math.abs(T.arena.charScale - scl) < 1e-4, `${cid} default charScale ${T.arena.charScale} != ${scl}`);
+  }
+  T.selectCharacter('pteranodon');
+  T.arena.flip = false; T.arena.keys = { KeyA: true }; T.arena.hitstop = 0;
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.flip, true);
+  assert.ok(T.arena.turnBoostMs > 200, 'Pteranodon turnaround speed burst activated');
+  T.selectCharacter('tasmanian_king_crab');
+  T.arena.flip = false; T.arena.keys = { KeyA: true }; T.arena.hitstop = 0;
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.flip, true);
+  assert.ok(T.arena.turnBoostMs > 200, 'King Crab turnaround speed burst activated');
+  T.selectCharacter('bat_chiroptera');
+  T.arena.flip = false; T.arena.clip = 'walk'; T.arena.keys = { KeyA: true };
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.clip, 'turn');
+  for (let i = 0; i < 16; i++) T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.flip, true);
+  assert.equal(T.arena.clip, 'walk', 'Bat resumes walk immediately after turn without idle flash');
+  T.arena.keys = {};
+
+  // Chilopoda: <50px laser power_up, >=50px burrow attack_light targeting player X
+  T.selectCharacter('chilopoda');
+  T.setArenaCharacterScale(1.0);
+  T.setUtilityAiEnabled(true);
+  T.arena.enemyAi.x = 1500; T.arena.y = 840;
+  T.arena.x = 1330;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'power_up');
+  T.arena.enemyAi.actionClip = null; T.arena.enemyAi.cooldownRemaining = 0;
+  T.arena.x = 1200;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'attack_light');
+  assert.ok(T.arena.enemyAi.chiloAction && Array.isArray(T.arena.enemyAi.chiloAction.target));
+
+  // Tasmanian King Crab: spawns facing left (-X), rotates toward player behind its back (+X or -X) before firing power_up
+  T.selectCharacter('tasmanian_king_crab');
+  T.setArenaCharacterScale(2.0);
+  T.setUtilityAiEnabled(true);
+  assert.equal(T.arena.enemyAi.flip, true, 'Unlocked King Crab AI enemy spawns facing left (-X) toward player');
+  // Player stands behind Crab inside zone [1120..1600] on +X side (edge gap 204px >=200) -> Crab flips right (flip=false) before firing power_up
+  T.arena.enemyAi.x = 1125;
+  T.arena.x = 1595;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.flip, false, 'Crab AI must rotate right toward player behind its back');
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'power_up');
+  assert.equal(T.arena.enemyAi.actionClip, 'power_up');
+  // Reset AI action & cooldown, move Player behind Crab again inside zone on -X side (edge gap 202px >=200) -> Crab flips left (flip=true)
+  T.arena.enemyAi.actionClip = null;
+  T.arena.enemyAi.cooldownRemaining = 0;
+  T.arena.enemyAi.x = 1590;
+  T.arena.x = 1122;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.flip, true, 'Crab AI must rotate left toward player behind its back');
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'power_up');
+  assert.equal(T.arena.enemyAi.actionClip, 'power_up');
+  T.stepAndRenderArena(16.67);
+  assert.match(getEl('arenaAiStatus').textContent, /AI\[tasmanian_king_crab\]/);
+  T.setUtilityAiEnabled(false);
+  tabHumanBtn.click();
+}
+
+console.log('[OK] Frontend E2E + Rust WASM + 2-Tab Dynamic Canvas (Empty Roster + Multi-Character) PASSED 100%!');

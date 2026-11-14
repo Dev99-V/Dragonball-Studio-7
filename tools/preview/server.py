@@ -354,6 +354,7 @@ def verify_engine_localhost_parity() -> dict:
         if not b["sha256_atlases"]:
             errors.append(f"Thiếu mã băm SHA-256 atlas PNG ở {bid}")
 
+    errors.extend(verify_arena_stage_parity())
     return {
         "ok": len(errors) == 0,
         "checked_bundles": len(bundles),
@@ -363,6 +364,72 @@ def verify_engine_localhost_parity() -> dict:
     }
 
 
+def load_arena_stage() -> dict:
+    """Load the Single-Source-of-Truth Landscape 16:9 (1920x1080) stage spec."""
+    stage_path = ASSETS_DIR / "maps" / "rocky_plateau" / "arena-stage.json"
+    if not stage_path.is_file():
+        return {}
+    try:
+        return json.loads(stage_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def verify_arena_stage_parity() -> list[str]:
+    """Verify 1:1 viewport, map asset, phone bezel, and Godot 4 scene parity."""
+    import hashlib
+    errs: list[str] = []
+    stage = load_arena_stage()
+    if not stage:
+        return ["Missing or invalid assets/maps/rocky_plateau/arena-stage.json"]
+
+    vp = stage.get("viewport", {})
+    if vp.get("width") != 1920 or vp.get("height") != 1080:
+        errs.append(f"arena-stage viewport must be 1920x1080, got {vp.get('width')}x{vp.get('height')}")
+
+    map_cfg = stage.get("map", {})
+    bg_rel = map_cfg.get("background_path", "")
+    bg_file = REPO_ROOT / bg_rel if bg_rel else None
+    if not bg_file or not bg_file.is_file():
+        errs.append(f"Missing sample map background: {bg_rel}")
+    else:
+        actual_sha = hashlib.sha256(bg_file.read_bytes()).hexdigest()
+        if actual_sha != map_cfg.get("sha256"):
+            errs.append(f"Sample map sha256 mismatch: {actual_sha} != {map_cfg.get('sha256')}")
+
+    bezel_cfg = stage.get("phone_bezel", {})
+    bezel_rel = bezel_cfg.get("repo_path", "")
+    bezel_file = REPO_ROOT / bezel_rel if bezel_rel else None
+    if not bezel_file or not bezel_file.is_file():
+        errs.append(f"Missing phone bezel overlay: {bezel_rel}")
+    else:
+        bezel_sha = hashlib.sha256(bezel_file.read_bytes()).hexdigest()
+        if bezel_sha != bezel_cfg.get("sha256"):
+            errs.append(f"Phone bezel sha256 mismatch: {bezel_sha} != {bezel_cfg.get('sha256')}")
+
+    pg_path = REPO_ROOT / "project.godot"
+    if not pg_path.is_file():
+        errs.append("Missing project.godot")
+    else:
+        pg = pg_path.read_text(encoding="utf-8")
+        expected_lines = [
+            f"window/size/viewport_width={vp.get('width', 1920)}",
+            f"window/size/viewport_height={vp.get('height', 1080)}",
+            f'window/stretch/mode="{vp.get("stretch_mode", "canvas_items")}"',
+            f'window/stretch/aspect="{vp.get("stretch_aspect", "keep")}"',
+            f"window/handheld/orientation={vp.get('handheld_orientation_code', 0)}",
+            'run/main_scene="res://scenes/ArenaSandbox.tscn"',
+        ]
+        for needle in expected_lines:
+            if needle not in pg:
+                errs.append(f"project.godot missing 1:1 stage setting: {needle}")
+
+    for sc_rel in ("scenes/ArenaSandbox.tscn", "scenes/ArenaSandbox.gd"):
+        if not (REPO_ROOT / sc_rel).is_file():
+            errs.append(f"Missing Godot arena scene file: {sc_rel}")
+    return errs
+
+
 def build_godot_zip_bytes() -> bytes:
     """Build a lightweight, ready-to-open Godot 4 project ZIP on the fly."""
     buf = io.BytesIO()
@@ -370,6 +437,7 @@ def build_godot_zip_bytes() -> bytes:
         REPO_ROOT / "project.godot",
         REPO_ROOT / "scenes",
         REPO_ROOT / "tests",
+        ASSETS_DIR / "maps",
         ROSTER_JSON,
     ]
     if ASSETS_DIR.exists():
@@ -433,6 +501,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "bundles": bundles,
                 "roster": roster,
                 "setups": build_setups(bundles, roster),
+                "arena_stage": load_arena_stage(),
                 "parity": parity,
                 "motion_quality": verify_motion_quality(),
             }
@@ -457,6 +526,23 @@ class PreviewHandler(BaseHTTPRequestHandler):
             )
             return
 
+        if req_path.startswith("/preview-assets/"):
+            preview_assets_dir = (REPO_ROOT / "tools" / "preview" / "assets").resolve()
+            rel_name = req_path[len("/preview-assets/"):].lstrip("/")
+            target = (preview_assets_dir / rel_name).resolve()
+            if not str(target).startswith(str(preview_assets_dir)) or not target.is_file():
+                self._send_bytes(404, "text/plain; charset=utf-8", b"Not found")
+                return
+            ext = target.suffix.lower()
+            ctype = {
+                ".png": "image/png",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".json": "application/json; charset=utf-8",
+            }.get(ext, "application/octet-stream")
+            self._send_bytes(200, ctype, target.read_bytes())
+            return
+
         if req_path.startswith("/assets/"):
             target = (REPO_ROOT / req_path.lstrip("/")).resolve()
             if not str(target).startswith(str(ASSETS_DIR.resolve())) or not target.is_file():
@@ -465,6 +551,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
             ext = target.suffix.lower()
             ctype = {
                 ".png": "image/png",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
                 ".json": "application/json; charset=utf-8",
                 ".tres": "text/plain; charset=utf-8",
                 ".tscn": "text/plain; charset=utf-8",

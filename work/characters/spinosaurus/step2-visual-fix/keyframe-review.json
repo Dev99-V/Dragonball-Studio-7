@@ -1,0 +1,35 @@
+{
+  "status": "reviewed_pending_owner",
+  "method": "existing_complete_source_frames",
+  "atlas_sha256": "bd812e4deec4810517293183b82a1c6a00c7bbfe1e28cf287385c777f65da005",
+  "previous_revision_atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
+  "reviewed_at": "2026-11-14T09:26:26.764136+00:00",
+  "checks": {
+    "body_connections": true,
+    "whole_pose_sequence": true,
+    "perspective_turns": true,
+    "phase_timing": true,
+    "three_backgrounds": true,
+    "character_identity": true
+  },
+  "unresolved_structural_failures": [],
+  "naturalness_verdict": "reviewed_pending_owner",
+  "owner_approved": false,
+  "notes": "Step-2 visual fix: register walk_00..07 horizontal torso centroid consistently at ~183.5px (removing +/-11px snap) and ground floating walk_01,02,03,06 onto y=223; non-walk clips byte-identical.",
+  "filmstrips_opened": [
+    "filmstrip-00.png",
+    "filmstrip-01.png",
+    "filmstrip-02.png",
+    "filmstrip-03.png",
+    "filmstrip-04.png",
+    "filmstrip-05.png",
+    "filmstrip-06.png",
+    "filmstrip-07.png",
+    "filmstrip-08.png"
+  ],
+  "backgrounds": [
+    "light",
+    "dark",
+    "checker"
+  ]
+}

@@ -130,7 +130,7 @@ Agent tuyệt đối **KHÔNG ĐƯỢC NHẦM LẪN** hai khái niệm sau:
 ## Điều 8. Tiêu Chuẩn Developer (Unit Test, CI/CD, Versioning) & Bộ Nhớ Bắt Buộc (`./loop.sh`)
 
 1. **Unit Test, CI/CD & SemVer**:
-   - Mọi module xử lý dữ liệu, Godot prefab/bundle, Rust WASM/combat core và giao diện 3 Tab phải có kiểm thử tự động chạy qua `./loop.sh test` (`exit 0`) và tích hợp CI (`.github/workflows/ci.yml`).
+   - Mọi module xử lý dữ liệu, Godot prefab/bundle, Rust WASM/combat core và giao diện 2 Tab phải có kiểm thử tự động chạy qua `./loop.sh test` (`exit 0`) và tích hợp CI (`.github/workflows/ci.yml`).
    - Phiên bản nguồn duy nhất tại `VERSION` theo chuẩn `MAJOR.MINOR.PATCH`, đồng bộ chặt với `state.json`, `project.godot` và `engines/rust_combat_sim/Cargo.toml`.
 2. **Quy tắc Đọc / Ghi Hệ Thống Bộ Nhớ (`./loop.sh`)**:
    - **`AGENTS.md` & `state.json` (BẮT BUỘC MỌI PHIÊN)**: Chạy `./loop.sh status` ngay khi vào phiên; cập nhật `state.json` ngay sau mỗi task để chống mất ngữ cảnh khi đứt kết nối.

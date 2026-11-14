@@ -581,11 +581,11 @@
         "turn_04"
       ],
       "ticks": [
-        5,
-        4,
+        2,
         3,
         4,
-        5
+        3,
+        3
       ],
       "loop_policy": "oneshot",
       "keys": {

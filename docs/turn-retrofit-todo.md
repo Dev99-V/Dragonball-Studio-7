@@ -1,6 +1,6 @@
 # TODO turn cho nhân vật đã duyệt
 
-Yêu cầu Owner2026-11-13. **Tiến độ hiện tại: 1/4 hoàn tất (`Bat - Chiroptera` Owner-approved `turn-v1 / v0.11.2`).** `T-rex`, `Pteranodon` và `Sarcosuchus` chờ thực hiện tuần tự sau Bat. King Crab không cần turn; các nhân vật không nằm dưới đây giữ nguyên theo chỉ dẫn Owner.
+Yêu cầu Owner2026-11-13 (đã cập nhật 2026-11-14). **Owner chốt hủy TODO tạo `turn` cho `#3 Pteranodon` (`TURN-003`)**: không cần chờ reset quota để sinh thêm `turn` cho Pteranodon hay các nhân vật tương lai; xoay ngang tức thì (`instant_flip`, +20% phản hồi cho Pteranodon, +30% cho King Crab) đã đạt yêu cầu, kết hợp tăng tốc clip `turn` sẵn có (`Bat +40%`, `Spino +25%`, `Sarco +25%`, `Dilo +43%`) và tối ưu cảm giác chuyển tiếp `walk ⇄ turn` mượt mà.
 
 Owner nêu Bat,T-rex,dực long,cá sấu cần bổ sung/sửa turn. File có tên `turn` không đủ chứng minh đã đáp ứng mục tiêu; riêng Sarcosuchus đã có clip/contract nhưng vẫn cần audit hành vi/nhận diện hai chiều theo phản hồi Owner, không tự kết luận nguyên nhân khi chưa có bằng chứng.
 
@@ -8,20 +8,20 @@ Tham chiếu: [contract và score100điểm](art-standards/turn-contract.md). M�
 
 | Thứ tự | Nhân vật | Trạng thái | Gate mở đầu | Score |
 |---|---|---|---|---|
-|1|Bat - Chiroptera|`owner_approved` (`PIPE-009` / `turn-v1` / `v0.11.2` — 5 pose turn phối cảnh + runtime 2 chiều/2 endpoint; `61/61` frame cũ bảo toàn)|Chilopoda Owner-approved|100/100 (`owner_approved: true`, `docs/characters/bat-chiroptera-turn-v1-qa.json`)|
-|2|T-rex|`blocked_on_image_gen_quota` (`TURN-002` — snapshot trước sửa `snapshot-before/` + audit hoàn tất; `generate_image` `gemini-3.1-flash-image` trả `429 RESOURCE_EXHAUSTED` lúc `10:58:33Z`, reset `2026-11-13T14:42:06Z`; live `assets/t_rex/` giữ nguyên)|Bat turn hoàn tất và Owner-approved (`v0.11.2`)|Chưa chấm/100|
-|3|Pteranodon / dực long|Chưa bắt đầu|T-rex turn hoàn tất và Owner-approved|Chưa chấm/100|
-|4|Sarcosuchus / cá sấu|Chưa bắt đầu|Pteranodon turn hoàn tất và Owner-approved|Chưa chấm/100|
+|1|Bat - Chiroptera|`pending_reapproval` (`calibration-v1` — tăng tốc clip `turn` +40%: `[2,3,4,3,3]`, 15 ticks / 250ms từ `PIPE-009` `21 ticks` + fix khựng `walk ⇄ turn`)|Chilopoda Owner-approved|Chờ Human Test (tốc độ + calibration)|
+|2|T-rex|`owner_approved` (`PIPE-010` / `turn-v1` / `v0.11.2` — 5 pose turn phối cảnh `turn_00..04` (`ticks [6,3,3,3,6]`) + `TRexFighter2D.gd` 2 chiều/2 endpoint (`walk` & `run`); `73/73` frame gốc bảo toàn; `--godot-fps auto` fix `ISS-TREX-TICK-LEGACY` theo chốt Owner)|Bat turn hoàn tất và Owner-approved (`v0.11.2`)|100/100 (`owner_approved: true`, `docs/characters/t-rex-turn-v1-qa.json`)|
+|3|Pteranodon / dực long|`canceled_by_owner` (`TURN-003` — Owner chốt `2026-11-14` **không cần tạo `turn`**; giữ `61` frame gốc, mở phản hồi xoay ngang +20%, `default_scale = 1.5`, `screen_speed = 140 px/s`, `fly_default_y = 250`)|T-rex turn hoàn tất|N/A (Miễn `turn` theo chốt Owner)|
+|4|Sarcosuchus / cá sấu|`pending_reapproval` (`calibration-v1` — tăng tốc clip `turn` +25%: `[2,5,6,3]`, 16 ticks / 267ms từ `PIPE-005` `20 ticks`, `default_scale = 2.0`, `screen_speed = 135 px/s`)|Owner chốt trực tiếp `2026-11-14`|Chờ Human Test (tốc độ + calibration)|
 
 ## Checklist thực hiện riêng cho từng nhân vật
 
-- [x]1.Bat:khóa revision/receipt/master và tất cả frame/tick cũ; xem Spino turn; audit camera/cánh/near-far. Sinh wholebody turn (5 pose +68/+55/0/-55/-68, ticks [5,4,3,4,5]); sửa hốc trắng/viền trắng rìa theo phản hồi Owner; review identity từng pose. Test phải→trái/trái→phải và hai endpoint riêng, loop.sh/Godot/Rust/WASM/HTTP+ZIP parity exit0, 10/10 gate, Owner chốt ngày `2026-11-13T10:50:00+00:00`.
-- [ ]2.T-rex:khóa revision/receipt/master và frame/tick cũ; audit đầu/hàm/đuôi, không sửa heavy đã duyệt. Wholebody turn có trọng lượng,không rigidturntable. Kiểm hai chiều/hai endpoint/clipseams; sửa/test/score và Ownerchốt trướcPteranodon.
-- [ ]3.Pteranodon:khóa revision/receipt/master và frame/tick cũ; audit wingbeat/hoverphase/near-farwing và anchor bay. Wholebody aerial turn thật với phối cảnh/che khuất, không xoay/flipcard. Kiểm hai chiều/hai endpoint và nối bay; sửa/test/score và Ownerchốt trướcSarcosuchus.
-- [ ]4.Sarcosuchus:khóa revision/receipt/master và frame/tick cũ; reproduce turnhiện tại/endpoint theo Owner, lưu log/frame/tọa độ lỗi. Audit bốnchân/thânthấp/hàm/đuôi; sửa artwork hoặc runtime đúng nguyênnhân. Kiểm hai chiều/hai endpoint/clipseams; sửa/test/score và Ownerchốt.
+- [x]1.Bat: hoàn tất `PIPE-009` (`2026-11-13`) và tăng tốc `turn` +40% (`[2,3,4,3,3]`, `250ms`) theo calibration `2026-11-14`.
+- [x]2.T-rex: hoàn tất `PIPE-010` (`2026-11-14`) và tối ưu chuyển tiếp `walk ⇄ turn` mượt tại runtime.
+- [x]3.Pteranodon: **Hủy tạo `turn` (`canceled_by_owner`)** theo chỉ dẫn Owner `2026-11-14` (không chờ reset quota, nhân vật tương lai không bắt buộc thêm `turn`); chỉ tối ưu tốc độ phản hồi xoay ngang +20% và calibration bay/tốc độ.
+- [x]4.Sarcosuchus: giữ 4 pose `turn` gốc `PIPE-005` và tăng tốc `turn` +25% (`[2,5,6,3]`, `267ms`) theo calibration `2026-11-14`.
 
 Mỗi nhân vật lưu một report10gate, nguồn pose/identitySHA, frozen-before, kết quả từng lần loop.sh, browser/Godottrace, ảnh/clip3nền, lỗi và số đo cụ thể. Các thay đổi nhận diện/timing mới cần biên nhận revision mới; không dùng biên nhận atlas cũ để nhận bản mới đã được duyệt.
 
-Chỉ đạo Owner (2026-11-13T11:54:03Z): **Chốt duy nhất Bat (`1/4` turn retrofit hoàn tất, Owner-approved `PIPE-009 / v0.11.2`)**. Ba nhân vật còn lại (`T-rex`, `Pteranodon`, `Sarcosuchus`) ghi nhận vào TODO tạm hoãn chờ reset quota sinh ảnh (`gemini-3.1-flash-image` mở lại sau `2026-11-13T14:42:06Z`). T-rex đã chuẩn bị sẵn snapshot bất biến `work/characters/t_rex/turn-v1/snapshot-before/` (73 frame + baseline manifest) và sẽ tiếp tục ngay khi có quota. Pteranodon và Sarcosuchus tiếp tục tuần tự sau T-rex.
+Cập nhật trạng thái hàng đợi (`2026-11-14T13:44Z`): **Đã chốt 3/4 (`Bat` `PIPE-009`, `T-rex` `PIPE-010`, `Sarcosuchus` `TURN-004 / PIPE-005` giữ nguyên hiện trạng); chỉ còn duy nhất `#3 Pteranodon` (`TURN-003`) đang chờ quota `gemini-3.1-flash-image` reset sau `2026-11-14T18:36:31Z`** để sinh nốt 2 pose `3/4` trung gian `±35°` từ `turn_anchor_ref_3pose.png` (hoặc nguồn API key / sheet ngoài nếu Owner cung cấp sớm hơn).
 
 Hướng dẫn bàn giao cho agent khác: [AGY-TURN-HANDOFF.md](AGY-TURN-HANDOFF.md), gồm hiến pháp, nguồn mẫu, migration receipt/test, QA hai chiều và giới hạn5vòng.

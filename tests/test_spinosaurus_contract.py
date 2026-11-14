@@ -42,25 +42,42 @@ class SpinosaurusContract(unittest.TestCase):
   self.assertEqual(manifest['clips']['walk']['ticks'],[7,8]*4)
   meta=json.loads((ROOT/'assets/spinosaurus/godot_bundle/engine-export.json').read_text())
   self.assertNotIn('run',meta['render_contract']['body_clips'])
-  self.assertEqual(meta['render_contract']['locomotion'],{'kind':'ground','clip':'walk','walk_cycle_order':list(range(8))})
+  self.assertEqual(meta['render_contract']['locomotion'],{'kind':'ground','clip':'walk','walk_cycle_order':list(range(8)),'default_scale':2.0,'screen_speed_px_per_second':130,'speed_px_per_second':65.0})
+  self.assertEqual(meta['clips']['turn']['ticks'],[2,6,5,3])
+  self.assertEqual(meta['render_contract']['turning']['duration_ticks'],16)
  def test_gait_scope_preserves_other_clips_and_walk_middle(self):
   before=json.loads((WORK/'before-final-no-run.json').read_text())
+  walk_torso_x=[]
   for f in self.data['frames']:
    name=f['name'];actual=hashlib.sha256((self.base/f['file']).read_bytes()).hexdigest()
+   if name.startswith('walk_'):
+    im=np.array(Image.open(self.base/f['file']).convert('RGBA'))
+    ys,xs=np.where(im[:195,:,3]>0)
+    walk_torso_x.append(float(xs.mean()))
+    bb=Image.fromarray(im).getbbox()
+    self.assertIsNotNone(bb);self.assertTrue(72<=bb[3]-bb[1]<=79,(name,bb));self.assertEqual(bb[3],224,(name,bb))
+    continue
    if not name.startswith('run_'):self.assertEqual(actual,before['frames'][name],name)
+  self.assertLessEqual(max(walk_torso_x)-min(walk_torso_x),2.0,walk_torso_x)
   meta=json.loads((ROOT/'assets/spinosaurus/godot_bundle/engine-export.json').read_text())
   for name,c in meta['clips'].items():
-   if name=='run':continue
+   if name in ('run','turn'):continue
    self.assertEqual(c['godot'],before['clips'][name]['godot'])
    self.assertEqual(c['events_ms'],before['clips'][name]['events_ms'])
  def test_owner_approval_is_bound_to_final_no_run_atlas(self):
-  receipt=json.loads((ROOT/'assets/spinosaurus/owner_approval.json').read_text())
-  atlas=ROOT/receipt['atlas_path']
+  receipt=json.loads((ROOT/'work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json').read_text())
+  atlas=ROOT/'work/characters/spinosaurus/step2-visual-fix/snapshot-before/spinosaurus-atlas-00.png'
   self.assertEqual(receipt['status'],'owner_approved')
   self.assertEqual(receipt['atlas_sha256'],hashlib.sha256(atlas.read_bytes()).hexdigest())
   self.assertIn('run',receipt['excluded_clips'])
   self.assertNotIn('run',receipt['present_clips'])
   self.assertEqual(receipt['workflow_id'],'PIPE-003')
+  roster=json.loads((ROOT/'assets/roster.json').read_text())
+  entry=next(ch for ch in roster['characters'] if ch['character_id']=='spinosaurus')
+  self.assertEqual(entry['status'],'finalized_pending_owner_reapproval')
+  self.assertEqual(entry['motion_quality']['status'],'reviewed_pending_owner')
+  self.assertFalse(entry['motion_quality']['owner_approved'])
+  self.assertEqual(entry['motion_quality']['previous_revision_atlas_sha256'],receipt['atlas_sha256'])
  def test_heavy_body_preserved_and_contact_effect_starts_at_five(self):
   tail=self.qa['tail_impact'];self.assertEqual(tail['contact_frame'],5);self.assertTrue(tail['body_pixels_preserved'])
   self.assertEqual([r['frame'] for r in tail['phases']],[5,6,7]);self.assertTrue(all(r['effect_pixels']>0 for r in tail['phases']))

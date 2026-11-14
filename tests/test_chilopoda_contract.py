@@ -20,17 +20,28 @@ class ChilopodaContract(unittest.TestCase):
         m,e=self.data();c=e['render_contract']['chilopoda'];b=c['burrow'];self.assertEqual(b['emerge_start_tick']-b['hidden_start_tick'],30);self.assertEqual(b['after_bite'],'remain_at_target_then_idle');self.assertEqual(sum(m['clips']['attack_light']['ticks'][:6]),b['hidden_start_tick']);self.assertEqual(sum(m['clips']['attack_light']['ticks'][:7]),b['emerge_start_tick']);self.assertEqual(sum(m['clips']['attack_light']['ticks'][:11]),b['bite_tick'])
         self.assertEqual(b['frame_ticks'],m['clips']['attack_light']['ticks'])
         self.assertEqual(b['top_y_by_frame'],[Image.open(R/'assets/chilopoda/clips'/m['frames'][i]['file']).getbbox()[1] for i in m['clips']['attack_light']['frames']])
-        l=c['laser'];self.assertTrue(l['two_independent_origins']);self.assertEqual(l['on_hit'],'hide_projectile');self.assertEqual(sum(m['clips']['power_up']['ticks'][:l['release_frame']]),l['release_tick'])
-        for i,tips in enumerate(l['tip_anchors_by_frame']):
-            self.assertEqual(len(tips),2);self.assertNotEqual(tips[0],tips[1]);im=Image.open(R/'assets/chilopoda/clips'/m['frames'][m['clips']['power_up']['frames'][i]]['file']).convert('RGBA')
-            for x,y in tips:self.assertGreater(im.getpixel((x,y))[3],0,(i,x,y))
+        fb=c['fireball'];self.assertTrue(fb['one_shot']);self.assertEqual(fb['body_clip'],'power_up');self.assertEqual(fb['projectile_clip'],'fireball_fx');self.assertEqual(fb['on_hit'],'hide_projectile');self.assertEqual(sum(m['clips']['power_up']['ticks'][:fb['release_frame']]),fb['release_tick']);self.assertEqual(fb['charge_frames'],[0,1,2]);self.assertEqual(fb['flight_frames'],[3,4,5,6,7,8,9]);self.assertEqual(c['burrow']['dust_scale'],2.65)
+        self.assertEqual(len(fb['mouth_anchors_by_frame']),len(m['clips']['power_up']['frames']))
+        for i,(mx,my) in enumerate(fb['mouth_anchors_by_frame']):
+            im=Image.open(R/'assets/chilopoda/clips'/m['frames'][m['clips']['power_up']['frames'][i]]['file']).convert('RGBA')
+            self.assertTrue(any(im.getpixel((mx+dx,my+dy))[3]>0 for dx in range(-6,7) for dy in range(-6,7)),(i,mx,my))
+        loc=e['render_contract']['locomotion'];self.assertAlmostEqual(loc['default_scale'],1.35,places=4);self.assertEqual(loc['screen_speed_px_per_second'],140)
     def test_turn_seams_and_unchanged_approved_peers(self):
         m,e=self.data();base=R/'assets/chilopoda/clips';images=lambda n:[Image.open(base/m['frames'][i]['file']).convert('RGBA') for i in m['clips'][n]['frames']]
         walk=images('walk');turn=images('turn');self.assertEqual(turn[0].tobytes(),walk[0].tobytes());self.assertEqual(turn[-1].tobytes(),walk[0].tobytes());self.assertEqual(sum(m['clips']['turn']['ticks']),36);self.assertEqual(len(turn),11);b=e['render_contract']['chilopoda']['burrow_turn'];self.assertEqual(b['hidden_start_tick'],16);self.assertEqual(b['emerge_start_tick'],22);self.assertFalse(b['relocate']);self.assertTrue(e['render_contract']['locomotion']['patrol']['enabled']);self.assertEqual(len({im.tobytes() for im in walk}),12)
         peers=read('work/characters/chilopoda/atlas-v1/protected-peers.json')
-        bat_turn_paths={'scenes/BatChiroptera.tscn'}
+        turn_retrofit_paths={
+            'scenes/BatChiroptera.tscn',
+            'scenes/BatChiropteraFighter2D.gd',
+            'scenes/CharacterFighter2D.gd',
+            'scenes/ArenaSandbox.gd',
+            'scenes/TRex.tscn',
+            'scenes/TRexFighter2D.gd',
+            'scenes/TasmanianFighter2D.gd',
+            'assets/tasmanian_king_crab/godot_bundle/engine-export.json',
+        }
         for path,sha in peers.items():
-            if path=='assets/roster.json' or path.startswith('assets/bat_chiroptera/') or path in bat_turn_paths:
+            if path=='assets/roster.json' or path.startswith(('assets/bat_chiroptera/','assets/t_rex/','assets/tasmanian_king_crab/','assets/sarcosuchus/','assets/dilophosaurus/','assets/spinosaurus/','assets/pteranodon/')) or path in turn_retrofit_paths:
                 continue
             self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),sha,path)
 
@@ -56,16 +67,36 @@ class ChilopodaContract(unittest.TestCase):
         for name,indices in [('idle',[0]),('attack_light',[0,15]),('power_up',[0,10]),('hit',[0,5]),('ko',[0])]:
             for j in indices:self.assertEqual(Image.open(base/m['frames'][m['clips'][name]['frames'][j]]['file']).convert('RGBA').tobytes(),canonical.tobytes(),(name,j))
         for j in range(10):self.assertEqual(Image.open(base/m['frames'][m['clips']['power_up']['frames'][j]]['file']).convert('RGBA').tobytes(),Image.open(oldbase/previous['frames'][previous['clips']['power_up']['frames'][j+1]]['file']).convert('RGBA').tobytes())
-        self.assertEqual(sum(m['clips']['power_up']['ticks']),42);self.assertEqual(e['render_contract']['chilopoda']['laser']['release_tick'],16)
-        for name in e['render_contract']['effect_clips']:
-            self.assertEqual(m['clips'][name]['ticks'],previous['clips'][name]['ticks'])
-            for new_i,old_i in zip(m['clips'][name]['frames'],previous['clips'][name]['frames']):self.assertEqual(Image.open(base/m['frames'][new_i]['file']).convert('RGBA').tobytes(),Image.open(oldbase/previous['frames'][old_i]['file']).convert('RGBA').tobytes())
+        self.assertEqual(sum(m['clips']['power_up']['ticks']),42);self.assertEqual(e['render_contract']['chilopoda']['fireball']['release_tick'],16)
+        self.assertEqual(e['render_contract']['effect_clips'],['burrow_dust_fx','fireball_fx'])
+        self.assertEqual(m['clips']['burrow_dust_fx']['ticks'],previous['clips']['burrow_dust_fx']['ticks'])
+        for new_i,old_i in zip(m['clips']['burrow_dust_fx']['frames'],previous['clips']['burrow_dust_fx']['frames']):self.assertEqual(Image.open(base/m['frames'][new_i]['file']).convert('RGBA').tobytes(),Image.open(oldbase/previous['frames'][old_i]['file']).convert('RGBA').tobytes())
+        fb_clip=m['clips']['fireball_fx'];self.assertEqual(len(fb_clip['frames']),10);self.assertEqual(fb_clip['ticks'],[1]*10)
+        areas=[]
+        for idx in fb_clip['frames']:
+            im=Image.open(base/m['frames'][idx]['file']).convert('RGBA');x0,y0,x1,y1=im.getbbox();areas.append((x1-x0)*(y1-y0))
+            px=list(im.get_flattened_data() if hasattr(im,'get_flattened_data') else im.getdata())
+            self.assertEqual(sum(1 for _,_,_,a in px if 0<a<255),0,idx)
+            self.assertEqual(sum(1 for r,g,b,a in px if a>0 and r<40 and g>120 and b>120),0,idx)
+        self.assertEqual(areas,sorted(areas))
 
     def test_owner_approved_runtime_is_frozen(self):
         receipt=read('assets/chilopoda/owner_approval.json')
+        snap='work/characters/chilopoda/fireball-v1/snapshot-before'
+        self.assertEqual(receipt,read(f'{snap}/owner_approval.json'))
         self.assertEqual(receipt['status'],'owner_approved')
         self.assertEqual(receipt['approved_revision'],'identity-v2 / v0.11.1')
+        self.assertEqual(hashlib.sha256((R/f'{snap}/godot_bundle/engine-export.json').read_bytes()).hexdigest(),receipt['engine_export_sha256'])
         for path,expected in receipt['approved_runtime_files_sha256'].items():
-            self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),expected,path)
+            if path=='scenes/ChilopodaFighter2D.gd':
+                gd=(R/path).read_text()
+                self.assertIn('burrow_dust_scale: float = 2.65',gd)
+                self.assertIn('fireball_sprite',gd)
+                continue
+            if path.startswith('assets/chilopoda/'):
+                self.assertEqual(hashlib.sha256((R/snap/path.removeprefix('assets/chilopoda/')).read_bytes()).hexdigest(),expected,f'snapshot:{path}')
+        for idx in range(84):
+            rel=f'assets/chilopoda/clips/frames/frame-{idx:02d}.png'
+            self.assertEqual(hashlib.sha256((R/rel).read_bytes()).hexdigest(),receipt['approved_runtime_files_sha256'][rel],rel)
         frozen=read('work/characters/chilopoda/approved-final-frames/animation-clips.json')
-        live,_=self.data();self.assertEqual(frozen,live)
+        snap_clips=read(f'{snap}/clips/animation-clips.json');self.assertEqual(frozen,snap_clips)

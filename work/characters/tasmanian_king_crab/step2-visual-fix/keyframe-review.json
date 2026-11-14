@@ -1,0 +1,34 @@
+{
+  "status": "reviewed_pending_owner",
+  "method": "imagegen_complete_body_keyframes",
+  "atlas_sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c",
+  "previous_revision_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
+  "reviewed_at": "2026-11-14T09:26:26.764136+00:00",
+  "checks": {
+    "body_connections": true,
+    "whole_pose_sequence": true,
+    "perspective_turns": true,
+    "phase_timing": true,
+    "three_backgrounds": true,
+    "character_identity": true
+  },
+  "unresolved_structural_failures": [],
+  "naturalness_verdict": "reviewed_pending_owner",
+  "owner_approved": false,
+  "notes": "Step-2 visual fix: match idle_01..07 tonal curve/alignment to idle_00 (master.png) to eliminate frame-0 flash, and ground idle_02, idle_03, walk_01 feet onto y=223 (y224 baseline).",
+  "filmstrips_opened": [
+    "filmstrip-00.png",
+    "filmstrip-01.png",
+    "filmstrip-02.png",
+    "filmstrip-03.png",
+    "filmstrip-04.png",
+    "filmstrip-05.png",
+    "filmstrip-06.png",
+    "filmstrip-07.png"
+  ],
+  "backgrounds": [
+    "light",
+    "dark",
+    "checker"
+  ]
+}

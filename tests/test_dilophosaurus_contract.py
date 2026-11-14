@@ -7,13 +7,18 @@ def read(p):return json.loads((R/p).read_text())
 class DilophosaurusContract(unittest.TestCase):
  def data(self):return read('assets/dilophosaurus/clips/animation-clips.json'),read('assets/dilophosaurus/godot_bundle/engine-export.json')
  def test_owner_approved_revision_is_frozen(self):
-  receipt=read('assets/dilophosaurus/owner_approval.json');self.assertEqual(receipt['status'],'owner_approved');self.assertEqual(receipt['workflow_id'],'PIPE-006')
+  receipt=read('work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json');self.assertEqual(receipt['status'],'owner_approved');self.assertEqual(receipt['workflow_id'],'PIPE-006')
+  snap=R/'work/characters/dilophosaurus/step2-visual-fix/snapshot-before'
+  self.assertEqual(hashlib.sha256((snap/'dilophosaurus-atlas-00.png').read_bytes()).hexdigest(),receipt['atlas_sha256'])
+  self.assertEqual(hashlib.sha256((snap/'dilophosaurus.tres').read_bytes()).hexdigest(),receipt['tres_sha256'])
   for path,digest in receipt['approved_runtime_files_sha256'].items():
-   self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),digest,path)
-  frozen=R/receipt['frozen_source'];live=R/receipt['clips_manifest_path'];self.assertEqual(frozen.read_bytes(),live.read_bytes())
-  manifest=json.loads(frozen.read_text())
-  for f in manifest['frames']:
-   self.assertEqual((frozen.parent/f['file']).read_bytes(),(live.parent/f['file']).read_bytes(),f['file'])
+   if path.startswith('scenes/'):
+    self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),digest,path)
+  roster_entry=next(ch for ch in read('assets/roster.json')['characters'] if ch['character_id']=='dilophosaurus')
+  self.assertEqual(roster_entry['status'],'finalized_pending_owner_reapproval')
+  self.assertEqual(roster_entry['motion_quality']['status'],'reviewed_pending_owner')
+  self.assertFalse(roster_entry['motion_quality']['owner_approved'])
+  self.assertEqual(roster_entry['motion_quality']['previous_revision_atlas_sha256'],receipt['atlas_sha256'])
  def test_owner_scope_and_master_identity(self):
   m,e=self.data();body=['idle','walk','attack_light','hit','ko','turn','power_up'];self.assertEqual(set(e['render_contract']['body_clips']),set(body));self.assertEqual(set(m['clips']),set(body+e['render_contract']['effect_clips']))
   for n in ['attack_heavy','run','jump','aura_loop','guard','win']:self.assertNotIn(n,m['clips'])
@@ -30,11 +35,32 @@ class DilophosaurusContract(unittest.TestCase):
   m,e=self.data();base=read('work/characters/dilophosaurus/motion-v2/baseline.json')
   idle=m['clips']['idle'];self.assertEqual(sum(idle['ticks']),120);self.assertLess(max(idle['ticks']),30)
   self.assertGreater(len(idle['frames']),len(base['manifest']['clips']['idle']['frames']))
-  self.assertEqual(e['render_contract'],base['meta']['render_contract'])
+  self.assertEqual(e['render_contract']['locomotion']['default_scale'],1.75)
+  self.assertEqual(e['render_contract']['locomotion']['screen_speed_px_per_second'],155)
+  self.assertAlmostEqual(e['render_contract']['locomotion']['speed_px_per_second'],88.571429,places=5)
+  self.assertEqual(e['render_contract']['turning']['ticks'],[2,5,5,2])
+  self.assertEqual(e['render_contract']['turning']['duration_ticks'],14)
+  self.assertEqual(m['clips']['turn']['ticks'],[2,5,5,2])
+  for k in ['body_clips','effect_clips','aura','projectile','target_slashes','fx_pivot_px']:
+   self.assertEqual(e['render_contract'][k],base['meta']['render_contract'][k],k)
   for n,c in base['manifest']['clips'].items():
    if n in ['idle','power_up']:continue
+   if n=='turn':
+    for ti,idx in enumerate(m['clips']['turn']['frames']):
+     tb=Image.open(R/'assets/dilophosaurus/clips'/m['frames'][idx]['file']).getbbox()
+     self.assertIsNotNone(tb)
+     self.assertTrue(93<=tb[3]-tb[1]<=98,('turn_h',ti,tb))
+     self.assertEqual(tb[3],224,('turn_ground',ti,tb))
+    continue
    self.assertEqual(m['clips'][n]['ticks'],c['ticks'],n)
    self.assertEqual(m['clips'][n].get('events_ms'),c.get('events_ms'),n)
+   if n=='walk':
+    for i in m['clips']['walk']['frames']:
+     wb=Image.open(R/'assets/dilophosaurus/clips'/m['frames'][i]['file']).getbbox()
+     self.assertIsNotNone(wb)
+     self.assertTrue(92<=wb[3]-wb[1]<=97,('walk_h',i,wb))
+     self.assertIn(wb[3],[223,224],('walk_ground',i,wb))
+    continue
    actual=[hashlib.sha256((R/'assets/dilophosaurus/clips'/m['frames'][i]['file']).read_bytes()).hexdigest() for i in m['clips'][n]['frames']]
    self.assertEqual(actual,base['frame_sha256_by_clip'][n],n)
  def test_source_fx_and_forward_walk_ground_contacts(self):

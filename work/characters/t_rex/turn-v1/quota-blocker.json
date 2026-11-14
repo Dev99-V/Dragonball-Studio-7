@@ -2,7 +2,7 @@
   "character_id": "t_rex",
   "revision": "turn-v1",
   "recorded_at": "2026-11-13T11:01:02+00:00",
-  "status": "blocked_on_image_gen_quota",
+  "status": "cleared_after_reset",
   "snapshot_manifest": "work/characters/t_rex/turn-v1/snapshot-before/baseline-manifest.json",
   "canonical_master_path": "work/characters/t_rex/walk-style-v4/walk-00-reference.png",
   "canonical_master_sha256": "d4dc74e198774a0af2097962967492e3d2f909831b40b7c811ea7b5aa3208e69",
@@ -37,5 +37,6 @@
     "cli_codex": false,
     "cli_grok": false
   },
-  "policy_compliance": "Per AGENTS.md (no card flip, no cut-part/warp collage, no fallback codeart2d likeness sprites, do not commit past unmeasured quota), live assets/t_rex/, scenes/TRex.tscn, and peer characters remain untouched pending quota reset or Owner-supplied key/sheet."
+  "policy_compliance": "Per AGENTS.md (no card flip, no cut-part/warp collage, no fallback codeart2d likeness sprites, do not commit past unmeasured quota), live assets/t_rex/, scenes/TRex.tscn, and peer characters remain untouched pending quota reset or Owner-supplied key/sheet.",
+  "cleared_at": "2026-11-14T06:57:17Z"
 }
