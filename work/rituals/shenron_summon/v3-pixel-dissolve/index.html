@@ -1,0 +1,3487 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DR7-Studio — Trạm Human Test &amp; Đối Chiếu Engine 1:1 (Godot 4 + Rust Core)</title>
+  <style>
+    :root {
+      --bg: #0b0e17;
+      --panel: #131826;
+      --panel2: #1a2133;
+      --border: #28324c;
+      --text: #e6ecff;
+      --muted: #93a1c6;
+      --gold: #facc15;
+      --orange: #fb923c;
+      --green: #22c55e;
+      --cyan: #38bdf8;
+      --amber: #f59e0b;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+      overflow-x: hidden;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      background: #0f1422;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .brand h1 { font-size: 15px; font-weight: 700; color: #fff; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-ok { background: rgba(34,197,94,0.16); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); }
+    .badge-warn { background: rgba(245,158,11,0.16); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
+    .badge-info { background: rgba(56,189,248,0.15); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.4); }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 7px 13px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      transition: 0.15s;
+    }
+    .tab-btn:hover { color: #fff; border-color: #43537d; }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #eab308, #f97316);
+      color: #0b0e17;
+      border-color: transparent;
+    }
+    .btn {
+      padding: 6px 11px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      user-select: none;
+    }
+    .btn:hover { border-color: var(--cyan); color: #fff; }
+    .btn-primary { background: #2563eb; border-color: #3b82f6; color: #fff; }
+    .btn-gold { background: #eab308; border-color: #facc15; color: #0b0e17; }
+    .tab-view { display: none; padding: 12px; }
+    .tab-view.active { display: block; }
+
+    #runtimeErrorBanner {
+      display: none;
+      margin: 8px 12px 0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid var(--red);
+      color: #fecaca;
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+    }
+
+    .workbench {
+      display: grid;
+      grid-template-columns: 330px minmax(480px, 1fr) 360px;
+      gap: 12px;
+      align-items: start;
+    }
+    @media (max-width: 1280px) {
+      .workbench { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .card h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--cyan);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+    .warn-box {
+      background: rgba(245, 158, 11, 0.11);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      border-radius: 8px;
+      padding: 9px 10px;
+      color: #fde68a;
+      font-size: 11.5px;
+      margin-top: 8px;
+    }
+    .ok-box {
+      background: rgba(34, 197, 94, 0.10);
+      border: 1px solid rgba(34, 197, 94, 0.40);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #bbf7d0;
+      font-size: 11.5px;
+      margin-top: 8px;
+    }
+
+    .roster-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .roster-filter-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .filter-pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .filter-pill.active {
+      background: rgba(56,189,248,0.2);
+      color: #fff;
+      border-color: var(--cyan);
+    }
+    .roster-scroll {
+      max-height: 230px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 2px;
+    }
+    .roster-card {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .roster-card:hover { border-color: #4f6596; }
+    .roster-card.active {
+      border-color: var(--gold);
+      background: rgba(250, 204, 21, 0.12);
+    }
+    .roster-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 6px;
+      background: #0c101b;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      image-rendering: pixelated;
+    }
+    .roster-info { flex: 1; min-width: 0; }
+    .roster-title { font-weight: 700; color: #fff; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .roster-sub { font-size: 11px; color: var(--muted); }
+    .roster-pills { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+    .mini-pill { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #0d1322; border: 1px solid var(--border); color: #cbd5e1; }
+
+    .mode-card {
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--gold);
+      background: rgba(250, 204, 21, 0.10);
+      margin-bottom: 4px;
+    }
+    .mode-card .title { font-weight: 700; font-size: 12.5px; color: #fff; }
+    .mode-card .desc { font-size: 11px; color: #dbeafe; margin-top: 4px; }
+
+    .clip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .clip-chip {
+      padding: 5px 9px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .clip-chip.active { background: var(--cyan); color: #08101d; border-color: transparent; }
+
+    .runtime-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.09);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      font-size: 11.5px;
+    }
+
+    .viewport-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .canvas-stage-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #080b12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      overflow: auto;
+    }
+    #inspectorCanvas {
+      cursor: crosshair;
+      image-rendering: pixelated;
+      border-radius: 4px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    }
+    .readout-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding: 7px 10px;
+      background: #0d121f;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11.5px;
+    }
+    .swatch {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      border-radius: 3px;
+      border: 1px solid #fff;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    .scrubber-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .scrubber-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    #frameSlider {
+      flex: 1;
+      min-width: 160px;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+    .filmstrip {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-top: 6px;
+    }
+    .thumb {
+      flex: 0 0 auto;
+      width: 68px;
+      padding: 4px;
+      border-radius: 6px;
+      background: #0d121f;
+      border: 1px solid var(--border);
+      text-align: center;
+      cursor: pointer;
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+    .thumb.active { border-color: var(--gold); color: var(--gold); background: rgba(250,204,21,0.1); }
+    .thumb canvas { width: 58px; height: auto; image-rendering: pixelated; display: block; margin: 0 auto 3px; }
+
+    .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .tag-btn {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-align: left;
+    }
+    .tag-btn.active { border-color: var(--gold); color: #fff; background: rgba(250,204,21,0.15); }
+    textarea, input[type="text"], select {
+      width: 100%;
+      background: #0c101c;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 9px;
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .kv-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .kv-table td { padding: 4px 2px; border-bottom: 1px solid rgba(40,50,76,0.55); }
+    .kv-table td:last-child { text-align: right; font-family: ui-monospace, monospace; color: #fff; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>🐉 DR7-Studio — Trạm Human Test &amp; Đối Chiếu Engine 1:1 (Godot 4 + Rust Core)</h1>
+      <span id="parityBadge" class="badge badge-ok">Đang kiểm tra đồng bộ SHA-256...</span>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tab-human">🎯 1. Human Test &amp; Thước Đo Gửi Agent</button>
+      <button class="tab-btn" data-tab="tab-arena">⚔️ 2. Sân Tập Gameplay Thực Chiến</button>
+    </div>
+    <div>
+      <a class="btn" href="/api/download-godot-pack.zip">📦 Tải Gói Godot 4 (.zip)</a>
+    </div>
+  </header>
+
+  <div id="runtimeErrorBanner"></div>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 1: HUMAN TEST, MULTI-CHARACTER ROSTER & AGENT COORDINATES         -->
+  <!-- ===================================================================== -->
+  <section id="tab-human" class="tab-view active">
+    <div class="workbench">
+      <!-- LEFT COLUMN: SCALABLE CHARACTER ROSTER + OFFICIAL ARCH + CLIPS -->
+      <div>
+        <div class="card">
+          <h2>
+            <span>👥 Danh Sách Nhân Vật Chính Thức</span>
+            <span class="badge badge-ok" id="rosterCountBadge">0 Hoàn thiện</span>
+          </h2>
+          <div class="roster-toolbar">
+            <input type="text" id="inpSearchChar" placeholder="🔎 Tìm tên, ID, hệ phái (VD: saiyan, z_fighters)..." />
+            <div class="roster-filter-row" id="rosterFilters">
+              <button class="filter-pill active" data-filter="all">Tất cả</button>
+              <button class="filter-pill" data-filter="z_fighters">Tướng Chính / Z</button>
+              <button class="filter-pill" data-filter="boss_mob">Boss / Quái</button>
+            </div>
+          </div>
+          <div id="rosterList" class="roster-scroll"></div>
+          <div id="completenessWarning" class="warn-box" style="display:none;"></div>
+          <div id="completenessOkBox" class="ok-box" style="display:none;"></div>
+          <div id="motionQualityBox" class="warn-box" style="display:none;"></div>
+        </div>
+
+        <div class="card">
+          <h2><span>🏗️ Kiến Trúc Chuẩn Hiến Pháp DR7-Studio</span></h2>
+          <div id="archModeList">
+            <div class="mode-card active" id="cardMode1Layer" data-arch="combined_1layer">
+              <div class="title">✅ Gộp Chung 1 Lớp Nguyên Bản (<code>Combined 1-Layer</code>)</div>
+              <div class="desc">
+                • <b>Engine chính thức</b>: <b>Godot 4</b> (Client Mobile APK/iOS + Scene/UI + <code>MultiMeshInstance2D</code>) + <b>Rust Core</b> (<code>GDExtension</code> / <code>WASM</code> / Spatial-Grid AoI Server) + <b>Supabase</b>.<br/>
+                • <b>1 Quad / 1 Draw Call</b>: Bảo toàn 100% cấu trúc pixel gốc từ Atlas, tuyệt đối không cắt xẻ tách đa lớp làm sai lệch hình ảnh.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>
+            <span>🎞️ Danh Sách Clip Hoạt Ảnh</span>
+            <span class="badge badge-info" id="clipCountBadge">0 clips</span>
+          </h2>
+          <div id="clipList" class="clip-list"></div>
+          <div style="margin-top:8px; font-size:11px; color:var(--muted);" id="clipMetaInfo"></div>
+        </div>
+      </div>
+
+      <!-- CENTER COLUMN: RUNTIME TRANSPARENCY + INSPECTOR CANVAS + SCRUBBER -->
+      <div>
+        <div class="card">
+          <div class="runtime-strip">
+            <div>
+              <b style="color:#fff;">⚙️ Runtime đang chạy ở Tab 1:</b>
+              <span id="tab1RuntimeDesc" style="color:#bae6fd;">Bộ nhịp 60Hz bằng <b>Rust WASM</b> + Vẽ khung đo Pixel bằng <b>Canvas2D</b> (đọc trực tiếp 1:1 <code>.tres</code> &amp; PNG Atlas của Godot 4 / Rust).</span>
+            </div>
+            <label><input type="checkbox" id="chkIndependentAura"/> Aura độc lập (E)</label>
+            <label style="white-space:nowrap;">
+              Bộ tính nhịp Frame:
+              <select id="selStepperEngine" style="width:auto; display:inline-block; padding:3px 6px;">
+                <option value="rust_wasm" selected>🦀 Rust 1.99.1 WASM Stepper</option>
+                <option value="godot_spec">🤖 Godot 4 .tres Spec Stepper</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="attachmentRuntimeNote" style="font-size:11px;color:var(--cyan);margin:6px 0;"></div>
+          <div class="viewport-toolbar">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <label style="font-size:11.5px;">Phóng đại:
+                <select id="selZoom" style="width:auto; display:inline-block; padding:4px 6px;">
+                  <option value="1" id="optZoom1">1× (320×256)</option>
+                  <option value="2" id="optZoom2" selected>2× (640×512 — Khuyên dùng)</option>
+                  <option value="3" id="optZoom3">3× (960×768 — Soi chi tiết pixel)</option>
+                </select>
+              </label>
+              <label style="font-size:11.5px;">Nền:
+                <select id="selBg" style="width:auto; display:inline-block; padding:4px 6px;">
+                  <option value="dark" selected>Tối (#141824)</option>
+                  <option value="checker">Ô cờ Alpha</option>
+                  <option value="light">Sáng (#E5E7EB)</option>
+                  <option value="namek">Cỏ Namek</option>
+                </select>
+              </label>
+            </div>
+            <div style="display:flex; gap:10px; font-size:11.5px; align-items:center; flex-wrap:wrap;">
+              <label><input type="checkbox" id="chkMapGrid" checked /> Lưới Map 32px / 64 PPU</label>
+              <label><input type="checkbox" id="chkBBox" checked /> Khung BBox &amp; Tâm Chân</label>
+              <button class="btn" id="btnClearRect">Xoá vùng chọn</button>
+            </div>
+          </div>
+
+          <div class="canvas-stage-wrap">
+            <canvas id="inspectorCanvas" width="668" height="540"></canvas>
+          </div>
+
+          <div class="readout-bar">
+            <span id="cursorCoord">Canvas: (—, —) | Offset tâm chân: (—, —)</span>
+            <span id="cursorAtlas">Atlas: (—, —)</span>
+            <span><span id="cursorSwatch" class="swatch"></span><span id="cursorRgba">RGBA: (—, —, —, —)</span></span>
+          </div>
+
+          <!-- INTERACTIVE FRAME REFERENCE SLIDER -->
+          <div class="scrubber-box">
+            <div class="scrubber-controls">
+              <button class="btn btn-gold" id="btnPlayPause">⏸ Tạm dừng</button>
+              <button class="btn" id="btnPrevFrame">⏮ -1 Frame</button>
+              <input type="range" id="frameSlider" min="0" max="3" value="0" step="1" />
+              <button class="btn" id="btnNextFrame">+1 Frame ⏭</button>
+              <select id="selSpeed" style="width:auto; padding:4px 7px;">
+                <option value="0.25">0.25× (Soi chậm)</option>
+                <option value="0.5">0.5×</option>
+                <option value="1" selected>1.0× (Chuẩn 60Hz)</option>
+                <option value="1.5">1.5×</option>
+              </select>
+              <label style="font-size:11.5px; white-space:nowrap;" title="Tự động phát lặp lại các đòn đánh/kỹ năng oneshot để tiện kiểm tra">
+                <input type="checkbox" id="chkAutoReplay" checked /> 🔁 Tự lặp clip ngắn
+              </label>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); flex-wrap:wrap; gap:6px;">
+              <span id="scrubberLabel">Frame: 0 / 0</span>
+              <span id="scrubberRegion">Atlas Region: —</span>
+            </div>
+            <div id="filmstrip" class="filmstrip"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: AGENT COORDINATE PROTOCOL + MAP METRICS + PARITY -->
+      <div>
+        <div class="card">
+          <h2><span>📐 Giao Tiếp Toạ Độ Sửa Lỗi Với Agent</span></h2>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">
+            Chọn kiểu khoanh vùng rồi kéo trên ảnh bên trái. Với <b>Tự do (Lasso)</b>, kéo theo đường bao và thả để khép vùng; chỉ pixel bên trong được đo và gửi Agent. Khung hình tự tạm dừng khi bắt đầu chọn.
+          </p>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+            <label for="selSelectionMode">Khoanh vùng</label>
+            <select id="selSelectionMode">
+              <option value="rect">Hình chữ nhật</option>
+              <option value="lasso">Tự do (Lasso)</option>
+            </select>
+          </div>
+          <div class="tag-grid" id="tagButtons">
+            <button class="tag-btn active" data-tag="CHINH_NET">🔍 Cần chỉnh nét đoạn này</button>
+            <button class="tag-btn" data-tag="LOI_HOAT_ANH">🎞️ Đang bị lỗi hoạt ảnh</button>
+            <button class="tag-btn" data-tag="LUOC_BO">✂️ Cần lược bỏ chi tiết</button>
+            <button class="tag-btn" data-tag="XOA_NEN">🧹 Cần xóa nền / viền bẩn</button>
+            <button class="tag-btn" data-tag="LOI_MAU_SAC">🎨 Lỗi màu sắc</button>
+            <button class="tag-btn" data-tag="MAT_CHI_TIET">🧩 Mất chi tiết</button>
+          </div>
+          <input type="text" id="inpOwnerNote" placeholder="Ghi chú thêm của anh (VD: căn lại tốc độ đòn chém)..." style="margin-bottom:8px;" />
+          <textarea id="txtAgentSpec" rows="7" readonly></textarea>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="btn btn-primary" id="btnCopySpec" style="flex:1; justify-content:center;">📋 Copy Thông Số Gửi Agent</button>
+            <button class="btn" id="btnAddPin" title="Ghim vùng này vào danh sách nhiều điểm">+ Ghim điểm</button>
+          </div>
+          <div id="pinnedList" style="margin-top:8px; font-size:11px; color:var(--muted);"></div>
+        </div>
+
+        <div class="card">
+          <h2><span>🗺️ Kích Thước Đồng Bộ Scene Map &amp; Độ Nét Pixel</span></h2>
+          <table class="kv-table" id="metricsTable"></table>
+        </div>
+
+        <div class="card">
+          <h2><span>🔐 Đối Soát Đồng Bộ Engine ⇄ Localhost (SHA-256)</span></h2>
+          <table class="kv-table" id="parityTable"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 2: INTERACTIVE 2D GAMEPLAY SANDBOX                                -->
+  <!-- ===================================================================== -->
+  <section id="tab-arena" class="tab-view">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+        <div>
+          <b>⚔️ Sân Tập Thực Chiến Mobile 16:9 (<span id="arenaCharLabel">Chưa có nhân vật</span>):</b>
+          <span id="arenaControlHint"><code>A/D</code> Đi bộ • <code>Shift+A/D</code> Chạy nhanh • <code>W/Space</code> Nhảy • <code>J/U/I/K/L/O/P</code> Tuyệt chiêu nhân vật</span>
+        </div>
+        <div id="arenaActionButtons" style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+          <button class="btn" id="btnMoveLeft">◀ Trái</button>
+          <button class="btn" id="btnJump">⬆ Nhảy</button>
+          <button class="btn" id="btnFlyDown" style="display:none;">⬇ Hạ xuống</button>
+          <button class="btn" id="btnMoveRight">Phải ▶</button>
+          <button class="btn" id="btnPatrol" style="display:none;" title="Bật/tắt bay tuần tra 2 đầu (Shift+Click để chạy run)">🔁 Tuần tra 2 đầu</button>
+          <span id="arenaSpawnFacingControls" style="display:none; gap:4px; align-items:center;">
+            <button class="btn" id="btnSpawnRight" title="Hồi sinh nhìn Phải (+X) — mặc định và khóa suốt vòng đời">↪ Hồi sinh Phải (+X)</button>
+            <button class="btn" id="btnSpawnLeft" title="Hồi sinh nhìn Trái (-X) và khóa suốt vòng đời">↩ Hồi sinh Trái (-X)</button>
+          </span>
+          <button class="btn btn-gold" id="btnSummonShenron">✨ Gọi Shenron</button>
+          <span id="arenaSkillButtons" style="display:inline-flex; gap:5px; flex-wrap:wrap;"></span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; margin-bottom:6px; background:#0b1220; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;" id="arenaScaleControls">
+          <span style="color:var(--muted);">Tỷ lệ nhân vật (Nearest):</span>
+          <button class="btn" id="btnScale1" data-scale="1">1×</button>
+          <button class="btn" id="btnScale125" data-scale="1.25">1.25×</button>
+          <button class="btn" id="btnScale15" data-scale="1.5">1.5×</button>
+          <button class="btn" id="btnScale175" data-scale="1.75">1.75×</button>
+          <button class="btn btn-gold" id="btnScale2" data-scale="2">2× (Mặc định)</button>
+          <button class="btn" id="btnScale25" data-scale="2.5">2.5×</button>
+          <button class="btn" id="btnScale3" data-scale="3">3×</button>
+          <input type="range" id="rngArenaScale" min="0.5" max="3.0" step="0.05" value="2" style="width:96px;" title="Kéo chỉnh tỷ lệ tự do (không sửa asset)" />
+          <input type="number" id="numArenaScale" min="0.5" max="3.0" step="0.05" value="2" style="width:62px; padding:3px 5px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;" />
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkPhoneBezel" checked /> 📱 Khung ĐT 16:9</label>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="Hiển thị đúng 1920×1080 CSS pixel thật không co nhỏ"><input type="checkbox" id="chkNative1to1" /> 🖥️ Pixel thật 1:1 (1920×1080)</label>
+          <button class="btn" id="btnFullscreenArena" title="Mở rộng toàn màn hình để soi thực chiến">⛶ Toàn màn hình</button>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkSampleMap" checked /> 🏔️ Map Mẫu</label>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkArenaGrid" checked /> 📐 Thước &amp; Khung</label>
+          <span id="arenaStageBadge" style="color:var(--gold); font-weight:600;">1920×1080 • 16:9 • PPU 64</span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:6px 10px; margin-bottom:10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="color:var(--muted);">🏃 Tốc độ di chuyển (px/s):</span>
+          <input type="range" id="rngArenaSpeed" min="20" max="600" step="5" value="270" style="width:120px;" />
+          <input type="number" id="numArenaSpeed" min="10" max="1000" step="5" value="270" style="width:68px; padding:3px 5px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;" />
+          <span id="arenaSpeedReadout" style="color:#67e8f9; font-family:monospace;">270 px/s (~6.1s hết sân)</span>
+          <button class="btn" id="btnResetSpeed">↺ Mặc định loài</button>
+        </div>
+        <div id="arenaFlightControls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="color:var(--muted);">🦇 Tầm bay Y (60..840):</span>
+          <input type="range" id="rngFlyAltY" min="60" max="840" step="10" value="250" style="width:110px;" />
+          <span id="arenaFlyAltLabel" style="color:#93c5fd; font-family:monospace;">Spawn Y=250 (Giữa -290px | Cách sàn 590px)</span>
+          <button class="btn" id="btnResetFlyAlt">↺ Y=250</button>
+        </div>
+        <div id="arenaDustControls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="color:var(--muted);">💨 Bụi độn thổ FX:</span>
+          <button class="btn" id="btnDust1" data-dust-scale="1">1× Gốc</button>
+          <button class="btn" id="btnDust15" data-dust-scale="1.5">1.5× (+50%)</button>
+          <button class="btn" id="btnDust225" data-dust-scale="2.25">2.25× (50% thân)</button>
+          <button class="btn btn-gold" id="btnDust265" data-dust-scale="2.65">2.65× (Mặc định)</button>
+          <input type="range" id="rngBurrowDustScale" min="1.0" max="4.0" step="0.05" value="2.65" style="width:90px;" />
+          <span id="arenaDustScaleLabel" style="color:#fde047; font-family:monospace;">2.65×</span>
+        </div>
+      </div>
+      <div id="arenaAiControls" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; margin-bottom:10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; font-weight:600; color:#f59e0b;">
+            <input type="checkbox" id="chkUtilityAI" /> 🤖 Utility AI Địch (≤500px)
+          </label>
+          <span style="color:var(--muted);">Quái AI:</span>
+          <select id="selEnemyChar" style="padding:3px 7px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;"></select>
+          <button class="btn" id="btnPullIntoZone" title="Đưa nhân vật vào vùng AI [zoneMin..zoneMax] để test cận chiến/chưởng ngay">⚡ Vào vùng AI</button>
+          <button class="btn" id="btnResetEnemyAi" title="Đưa quái AI về tâm vùng ban đầu & reset chuỗi 2 nhẹ -> nặng">↺ Reset Quái AI</button>
+        </div>
+        <span id="arenaAiStatus" style="color:#fcd34d; font-family:monospace;">AI TẮT • Zone [1120..1600] • &lt;50px nhẹ / 50..200px đuổi / ≥200px power_up</span>
+      </div>
+      <div id="arenaViewportOuter" style="background:#05080f; border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; justify-content:center; align-items:center; overflow:auto;">
+        <div id="arenaPhoneFrame" style="position:relative; width:100%; max-width:1180px; aspect-ratio:2096/1166; margin:0 auto;">
+          <div id="arenaScreenSlot" style="position:absolute; left:4.198473%; top:4.545455%; width:91.603053%; height:92.624357%; overflow:hidden; border-radius:2.2%; background:#080c14;">
+            <canvas id="arenaCanvas" width="1920" height="1080" style="width:100%; height:100%; image-rendering:pixelated; display:block;"></canvas>
+          </div>
+          <img id="arenaPhoneBezelImg" src="/preview-assets/phone-frame-landscape-16x9.png" alt="Landscape 16:9 Phone Frame" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none;" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // =========================================================================
+    // GLOBAL STATE & DYNAMIC 1-LAYER MULTI-CHARACTER BUNDLE RESOLVER
+    // =========================================================================
+    const RULER_PAD = 28;
+    const state = {
+      api: null,
+      wasmExports: null,
+      bundlesById: {},
+      images: {},
+      imagePromises: {},
+      rosterFilter: 'all',
+      rosterSearch: '',
+      activeChar: null,
+      archMode: 'combined_1layer',
+      stepperEngine: 'rust_wasm',   // 'rust_wasm' | 'godot_spec'
+      activeClipName: 'aura_loop',
+      auraEnabled: false,
+      fxTicks: 0,
+      playing: true,
+      autoReplayOneshot: true,
+      speedMult: 1.0,
+      stepIdx: 0,
+      stepElapsedMs: 0,
+      zoom: 2,
+      bgMode: 'dark',
+      showMapGrid: true,
+      showBBox: true,
+      dragStart: null,
+      selectedRect: null,
+      selectedPolygon: null,
+      selectionMode: 'rect',
+      selectionPointerId: null,
+      activeTag: 'CHINH_NET',
+      pinnedSpecs: [],
+      activeTab: 'tab-human',
+    };
+
+    const offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = 320;
+    offscreenCanvas.height = 256;
+    const offCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+
+    function getCanvasSize(ch = state.activeChar) {
+      const sz = ch && ch.map_sync_metrics && ch.map_sync_metrics.canvas_size_px;
+      return (Array.isArray(sz) && sz.length === 2) ? [sz[0], sz[1]] : [320, 256];
+    }
+
+    function ensureOffscreenSize(cw, ch) {
+      if (offscreenCanvas.width !== cw || offscreenCanvas.height !== ch) {
+        offscreenCanvas.width = cw;
+        offscreenCanvas.height = ch;
+      }
+    }
+
+    function showRuntimeError(context, err) {
+      console.error(context, err);
+      const el = document.getElementById('runtimeErrorBanner');
+      if (el) {
+        el.style.display = 'block';
+        el.textContent = `[Lỗi Runtime tại ${context}]: ${err && err.message ? err.message : String(err)}`;
+      }
+    }
+
+    function loadImage(url) {
+      if (state.images[url]) return Promise.resolve(state.images[url]);
+      if (state.imagePromises[url]) return state.imagePromises[url];
+      const p = new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          state.images[url] = img;
+          delete state.imagePromises[url];
+          resolve(img);
+        };
+        img.onerror = () => {
+          delete state.imagePromises[url];
+          reject(new Error(`Không tải được ảnh ${url}`));
+        };
+        img.src = url;
+      });
+      state.imagePromises[url] = p;
+      return p;
+    }
+
+    function getCharBundle(ch = state.activeChar) {
+      if (!ch || !ch.modes || !ch.modes.combined_1layer) return null;
+      const cId = ch.modes.combined_1layer.bundle_id;
+      return cId ? state.bundlesById[cId] : null;
+    }
+
+    async function initApp() {
+      try {
+        const [bRes, wasmBytes] = await Promise.all([
+          fetch('/api/bundles').then(r => r.json()),
+          fetch('/rust_combat_sim.wasm').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null),
+        ]);
+        state.api = bRes;
+        applyArenaStageConfig(bRes.arena_stage);
+
+        if (wasmBytes) {
+          const mod = await WebAssembly.instantiate(wasmBytes, {});
+          state.wasmExports = mod.instance.exports;
+        }
+
+        const preloadUrlSet = new Set();
+        if (arena.mapWebPath) preloadUrlSet.add(arena.mapWebPath);
+      if(bRes.rituals?.shenron_summon)preloadUrlSet.add("/"+bRes.rituals.shenron_summon.atlas);
+        for (const b of bRes.bundles) {
+          state.bundlesById[b.id] = b;
+          for (const anim of Object.values(b.animations)) {
+            for (const f of anim.frames) {
+              if (f.atlas_url) preloadUrlSet.add(f.atlas_url);
+            }
+          }
+        }
+        const preloadUrls = Array.from(preloadUrlSet).map(u =>
+          u === arena.mapWebPath ? loadImage(u).catch(() => null) : loadImage(u)
+        );
+        await Promise.all(preloadUrls);
+
+        setupEventListeners();
+        renderParityHeader();
+
+        const reviewQuery = typeof URLSearchParams === 'function'
+          ? new URLSearchParams(globalThis.location?.search || '') : null;
+        const firstChar = bRes.roster.characters.find(c => c.character_id === reviewQuery?.get('character'))
+          || bRes.roster.characters[0] || null;
+        if (firstChar) {
+          populateEnemySelectOptions();
+          selectCharacter(firstChar.character_id);
+          const reviewClip = reviewQuery?.get('clip');
+          const reviewAnimation = getCharBundle(firstChar)?.animations[reviewClip];
+          if (reviewAnimation) {
+            state.activeClipName = reviewClip;
+            const requestedFrame = Number(reviewQuery.get('frame') || 0);
+            state.stepIdx = Number.isFinite(requestedFrame)
+              ? Math.max(0, Math.min(reviewAnimation.frames.length - 1, Math.floor(requestedFrame))) : 0;
+            state.stepElapsedMs = 0;
+            state.playing = reviewQuery.get('paused') !== '1';
+            syncClipChoices();
+            updatePlayButtonUI();
+          }
+        } else {
+          renderEmptyStateUI();
+        }
+
+        renderInspector();
+        stepAndRenderArena(16.67);
+
+        requestAnimationFrame(mainLoop);
+      } catch (err) {
+        showRuntimeError('initApp', err);
+      }
+    }
+
+    function renderEmptyStateUI() {
+      state.activeChar = null;
+      state.stepIdx = 0;
+      state.stepElapsedMs = 0;
+      state.selectedRect = null;
+      state.selectedPolygon = null;
+      state.playing = false;
+
+      const [cw, chPx] = getCanvasSize(null);
+      ensureOffscreenSize(cw, chPx);
+      const z1 = document.getElementById('optZoom1');
+      const z2 = document.getElementById('optZoom2');
+      const z3 = document.getElementById('optZoom3');
+      if (z1) z1.textContent = `1× (${cw}×${chPx})`;
+      if (z2) z2.textContent = `2× (${cw * 2}×${chPx * 2} — Khuyên dùng)`;
+      if (z3) z3.textContent = `3× (${cw * 3}×${chPx * 3} — Soi chi tiết pixel)`;
+
+      document.getElementById('arenaCharLabel').textContent = 'Chưa có nhân vật';
+      renderRosterList();
+      renderCharMetricsAndWarnings();
+      syncClipChoices();
+      renderArenaControls();
+      updatePlayButtonUI();
+      updateAgentSpecText();
+    }
+
+    // =========================================================================
+    // SCALABLE MULTI-CHARACTER ROSTER & DYNAMIC SELECTION
+    // =========================================================================
+    function selectCharacter(charId) {
+      const ch = (state.api.roster.characters || []).find(c => c.character_id === charId);
+      if (!ch) return;
+      dismissShenronSummon();
+      state.activeChar = ch;
+      updateSummonButton();
+      const selectedBundle = getCharBundle(ch);
+      const isFlight = isFlyingBundle(selectedBundle);
+      arena.actionClip=null; arena.turnTargetFlip=null; arena.clip='idle'; arena.step=0; arena.elapsed=0;
+      arena.turnElapsedMs = 0; arena.turnDurationMs = 0; arena.turnBoostMs = 0;
+      arena.charScale = getDefaultCharScale(selectedBundle);
+      arena.spawnFacing = getDefaultSpawnFacing(selectedBundle);
+      arena.flip = arena.spawnFacing === 'left';
+      arena.x = arena.flip ? arena.playerSpawnLeftX : arena.playerSpawnX;
+      arena.y = isFlight ? arena.flyDefaultY : arena.groundY;
+      arena.vy = 0;
+      arena.customSpeedPxPerSec = null;
+      arena.chiloPatrol=false;arena.chiloPatrolDir=1;arena.chiloInputDir=0;arena.chiloAction=null;
+      arena.patrolEnabled=false;arena.patrolDir=arena.flip?-1:1;arena.patrolRun=false;
+      state.archMode = 'combined_1layer';
+      const independent = selectedBundle?.render_contract;
+      const hasAura = Boolean(independent?.aura?.loop_clip && selectedBundle?.animations[independent.aura.loop_clip]);
+      if(independent) { state.activeClipName='idle'; state.auraEnabled=false; state.fxTicks=0; arena.rageMode=false; }
+      document.getElementById('chkIndependentAura').disabled=!hasAura;
+      document.getElementById('chkIndependentAura').checked=Boolean(hasAura && state.auraEnabled);
+      document.getElementById('attachmentRuntimeNote').textContent=isStationaryBundle(selectedBundle) ? 'Đứng yên • hoạt ảnh idle' : independent ? 'Thân và FX độc lập • chung một atlas • có thêm quad khi bật FX.' : '';
+      const btnJump = document.getElementById('btnJump');
+      const btnFlyDown = document.getElementById('btnFlyDown');
+      if (btnJump) {
+        btnJump.textContent = isFlight ? '⬆ Bay lên' : '⬆ Nhảy';
+        btnJump.disabled = isFlight ? false : !selectedBundle?.animations.jump;
+      }
+      if (btnFlyDown) btnFlyDown.style.display = isFlight ? '' : 'none';
+      const flightWrap = document.getElementById('arenaFlightControls');
+      if (flightWrap) flightWrap.style.display = isFlight ? 'flex' : 'none';
+      const dustWrap = document.getElementById('arenaDustControls');
+      if (dustWrap) dustWrap.style.display = independent?.chilopoda ? 'flex' : 'none';
+      document.getElementById('arenaControlHint').textContent=independent ? (independent.locomotion?.kind==='flight' ? (independent.turning?.clip ? 'A/D: bay ngang & xoay đầu • W/S (↑/↓): bay lên/xuống • Shift: bay nhanh • Tuần tra • nút kỹ năng' : 'A/D: bay ngang • W/S (↑/↓): bay lên/xuống • Shift: bay nhanh • nút kỹ năng bên phải') : (isSidewaysLocked(selectedBundle) ? 'A/D: bò ngang tiến/lùi (không xoay, giữ mặt khi spawn) • Mặt mặc định: Phải (+X) • nút kỹ năng bên phải' : (hasAura ? 'A/D: di chuyển • E: bật/tắt Ki • nút kỹ năng bên phải' : (selectedBundle?.animations.run ? 'A/D: đi bộ • Shift: chạy • nút kỹ năng bên phải' : (canFlipPatrolWithoutTurn(selectedBundle) ? 'A/D: đi bộ & xoay hướng • Tuần tra • nút kỹ năng bên phải' : 'A/D: đi bộ • nút kỹ năng bên phải'))))) : 'A/D: đi bộ • Shift: chạy • W/Space: nhảy';
+      if(independent?.chilopoda)document.getElementById('arenaControlHint').textContent='A/D: bắt đầu bò • đến cuối đường tự quay đầu đi lại • dùng kỹ năng để dừng bò';
+      updatePatrolButtonUI();
+      updateSpawnFacingUI();
+      updateArenaScaleUI();
+      updateArenaSpeedUI();
+      updateArenaFlightUI();
+      updateArenaDustScaleUI();
+
+      if (!arena.enemyAi.pinned || !arena.enemyAi.charId) {
+        selectEnemyCharacter(ch.character_id, false);
+      }
+      updateEnemyAiStatusUI();
+
+      const [cw, chPx] = getCanvasSize(ch);
+      ensureOffscreenSize(cw, chPx);
+      const z1 = document.getElementById('optZoom1');
+      const z2 = document.getElementById('optZoom2');
+      const z3 = document.getElementById('optZoom3');
+      if (z1) z1.textContent = `1× (${cw}×${chPx})`;
+      if (z2) z2.textContent = `2× (${cw * 2}×${chPx * 2} — Khuyên dùng)`;
+      if (z3) z3.textContent = `3× (${cw * 3}×${chPx * 3} — Soi chi tiết pixel)`;
+
+      state.stepIdx = 0;
+      state.stepElapsedMs = 0;
+      state.selectedRect = null;
+      state.selectedPolygon = null;
+      state.playing = true;
+
+      document.getElementById('arenaCharLabel').textContent = ch.display_name;
+      renderRosterList();
+      renderCharMetricsAndWarnings();
+      syncClipChoices();
+      renderArenaControls();
+      updatePlayButtonUI();
+      updateAgentSpecText();
+    }
+
+    function renderRosterList() {
+      const allChars = state.api.roster.characters || [];
+      document.getElementById('rosterCountBadge').textContent = `${allChars.length} Hoàn thiện`;
+
+      const listEl = document.getElementById('rosterList');
+      listEl.innerHTML = '';
+      if (allChars.length === 0) {
+        listEl.innerHTML = `<div style="padding:10px; color:var(--muted); font-size:11.5px; text-align:center;">Roster hiện đang trống (0 nhân vật).<br/>Gửi sheet/Atlas cho Agent để thiết lập nhân vật mới.</div>`;
+        return;
+      }
+
+      const q = state.rosterSearch.trim().toLowerCase();
+      const filtered = allChars.filter(ch => {
+        if (state.rosterFilter === 'z_fighters' && ch.faction !== 'z_fighters') return false;
+        if (state.rosterFilter === 'boss_mob' && ch.faction === 'z_fighters') return false;
+        if (!q) return true;
+        const hay = `${ch.character_id} ${ch.display_name} ${ch.role_label || ''} ${(ch.tags || []).join(' ')}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div style="padding:10px; color:var(--muted); font-size:11.5px; text-align:center;">Không có nhân vật nào khớp bộ lọc.</div>`;
+        return;
+      }
+
+      filtered.forEach(ch => {
+        const isAct = state.activeChar && state.activeChar.character_id === ch.character_id;
+        const card = document.createElement('div');
+        card.className = 'roster-card' + (isAct ? ' active' : '');
+
+        const av = document.createElement('canvas');
+        av.width = 48; av.height = 48;
+        av.className = 'roster-avatar';
+        drawCharacterAvatar(av, ch);
+
+        const clipBadge = `${(ch.present_clips || []).length} clips`;
+        const [cw, chPx] = getCanvasSize(ch);
+
+        const info = document.createElement('div');
+        info.className = 'roster-info';
+        info.innerHTML = `
+          <div class="roster-title">${ch.display_name}</div>
+          <div class="roster-sub"><code>${ch.character_id}</code> • ${ch.role_label || 'Fighter'}</div>
+          <div class="roster-pills">
+            <span class="mini-pill">1-Lớp Chuẩn</span>
+            <span class="mini-pill">${cw}×${chPx}</span>
+            <span class="mini-pill">${clipBadge}</span>
+          </div>
+        `;
+        card.appendChild(av);
+        card.appendChild(info);
+        card.onclick = () => selectCharacter(ch.character_id);
+        listEl.appendChild(card);
+      });
+    }
+
+    function drawCharacterAvatar(canvas, ch) {
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = '#101626';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const b = getCharBundle(ch);
+      if (!b) return;
+      const idleAnim = b.animations['idle'] || Object.values(b.animations)[0];
+      const f = idleAnim && idleAnim.frames[0];
+      if (!f) return;
+      const img = state.images[f.atlas_url];
+      if (!img) return;
+      const bb = (ch.map_sync_metrics && ch.map_sync_metrics.body_only_bbox_px) || { x: 80, y: 150, w: 48, h: 64 };
+      const boxSide = Math.max(bb.w, Math.min(bb.h, 54)) + 8;
+      const cx = bb.x + bb.w * 0.5;
+      const sx = f.x + Math.max(0, Math.round(cx - boxSide * 0.5));
+      const sy = f.y + Math.max(0, bb.y - 4);
+      const sw = Math.min(f.w, boxSide);
+      const sh = Math.min(f.h, boxSide);
+      ctx.drawImage(img, sx, sy, sw, sh, 2, 2, 44, 44);
+    }
+
+    function renderParityHeader() {
+      const p = state.api.parity;
+      const badge = document.getElementById('parityBadge');
+      if (p && p.ok) {
+        badge.className = 'badge badge-ok';
+        badge.textContent = p.checked_bundles === 0
+          ? '✅ ĐỒNG BỘ 1:1 ENGINE ⇄ LOCALHOST (0 gói — Roster trống, sẵn sàng nhận Atlas mới)'
+          : `✅ ĐỒNG BỘ 1:1 ENGINE ⇄ LOCALHOST (${p.checked_bundles} gói SHA-256 khớp tuyệt đối)`;
+      } else {
+        badge.className = 'badge badge-warn';
+        badge.textContent = `⚠️ Cảnh báo đồng bộ: ${(p && p.errors.join('; ')) || 'Lỗi'}`;
+      }
+
+      const tbl = document.getElementById('parityTable');
+      if (!state.api.bundles || state.api.bundles.length === 0) {
+        tbl.innerHTML = '<tr><td><code>Roster rỗng (0 gói)</code></td><td>Đang chờ Atlas mới</td></tr>';
+        return;
+      }
+      tbl.innerHTML = state.api.bundles.map(b => {
+        const atlasHash = Object.values(b.sha256_atlases || {})[0] || '—';
+        return `<tr><td><code>${b.id}</code> (1-Layer Atlas)</td><td>SHA:${atlasHash.slice(0, 12)}…</td></tr>`;
+      }).join('');
+    }
+
+    function renderCharMetricsAndWarnings() {
+      const ch = state.activeChar;
+      const warnEl = document.getElementById('completenessWarning');
+      const motionEl = document.getElementById('motionQualityBox');
+      const mq = state.api.motion_quality?.characters?.[ch?.character_id];
+      motionEl.style.display = mq ? 'block' : 'none';
+      if (mq) motionEl.textContent = mq.release_approved ? 'Hoạt ảnh đã được Owner nghiệm thu.' :
+        (mq.ok_for_human_test ? 'Bộ keyframe đã tự rà soát; đang chờ Owner Human Test. Kiểm tra kỹ thuật không thay thế nghiệm thu chuyển động.' : 'Motion FAIL / chưa đủ review: '+mq.errors.join(' • '));
+      const okEl = document.getElementById('completenessOkBox');
+      if (!ch) {
+        warnEl.style.display = 'none';
+        if (okEl) {
+          okEl.style.display = 'block';
+          okEl.innerHTML = `ℹ️ <b>Roster đang trống (0 nhân vật)</b>: Chờ Owner gửi file Atlas gốc để bóc tách 1 lớp chuẩn Hiến pháp.`;
+        }
+        document.getElementById('metricsTable').innerHTML = `
+          <tr><td>Trạng thái Roster</td><td>0 nhân vật (Đang chờ Atlas)</td></tr>
+          <tr><td>Khung Canvas chuẩn mẫu</td><td>Bội số 16 (VD: 256×256, 320×256)</td></tr>
+          <tr><td>Kiến trúc bắt buộc</td><td>Combined 1-Layer (Nearest 1:1)</td></tr>
+        `;
+        return;
+      }
+      if (ch.missing_provisional_clips && ch.missing_provisional_clips.length > 0) {
+        warnEl.style.display = 'block';
+        if (okEl) okEl.style.display = 'none';
+        warnEl.innerHTML = `
+          <b>⚠️ Cảnh báo bộ hoạt ảnh chưa đầy đủ (Điều 7 AGENTS.md):</b><br/>
+          • Đã có (<b>${ch.present_clips.length}</b>): <code>${ch.present_clips.join(', ')}</code><br/>
+          • Chưa có (<b>${ch.missing_provisional_clips.length}</b>): <code>${ch.missing_provisional_clips.join(', ')}</code>
+          ${ch.not_applicable_clips ? '<br/>• Owner đã loại khỏi bộ nhân vật này: <code>' + ch.missing_provisional_clips.filter(k => k in ch.not_applicable_clips).join(', ') + '</code>' : ''}
+        `;
+      } else {
+        warnEl.style.display = 'none';
+        if (okEl) {
+          okEl.style.display = 'block';
+          okEl.innerHTML = `✅ <b>Đủ 100% bộ hoạt ảnh chiến đấu cốt lõi (${ch.present_clips.length} clips)</b>: Sẵn sàng điều khiển thực chiến trên cả Godot 4 &amp; Rust Core.`;
+        }
+      }
+
+      const m = ch.map_sync_metrics;
+      const s = ch.pixel_sharpness_metrics;
+      const fxBox = m.full_fx_bbox_px || m.full_aura_shock_bbox_px;
+      document.getElementById('metricsTable').innerHTML = `
+        <tr><td>Khung Canvas nhân vật</td><td>${m.canvas_size_px[0]} × ${m.canvas_size_px[1]} px</td></tr>
+        <tr><td>Tâm chân mặt đất (<code>anchor_px</code>)</td><td>(${m.foot_anchor_px[0]}, ${m.foot_anchor_px[1]}) px</td></tr>
+        <tr><td>Kích thước Thân thuần (<code>Body BBox</code>)</td><td>${m.body_only_bbox_px.w} × ${m.body_only_bbox_px.h} px</td></tr>
+        <tr><td>Kích thước Toàn thân / Vũ khí / FX</td><td>${fxBox.w} × ${fxBox.h} px</td></tr>
+        <tr><td>Quy đổi Map @ <code>64 PPU</code> (Thân)</td><td>${m.world_size_at_64ppu_m.body_w_m}m × ${m.world_size_at_64ppu_m.body_h_m}m</td></tr>
+        <tr><td>Quy đổi Map @ <code>64 PPU</code> (Full FX)</td><td>${m.world_size_at_64ppu_m.aura_w_m}m × ${m.world_size_at_64ppu_m.aura_h_m}m</td></tr>
+        <tr><td>Số ô Tile Map <code>32×32 px</code> (Thân)</td><td>${m.tile_32px_span.body_tiles_w} × ${m.tile_32px_span.body_tiles_h} ô</td></tr>
+        <tr><td>Tỷ lệ Texel &amp; Lọc mẫu</td><td>${s.texel_scale_ratio}</td></tr>
+        <tr><td>Độ sắc nét biên (<code>Sobel Acutance</code>)</td><td>${s.edge_acutance_sobel}</td></tr>
+        <tr><td>Độ cứng biên Pixel (<code>Alpha &ge; 245</code>)</td><td>${s.alpha_hardness_pct}%</td></tr>
+        <tr><td>Hốc màu nền kẹt (<code>enclosed_pockets</code>)</td><td>${s.enclosed_key_pockets} px (Sạch 100%)</td></tr>
+        <tr><td>Nhiễu nền đặc / viền ngoài</td><td>${s.opaque_key_px} px / ${s.outer_ring_spill_fraction ?? 'chưa đo'}</td></tr>
+      `;
+    }
+
+    // =========================================================================
+    // TAB 1: 1-LAYER COMBINED CLIP SYNC, WASM / GODOT STEPPER & INSPECTOR
+    // =========================================================================
+    function getActiveTimelineFrames() {
+      const b = getCharBundle();
+      if (!b) return { animName: 'idle', loop: true, speed_hz: 60.0, frames: [] };
+      const anim = b.animations[state.activeClipName] || Object.values(b.animations)[0];
+      return {
+        animName: anim.name,
+        loop: anim.loop,
+        speed_hz: anim.speed_hz,
+        frames: anim.frames,
+        events_ms: anim.events_ms || [],
+      };
+    }
+
+    function syncWasmTimelineDurations(frames) {
+      if (!state.wasmExports || !state.wasmExports.wasm_clip_set_len) return;
+      state.wasmExports.wasm_clip_set_len(frames.length);
+      frames.forEach((f, idx) => {
+        state.wasmExports.wasm_clip_set_dur(idx, f.duration_ms || 83.33);
+      });
+    }
+
+    function updatePlayButtonUI() {
+      const btn = document.getElementById('btnPlayPause');
+      if (!btn) return;
+      if (state.playing) {
+        btn.textContent = '⏸ Tạm dừng';
+      } else {
+        const tl = getActiveTimelineFrames();
+        const atEnd = !tl.loop && state.stepIdx >= tl.frames.length - 1 && tl.frames.length > 1;
+        btn.textContent = atEnd ? '▶ Phát lại từ đầu' : '▶ Phát tiếp';
+      }
+    }
+
+    function syncClipChoices() {
+      const b = getCharBundle();
+      const cntBadge = document.getElementById('clipCountBadge');
+      const listEl = document.getElementById('clipList');
+      const slider = document.getElementById('frameSlider');
+      if (!b || !state.activeChar) {
+        if (cntBadge) cntBadge.textContent = '0 clips';
+        listEl.innerHTML = '<span style="color:var(--muted); font-size:11.5px;">Chưa có clip hoạt ảnh nào.</span>';
+        document.getElementById('clipMetaInfo').textContent = 'Chưa có nhân vật đang chọn.';
+        slider.max = 0;
+        slider.value = 0;
+        document.getElementById('filmstrip').innerHTML = '';
+        return;
+      }
+      const clipChoices = b.render_contract
+        ? [...b.render_contract.body_clips, ...(b.render_contract.effect_clips || []).filter(c => !b.render_contract.body_clips.includes(c))]
+        : Object.keys(b.animations);
+      const priority = [
+        'power_up', 'aura_loop', 'idle', 'walk', 'run', 'jump', 'guard',
+        'attack_light', 'attack_heavy', 'spin_kick', 'sword_combo', 'burning_sword',
+        'ki_blast', 'galick_gun', 'final_flash', 'vanish_blitz', 'ultimate_spirit_sword',
+        'hit', 'ko', 'win',
+      ];
+      clipChoices.sort((x, y) => {
+        const ix = priority.indexOf(x), iy = priority.indexOf(y);
+        return (ix === -1 ? 99 : ix) - (iy === -1 ? 99 : iy);
+      });
+
+      if (!clipChoices.includes(state.activeClipName)) {
+        state.activeClipName = clipChoices[0] || 'idle';
+      }
+
+      if (cntBadge) cntBadge.textContent = b.render_contract ? `${b.render_contract.body_clips.length} thân · ${b.render_contract.effect_clips.length} FX` : `${clipChoices.length} clips`;
+
+      listEl.innerHTML = clipChoices.map(cname => `
+        <button class="clip-chip ${cname === state.activeClipName ? 'active' : ''}" data-clip="${cname}">${cname}</button>
+      `).join('');
+      listEl.querySelectorAll('.clip-chip').forEach(btn => {
+        btn.onclick = () => {
+          state.activeClipName = btn.dataset.clip;
+          const hasAura = Boolean(b.render_contract?.aura?.loop_clip && b.animations[b.render_contract.aura.loop_clip]);
+          if(hasAura && ['power_up','aura_loop','ko'].includes(state.activeClipName)) {state.auraEnabled=state.activeClipName!=='ko';document.getElementById('chkIndependentAura').checked=state.auraEnabled;}
+          state.stepIdx = 0;
+          state.stepElapsedMs = 0;
+          state.playing = true;
+          syncClipChoices();
+          updatePlayButtonUI();
+          updateAgentSpecText();
+        };
+      });
+
+      const tl = getActiveTimelineFrames();
+      syncWasmTimelineDurations(tl.frames);
+
+      slider.max = Math.max(0, tl.frames.length - 1);
+      if (state.stepIdx >= tl.frames.length) state.stepIdx = 0;
+      slider.value = state.stepIdx;
+
+      const prefab = state.activeChar.modes.combined_1layer && state.activeChar.modes.combined_1layer.godot_prefab;
+      const staticHint = tl.frames.length === 1 ? ' • <span style="color:var(--gold);">(Tư thế tĩnh 1 frame)</span>' : '';
+      document.getElementById('clipMetaInfo').innerHTML =
+        `Prefab: <code>${prefab || '—'}</code> • Speed: <code>${tl.speed_hz} Hz</code> • Loop gốc: <code>${tl.loop}</code> (${tl.frames.length} frame)${staticHint}`;
+
+      buildFilmstrip(tl);
+    }
+
+    function buildFilmstrip(tl) {
+      const strip = document.getElementById('filmstrip');
+      strip.innerHTML = '';
+      const [cw, ch] = getCanvasSize();
+      const thumbW = 60;
+      const thumbH = Math.max(36, Math.round(thumbW * (ch / cw)));
+      tl.frames.forEach((f, idx) => {
+        const div = document.createElement('div');
+        div.className = 'thumb' + (idx === state.stepIdx ? ' active' : '');
+        const c = document.createElement('canvas');
+        c.width = thumbW;
+        c.height = thumbH;
+        const cx = c.getContext('2d');
+        cx.imageSmoothingEnabled = false;
+        drawCompositeStep(cx, state.activeClipName, idx, thumbW / cw, thumbH / ch);
+        const lbl = document.createElement('div');
+        lbl.textContent = `#${idx} (${Math.round(f.duration_ms)}ms)`;
+        div.appendChild(c);
+        div.appendChild(lbl);
+        div.onclick = () => {
+          state.playing = false;
+          state.stepIdx = idx;
+          state.stepElapsedMs = 0;
+          document.getElementById('frameSlider').value = idx;
+          updatePlayButtonUI();
+          highlightFilmstrip();
+          updateAgentSpecText();
+        };
+        strip.appendChild(div);
+      });
+    }
+
+    function highlightFilmstrip() {
+      document.querySelectorAll('#filmstrip .thumb').forEach((el, i) => {
+        el.classList.toggle('active', i === state.stepIdx);
+      });
+    }
+
+    function animationTickLength(anim) {
+      return anim.frames.reduce((s, f) => s + f.duration_ticks * 60 / anim.speed_hz, 0);
+    }
+    function animationFrameTick(anim, index) {
+      return anim.frames.slice(0,index).reduce((s,f)=>s+f.duration_ticks*60/anim.speed_hz,0);
+    }
+    function sampleFxFrame(anim, tick) {
+      const total=animationTickLength(anim);
+      let t=anim.loop ? ((tick%total)+total)%total : Math.min(tick,total-0.000001);
+      for(let i=0;i<anim.frames.length;i++) {
+        const d=anim.frames[i].duration_ticks*60/anim.speed_hz;
+        if(t<d) return anim.frames[i];
+        t-=d;
+      }
+      return anim.frames[anim.frames.length-1];
+    }
+    function fireballFlightTiming(c, target) {
+      const f = c.fireball;
+      const origin = f.mouth_anchors_by_frame[f.release_frame];
+      const targetHit = [target[0], target[1] - c.target_hit_height_px];
+      const dx = targetHit[0] - origin[0], dy = targetHit[1] - origin[1];
+      const dist = Math.hypot(dx, dy);
+      const rawTicks = Math.max(0, (dist - f.target_radius_px) / f.speed_px_per_tick);
+      const minTicks = Number(f.min_flight_ticks ?? 14);
+      const maxTicks = Number(f.max_flight_ticks ?? 25.5);
+      const flightTicks = Math.max(minTicks, Math.min(maxTicks, Math.max(minTicks, rawTicks)));
+      return { origin, targetHit, dx, dy, dist, flightTicks, hitTick: f.release_tick + flightTicks };
+    }
+    function chilopodaActionState(contract, clip, tick, targetGround) {
+      const c=contract.chilopoda,a=c.anchor_px,target=targetGround||c.target_ground_canvas_px;
+      const result={bodyVisible:true,bodyDx:0,bodyDy:0,groundY:c.ground_y,dust:[],fireball:null};
+      const q=c.burrow_turn&&clip===c.burrow_turn.body_clip?c.burrow_turn:c.burrow;
+      if(clip===q.body_clip) {
+        let pose=0,left=tick;while(pose<q.frame_ticks.length-1&&left>=q.frame_ticks[pose])left-=q.frame_ticks[pose++];
+        const visibleDepth=Math.max(0,c.ground_y-q.top_y_by_frame[pose]-1);
+        const smooth=v=>{const t=Math.max(0,Math.min(1,v));return t*t*(3-2*t)};
+        if(tick>=q.dive_start_tick&&tick<q.hidden_start_tick)result.bodyDy=visibleDepth*smooth((tick-q.dive_start_tick)/(q.hidden_start_tick-q.dive_start_tick));
+        result.bodyVisible=!(tick>=q.hidden_start_tick&&tick<q.emerge_start_tick);
+        if(tick>=q.emerge_start_tick){result.bodyDx=q.relocate===false?0:target[0]-q.bite_offset_x_px-a[0];result.bodyDy=visibleDepth*(1-smooth((tick-q.emerge_start_tick)/(q.emerge_end_tick-q.emerge_start_tick)))}
+        const entryPoint=q.relocate===false?[a[0],c.ground_y]:[a[0]+q.bite_offset_x_px,c.ground_y],exitPoint=q.relocate===false?entryPoint:target;
+        for(const [start,point]of [[q.entry_fx_start_tick,entryPoint],[q.exit_fx_start_tick,exitPoint]])if(tick>=start&&tick<start+q.dust_lifetime_ticks)result.dust.push({tick:tick-start,point});
+      }
+      const f=c.fireball;
+      if(f&&clip===f.body_clip&&tick>=f.release_tick) {
+        const ft=fireballFlightTiming(c,target),elapsed=tick-f.release_tick;
+        if(elapsed<ft.flightTicks) {
+          const t=Math.max(0,Math.min(1,elapsed/Math.max(1,ft.flightTicks)));
+          const flightFrames=f.flight_frames||[3,4,5,6,7,8,9];
+          const frameIdx=flightFrames[Math.min(flightFrames.length-1,Math.floor(t*flightFrames.length))];
+          result.fireball={point:[ft.origin[0]+ft.dx*t,ft.origin[1]+ft.dy*t],angle:Math.atan2(ft.dy,ft.dx),frameIdx,hitTick:ft.hitTick};
+        }
+      }
+      return result;
+    }
+    function chilopodaLayers(b,clipName,index,tick,options={}) {
+      const contract=b.render_contract,c=contract.chilopoda,a=c.anchor_px,fxPivot=contract.fx_pivot_px;
+      const target=options.targetGroundCanvasPx||c.target_ground_canvas_px;
+      const q=chilopodaActionState(contract,clipName,tick,target),shift=options.sceneOriginShift||[0,0],layers=[];
+      const point=p=>[p[0]-shift[0],p[1]-shift[1]];
+      const body=b.animations[clipName];
+      const burrowed=[c.burrow.body_clip,c.burrow_turn?.body_clip].includes(clipName);
+      const turnMirror=c.burrow_turn&&clipName===c.burrow_turn.body_clip&&!options.turnFacingHandled?Boolean(options.initialFacingLeft)!==(tick>=c.burrow_turn.hidden_start_tick):false;
+      if(q.bodyVisible)layers.push({layer:'Body',bundle:b.id,frame:body.frames[index],point:point([a[0]+q.bodyDx,a[1]+q.bodyDy]),pivot:a,angle:0,mirror:turnMirror,clipBelowY:burrowed?c.ground_y:null});
+      for(const dust of q.dust)layers.push({layer:'BurrowDust',bundle:b.id,frame:sampleFxFrame(b.animations[c.burrow.dust_clip],dust.tick),point:point(dust.point),pivot:fxPivot,angle:0,layerScale:options.dustScale||1});
+      const f=c.fireball,fbFrames=f?b.animations[f.projectile_clip]?.frames:null;
+      if(f&&fbFrames&&clipName===f.body_clip) {
+        if(tick<f.release_tick) {
+          const chargeFrames=f.charge_frames||[0,1,2];
+          const cIdx=chargeFrames[Math.min(index,chargeFrames.length-1)];
+          const mPos=f.mouth_anchors_by_frame[Math.min(index,f.mouth_anchors_by_frame.length-1)];
+          layers.push({layer:'FireballFX',bundle:b.id,frame:fbFrames[cIdx],point:point(mPos),pivot:fxPivot,angle:0});
+        } else if(q.fireball) {
+          layers.push({layer:'FireballFX',bundle:b.id,frame:fbFrames[q.fireball.frameIdx],point:point(q.fireball.point),pivot:fxPivot,angle:q.fireball.angle});
+        }
+      }
+      return layers;
+    }
+    function getLayerFramesForStep(clipName, stepIdx, options={}) {
+      const b = options.bundle || getCharBundle();
+      if(!b) return [];
+      const contract=b.render_contract;
+      if(!contract) {
+        const anim=b.animations[clipName]||Object.values(b.animations)[0];
+        if(!anim||!anim.frames.length) return [];
+        return [{layer:'Combined1Layer(z=0)',bundle:b.id,frame:anim.frames[Math.min(stepIdx,anim.frames.length-1)]}];
+      }
+      if(contract.effect_clips?.includes(clipName)&&!contract.body_clips.includes(clipName)&&clipName!=='aura_loop') {
+        const fxAnim=b.animations[clipName];
+        if(!fxAnim||!fxAnim.frames.length)return [];
+        return [{layer:'Projectile',bundle:b.id,frame:fxAnim.frames[Math.min(stepIdx,fxAnim.frames.length-1)]}];
+      }
+      const auraView=clipName==='aura_loop';
+      const bodyName=contract.body_clips.includes(clipName)?clipName:'idle';
+      const anim=b.animations[bodyName];
+      const index=auraView?0:Math.min(stepIdx,anim.frames.length-1);
+      const tick=animationFrameTick(anim,index)+(options.elapsedMs||0)*0.06;
+      if(contract.chilopoda)return chilopodaLayers(b,bodyName,index,tick,options);
+      const fxTick=options.fxTicks===undefined?state.fxTicks:options.fxTicks;
+      const layers=[];
+      const hasAuraLoop=Boolean(contract.aura?.loop_clip&&b.animations[contract.aura.loop_clip]);
+      const auraOn=hasAuraLoop&&(auraView||(options.auraEnabled===undefined?state.auraEnabled:options.auraEnabled));
+      if(auraOn&&bodyName!=='ko') {
+        const charge=b.animations[contract.aura.charge_clip];
+        const effect=charge&&bodyName==='power_up'&&tick<animationTickLength(charge)?charge:b.animations[contract.aura.loop_clip];
+        const frame=auraView?effect.frames[Math.min(stepIdx,effect.frames.length-1)]:sampleFxFrame(effect,effect===charge?tick:fxTick);
+        layers.push({layer:'Aura',bundle:b.id,frame});
+      }
+      layers.push({layer:'Body',bundle:b.id,frame:anim.frames[index]});
+      const charge=contract.charge;
+      if(charge && bodyName===charge.body_clip && index<charge.release_frame) {
+        const point=charge.origin_canvas_px_by_frame[index];
+        layers.push({layer:'Charge',bundle:b.id,frame:sampleFxFrame(b.animations[charge.effect_clip],tick),point,pivot:contract.fx_pivot_px,angle:0});
+      }
+      const slashes=contract.target_slashes;
+      if(slashes && bodyName===slashes.body_clip) {
+        const point=options.targetCanvasPx||slashes.default_target_canvas_px;
+        for(const strike of slashes.strikes) {
+          const elapsed=tick-strike.at_tick;
+          if(elapsed>=0 && elapsed<strike.duration_ticks) {
+            layers.push({layer:'TargetSlash',bundle:b.id,frame:sampleFxFrame(b.animations[strike.clip],elapsed),point,pivot:contract.fx_pivot_px,angle:0});
+          }
+        }
+      }
+      const p=contract.projectile;
+      if(!p)return layers;
+      if(p.kind==='linear_energy') {
+        if(bodyName===p.body_clip) {
+          const baseTick=tick;
+          const elapsed=baseTick-animationFrameTick(anim,p.release_frame);
+          if(elapsed>=0&&elapsed<p.lifetime_ticks)layers.push({layer:'Projectile',bundle:b.id,frame:sampleFxFrame(b.animations[p.projectile_clip],elapsed),point:p.origin_canvas_px.map((v,j)=>v+elapsed*p.velocity_px_per_tick[j]),pivot:contract.fx_pivot_px,angle:0});
+        }
+        return layers;
+      }
+      if(bodyName===p.body_clip) {
+        const release=animationFrameTick(anim,p.release_frame),ret=animationFrameTick(anim,p.return_frame),caught=animationFrameTick(anim,p.catch_frame),farTick=animationFrameTick(anim,p.far_frame);
+        if(tick>=release&&tick<caught) {
+          const returning=tick>=ret;
+          const mix=(a,c,k)=>a.map((v,j)=>v+(c[j]-v)*Math.max(0,Math.min(1,k)));
+          const point=returning?mix(p.far_canvas_px,p.catch_canvas_px,(tick-ret)/(caught-ret)):mix(p.start_canvas_px,p.far_canvas_px,(tick-release)/(farTick-release));
+          const angle=returning?2*Math.PI*((ret-release)-(tick-ret))/p.rotation_period_ticks:2*Math.PI*(tick-release)/p.rotation_period_ticks;
+          const phase=returning?3-Math.floor((tick-ret)/p.spin_step_ticks)%4:Math.floor((tick-release)/p.spin_step_ticks)%4;
+          layers.push({layer:'SpinTrail',bundle:b.id,frame:b.animations[p.spin_clip].frames[phase],point,pivot:contract.fx_pivot_px,angle:0});
+          layers.push({layer:'Hammer',bundle:b.id,frame:b.animations[p.hammer_clip].frames[0],point,pivot:contract.fx_pivot_px,angle});
+        }
+      }
+      return layers;
+    }
+    function drawCompositeStep(ctx,clipName,stepIdx,scaleX=1,scaleY=scaleX,options={}) {
+      const layers=getLayerFramesForStep(clipName,stepIdx,options);
+      const [cw,ch]=getCanvasSize(options.character || state.activeChar);ctx.imageSmoothingEnabled=false;
+      for(const item of layers) {
+        const f=item.frame,img=state.images[f.atlas_url];if(!img)continue;
+        if(item.clipBelowY!=null){ctx.save();ctx.beginPath();ctx.rect(0,0,cw*scaleX,item.clipBelowY*scaleY);ctx.clip()}
+        if(item.point) {
+          ctx.save();ctx.translate(item.point[0]*scaleX,item.point[1]*scaleY);ctx.rotate(item.angle);
+          if(item.mirror)ctx.scale(-1,1);
+          if(item.layerScale&&item.layerScale!==1)ctx.scale(item.layerScale,item.layerScale);
+          ctx.drawImage(img,f.x,f.y,f.w,f.h,-item.pivot[0]*scaleX,-item.pivot[1]*scaleY,cw*scaleX,ch*scaleY);ctx.restore();
+        } else ctx.drawImage(img,f.x,f.y,f.w,f.h,0,0,cw*scaleX,ch*scaleY);
+        if(item.clipBelowY!=null)ctx.restore();
+      }
+      return layers;
+    }
+    const sourceProbe=document.createElement('canvas');sourceProbe.width=1;sourceProbe.height=1;
+    const sourceProbeCtx=sourceProbe.getContext('2d',{willReadFrequently:true});
+    function atlasPointForLayer(item,x,y) {
+      if(!item.point)return {x:Math.floor(x),y:Math.floor(y)};
+      const dx=x+0.5-item.point[0],dy=y+0.5-item.point[1],c=Math.cos(item.angle),s=Math.sin(item.angle);
+      return {x:Math.floor((item.mirror?-1:1)*(c*dx+s*dy)+item.pivot[0]),y:Math.floor(-s*dx+c*dy+item.pivot[1])};
+    }
+    function sourceLayerAt(layers,x,y) {
+      for(const item of [...layers].reverse()) {
+        if(item.clipBelowY!=null&&y>=item.clipBelowY)continue;
+        const uv=atlasPointForLayer(item,x,y),f=item.frame,img=state.images[f.atlas_url];
+        if(!img||uv.x<0||uv.y<0||uv.x>=f.w||uv.y>=f.h)continue;
+        sourceProbeCtx.clearRect(0,0,1,1);sourceProbeCtx.drawImage(img,f.x+uv.x,f.y+uv.y,1,1,0,0,1,1);
+        if(sourceProbeCtx.getImageData(0,0,1,1).data[3]>0)return {item,x:f.x+uv.x,y:f.y+uv.y};
+      }
+      return null;
+    }
+
+    function stepInspectorAnimation(dtMs) {
+      if (!state.playing || !state.activeChar) return;
+      const tl = getActiveTimelineFrames();
+      if (!tl.frames.length) return;
+
+      const scaledDt = dtMs * state.speedMult;
+      state.fxTicks += scaledDt * 0.06;
+      const prevIdx = state.stepIdx;
+      let finishedOneshot = false;
+
+      if (state.stepperEngine === 'rust_wasm' && state.wasmExports && state.wasmExports.wasm_clip_step) {
+        const syncKey = `${state.activeChar.character_id}:${state.activeClipName}:${tl.frames.length}`;
+        if (state._lastWasmClipKey !== syncKey) {
+          syncWasmTimelineDurations(tl.frames);
+          state._lastWasmClipKey = syncKey;
+        }
+        const outPtr = state.wasmExports.wasm_clip_step(
+          state.stepIdx,
+          state.stepElapsedMs,
+          scaledDt,
+          tl.loop ? 1 : 0,
+          state.autoReplayOneshot ? 1 : 0
+        );
+        const res = new Float32Array(state.wasmExports.memory.buffer, outPtr, 3);
+        state.stepIdx = Math.round(res[0]);
+        state.stepElapsedMs = res[1];
+        finishedOneshot = res[2] > 0.5;
+      } else {
+        const curF = tl.frames[state.stepIdx] || tl.frames[0];
+        const dur = Math.max(16.0, curF.duration_ms || 83.33);
+        state.stepElapsedMs += scaledDt;
+        if (state.stepElapsedMs >= dur) {
+          state.stepElapsedMs -= dur;
+          if (state.stepIdx + 1 < tl.frames.length) {
+            state.stepIdx++;
+          } else if (tl.loop || state.autoReplayOneshot) {
+            state.stepIdx = 0;
+          } else {
+            state.stepIdx = tl.frames.length - 1;
+            state.stepElapsedMs = 0;
+            finishedOneshot = true;
+          }
+        }
+      }
+
+      if (finishedOneshot) {
+        state.playing = false;
+        updatePlayButtonUI();
+      }
+      if (state.stepIdx !== prevIdx) {
+        document.getElementById('frameSlider').value = state.stepIdx;
+        highlightFilmstrip();
+        updateAgentSpecText();
+      }
+    }
+
+    function renderInspector() {
+      const canvas = document.getElementById('inspectorCanvas');
+      if (!canvas) return;
+      const [cw, ch] = getCanvasSize();
+      ensureOffscreenSize(cw, ch);
+      const z = state.zoom;
+      const viewW = cw * z;
+      const viewH = ch * z;
+      if (canvas.width !== viewW + RULER_PAD || canvas.height !== viewH + RULER_PAD) {
+        canvas.width = viewW + RULER_PAD;
+        canvas.height = viewH + RULER_PAD;
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      offCtx.clearRect(0, 0, cw, ch);
+      const activeLayers = state.activeChar
+        ? drawCompositeStep(offCtx, state.activeClipName, state.stepIdx, 1.0, 1.0, {elapsedMs:state.stepElapsedMs,fxTicks:state.fxTicks})
+        : [];
+
+      ctx.save();
+      ctx.translate(RULER_PAD, RULER_PAD);
+      if (state.bgMode === 'dark') {
+        ctx.fillStyle = '#141824';
+        ctx.fillRect(0, 0, viewW, viewH);
+      } else if (state.bgMode === 'light') {
+        ctx.fillStyle = '#e5e7eb';
+        ctx.fillRect(0, 0, viewW, viewH);
+      } else if (state.bgMode === 'namek') {
+        const g = ctx.createLinearGradient(0, 0, 0, viewH);
+        g.addColorStop(0, '#134e4a');
+        g.addColorStop(0.82, '#115e59');
+        g.addColorStop(0.83, '#3f6212');
+        g.addColorStop(1, '#365314');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, viewW, viewH);
+      } else {
+        const sq = 8 * z;
+        for (let y = 0; y < viewH; y += sq) {
+          for (let x = 0; x < viewW; x += sq) {
+            ctx.fillStyle = ((x / sq + y / sq) % 2 === 0) ? '#1f2937' : '#374151';
+            ctx.fillRect(x, y, sq, sq);
+          }
+        }
+      }
+
+      if (state.showMapGrid) {
+        for (let px = 0; px <= cw; px += 32) {
+          const is64 = (px % 64 === 0);
+          ctx.strokeStyle = is64 ? 'rgba(56, 189, 248, 0.25)' : 'rgba(148, 163, 184, 0.12)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(px * z + 0.5, 0); ctx.lineTo(px * z + 0.5, viewH);
+          ctx.stroke();
+        }
+        for (let py = 0; py <= ch; py += 32) {
+          const is64 = (py % 64 === 0);
+          ctx.strokeStyle = is64 ? 'rgba(56, 189, 248, 0.25)' : 'rgba(148, 163, 184, 0.12)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, py * z + 0.5); ctx.lineTo(viewW, py * z + 0.5);
+          ctx.stroke();
+        }
+      }
+
+      if (!state.activeChar) {
+        ctx.fillStyle = state.bgMode === 'light' ? '#334155' : '#94a3b8';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('Roster đang trống (0 nhân vật)', Math.max(20, viewW * 0.5 - 110), viewH * 0.5 - 10);
+        ctx.font = '12px sans-serif';
+        ctx.fillText('Gửi file sheet/Atlas cho Agent để setup nhân vật mới', Math.max(20, viewW * 0.5 - 155), viewH * 0.5 + 14);
+      } else {
+        const m = state.activeChar.map_sync_metrics;
+        ctx.drawImage(offscreenCanvas, 0, 0, viewW, viewH);
+
+        if (state.showBBox) {
+          const bb = m.body_only_bbox_px;
+          const fb = m.full_fx_bbox_px || m.full_aura_shock_bbox_px;
+          ctx.strokeStyle = 'rgba(34, 197, 94, 0.65)';
+          ctx.setLineDash([4, 3]);
+          ctx.strokeRect(bb.x * z, bb.y * z, bb.w * z, bb.h * z);
+          ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
+          ctx.strokeRect(fb.x * z, fb.y * z, fb.w * z, fb.h * z);
+          ctx.setLineDash([]);
+
+          const ax = m.foot_anchor_px[0] * z;
+          const ay = m.foot_anchor_px[1] * z;
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(ax - 8, ay); ctx.lineTo(ax + 8, ay);
+          ctx.moveTo(ax, ay - 8); ctx.lineTo(ax, ay + 8);
+          ctx.stroke();
+        }
+      }
+
+      if (state.selectedRect) {
+        const r = state.selectedRect;
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.18)';
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2;
+        if (state.selectedPolygon) {
+          ctx.beginPath();
+          state.selectedPolygon.forEach((p, i) => {
+            if (i === 0) ctx.moveTo(p.x * z, p.y * z);
+            else ctx.lineTo(p.x * z, p.y * z);
+          });
+          ctx.closePath(); ctx.fill('evenodd'); ctx.stroke();
+        } else {
+          ctx.fillRect(r.x * z, r.y * z, r.w * z, r.h * z);
+          ctx.strokeRect(r.x * z, r.y * z, r.w * z, r.h * z);
+        }
+        ctx.fillStyle = '#0b0e17';
+        ctx.fillRect(r.x * z, Math.max(0, r.y * z - 18), 140, 17);
+        ctx.fillStyle = '#facc15';
+        ctx.font = 'bold 11px monospace';
+        ctx.fillText(`${state.selectedPolygon ? "Lasso" : "Rect"}(${r.x},${r.y},${r.w},${r.h})`, r.x * z + 4, Math.max(12, r.y * z - 5));
+      }
+      ctx.restore();
+
+      // Pixel coordinate rulers (X: 0..cw, Y: 0..ch)
+      ctx.fillStyle = '#0f1525';
+      ctx.fillRect(0, 0, canvas.width, RULER_PAD);
+      ctx.fillRect(0, 0, RULER_PAD, canvas.height);
+      ctx.strokeStyle = '#28324c';
+      ctx.strokeRect(0, 0, canvas.width, RULER_PAD);
+      ctx.strokeRect(0, 0, RULER_PAD, canvas.height);
+
+      ctx.fillStyle = '#93a1c6';
+      ctx.font = '10px monospace';
+      for (let px = 0; px <= cw; px += 32) {
+        const sx = RULER_PAD + px * z;
+        ctx.beginPath();
+        ctx.moveTo(sx, RULER_PAD - 6); ctx.lineTo(sx, RULER_PAD);
+        ctx.strokeStyle = '#64748b';
+        ctx.stroke();
+        if (px < cw) ctx.fillText(String(px), sx + 2, 14);
+      }
+      for (let py = 0; py <= ch; py += 32) {
+        const sy = RULER_PAD + py * z;
+        ctx.beginPath();
+        ctx.moveTo(RULER_PAD - 6, sy); ctx.lineTo(RULER_PAD, sy);
+        ctx.strokeStyle = '#64748b';
+        ctx.stroke();
+        if (py < ch) {
+          ctx.save();
+          ctx.translate(12, sy + 3);
+          ctx.rotate(-Math.PI / 2);
+          ctx.fillText(String(py), -12, 0);
+          ctx.restore();
+        }
+      }
+
+      const topLayer = activeLayers.find(l=>l.layer==='Body') || activeLayers[activeLayers.length - 1];
+      const tl = getActiveTimelineFrames();
+      if (topLayer) {
+        document.getElementById('scrubberLabel').textContent =
+          `Step: ${state.stepIdx} / ${Math.max(0, tl.frames.length - 1)} (${topLayer.frame.sub_id} • ${topLayer.frame.duration_ms}ms • ${state.stepperEngine === 'rust_wasm' ? 'Rust WASM' : 'Godot Spec'})`;
+        document.getElementById('scrubberRegion').textContent =
+          `Atlas Rect2(${topLayer.frame.x}, ${topLayer.frame.y}, ${topLayer.frame.w}, ${topLayer.frame.h})`;
+      } else {
+        document.getElementById('scrubberLabel').textContent = 'Step: 0 / 0 (Chưa có nhân vật)';
+        document.getElementById('scrubberRegion').textContent = 'Atlas Region: —';
+      }
+    }
+
+    // Pixel-center even/odd rasterization, shared by statistics and copied masks.
+    // A run is [canvasY, startCanvasX, length]; bbox is descriptive only for lasso.
+    function selectionPixelRuns(rect, polygon = null) {
+      if (!rect) return [];
+      const runs = [];
+      for (let y = rect.y; y < rect.y + rect.h; y++) {
+        if (!polygon) { runs.push([y, rect.x, rect.w]); continue; }
+        const crossings = [], py = y + 0.5;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+          const a = polygon[i], b = polygon[j];
+          if ((a.y > py) !== (b.y > py)) crossings.push((b.x - a.x) * (py - a.y) / (b.y - a.y) + a.x);
+        }
+        crossings.sort((a,b) => a-b);
+        for (let i = 0; i + 1 < crossings.length; i += 2) {
+          const start = Math.max(rect.x, Math.ceil(crossings[i] - 0.5));
+          const end = Math.min(rect.x + rect.w, Math.ceil(crossings[i+1] - 0.5));
+          if (end > start) runs.push([y, start, end - start]);
+        }
+      }
+      return runs;
+    }
+
+    function updateAgentSpecText() {
+      const ch = state.activeChar;
+      if (!ch) {
+        document.getElementById('txtAgentSpec').value =
+          '[DR7-EDIT-SPEC]\n- Trạng thái: Roster đang trống (0 nhân vật).\n- Hướng dẫn: Gửi file sheet/Atlas cho Agent để setup nhân vật mới.';
+        return;
+      }
+      const [cw, chPx] = getCanvasSize(ch);
+      const tagLabels = {
+        CHINH_NET: 'CHỈNH NÉT / TĂNG CHI TIẾT PIXEL',
+        LOI_HOAT_ANH: 'SỬA LỖI HOẠT ẢNH / LỆCH NHỊP FRAME',
+        LUOC_BO: 'LƯỢC BỎ CHI TIẾT THỪA',
+        XOA_NEN: 'XÓA NỀN / KHỬ VIỀN MÀU BẨN',
+        LOI_MAU_SAC: 'LỖI MÀU SẮC',
+        MAT_CHI_TIET: 'MẤT CHI TIẾT',
+      };
+      const layers = getLayerFramesForStep(state.activeClipName, state.stepIdx, {elapsedMs:state.stepElapsedMs,fxTicks:state.fxTicks});
+      const layerDesc = layers.map(l => `${l.layer}:${l.frame.sub_id}@Atlas(${l.frame.x},${l.frame.y},${l.frame.w},${l.frame.h})${l.point ? ':pivot='+l.pivot.join(',')+':canvas='+l.point.join(',')+':angle='+l.angle : ''}`).join(' + ');
+      const r = state.selectedRect;
+      let rectLine = `Toàn khung Canvas ${cw}x${chPx} (Kéo chuột trên ảnh để khoanh vùng hẹp hơn)`;
+      let pxStats = '';
+      if (r) {
+        const ax = ch.map_sync_metrics.foot_anchor_px[0];
+        const ay = ch.map_sync_metrics.foot_anchor_px[1];
+        rectLine = `Canvas Rect(${r.x}, ${r.y}, ${r.w}, ${r.h}) | Offset từ tâm chân: (${r.x - ax}, ${r.y - ay})`;
+        const imgData = offCtx.getImageData(r.x, r.y, Math.max(1, r.w), Math.max(1, r.h)).data;
+        const runs = selectionPixelRuns(r, state.selectedPolygon);
+        let selectedCount = 0, nonZero = 0, rSum = 0, gSum = 0, bSum = 0;
+        for (const [y, x, length] of runs) {
+          selectedCount += length;
+          for (let px = x; px < x + length; px++) {
+            const i = ((y - r.y) * r.w + px - r.x) * 4;
+            if (imgData[i + 3] > 0) {
+              nonZero++;
+              rSum += imgData[i]; gSum += imgData[i + 1]; bSum += imgData[i + 2];
+            }
+          }
+        }
+        if (state.selectedPolygon) {
+          rectLine = `Canvas Lasso (bbox Rect(${r.x}, ${r.y}, ${r.w}, ${r.h}) chỉ để định vị; chỉ sửa pixel trong mặt nạ) | Offset từ tâm chân: (${r.x - ax}, ${r.y - ay})`;
+          rectLine += `\n- Polygon Canvas (khép kín, even-odd, tâm pixel): ${JSON.stringify(state.selectedPolygon.map(p => [p.x, p.y]))}`;
+          rectLine += `\n- PixelRuns Canvas [y,x,length] (mặt nạ chính xác): ${JSON.stringify(runs)}`;
+        }
+        const avgRgb = nonZero > 0 ? `[${Math.round(rSum/nonZero)}, ${Math.round(gSum/nonZero)}, ${Math.round(bSum/nonZero)}]` : '[0,0,0]';
+        pxStats = `\n- Đo đạc vùng chọn: ${nonZero}/${selectedCount} pixel có hình, RGB trung bình=${avgRgb}`;
+      }
+      const note = document.getElementById('inpOwnerNote').value.trim();
+      const spec = [
+        `[DR7-EDIT-SPEC]`,
+        `- Nhân vật: ${ch.character_id} | Kiến trúc: combined_1layer (Godot 4 + Rust Core)`,
+        `- Yêu cầu: ${tagLabels[state.activeTag]}`,
+        `- Clip & Frame: clip="${state.activeClipName}", step=${state.stepIdx}`,
+        `- Lớp & Tọa độ Atlas: ${layerDesc}`,
+        `- Vùng tọa độ cần xử lý: ${rectLine}${pxStats}`,
+        note ? `- Ghi chú của Owner: ${note}` : null,
+      ].filter(Boolean).join('\n');
+      document.getElementById('txtAgentSpec').value = spec;
+    }
+
+    // =========================================================================
+    // TAB 2: PLAYABLE 2D GAMEPLAY SANDBOX (FULL LOCOMOTION + DYNAMIC SKILLS)
+    // =========================================================================
+    const SKILL_SPECS = {
+      attack_light: { dmg: 120, range: 220, label: '-120 LIGHT ATTACK!', shake: 0 },
+      attack_nomal: { dmg: 120, range: 220, label: '-120 CLAW ATTACK!', shake: 0 },
+      attack_heavy: { dmg: 220, range: 250, label: '-220 HEAVY SMASH!', shake: 0 },
+      power_up:     { dmg: 250, range: 920, label: '-250 POWER SURGE!', shake: 0 },
+      ki_blast:     { dmg: 280, range: 1000, label: '-280 KI BLAST!', shake: 0 },
+    };
+
+    const ARENA_HOTKEYS = [
+      { code: 'KeyJ', key: 'J' },
+      { code: 'KeyU', key: 'U' },
+      { code: 'KeyI', key: 'I' },
+      { code: 'KeyK', key: 'K' },
+      { code: 'KeyL', key: 'L' },
+      { code: 'KeyO', key: 'O' },
+      { code: 'KeyP', key: 'P' },
+    ];
+    let arenaHotkeyClips = {};
+
+    function renderArenaControls() {
+      const container = document.getElementById('arenaSkillButtons');
+      if (!container) return;
+      container.innerHTML = '';
+      arenaHotkeyClips = {};
+      const b = getCharBundle();
+      if (!state.activeChar || !b) {
+        const msg = document.createElement('span');
+        msg.style.color = 'var(--muted)';
+        msg.style.fontSize = '11.5px';
+        msg.textContent = 'Chờ nhân vật mới để kích hoạt kỹ năng';
+        container.appendChild(msg);
+        return;
+      }
+      const passive = new Set(['idle', 'walk', 'fly', 'run', 'jump', 'guard', 'aura_loop', 'hit', 'ko', 'win', 'turn']);
+      const skillNames = Object.keys(b.animations).filter(n => !passive.has(n) && (!b.render_contract || b.render_contract.body_clips.includes(n)));
+      skillNames.slice(0, ARENA_HOTKEYS.length).forEach((clipName, idx) => {
+        const hk = ARENA_HOTKEYS[idx];
+        arenaHotkeyClips[hk.code] = clipName;
+        const sp = SKILL_SPECS[clipName] || { dmg: 350 };
+        const btn = document.createElement('button');
+        btn.className = idx === skillNames.length - 1 ? 'btn btn-primary' : 'btn';
+        btn.dataset.clip = clipName;
+        btn.textContent = `${hk.key}: ${clipName} (${sp.dmg})`;
+        btn.onclick = () => triggerArenaAction(clipName);
+        container.appendChild(btn);
+      });
+    }
+
+    const arena = {
+      viewportWidth: 1920, viewportHeight: 1080,
+      x: 560, y: 840, groundY: 840, vy: 0,
+      minX: 140, maxX: 1780,
+      flyMinY: 60, flyDefaultY: 250, flyVerticalSpeedPxPerS: 240,
+      playerSpawnX: 560, playerSpawnLeftX: 1240,
+      defaultCharScale: 2,
+      charScale: 2,
+      enemyScale: 2,
+      customSpeedPxPerSec: null,
+      burrowDustScale: 2.65,
+      native1to1: false,
+      showPhoneBezel: true,
+      showSampleMap: true,
+      showGridOverlay: true,
+      mapWebPath: '/assets/maps/rocky_plateau/rocky-plateau-bg.jpg',
+      bezelWebPath: '/preview-assets/phone-frame-landscape-16x9.png',
+      bezelImageSize: [2096, 1166],
+      bezelHoleRect: [88, 53, 1920, 1080],
+      jumpVelocityPxPerMs: -0.78,
+      gravityPxPerMs2: 0.0020,
+      fxTicks:0,
+      rageMode: true,
+      spawnFacing: 'right',
+      flip: false,
+      actionClip: null,
+      turnTargetFlip: null,
+      turnElapsedMs: 0,
+      turnDurationMs: 0,
+      turnPrevDir: 1,
+      turnBoostMs: 0,
+      clip: 'idle',
+      step: 0,
+      elapsed: 0,
+      shake: 0,
+      hitstop: 0,
+      dummyX: 1360,
+      dummyHp: 2000,
+      dummyMaxHp: 2000,
+      dummyFlash: 0,
+      dummyClip: 'idle',
+      dummyStep: 0,
+      popups: [],
+      keys: {},
+      chiloPatrol:false,chiloPatrolDir:1,chiloInputDir:0,chiloAction:null,
+      patrolEnabled:false,patrolDir:1,patrolRun:false,
+      holdLeft: false,
+      holdRight: false,
+      holdFlyUp: false,
+      holdFlyDown: false,
+      utilityAiCfg: {
+        close_edge_px: 50,
+        mid_max_edge_px: 200,
+        heavy_max_edge_px: 200,
+        attack_cooldown_s: 1.0,
+        light_hits_before_heavy: 2,
+        zone_width_max_px: 500,
+        zone_width_default_px: 480,
+      },
+      enemyAi: {
+        enabled: false,
+        charId: '',
+        pinned: false,
+        x: 1360,
+        y: 840,
+        flip: true,
+        spawnFacing: 'right',
+        clip: 'idle',
+        step: 0,
+        elapsed: 0,
+        actionClip: null,
+        turnTargetFlip: null,
+        turnElapsedMs: 0,
+        turnDurationMs: 0,
+        turnPrevDir: -1,
+        turnBoostMs: 0,
+        chiloAction: null,
+        homeX: 1360,
+        zoneMinX: 1120,
+        zoneMaxX: 1600,
+        patrolDir: -1,
+        cooldownRemaining: 0,
+        lightChainCount: 0,
+        lastIntent: 'idle',
+        lastReason: 'ai_off',
+        lastAttackClip: '',
+        lastEdgeDist: -1,
+      },
+    };
+
+    function getBodyDims(ch = state.activeChar) {
+      const bb = ch?.map_sync_metrics?.body_only_bbox_px;
+      if (!bb) return [0, 0];
+      if (Array.isArray(bb)) return [Number(bb[0]) || 0, Number(bb[1]) || 0];
+      return [Number(bb.w) || 0, Number(bb.h) || 0];
+    }
+
+    function isFlyingBundle(b = getCharBundle()) {
+      return b?.render_contract?.locomotion?.kind === 'flight';
+    }
+
+    function getDefaultCharScale(b = getCharBundle()) {
+      return Number(b?.render_contract?.locomotion?.default_scale) || arena.defaultCharScale || 2;
+    }
+
+    function getTurnSpeedMultiplier(b = getCharBundle()) {
+      return Math.max(1.0, Number(b?.render_contract?.turning?.turn_speed_multiplier) || 1.0);
+    }
+
+    function clipTotalDurationMs(anim) {
+      if (!anim || !Array.isArray(anim.frames) || !anim.frames.length) return 0;
+      return anim.frames.reduce((acc, f) => acc + Math.max(16.0, Number(f?.duration_ms) || (Number(f?.duration_ticks || 5) * 1000 / 60)), 0);
+    }
+
+    function turnMomentumFactor(elapsedMs, durationMs, prevDir, targetDir) {
+      if (!durationMs || durationMs <= 0) return targetDir;
+      const p = Math.max(0, Math.min(1, elapsedMs / durationMs));
+      if (p < 0.38) return prevDir * (1 - p / 0.38) * 0.45;
+      return targetDir * ((p - 0.38) / 0.62);
+    }
+
+    function isStationaryBundle(b = getCharBundle()) {
+      return b?.render_contract?.locomotion?.kind === 'stationary';
+    }
+
+    function getContractWalkSpeedPxPerS(b = getCharBundle(), scale = arena.charScale, patrolActive = arena.patrolEnabled) {
+      const loc = b?.render_contract?.locomotion;
+      if (isStationaryBundle(b)) return 0;
+      if (loc?.speed_px_per_second) {
+        return Number(loc.speed_px_per_second) * scale;
+      }
+      const patrolCfg = loc?.patrol;
+      if (patrolCfg?.speed_px_per_second) {
+        return Number(patrolCfg.speed_px_per_second) * scale;
+      }
+      return 270 * (scale / 2.0);
+    }
+
+    function getEffectiveWalkSpeedPxPerS(b = getCharBundle(), scale = arena.charScale, patrolActive = arena.patrolEnabled) {
+      if (isStationaryBundle(b)) return 0;
+      if (arena.customSpeedPxPerSec !== null && Number.isFinite(arena.customSpeedPxPerSec)) {
+        return Math.max(10, arena.customSpeedPxPerSec);
+      }
+      return getContractWalkSpeedPxPerS(b, scale, patrolActive);
+    }
+
+    function applyArenaStageConfig(stage) {
+      if (!stage || typeof stage !== 'object') return;
+      const vp = stage.viewport || {};
+      const gp = stage.gameplay || {};
+      const mp = stage.map || {};
+      const bz = stage.phone_bezel || {};
+      const fl = gp.flight || {};
+      arena.viewportWidth = Number(vp.width) || 1920;
+      arena.viewportHeight = Number(vp.height) || 1080;
+      arena.groundY = Number(gp.ground_y) || 840;
+      arena.flyMinY = Number(fl.min_y) || 60;
+      arena.flyDefaultY = Number(fl.default_y) || 250;
+      arena.flyVerticalSpeedPxPerS = Number(fl.vertical_speed_px_per_s) || 240;
+      if (typeof gp.burrow_dust_scale_default === 'number') arena.burrowDustScale = gp.burrow_dust_scale_default;
+      arena.y = isFlyingBundle() ? arena.flyDefaultY : arena.groundY;
+      if (Array.isArray(gp.walkable_bounds_x) && gp.walkable_bounds_x.length >= 2) {
+        arena.minX = Number(gp.walkable_bounds_x[0]);
+        arena.maxX = Number(gp.walkable_bounds_x[1]);
+      }
+      arena.playerSpawnX = Number(gp.player_spawn_x) || 560;
+      arena.playerSpawnLeftX = Number(gp.player_spawn_facing_left_x) || 1240;
+      arena.x = arena.playerSpawnX;
+      arena.dummyX = Number(gp.dummy_spawn_x) || 1360;
+      if (gp.utility_ai && typeof gp.utility_ai === 'object') {
+        arena.utilityAiCfg = {
+          close_edge_px: Number(gp.utility_ai.close_edge_px ?? 50),
+          mid_max_edge_px: Number(gp.utility_ai.mid_max_edge_px ?? 200),
+          heavy_max_edge_px: Number(gp.utility_ai.heavy_max_edge_px ?? 200),
+          attack_cooldown_s: Number(gp.utility_ai.attack_cooldown_s ?? 1.0),
+          light_hits_before_heavy: Number(gp.utility_ai.light_hits_before_heavy ?? 2),
+          zone_width_max_px: Number(gp.utility_ai.zone_width_max_px ?? 500),
+          zone_width_default_px: Number(gp.utility_ai.zone_width_default_px ?? 480),
+        };
+      }
+      resetEnemyAiZone(arena.dummyX);
+      arena.defaultCharScale = Number(gp.character_scale_default) || 2;
+      arena.charScale = getDefaultCharScale(getCharBundle());
+      arena.enemyScale = getDefaultCharScale(getCharBundle(getEnemyRosterEntry()));
+      if (typeof gp.jump_velocity_px_per_s === 'number') {
+        arena.jumpVelocityPxPerMs = gp.jump_velocity_px_per_s / 1000.0;
+      }
+      if (typeof gp.gravity_px_per_s2 === 'number') {
+        arena.gravityPxPerMs2 = gp.gravity_px_per_s2 / 1000000.0;
+      }
+      if (mp.background_web_path) arena.mapWebPath = mp.background_web_path;
+      if (bz.web_path) arena.bezelWebPath = bz.web_path;
+      if (Array.isArray(bz.image_size_px) && bz.image_size_px.length === 2) arena.bezelImageSize = bz.image_size_px;
+      if (Array.isArray(bz.screen_hole_px) && bz.screen_hole_px.length === 4) arena.bezelHoleRect = bz.screen_hole_px;
+      if (typeof bz.default_enabled === 'boolean') arena.showPhoneBezel = bz.default_enabled;
+
+      const c = document.getElementById('arenaCanvas');
+      if (c && (c.width !== arena.viewportWidth || c.height !== arena.viewportHeight)) {
+        c.width = arena.viewportWidth;
+        c.height = arena.viewportHeight;
+      }
+      const bezelImg = document.getElementById('arenaPhoneBezelImg');
+      if (bezelImg && arena.bezelWebPath) bezelImg.src = arena.bezelWebPath;
+      updateArenaFrameLayout();
+      updateArenaScaleUI();
+      updateArenaSpeedUI();
+      updateArenaFlightUI();
+      updateArenaDustScaleUI();
+      updateEnemyAiStatusUI();
+    }
+
+    function computeBodyRect(posX, footY, bodyW, bodyH, scale = 1) {
+      const bw = Math.max(16, (Number(bodyW) || 140) * scale);
+      const bh = Math.max(16, (Number(bodyH) || 140) * scale);
+      return { x: posX - bw * 0.5, y: footY - bh, w: bw, h: bh };
+    }
+
+    function computeEdgeDistance(selfRect, targetRect) {
+      const dx = Math.max(0, selfRect.x - (targetRect.x + targetRect.w), targetRect.x - (selfRect.x + selfRect.w));
+      const dy = Math.max(0, selfRect.y - (targetRect.y + targetRect.h), targetRect.y - (selfRect.y + selfRect.h));
+      return Math.hypot(dx, dy);
+    }
+
+    function resetEnemyAiZone(centerX = arena.dummyX) {
+      const cfg = arena.utilityAiCfg || {};
+      const maxW = Number(cfg.zone_width_max_px ?? 500);
+      const defW = Number(cfg.zone_width_default_px ?? 480);
+      const span = Math.max(40, Math.min(maxW, defW));
+      const home = Math.max(arena.minX + span * 0.5, Math.min(arena.maxX - span * 0.5, centerX));
+      arena.enemyAi.homeX = home;
+      arena.enemyAi.zoneMinX = Math.max(arena.minX, home - span * 0.5);
+      arena.enemyAi.zoneMaxX = Math.min(arena.maxX, Math.max(arena.enemyAi.zoneMinX + 40, home + span * 0.5));
+      arena.enemyAi.cooldownRemaining = 0;
+      arena.enemyAi.lightChainCount = 0;
+      arena.enemyAi.patrolDir = -1;
+      arena.enemyAi.lastIntent = 'patrol';
+      arena.enemyAi.lastReason = 'zone_init';
+      arena.enemyAi.lastAttackClip = '';
+      arena.enemyAi.lastEdgeDist = -1;
+    }
+
+    function evaluateUtilityAI(aiState, params, cfg = arena.utilityAiCfg) {
+      if (params.is_stationary) {
+        aiState.lastIntent = 'idle';
+        aiState.lastReason = 'stationary';
+        return { intent: 'idle', move_dir: 0, attack_clip: '', desired_face_left: Boolean(params.facing_left), edge_dist: -1, reason: 'stationary' };
+      }
+      const closeEdge = Number(cfg.close_edge_px ?? 50);
+      const midMaxEdge = Number(cfg.mid_max_edge_px ?? 200);
+      const heavyMaxEdge = Number(cfg.heavy_max_edge_px ?? 200);
+      const attackCd = Number(cfg.attack_cooldown_s ?? 1.0);
+      const hitsBeforeHeavy = Number(cfg.light_hits_before_heavy ?? 2);
+
+      const cid = String(params.character_id || '');
+      const isFlying = Boolean(params.is_flying);
+      const hasHeavy = Boolean(params.has_heavy);
+      const lightClip = String(params.light_clip || 'attack_light');
+      const selfRect = params.self_rect;
+      const targetRect = params.target_rect;
+      const selfX = Number(params.self_x ?? aiState.homeX);
+      const targetX = Number(params.target_x ?? 0);
+      const isBusy = Boolean(params.is_busy);
+
+      const patrolStep = () => {
+        if (selfX <= aiState.zoneMinX + 4) aiState.patrolDir = 1;
+        else if (selfX >= aiState.zoneMaxX - 4) aiState.patrolDir = -1;
+        aiState.lastIntent = 'patrol';
+        aiState.lastReason = 'target_outside_zone';
+        return {
+          intent: 'patrol',
+          move_dir: aiState.patrolDir,
+          attack_clip: '',
+          desired_face_left: aiState.patrolDir < 0,
+          edge_dist: -1,
+          reason: aiState.lastReason,
+        };
+      };
+
+      const zoneActive = targetX >= aiState.zoneMinX && targetX <= aiState.zoneMaxX;
+      if (!zoneActive) {
+        if (aiState.lightChainCount > 0) aiState.lightChainCount = 0;
+        if (isBusy) {
+          return { intent: 'busy', move_dir: 0, attack_clip: '', desired_face_left: targetX < selfX, edge_dist: -1, reason: 'busy' };
+        }
+        return patrolStep();
+      }
+
+      const edgeDist = computeEdgeDistance(selfRect, targetRect);
+      const faceLeft = targetX < selfX;
+
+      if (isBusy) {
+        aiState.lastIntent = 'busy';
+        aiState.lastReason = 'executing_action';
+        return { intent: 'busy', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      // Special Case 1: Chilopoda reverses range roles (<50px -> power_up laser, >=50px -> attack_light burrow)
+      if (cid === 'chilopoda') {
+        aiState.lightChainCount = 0;
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'chilopoda_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        const chosen = edgeDist < closeEdge ? 'power_up' : lightClip;
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = edgeDist < closeEdge ? 'chilopoda_close_laser' : 'chilopoda_far_burrow';
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: chosen, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      // Special Case 2: Flying mobs hover & patrol in air without chasing; >=50px ranged power_up, <50px melee light
+      if (isFlying) {
+        if (edgeDist >= closeEdge) {
+          aiState.lightChainCount = 0;
+          if (aiState.cooldownRemaining > 0) {
+            const pat = patrolStep();
+            pat.edge_dist = edgeDist;
+            pat.reason = 'flying_hover_cooldown';
+            aiState.lastReason = pat.reason;
+            return pat;
+          }
+          aiState.lastIntent = 'attack';
+          aiState.lastReason = 'flying_ranged_far';
+          aiState.cooldownRemaining = attackCd;
+          return { intent: 'attack', move_dir: 0, attack_clip: 'power_up', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'flying_melee_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = 'flying_melee_close';
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: lightClip, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      // Standard Ground Utility AI:
+      if (edgeDist >= midMaxEdge) {
+        aiState.lightChainCount = 0;
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'far_power_up_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = 'far_power_up';
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: 'power_up', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      if (hasHeavy && aiState.lightChainCount >= hitsBeforeHeavy && edgeDist < heavyMaxEdge) {
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'heavy_ready_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        aiState.lightChainCount = 0;
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = 'combo_heavy_followup';
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: 'attack_heavy', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      if (edgeDist < closeEdge) {
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = 'close_light_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+        }
+        aiState.lightChainCount += 1;
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = `close_light_${aiState.lightChainCount}`;
+        aiState.cooldownRemaining = attackCd;
+        return { intent: 'attack', move_dir: 0, attack_clip: lightClip, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+      }
+
+      let chaseDir = 0;
+      if (targetX > selfX + 2 && selfX < aiState.zoneMaxX) chaseDir = 1;
+      else if (targetX < selfX - 2 && selfX > aiState.zoneMinX) chaseDir = -1;
+      aiState.lastIntent = 'chase';
+      aiState.lastReason = 'mid_range_chase';
+      return { intent: 'chase', move_dir: chaseDir, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+    }
+
+    function getEnemyRosterEntry() {
+      const chars = state.api?.roster?.characters || [];
+      return chars.find(c => c.character_id === arena.enemyAi.charId) || state.activeChar;
+    }
+
+    function populateEnemySelectOptions() {
+      const sel = document.getElementById('selEnemyChar');
+      if (!sel || !state.api?.roster?.characters) return;
+      sel.innerHTML = '';
+      for (const ch of state.api.roster.characters) {
+        const opt = document.createElement('option');
+        opt.value = ch.character_id;
+        opt.textContent = ch.display_name || ch.character_id;
+        sel.appendChild(opt);
+      }
+      if (arena.enemyAi.charId) sel.value = arena.enemyAi.charId;
+    }
+
+    function selectEnemyCharacter(charId, pin = true) {
+      const ch = (state.api?.roster?.characters || []).find(c => c.character_id === charId);
+      if (!ch) return false;
+      const eb = getCharBundle(ch);
+      arena.enemyAi.charId = ch.character_id;
+      arena.enemyAi.pinned = pin;
+      arena.enemyScale = getDefaultCharScale(eb);
+      arena.enemyAi.x = arena.dummyX;
+      arena.enemyAi.y = isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY;
+      arena.enemyAi.spawnFacing = getDefaultSpawnFacing(eb);
+      arena.enemyAi.flip = isSidewaysLocked(eb) ? (arena.enemyAi.spawnFacing === 'left') : true;
+      arena.enemyAi.clip = 'idle';
+      arena.enemyAi.step = 0;
+      arena.enemyAi.elapsed = 0;
+      arena.enemyAi.actionClip = null;
+      arena.enemyAi.turnTargetFlip = null;
+      arena.enemyAi.turnElapsedMs = 0;
+      arena.enemyAi.turnDurationMs = 0;
+      arena.enemyAi.turnBoostMs = 0;
+      arena.enemyAi.chiloAction = null;
+      resetEnemyAiZone(arena.dummyX);
+      const sel = document.getElementById('selEnemyChar');
+      if (sel && sel.value !== ch.character_id) sel.value = ch.character_id;
+      updateEnemyAiStatusUI();
+      return true;
+    }
+
+    function setUtilityAiEnabled(enabled) {
+      arena.enemyAi.enabled = Boolean(enabled);
+      arena.enemyAi.actionClip = null;
+      arena.enemyAi.turnTargetFlip = null;
+      arena.enemyAi.chiloAction = null;
+      arena.enemyAi.clip = 'idle';
+      arena.enemyAi.step = 0;
+      arena.enemyAi.elapsed = 0;
+      resetEnemyAiZone(arena.dummyX);
+      const eCh = getEnemyRosterEntry();
+      const eb = getCharBundle(eCh);
+      arena.enemyAi.x = arena.dummyX;
+      arena.enemyAi.y = isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY;
+      if (eb && isSidewaysLocked(eb)) {
+        arena.enemyAi.flip = arena.enemyAi.spawnFacing === 'left';
+      }
+      const chk = document.getElementById('chkUtilityAI');
+      if (chk && chk.checked !== arena.enemyAi.enabled) chk.checked = arena.enemyAi.enabled;
+      if (!arena.enemyAi.enabled) {
+        arena.enemyAi.lastIntent = 'idle';
+        arena.enemyAi.lastReason = 'ai_off';
+      }
+      updateEnemyAiStatusUI();
+    }
+
+    function updateEnemyAiStatusUI() {
+      const lbl = document.getElementById('arenaAiStatus');
+      if (!lbl) return;
+      const zMin = Math.round(arena.enemyAi.zoneMinX);
+      const zMax = Math.round(arena.enemyAi.zoneMaxX);
+      if (!arena.enemyAi.enabled) {
+        lbl.textContent = `AI TẮT • Zone [${zMin}..${zMax}] • Bật để quái tự tuần tra & giao chiến 1:1 Godot`;
+        return;
+      }
+      const gapTxt = arena.enemyAi.lastEdgeDist >= 0 ? `${Math.round(arena.enemyAi.lastEdgeDist)}px` : 'Ngoài vùng';
+      lbl.textContent = `AI[${arena.enemyAi.charId}] ${arena.enemyAi.lastReason} • Rìa=${gapTxt} • Chain=${arena.enemyAi.lightChainCount}/${arena.utilityAiCfg.light_hits_before_heavy} • CD=${arena.enemyAi.cooldownRemaining.toFixed(1)}s • Zone [${zMin}..${zMax}]`;
+    }
+
+    function stepEnemyAiFrame(dtMs) {
+      const eCh = getEnemyRosterEntry();
+      const eb = getCharBundle(eCh);
+      if (!eCh || !eb) return null;
+      const ai = arena.enemyAi;
+      const eScale = arena.enemyScale || getDefaultCharScale(eb);
+      const eChilo = eb.render_contract?.chilopoda;
+      if (ai.enabled) {
+        ai.cooldownRemaining = Math.max(0, ai.cooldownRemaining - dtMs / 1000.0);
+        ai.turnBoostMs = Math.max(0, (ai.turnBoostMs || 0) - dtMs);
+        if (ai.turnTargetFlip !== null && !eChilo && ai.turnDurationMs > 0) {
+          ai.turnElapsedMs = (ai.turnElapsedMs || 0) + dtMs;
+          const mom = turnMomentumFactor(ai.turnElapsedMs, ai.turnDurationMs, ai.turnPrevDir || -1, ai.turnTargetFlip ? -1 : 1);
+          const turnSpdPerMs = getContractWalkSpeedPxPerS(eb, eScale, true) / 1000.0;
+          ai.x = Math.max(ai.zoneMinX, Math.min(ai.zoneMaxX, ai.x + mom * turnSpdPerMs * dtMs));
+        }
+        const [pW, pH] = getBodyDims(state.activeChar);
+        const [eW, eH] = getBodyDims(eCh);
+        const targetRect = computeBodyRect(arena.x, arena.y, pW || 140, pH || 140, arena.charScale);
+        const selfRect = computeBodyRect(ai.x, ai.y, eW || 140, eH || 140, eScale);
+        const caps = {
+          character_id: eCh.character_id,
+          is_flying: isFlyingBundle(eb),
+          sideways_locked: isSidewaysLocked(eb),
+          has_heavy: Boolean(eb.animations?.attack_heavy),
+          light_clip: eb.animations?.attack_light ? 'attack_light' : (eb.animations?.attack_nomal ? 'attack_nomal' : 'attack_light'),
+          locomotion_clip: eb.animations?.fly ? 'fly' : 'walk',
+        };
+        const res = evaluateUtilityAI(ai, {
+          character_id: caps.character_id,
+          is_stationary: isStationaryBundle(eb),
+          facing_left: ai.flip,
+          is_flying: caps.is_flying,
+          has_heavy: caps.has_heavy,
+          light_clip: caps.light_clip,
+          self_rect: selfRect,
+          target_rect: targetRect,
+          self_x: ai.x,
+          target_x: arena.x,
+          is_busy: Boolean(ai.actionClip || ai.turnTargetFlip !== null),
+        });
+        ai.lastEdgeDist = res.edge_dist;
+        ai.lastAttackClip = res.attack_clip || '';
+
+        if (res.intent !== 'busy') {
+          if (caps.sideways_locked) {
+            ai.flip = ai.spawnFacing === 'left';
+          } else if (ai.flip !== res.desired_face_left) {
+            const eTurnClip = eb.render_contract?.turning?.clip;
+            if (eTurnClip && eb.animations?.[eTurnClip]) {
+              ai.turnPrevDir = ai.flip ? -1 : 1;
+              ai.turnTargetFlip = res.desired_face_left;
+              ai.turnElapsedMs = 0;
+              ai.turnDurationMs = clipTotalDurationMs(eb.animations[eTurnClip]);
+              ai.actionClip = eTurnClip;
+              ai.clip = eTurnClip;
+              ai.step = 0;
+              ai.elapsed = 0;
+              updateEnemyAiStatusUI();
+              return { eCh, eb, res };
+            }
+            ai.flip = res.desired_face_left;
+            ai.turnBoostMs = 260;
+          }
+
+          if (res.intent === 'attack' && res.attack_clip && eb.animations?.[res.attack_clip]) {
+            ai.actionClip = res.attack_clip;
+            ai.clip = res.attack_clip;
+            ai.step = 0;
+            ai.elapsed = 0;
+            if (eb.render_contract?.chilopoda) {
+              const cc = eb.render_contract.chilopoda;
+              const sign = ai.flip ? -1 : 1;
+              const clampedTx = Math.max(arena.minX, Math.min(arena.maxX, arena.x));
+              ai.chiloAction = {
+                startX: ai.x,
+                sign,
+                target: [cc.anchor_px[0] + (clampedTx - ai.x) / eScale / sign, cc.ground_y],
+              };
+            } else {
+              arena.popups.push({ x: ai.x, y: ai.y - 110 * eScale, text: `AI ${res.attack_clip.toUpperCase()}`, life: 650 });
+            }
+          } else if ((res.intent === 'patrol' || res.intent === 'chase') && res.move_dir !== 0) {
+            const turnMult = (ai.turnBoostMs || 0) > 0 ? getTurnSpeedMultiplier(eb) : 1.0;
+            const spdPerMs = (getContractWalkSpeedPxPerS(eb, eScale, true) * turnMult) / 1000.0;
+            ai.x = Math.max(ai.zoneMinX, Math.min(ai.zoneMaxX, ai.x + res.move_dir * spdPerMs * dtMs));
+            if (caps.is_flying) ai.y = Math.max(arena.flyMinY, Math.min(arena.groundY, ai.y));
+            const targetLoco = eb.animations?.[caps.locomotion_clip] ? caps.locomotion_clip : 'idle';
+            if (ai.clip !== targetLoco) {
+              ai.clip = targetLoco;
+              ai.step = 0;
+              ai.elapsed = 0;
+            }
+          } else if (res.intent === 'wait_cooldown') {
+            if (ai.clip !== 'idle') {
+              ai.clip = 'idle';
+              ai.step = 0;
+              ai.elapsed = 0;
+            }
+          }
+        }
+      }
+
+      const activeClip = ai.enabled ? ai.clip : (arena.dummyClip || 'idle');
+      let eAnim = eb.animations?.[activeClip] || Object.values(eb.animations)[0];
+      if (ai.enabled && eAnim && eAnim.frames.length) {
+        ai.elapsed += dtMs;
+        if (eChilo?.burrow_turn && ai.clip === eChilo.burrow_turn.body_clip && ai.turnTargetFlip !== null) {
+          const tick = animationFrameTick(eAnim, ai.step) + ai.elapsed * 0.06;
+          if (tick >= eChilo.burrow_turn.hidden_start_tick) ai.flip = ai.turnTargetFlip;
+        }
+        if (eChilo && ai.chiloAction && ai.actionClip === eChilo.burrow.body_clip) {
+          const tick = animationFrameTick(eAnim, ai.step) + ai.elapsed * 0.06;
+          const q = chilopodaActionState(eb.render_contract, ai.clip, tick, ai.chiloAction.target);
+          if (tick >= eChilo.burrow.emerge_start_tick) {
+            ai.x = Math.max(ai.zoneMinX, Math.min(ai.zoneMaxX, ai.chiloAction.startX + ai.chiloAction.sign * q.bodyDx * eScale));
+          }
+        }
+        while (eAnim && eAnim.frames.length) {
+          const ef = eAnim.frames[Math.min(ai.step, eAnim.frames.length - 1)];
+          const eDur = Math.max(16.0, (ef && ef.duration_ms) || 83.33);
+          if (ai.elapsed < eDur) break;
+          ai.elapsed -= eDur;
+          if (ai.step + 1 < eAnim.frames.length) {
+            ai.step += 1;
+          } else if (ai.actionClip) {
+            const finishedAiTurn = ai.turnTargetFlip !== null;
+            if (finishedAiTurn) {
+              ai.flip = ai.turnTargetFlip;
+              ai.turnTargetFlip = null;
+              ai.turnElapsedMs = 0;
+              ai.turnDurationMs = 0;
+            }
+            ai.actionClip = null;
+            ai.chiloAction = null;
+            if (finishedAiTurn && !eChilo) {
+              const loco = eb.animations?.fly ? 'fly' : 'walk';
+              ai.clip = eb.animations?.[loco] ? loco : 'idle';
+              eAnim = eb.animations?.[ai.clip] || eAnim;
+              ai.step = (eAnim && eAnim.frames.length > 1) ? 1 : 0;
+            } else {
+              ai.clip = 'idle';
+              eAnim = eb.animations?.['idle'] || eAnim;
+              ai.step = 0;
+            }
+          } else if (eAnim.loop) {
+            ai.step = 0;
+          } else {
+            ai.elapsed = 0;
+            break;
+          }
+        }
+      }
+      if (ai.enabled) updateEnemyAiStatusUI();
+      return { eCh, eb };
+    }
+
+    function updateArenaFrameLayout() {
+      const frame = document.getElementById('arenaPhoneFrame');
+      const slot = document.getElementById('arenaScreenSlot');
+      const bezelImg = document.getElementById('arenaPhoneBezelImg');
+      const chkBezel = document.getElementById('chkPhoneBezel');
+      const chkNative = document.getElementById('chkNative1to1');
+      if (chkBezel) chkBezel.checked = arena.showPhoneBezel;
+      if (chkNative) chkNative.checked = arena.native1to1;
+      if (!frame || !slot) return;
+      const [bw, bh] = arena.bezelImageSize;
+      const [hx, hy, hw, hh] = arena.bezelHoleRect;
+      if (arena.showPhoneBezel) {
+        if (bezelImg) bezelImg.style.display = 'block';
+        frame.style.aspectRatio = `${bw} / ${bh}`;
+        if (arena.native1to1) {
+          frame.style.width = `${bw}px`;
+          frame.style.minWidth = `${bw}px`;
+          frame.style.maxWidth = 'none';
+        } else {
+          frame.style.width = '100%';
+          frame.style.minWidth = '';
+          frame.style.maxWidth = '1180px';
+        }
+        slot.style.left = `${(hx / bw * 100).toFixed(6)}%`;
+        slot.style.top = `${(hy / bh * 100).toFixed(6)}%`;
+        slot.style.width = `${(hw / bw * 100).toFixed(6)}%`;
+        slot.style.height = `${(hh / bh * 100).toFixed(6)}%`;
+        slot.style.borderRadius = '2.2%';
+      } else {
+        if (bezelImg) bezelImg.style.display = 'none';
+        frame.style.aspectRatio = `${arena.viewportWidth} / ${arena.viewportHeight}`;
+        if (arena.native1to1) {
+          frame.style.width = `${arena.viewportWidth}px`;
+          frame.style.minWidth = `${arena.viewportWidth}px`;
+          frame.style.maxWidth = 'none';
+        } else {
+          frame.style.width = '100%';
+          frame.style.minWidth = '';
+          frame.style.maxWidth = '1140px';
+        }
+        slot.style.left = '0%';
+        slot.style.top = '0%';
+        slot.style.width = '100%';
+        slot.style.height = '100%';
+        slot.style.borderRadius = '8px';
+      }
+    }
+
+    function formatScaleLabel(s) {
+      return Number(s).toFixed(2).replace(/\.?0+$/, '');
+    }
+
+    function setArenaCharacterScale(newScale) {
+      const raw = Number(newScale);
+      const clamped = Number.isFinite(raw) ? Math.max(0.5, Math.min(3.5, Math.round(raw * 20) / 20)) : 2;
+      arena.charScale = clamped;
+      arena.enemyScale = clamped;
+      updateArenaScaleUI();
+      updateArenaSpeedUI();
+    }
+
+    function updateArenaScaleUI() {
+      document.querySelectorAll('#arenaScaleControls button[data-scale]').forEach(btn => {
+        btn.classList.toggle('btn-gold', Math.abs(Number(btn.dataset.scale) - arena.charScale) < 0.001);
+      });
+      const rng = document.getElementById('rngArenaScale');
+      const num = document.getElementById('numArenaScale');
+      if (rng) rng.value = String(arena.charScale);
+      if (num) num.value = String(arena.charScale);
+      const badge = document.getElementById('arenaStageBadge');
+      if (badge) {
+        const [bodyW, bodyH] = getBodyDims(state.activeChar);
+        const sLabel = formatScaleLabel(arena.charScale);
+        const sizeNote = bodyH ? ` • Thân ${sLabel}× ≈ ${Math.round(bodyW * arena.charScale)}×${Math.round(bodyH * arena.charScale)}px (${(bodyH * arena.charScale / arena.viewportHeight * 100).toFixed(1)}% 1080p)` : '';
+        badge.textContent = `${arena.viewportWidth}×${arena.viewportHeight} • 16:9 • ${sLabel}× Nearest${sizeNote}`;
+      }
+    }
+
+    function updateArenaSpeedUI() {
+      const b = getCharBundle();
+      const eff = getEffectiveWalkSpeedPxPerS(b, arena.charScale);
+      const base1x = eff / Math.max(0.1, arena.charScale);
+      const rng = document.getElementById('rngArenaSpeed');
+      const num = document.getElementById('numArenaSpeed');
+      const lbl = document.getElementById('arenaSpeedReadout');
+      if (rng) { rng.disabled = isStationaryBundle(b); rng.value = String(Math.min(600, Math.max(20, Math.round(eff)))); }
+      if (num) { num.disabled = isStationaryBundle(b); num.value = String(Math.round(eff)); }
+      if (lbl && isStationaryBundle(b)) {
+        lbl.textContent = 'Đứng yên • 0 px/s';
+      } else if (lbl) {
+        const crossSec = (1640 / Math.max(1, eff)).toFixed(1);
+        const isCustom = arena.customSpeedPxPerSec !== null;
+        lbl.textContent = `${Math.round(eff)} px/s (~${crossSec}s hết sân | Base 1×: ${Math.round(base1x)} px/s${isCustom ? ' • Tùy chỉnh' : ''})`;
+      }
+    }
+
+    function updateArenaFlightUI() {
+      const rng = document.getElementById('rngFlyAltY');
+      const lbl = document.getElementById('arenaFlyAltLabel');
+      const val = Math.round(arena.flyDefaultY);
+      if (rng) rng.value = String(val);
+      if (lbl) {
+        const diffMid = val - Math.round(arena.viewportHeight / 2);
+        const floorDist = Math.round(arena.groundY - val);
+        lbl.textContent = `Spawn Y=${val} (Giữa ${diffMid >= 0 ? '+' : ''}${diffMid}px | Cách sàn ${floorDist}px)`;
+      }
+    }
+
+    function updateArenaDustScaleUI() {
+      document.querySelectorAll('#arenaDustControls button[data-dust-scale]').forEach(btn => {
+        btn.classList.toggle('btn-gold', Math.abs(Number(btn.dataset.dustScale) - arena.burrowDustScale) < 0.01);
+      });
+      const rng = document.getElementById('rngBurrowDustScale');
+      const lbl = document.getElementById('arenaDustScaleLabel');
+      if (rng) rng.value = String(arena.burrowDustScale);
+      if (lbl) {
+        const wPx = Math.round(35 * arena.burrowDustScale);
+        const hPx = Math.round(32 * arena.burrowDustScale);
+        lbl.textContent = `${formatScaleLabel(arena.burrowDustScale)}× (~${wPx}×${hPx}px gốc | ~${Math.round(wPx * arena.charScale)}px trên sân)`;
+      }
+    }
+
+    function isSidewaysLocked(b) {
+      const loc = b?.render_contract?.locomotion;
+      return Boolean(loc?.sideways_strafe || loc?.lock_spawn_facing || loc?.allow_turn_or_flip === false);
+    }
+
+    function canFlipPatrolWithoutTurn(b) {
+      const loc = b?.render_contract?.locomotion;
+      const locClip = loc?.clip || 'walk';
+      const turnClip = b?.render_contract?.turning?.clip;
+      return Boolean(
+        !isSidewaysLocked(b) &&
+        loc?.allow_turn_or_flip !== false &&
+        loc?.patrol?.enabled &&
+        !(turnClip && b?.animations?.[turnClip]) &&
+        b?.animations?.[locClip]
+      );
+    }
+
+    function getDefaultSpawnFacing(b) {
+      return b?.render_contract?.locomotion?.default_spawn_facing === 'left' ? 'left' : 'right';
+    }
+
+    function updateSpawnFacingUI() {
+      const wrap = document.getElementById('arenaSpawnFacingControls');
+      if (!wrap) return;
+      const b = getCharBundle();
+      const locked = isSidewaysLocked(b);
+      wrap.style.display = locked ? 'inline-flex' : 'none';
+      if (!locked) return;
+      const isLeft = arena.spawnFacing === 'left';
+      document.getElementById('btnSpawnRight')?.classList.toggle('btn-gold', !isLeft);
+      document.getElementById('btnSpawnLeft')?.classList.toggle('btn-gold', isLeft);
+    }
+
+    function respawnArenaCharacter(facingOverride, posX) {
+      const b = getCharBundle();
+      const nextFacing = (facingOverride === 'left' || facingOverride === 'right')
+        ? facingOverride
+        : getDefaultSpawnFacing(b);
+      arena.spawnFacing = nextFacing;
+      arena.flip = nextFacing === 'left';
+      arena.x = typeof posX === 'number' ? posX : (nextFacing === 'left' ? arena.playerSpawnLeftX : arena.playerSpawnX);
+      arena.y = isFlyingBundle(b) ? arena.flyDefaultY : arena.groundY;
+      arena.vy = 0;
+      arena.actionClip = null;
+      arena.turnTargetFlip = null;
+      arena.clip = 'idle';
+      arena.step = 0;
+      arena.elapsed = 0;
+      arena.patrolDir = nextFacing === 'left' ? -1 : 1;
+      updateSpawnFacingUI();
+      updatePatrolButtonUI();
+    }
+
+    function updatePatrolButtonUI() {
+      const btn = document.getElementById('btnPatrol');
+      if (!btn) return;
+      const b = getCharBundle();
+      const locClip = b?.render_contract?.locomotion?.clip || 'walk';
+      const hasTurnPatrol = Boolean(b?.render_contract?.turning?.clip && b?.animations?.[b.render_contract.turning.clip] && (b?.render_contract?.locomotion?.patrol || b?.render_contract?.chilopoda));
+      const hasSidewaysPatrol = Boolean(isSidewaysLocked(b) && b?.render_contract?.locomotion?.patrol?.enabled && b?.animations?.[locClip]);
+      const hasFlipPatrol = canFlipPatrolWithoutTurn(b);
+      const hasPatrol = !isStationaryBundle(b) && (hasTurnPatrol || hasSidewaysPatrol || hasFlipPatrol);
+      btn.style.display = hasPatrol ? '' : 'none';
+      btn.disabled = !hasPatrol;
+      const active = b?.render_contract?.chilopoda ? arena.chiloPatrol : arena.patrolEnabled;
+      btn.classList.toggle('btn-gold', Boolean(active));
+      btn.textContent = active ? '🔁 Tuần tra: BẬT' : (hasSidewaysPatrol ? '🔁 Tuần tra tiến/lùi' : '🔁 Tuần tra 2 đầu');
+    }
+
+    function toggleArenaPatrol(useRun = false) {
+      const b = getCharBundle();
+      if (!b || isStationaryBundle(b) || arena.turnTargetFlip !== null) return;
+      if (b.render_contract?.chilopoda) {
+        arena.chiloPatrol = !arena.chiloPatrol;
+        if (arena.chiloPatrol) arena.chiloPatrolDir = arena.flip ? -1 : 1;
+        updatePatrolButtonUI();
+        return;
+      }
+      const locClip = b.render_contract?.locomotion?.clip || 'walk';
+      const sidewaysPatrol = Boolean(isSidewaysLocked(b) && b.render_contract?.locomotion?.patrol?.enabled && b.animations[locClip]);
+      const flipPatrol = canFlipPatrolWithoutTurn(b);
+      const turnClip = b.render_contract?.turning?.clip;
+      if (!sidewaysPatrol && !flipPatrol && (!turnClip || !b.animations[turnClip])) return;
+      arena.patrolEnabled = !arena.patrolEnabled;
+      if (arena.patrolEnabled) {
+        arena.patrolDir = arena.flip ? -1 : 1;
+        arena.patrolRun = Boolean(!sidewaysPatrol && !flipPatrol && useRun && b.animations['run']);
+      } else {
+        arena.patrolRun = false;
+      }
+      updatePatrolButtonUI();
+    }
+
+    function getSummonConfig() { return state.api?.rituals?.shenron_summon || null; }
+    function isSummonCasting() { const c=getSummonConfig();return Boolean(c&&arena.summon&&arena.summon.tick<c.timeline.ready_tick); }
+    function updateSummonButton() {
+      const btn=document.getElementById('btnSummonShenron');if(!btn)return;
+      btn.disabled=!state.activeChar||!getSummonConfig();
+      btn.textContent=arena.summon?'Thu hồi Shenron':'✨ Gọi Shenron';
+    }
+    function startShenronSummon() {
+      const c=getSummonConfig();if(!c||!state.activeChar||arena.summon)return false;
+      const dragon=state.api.roster.characters.find(ch=>ch.character_id===c.behavior.dragon_character_id);
+      if(!dragon||!getCharBundle(dragon))return false;
+      const [,h]=getBodyDims(state.activeChar);
+      arena.summon={tick:0,origin:[arena.x,arena.y-h*arena.charScale*0.5]};
+      arena.patrolEnabled=false;arena.chiloPatrol=false;arena.vy=0;
+      arena.actionClip=null;arena.clip='idle';arena.step=0;arena.elapsed=0;
+      updateSummonButton();return true;
+    }
+    function dismissShenronSummon() { arena.summon=null;updateSummonButton(); }
+    function summonFlightProgress(tick,index,stride,duration) {
+      if(state.wasmExports?.wasm_summon_flight_progress)
+        return state.wasmExports.wasm_summon_flight_progress(tick,index,stride,duration);
+      const elapsed=tick-index*stride;return elapsed<0?-1:Math.max(0,Math.min(1,elapsed/Math.max(1,duration)));
+    }
+    function sampleShenronSummon(tick,origin) {
+      const c=getSummonConfig();if(!c)return null;
+      const t=c.timeline,l=c.layout,clamp=x=>Math.max(0,Math.min(1,x));
+      const vanish=1-clamp((tick-t.vanish_start_tick)/(t.flash_start_ticks[0]-t.vanish_start_tick));
+      let flashAlpha=0;
+      for(const start of t.flash_start_ticks){const e=tick-start;if(e>=0)flashAlpha=Math.max(flashAlpha,Math.min(clamp(e/t.flash_rise_ticks),clamp((t.flash_rise_ticks+t.flash_hold_ticks+t.flash_fall_ticks-e)/t.flash_fall_ticks)));}
+      const balls=c.items.map((item,index)=>{
+        const p=summonFlightProgress(tick,index,t.launch_stride_ticks,t.flight_ticks),u=Math.max(0,p),e=u*u*(3-2*u);
+        const target=[l.map_center_px[0]+item.formation_offset_px[0],l.map_center_px[1]+item.formation_offset_px[1]];
+        return {number:item.number,region:item.region,visible:p>=0&&tick<t.flash_start_ticks[0],alpha:vanish,
+          position:[origin[0]+(target[0]-origin[0])*e,origin[1]+(target[1]-origin[1])*e-l.flight_arc_height_px*4*u*(1-u)]};
+      });
+      const gr=c.regions.ground,gs=l.ground_display_width_px/gr[2],gh=gr[3]*gs;
+      const groundRect=[l.map_center_px[0]-l.ground_display_width_px/2,l.ground_y-gh,l.ground_display_width_px,gh];
+      const groundAlpha=clamp((tick-t.ground_start_tick)/24);
+      const glowAlpha=groundAlpha*(0.78+0.22*(0.5+0.5*Math.sin(2*Math.PI*(tick-t.ground_start_tick)/t.glow_period_ticks)));
+      const dragon=state.api.roster.characters.find(ch=>ch.character_id===c.behavior.dragon_character_id),bundle=getCharBundle(dragon);
+      const scale=l.dragon_scale,anchor=bundle?.anchor_px||[192,240];
+      const dragonPosition=[l.map_center_px[0],groundRect[1]+(anchor[1]-l.dragon_reference_bottom_canvas_y)*scale-l.dragon_gap_px];
+      const dragonAlpha=clamp((tick-t.dragon_start_tick)/(t.ready_tick-t.dragon_start_tick));
+      dragonPosition[1]+=l.dragon_reveal_rise_px*(1-dragonAlpha);
+      const clip=bundle?.animations[c.behavior.dragon_clip];const durations=clip?.frames.map(f=>f.duration_ticks)||[];
+      const total=durations.reduce((a,b)=>a+b,0);let rest=Math.max(0,tick-t.dragon_start_tick)%(total||1),dragonFrame=0;
+      while(dragonFrame<durations.length-1&&rest>=durations[dragonFrame])rest-=durations[dragonFrame++];
+      const phase=tick<t.last_arrival_tick?'flight':tick<t.vanish_start_tick?'gather':tick<t.flash_start_ticks[0]?'vanish':tick<t.ground_start_tick?'flash':tick<t.dragon_start_tick?'ground_glow':tick<t.ready_tick?'dragon_reveal':'ready';
+      return {revealTop:groundRect[1]*(1-dragonAlpha),flashAlpha,phase,balls,groundRect,groundAlpha,glowAlpha,dragonPosition,dragonAlpha,dragonFrame,dragon,bundle};
+    }
+    function drawShenronSummon(ctx) {
+      if(!arena.summon)return;
+      const c=getSummonConfig(),s=sampleShenronSummon(arena.summon.tick,arena.summon.origin);
+      const atlas=state.images['/'+c.atlas];if(!s||!atlas)return;
+      const region=(r,rect,alpha)=>{if(alpha<=0)return;ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha*=alpha;ctx.drawImage(atlas,...r,...rect);ctx.restore();};
+      for(const ball of s.balls){if(!ball.visible)continue;const w=c.layout.ball_display_width_px,h=w*ball.region[3]/ball.region[2];region(ball.region,[ball.position[0]-w/2,ball.position[1]-h/2,w,h],ball.alpha);}
+      const glowScale=c.layout.ground_display_width_px/256;
+      const glowRect=[s.groundRect[0]-32*glowScale,s.groundRect[1]-32*glowScale,c.regions.glow[2]*glowScale,c.regions.glow[3]*glowScale];
+      const grow=(r,n)=>[r[0]-n,r[1]-n,r[2]+2*n,r[3]+2*n];
+      const aw=c.layout.aura_width_px,ah=c.layout.aura_height_px;
+      region(c.regions.glow,[c.layout.map_center_px[0]-aw/2,c.layout.ground_y-ah,aw,ah],s.glowAlpha*0.75);
+      region(c.regions.glow,grow(glowRect,56),s.glowAlpha);region(c.regions.ground,s.groundRect,s.groundAlpha);region(c.regions.core,grow(glowRect,12),s.glowAlpha*0.86);
+      if(s.dragonAlpha>0&&s.bundle){
+        const [w,h]=s.bundle.frame_size,scale=c.layout.dragon_scale,[ax,ay]=s.bundle.anchor_px;
+        ensureOffscreenSize(w,h);offCtx.clearRect(0,0,w,h);
+        drawCompositeStep(offCtx,c.behavior.dragon_clip,s.dragonFrame,1,1,{bundle:s.bundle,character:s.dragon,auraEnabled:false,fxTicks:arena.summon.tick,elapsedMs:0});
+        ctx.save();ctx.beginPath();ctx.rect(0,s.revealTop,1920,1080-s.revealTop);ctx.clip();ctx.globalAlpha*=s.dragonAlpha;ctx.imageSmoothingEnabled=false;
+        ctx.drawImage(offscreenCanvas,s.dragonPosition[0]-ax*scale,s.dragonPosition[1]-ay*scale,w*scale,h*scale);ctx.restore();
+      }
+    }
+
+    function triggerArenaAction(clipName) {
+      if(isSummonCasting())return;
+      if (arena.turnTargetFlip !== null) return;
+      const b = getCharBundle();
+      if (!b || !b.animations[clipName]) return;
+      if(b.render_contract?.chilopoda&&arena.actionClip)return;
+      if (arena.patrolEnabled) { arena.patrolEnabled = false; arena.patrolRun = false; updatePatrolButtonUI(); }
+      arena.actionClip = clipName;
+      arena.clip = clipName;
+      arena.step = 0;
+      arena.elapsed = 0;
+      if(b.render_contract?.chilopoda) {
+        const c=b.render_contract.chilopoda,sign=arena.flip?-1:1;
+        arena.chiloPatrol=false;
+        updatePatrolButtonUI();
+        arena.chiloAction={startX:arena.x,sign,target:[c.anchor_px[0]+(arena.dummyX-arena.x)/arena.charScale/sign,c.ground_y],biteHit:false,fireballHit:false};
+        arena.hitstop=0;return;
+      }
+      const hasAuraLoop = Boolean(b.render_contract?.aura?.loop_clip && b.animations[b.render_contract.aura.loop_clip]);
+      if (clipName === 'power_up') {
+        arena.rageMode = true;
+        if(hasAuraLoop){state.auraEnabled=true;document.getElementById('chkIndependentAura').checked=true;}
+      }
+      const sp = SKILL_SPECS[clipName] || {
+        dmg: 350,
+        range: 380,
+        label: `-350 ${clipName.toUpperCase()}!`,
+        shake: 0,
+      };
+      arena.shake = 0;
+      arena.hitstop = 45;
+      const dist = Math.abs(arena.x - arena.dummyX);
+      const facingDummy = arena.x <= arena.dummyX ? !arena.flip : arena.flip;
+      const powerUpIsPassiveAura = Boolean(hasAuraLoop && b.render_contract?.projectile?.body_clip !== 'power_up');
+      const scaledRange = (sp.range || 420) * (arena.charScale / 2.0);
+      if (!(powerUpIsPassiveAura && clipName==='power_up') && dist <= scaledRange && (clipName === 'power_up' || facingDummy)) {
+        arena.dummyHp = arena.dummyHp <= sp.dmg ? arena.dummyMaxHp : arena.dummyHp - sp.dmg;
+        arena.dummyFlash = 1.0;
+        arena.dummyClip = b.animations['hit'] ? 'hit' : 'idle';
+        arena.dummyStep = 0;
+        arena.popups.push({ x: arena.dummyX, y: arena.groundY - 110 * arena.charScale, text: sp.label, life: 950 });
+      } else {
+        arena.popups.push({ x: arena.x, y: arena.y - 110 * arena.charScale, text: clipName.toUpperCase() + '!', life: 700 });
+      }
+    }
+
+    function triggerArenaJump() {
+      if(isSummonCasting())return;
+      if (isStationaryBundle()) return;
+      const b = getCharBundle();
+      if (isFlyingBundle(b)) {
+        arena.y = Math.max(arena.flyMinY, arena.y - 60);
+        return;
+      }
+      if(!b?.animations.jump)return;
+      if (arena.y >= arena.groundY - 1) {
+        arena.vy = arena.jumpVelocityPxPerMs;
+        if (!arena.actionClip && b && b.animations['jump']) {
+          arena.clip = 'jump';
+          arena.step = 0;
+          arena.elapsed = 0;
+        }
+      }
+    }
+
+    function applyChilopodaArenaHit(amount,label) {
+      arena.dummyHp=arena.dummyHp<=amount?arena.dummyMaxHp:arena.dummyHp-amount;
+      arena.dummyFlash=1;arena.dummyClip='hit';arena.dummyStep=0;
+      arena.popups.push({x:arena.dummyX,y:arena.groundY-90*arena.charScale,text:label,life:950});
+    }
+    function updateChilopodaArenaAction(b) {
+      const c=b.render_contract?.chilopoda,s=arena.chiloAction;
+      if(!c||!s||!arena.actionClip)return;
+      const anim=b.animations[arena.clip],tick=animationFrameTick(anim,arena.step)+arena.elapsed*.06;
+      const q=chilopodaActionState(b.render_contract,arena.clip,tick,s.target);
+      if(arena.clip===c.burrow.body_clip) {
+        if(tick>=c.burrow.emerge_start_tick)arena.x=s.startX+s.sign*q.bodyDx*arena.charScale;
+        if(tick>=c.burrow.bite_tick&&!s.biteHit){s.biteHit=true;applyChilopodaArenaHit(120,'-120 BURROW BITE!')}
+      }
+      const f=c.fireball;
+      if(f&&arena.clip===f.body_clip&&tick>=f.release_tick) {
+        const ft=fireballFlightTiming(c,s.target);
+        if(tick>=ft.hitTick&&!s.fireballHit){s.fireballHit=true;applyChilopodaArenaHit(250,'-250 FIREBALL!')}
+      }
+    }
+
+    function stepAndRenderArena(dtMs, ritualDtMs = dtMs) {
+      const canvas = document.getElementById('arenaCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if(arena.summon)arena.summon.tick+=ritualDtMs*0.06;
+      ctx.imageSmoothingEnabled = false;
+
+      const drawStageBackdrop = () => {
+        ctx.fillStyle = '#070d18';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const mapImg = arena.mapWebPath ? state.images[arena.mapWebPath] : null;
+        if (arena.showSampleMap && mapImg && mapImg.width > 0) {
+          ctx.save();
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(mapImg, 0, 0, canvas.width, canvas.height);
+          ctx.restore();
+        } else {
+          const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+          g.addColorStop(0, '#0a192f');
+          g.addColorStop(arena.groundY / canvas.height - 0.04, '#155e75');
+          g.addColorStop(arena.groundY / canvas.height, '#365314');
+          g.addColorStop(1, '#1a2e05');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        if (arena.showGridOverlay) {
+          ctx.save();
+          // Walkable ground baseline y = arena.groundY and [minX, maxX] boundary posts
+          ctx.strokeStyle = 'rgba(250, 204, 21, 0.72)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(arena.minX, arena.groundY);
+          ctx.lineTo(arena.maxX, arena.groundY);
+          ctx.stroke();
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+          ctx.lineWidth = 1;
+          for (let gx = arena.minX; gx <= arena.maxX; gx += 64) {
+            const major = ((gx - arena.minX) % 256) === 0;
+            ctx.beginPath();
+            ctx.moveTo(gx, arena.groundY - (major ? 14 : 7));
+            ctx.lineTo(gx, arena.groundY + (major ? 14 : 7));
+            ctx.stroke();
+          }
+
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
+          ctx.setLineDash([8, 6]);
+          ctx.beginPath();
+          ctx.moveTo(arena.minX, arena.groundY - 220);
+          ctx.lineTo(arena.minX, arena.groundY + 40);
+          ctx.moveTo(arena.maxX, arena.groundY - 220);
+          ctx.lineTo(arena.maxX, arena.groundY + 40);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(250, 204, 21, 0.9)';
+          ctx.font = 'bold 16px monospace';
+          ctx.fillText(`ground_y=${arena.groundY} | bounds=[${arena.minX}, ${arena.maxX}]`, arena.minX + 12, arena.groundY + 34);
+          ctx.restore();
+        }
+      };
+
+      const b = getCharBundle();
+      arena.fxTicks += dtMs*0.06;
+      if (!state.activeChar || !b) {
+        drawStageBackdrop();
+        ctx.fillStyle = 'rgba(11,14,23,0.82)';
+        ctx.fillRect(18, 18, 960, 42);
+        ctx.fillStyle = '#e6ecff';
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText('Khung: 1920×1080 (16:9 Mobile) | Chưa có nhân vật (Roster rỗng)', 32, 46);
+        return;
+      }
+
+      let enemyInfo = null;
+      if (arena.hitstop > 0) {
+        arena.hitstop -= dtMs;
+      } else {
+        enemyInfo = isSummonCasting() ? null : stepEnemyAiFrame(dtMs);
+        const goRight = arena.keys['ArrowRight'] || arena.keys['KeyD'] || arena.holdRight;
+        const goLeft = arena.keys['ArrowLeft'] || arena.keys['KeyA'] || arena.holdLeft;
+        const isRun = Boolean((arena.keys['ShiftLeft'] || arena.keys['ShiftRight'] || (arena.patrolEnabled && arena.patrolRun)) && b.animations['run']);
+        let dir = (goRight ? 1 : 0) - (goLeft ? 1 : 0);
+        const chilo=b.render_contract?.chilopoda;
+        if(chilo) {
+          if(dir!==0&&dir!==arena.chiloInputDir&&!arena.actionClip){arena.chiloPatrol=true;arena.chiloPatrolDir=dir;updatePatrolButtonUI();}
+          arena.chiloInputDir=dir;dir=arena.chiloPatrol&&!arena.actionClip?arena.chiloPatrolDir:0;
+        } else if (arena.patrolEnabled && !arena.actionClip) {
+          if (dir !== 0) arena.patrolDir = dir;
+          else dir = arena.patrolDir;
+        }
+        if (isStationaryBundle(b)||isSummonCasting()) dir = 0;
+        arena.turnBoostMs = Math.max(0, (arena.turnBoostMs || 0) - dtMs);
+        const sidewaysLocked = isSidewaysLocked(b);
+        const turnClip=b.render_contract?.turning?.clip;
+        if (sidewaysLocked) {
+          // Sideways crab locomotion keeps initial spawn facing locked; never turn or flip_h on advance/retreat.
+          arena.flip = arena.spawnFacing === 'left';
+        } else if (dir !== 0 && !arena.actionClip && arena.flip !== (dir < 0)) {
+          if (turnClip && b.animations[turnClip]) {
+            arena.turnPrevDir = arena.flip ? -1 : 1;
+            arena.turnTargetFlip=dir<0;
+            arena.turnElapsedMs = 0;
+            arena.turnDurationMs = clipTotalDurationMs(b.animations[turnClip]);
+            arena.actionClip=turnClip; arena.clip=turnClip; arena.step=0; arena.elapsed=0;
+          } else {
+            arena.flip=dir<0;
+            arena.turnBoostMs = 260;
+          }
+        }
+        const patrolCfg = b.render_contract?.locomotion?.patrol;
+        const patrolMinX = arena.minX ?? 140;
+        const patrolMaxX = arena.maxX ?? 1780;
+        const scaleFactor = arena.charScale / 2.0;
+        const isFlight = isFlyingBundle(b);
+        const effWalkPxPerS = getEffectiveWalkSpeedPxPerS(b, arena.charScale, arena.patrolEnabled);
+        const customActive = arena.customSpeedPxPerSec !== null && Number.isFinite(arena.customSpeedPxPerSec);
+        const turnMult = (arena.turnBoostMs || 0) > 0 ? getTurnSpeedMultiplier(b) : 1.0;
+        const movePxPerMs = isRun ? (customActive ? (effWalkPxPerS * 1.6) / 1000 : (effWalkPxPerS * 1.6) / 1000) : effWalkPxPerS / 1000;
+        let dxPx = 0;
+        if (arena.turnTargetFlip !== null) {
+          if (!chilo && arena.turnDurationMs > 0) {
+            arena.turnElapsedMs = (arena.turnElapsedMs || 0) + dtMs;
+            const mom = turnMomentumFactor(arena.turnElapsedMs, arena.turnDurationMs, arena.turnPrevDir || 1, arena.turnTargetFlip ? -1 : 1);
+            dxPx = mom * movePxPerMs * dtMs;
+          }
+        } else {
+          const baseMove = chilo
+            ? (arena.actionClip ? 0 : movePxPerMs)
+            : (arena.actionClip ? 0.08 * scaleFactor : movePxPerMs * turnMult);
+          dxPx = dir * baseMove * dtMs;
+        }
+        arena.x = Math.max(patrolMinX, Math.min(patrolMaxX, arena.x + dxPx));
+        if(chilo&&arena.chiloPatrol&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
+          arena.turnPrevDir = arena.flip ? -1 : 1;
+          arena.turnTargetFlip=dir>0;arena.chiloPatrolDir=-dir;
+          arena.turnElapsedMs = 0;
+          arena.turnDurationMs = clipTotalDurationMs(b.animations[turnClip]);
+          arena.actionClip=turnClip;arena.clip=turnClip;arena.step=0;arena.elapsed=0;
+        } else if(sidewaysLocked&&arena.patrolEnabled&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
+          arena.patrolDir=-dir;
+        } else if(!chilo&&arena.patrolEnabled&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
+          if (turnClip && b.animations[turnClip]) {
+            arena.turnPrevDir = arena.flip ? -1 : 1;
+            arena.turnTargetFlip=dir>0;arena.patrolDir=-dir;
+            arena.turnElapsedMs = 0;
+            arena.turnDurationMs = clipTotalDurationMs(b.animations[turnClip]);
+            arena.actionClip=turnClip;arena.clip=turnClip;arena.step=0;arena.elapsed=0;
+          } else if (canFlipPatrolWithoutTurn(b)) {
+            arena.patrolDir=-dir;
+            arena.flip=arena.patrolDir<0;
+            arena.turnBoostMs = 260;
+          }
+        }
+
+        let flyDirY = 0;
+        if (isFlight && !isSummonCasting()) {
+          const flyUp = arena.keys['KeyW'] || arena.keys['ArrowUp'] || arena.holdFlyUp;
+          const flyDown = arena.keys['KeyS'] || arena.keys['ArrowDown'] || arena.holdFlyDown;
+          flyDirY = (flyDown ? 1 : 0) - (flyUp ? 1 : 0);
+          const flySpeedY = (arena.flyVerticalSpeedPxPerS || 240) * scaleFactor / 1000;
+          arena.y = Math.max(arena.flyMinY, Math.min(arena.groundY, arena.y + flyDirY * flySpeedY * dtMs));
+          arena.vy = 0;
+        } else if (isStationaryBundle(b)||isSummonCasting()) {
+          arena.vy = 0;
+        } else {
+          arena.y += arena.vy * dtMs;
+          if (arena.y < arena.groundY) {
+            arena.vy += arena.gravityPxPerMs2 * dtMs;
+          } else {
+            arena.y = arena.groundY;
+            arena.vy = 0;
+          }
+        }
+
+        // Auto locomotion clip when not executing an active skill
+        if (!arena.actionClip) {
+          let desired = !b.render_contract && arena.rageMode && b.animations['aura_loop'] ? 'aura_loop' : 'idle';
+          if (!isFlight && arena.y < arena.groundY - 2 && b.animations['jump']) {
+            desired = 'jump';
+          } else if (dir !== 0 || (isFlight && flyDirY !== 0)) {
+            const motion=b.render_contract?.locomotion?.clip||'walk';
+            desired = (isRun && b.animations['run']) ? 'run' : (b.animations[motion] ? motion : desired);
+          }
+          if (arena.clip !== desired) {
+            arena.clip = desired;
+            arena.step = 0;
+            arena.elapsed = 0;
+          }
+        }
+
+        let curAnim = b.animations[arena.clip] || Object.values(b.animations)[0];
+        arena.elapsed += dtMs;
+        if(chilo?.burrow_turn&&arena.clip===chilo.burrow_turn.body_clip&&arena.turnTargetFlip!==null) {
+          const tick=animationFrameTick(curAnim,arena.step)+arena.elapsed*.06;
+          if(tick>=chilo.burrow_turn.hidden_start_tick)arena.flip=arena.turnTargetFlip;
+        }
+        if(chilo)updateChilopodaArenaAction(b);
+        while (curAnim && curAnim.frames.length) {
+          const curF = curAnim.frames[Math.min(arena.step, curAnim.frames.length - 1)];
+          const dur = Math.max(16.0, (curF && curF.duration_ms) || 83.33);
+          if (arena.elapsed < dur) break;
+          arena.elapsed -= dur;
+          if (arena.step + 1 < curAnim.frames.length) {
+            arena.step++;
+          } else if (arena.actionClip) {
+            const finishedTurn = arena.turnTargetFlip !== null;
+            if (finishedTurn) {
+              arena.flip=arena.turnTargetFlip; arena.turnTargetFlip=null;
+              arena.turnElapsedMs = 0; arena.turnDurationMs = 0;
+            }
+            arena.actionClip = null;
+            if (!chilo && (dir !== 0 || arena.patrolEnabled)) {
+              const motion = b.render_contract?.locomotion?.clip || 'walk';
+              arena.clip = (isRun && b.animations['run']) ? 'run' : (b.animations[motion] ? motion : 'idle');
+              curAnim = b.animations[arena.clip] || curAnim;
+              arena.step = (finishedTurn && curAnim && curAnim.frames.length > 1) ? 1 : 0;
+            } else {
+              arena.clip = (!b.render_contract && arena.rageMode && b.animations['aura_loop']) ? 'aura_loop' : 'idle';
+              curAnim = b.animations[arena.clip] || curAnim;
+              arena.step = 0;
+            }
+          } else if (curAnim.loop) {
+            arena.step = 0;
+          } else {
+            arena.elapsed = 0;
+            break;
+          }
+        }
+
+        if (arena.dummyClip === 'hit' && arena.dummyFlash <= 0.05) {
+          arena.dummyClip = 'idle';
+        }
+      }
+
+      arena.shake = 0;
+      arena.dummyFlash = Math.max(0, arena.dummyFlash - dtMs * 0.004);
+      arena.popups = arena.popups.filter(p => {
+        p.life -= dtMs;
+        p.y -= dtMs * 0.04;
+        return p.life > 0;
+      });
+
+      drawStageBackdrop();
+
+      if (arena.showGridOverlay && isFlyingBundle(b)) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(147, 197, 253, 0.55)';
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(arena.minX, arena.flyMinY);
+        ctx.lineTo(arena.maxX, arena.flyMinY);
+        ctx.moveTo(arena.minX, arena.flyDefaultY);
+        ctx.lineTo(arena.maxX, arena.flyDefaultY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(147, 197, 253, 0.85)';
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText(`Trần bay Y=${arena.flyMinY}`, arena.minX + 12, arena.flyMinY + 18);
+        const flyDiffMid = Math.round(arena.flyDefaultY - arena.viewportHeight / 2);
+        ctx.fillText(`Tầm bay mặc định Y=${arena.flyDefaultY} (Giữa màn ${flyDiffMid >= 0 ? '+' : ''}${flyDiffMid}px)`, arena.minX + 12, arena.flyDefaultY - 8);
+        ctx.restore();
+      }
+
+      ctx.save();
+
+      const [cw, chPx] = getCanvasSize();
+      ensureOffscreenSize(cw, chPx);
+      const scale = arena.charScale;
+      const scaleLabel = formatScaleLabel(scale);
+      const m = state.activeChar.map_sync_metrics;
+      const ax = m.foot_anchor_px[0], ay = m.foot_anchor_px[1];
+      const [bodyW, bodyH] = getBodyDims(state.activeChar);
+
+      // 1. Draw Sparring Dummy / Utility AI Enemy on the right (No artificial ellipse shadow)
+      const eCh = enemyInfo?.eCh || getEnemyRosterEntry() || state.activeChar;
+      const eb = enemyInfo?.eb || getCharBundle(eCh) || b;
+      const eScale = arena.enemyScale || getDefaultCharScale(eb);
+      const [eCw, eChPx] = getCanvasSize(eCh);
+      const em = eCh.map_sync_metrics || m;
+      const eAx = em.foot_anchor_px[0], eAy = em.foot_anchor_px[1];
+      const [eBodyW, eBodyH] = getBodyDims(eCh);
+      const enemyDrawX = arena.enemyAi.enabled ? arena.enemyAi.x : arena.dummyX;
+      const enemyDrawY = arena.enemyAi.enabled ? arena.enemyAi.y : (isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY);
+      const enemyFlip = arena.enemyAi.enabled ? arena.enemyAi.flip : (isSidewaysLocked(eb) ? (arena.enemyAi.spawnFacing === 'left') : true);
+      const enemyClip = arena.enemyAi.enabled ? arena.enemyAi.clip : arena.dummyClip;
+      const enemyStep = arena.enemyAi.enabled ? arena.enemyAi.step : arena.dummyStep;
+      const enemyChiloOpts = eb.render_contract?.chilopoda
+        ? {
+            turnFacingHandled: true,
+            dustScale: arena.burrowDustScale,
+            ...(arena.enemyAi.enabled && arena.enemyAi.chiloAction && arena.enemyAi.actionClip
+              ? {
+                  targetGroundCanvasPx: arena.enemyAi.chiloAction.target,
+                  sceneOriginShift: [(arena.enemyAi.x - arena.enemyAi.chiloAction.startX) / eScale / arena.enemyAi.chiloAction.sign, 0],
+                }
+              : {}),
+          }
+        : {};
+      ensureOffscreenSize(eCw, eChPx);
+      offCtx.clearRect(0, 0, eCw, eChPx);
+      drawCompositeStep(offCtx, enemyClip, enemyStep, 1.0, 1.0, {
+        bundle: eb,
+        character: eCh,
+        auraEnabled: false,
+        fxTicks: arena.fxTicks,
+        elapsedMs: arena.enemyAi.enabled ? arena.enemyAi.elapsed : 0,
+        ...enemyChiloOpts,
+      });
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.translate(enemyDrawX, enemyDrawY);
+      if (enemyFlip) ctx.scale(-1, 1);
+      if (arena.dummyFlash > 0) ctx.filter = 'brightness(2.2)';
+      ctx.drawImage(offscreenCanvas, -eAx * eScale, -eAy * eScale, eCw * eScale, eChPx * eScale);
+      ctx.restore();
+
+      // Ensure offscreen buffer returns to active player canvas size before drawing player
+      ensureOffscreenSize(cw, chPx);
+
+      // Enemy / Dummy HP bar & Utility AI zone / body-edge overlay
+      const hpTop = enemyDrawY - Math.max(96, (eBodyH ? eBodyH * eScale + 28 : 150));
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(enemyDrawX - 90, hpTop, 180, 14);
+      ctx.fillStyle = arena.enemyAi.enabled ? '#f59e0b' : '#ef4444';
+      ctx.fillRect(enemyDrawX - 88, hpTop + 2, 176 * (arena.dummyHp / arena.dummyMaxHp), 10);
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 14px sans-serif';
+      const enemyTitle = arena.enemyAi.enabled ? `AI ${eCh.display_name} (${arena.enemyAi.lastIntent})` : `Mục tiêu Tập (${arena.dummyHp} HP)`;
+      ctx.fillText(enemyTitle, enemyDrawX - 90, hpTop - 8);
+
+      if (arena.showGridOverlay && arena.enemyAi.enabled) {
+        const zY = arena.groundY + 12;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.90)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 6]);
+        ctx.beginPath();
+        ctx.moveTo(arena.enemyAi.zoneMinX, zY);
+        ctx.lineTo(arena.enemyAi.zoneMaxX, zY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(arena.enemyAi.zoneMinX, zY - 16);
+        ctx.lineTo(arena.enemyAi.zoneMinX, zY + 8);
+        ctx.moveTo(arena.enemyAi.zoneMaxX, zY - 16);
+        ctx.lineTo(arena.enemyAi.zoneMaxX, zY + 8);
+        ctx.stroke();
+        if (eBodyW > 0 && eBodyH > 0) {
+          const er = computeBodyRect(enemyDrawX, enemyDrawY, eBodyW, eBodyH, eScale);
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.85)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(er.x, er.y, er.w, er.h);
+        }
+        ctx.restore();
+      }
+
+      // 2. Draw Player Controlled Character (1:1 Nearest pixel parity with Godot 4, no ellipse shadow)
+      offCtx.clearRect(0, 0, cw, chPx);
+      const chiOptions=b.render_contract?.chilopoda?{turnFacingHandled:true,dustScale:arena.burrowDustScale,...(arena.chiloAction&&arena.actionClip?{targetGroundCanvasPx:arena.chiloAction.target,sceneOriginShift:[(arena.x-arena.chiloAction.startX)/scale/arena.chiloAction.sign,0]}:{})}:{};
+      drawCompositeStep(offCtx, arena.clip, arena.step, 1.0, 1.0, {auraEnabled:arena.rageMode,fxTicks:arena.fxTicks,elapsedMs:arena.elapsed,...chiOptions});
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.translate(arena.x, arena.y);
+      if (arena.flip) ctx.scale(-1, 1);
+      ctx.drawImage(offscreenCanvas, -ax * scale, -ay * scale, cw * scale, chPx * scale);
+      ctx.restore();
+
+      if (arena.showGridOverlay && bodyW > 0 && bodyH > 0) {
+        const bwPx = bodyW * scale;
+        const bhPx = bodyH * scale;
+        const boxLeft = arena.x - bwPx * 0.5;
+        const boxTop = arena.y - bhPx;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxLeft, boxTop, bwPx, bhPx);
+        ctx.fillStyle = 'rgba(11, 14, 23, 0.78)';
+        ctx.fillRect(boxLeft, boxTop - 26, Math.max(240, bwPx), 24);
+        ctx.fillStyle = '#67e8f9';
+        ctx.font = 'bold 14px monospace';
+        const pctH = (bhPx / canvas.height * 100).toFixed(1);
+        ctx.fillText(`Thân ${scaleLabel}×: ${Math.round(bwPx)}×${Math.round(bhPx)}px (${pctH}% 1080p)`, boxLeft + 6, boxTop - 9);
+        ctx.restore();
+      }
+
+      drawShenronSummon(ctx);
+
+      // 3. Floating Damage / Burst Popups
+      for (const p of arena.popups) {
+        ctx.fillStyle = '#facc15';
+        ctx.font = 'bold 22px monospace';
+        ctx.fillText(p.text, p.x - 95, p.y);
+      }
+      ctx.restore();
+
+      ctx.fillStyle = 'rgba(11,14,23,0.84)';
+      ctx.fillRect(16, 16, 1888, 38);
+      ctx.fillStyle = '#e6ecff';
+      ctx.font = 'bold 17px monospace';
+      const hudDir = (arena.keys['ArrowRight'] || arena.keys['KeyD'] || arena.holdRight ? 1 : 0) - (arena.keys['ArrowLeft'] || arena.keys['KeyA'] || arena.holdLeft ? 1 : 0) || (arena.patrolEnabled ? arena.patrolDir : 0);
+      const hudLock = isStationaryBundle(b) ? ' | Chính diện • Đứng yên' : isSidewaysLocked(b) ? ` | Mặt khóa: ${arena.flip ? 'Trái (-X)' : 'Phải (+X)'} (${hudDir === 0 ? 'Đứng' : ((hudDir > 0) !== arena.flip ? 'Tiến' : 'Lùi')})` : '';
+      const screenSizeNote = bodyW > 0 ? ` | Thân ${scaleLabel}×: ${Math.round(bodyW * scale)}×${Math.round(bodyH * scale)}px (${(bodyH * scale / canvas.height * 100).toFixed(1)}% màn)` : '';
+      const effSpeedNow = Math.round(getEffectiveWalkSpeedPxPerS(b, scale, arena.patrolEnabled));
+      ctx.fillText(
+        `1920×1080 (16:9) | ${state.activeChar.character_id} | ${scaleLabel}× Nearest${screenSizeNote} | Speed: ${effSpeedNow} px/s | Clip: ${arena.clip} (#${arena.step}) | Pos: (${Math.round(arena.x)}, ${Math.round(arena.y)})${hudLock}`,
+        28, 41
+      );
+      if(arena.summon){const flash=sampleShenronSummon(arena.summon.tick,arena.summon.origin).flashAlpha;if(flash>0){ctx.save();ctx.globalAlpha=flash;ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();}}
+    }
+
+    // =========================================================================
+    // CRASH-PROOF MAIN RAF LOOP & EVENT BINDINGS
+    // =========================================================================
+    let prevNow = performance.now();
+    function mainLoop(now) {
+      requestAnimationFrame(mainLoop);
+      const wallDtMs = Math.max(0, now - prevNow);
+      const dtMs = Math.min(50, Math.max(1, wallDtMs));
+      prevNow = now;
+
+      try {
+        if (state.activeTab === 'tab-human') {
+          stepInspectorAnimation(dtMs);
+          renderInspector();
+        } else if (state.activeTab === 'tab-arena') {
+          stepAndRenderArena(dtMs, wallDtMs);
+        }
+      } catch (err) {
+        showRuntimeError(state.activeTab, err);
+      }
+    }
+
+    function setupEventListeners() {
+      document.getElementById('btnSummonShenron').onclick=()=>{if(arena.summon)dismissShenronSummon();else startShenronSummon();};
+      document.getElementById('chkIndependentAura').onchange=e=>{state.auraEnabled=e.target.checked;arena.rageMode=e.target.checked;renderInspector();};
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+          btn.classList.add('active');
+          state.activeTab = btn.dataset.tab;
+          document.getElementById(state.activeTab).classList.add('active');
+          if (state.activeTab === 'tab-human') renderInspector();
+          if (state.activeTab === 'tab-arena') stepAndRenderArena(16.67);
+        };
+      });
+
+      document.getElementById('inpSearchChar').oninput = e => {
+        state.rosterSearch = e.target.value;
+        renderRosterList();
+      };
+      document.querySelectorAll('#rosterFilters .filter-pill').forEach(pill => {
+        pill.onclick = () => {
+          document.querySelectorAll('#rosterFilters .filter-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          state.rosterFilter = pill.dataset.filter;
+          renderRosterList();
+        };
+      });
+
+      document.getElementById('selStepperEngine').onchange = e => {
+        state.stepperEngine = e.target.value;
+        document.getElementById('tab1RuntimeDesc').innerHTML = state.stepperEngine === 'rust_wasm'
+          ? 'Bộ nhịp 60Hz bằng <b>Rust WASM (<code>rust_combat_sim.wasm</code>)</b> + Vẽ khung đo Pixel bằng <b>Canvas2D</b> (đọc 1:1 <code>.tres</code> &amp; PNG).'
+          : 'Bộ nhịp 60Hz bằng <b>Godot 4 <code>SpriteFrames.tres</code> Spec</b> + Vẽ khung đo Pixel bằng <b>Canvas2D</b> (đọc 1:1 <code>.tres</code> &amp; PNG).';
+      };
+
+      document.getElementById('selZoom').onchange = e => { state.zoom = Number(e.target.value); };
+      document.getElementById('selBg').onchange = e => { state.bgMode = e.target.value; };
+      document.getElementById('chkMapGrid').onchange = e => { state.showMapGrid = e.target.checked; };
+      document.getElementById('chkBBox').onchange = e => { state.showBBox = e.target.checked; };
+      document.getElementById('btnClearRect').onclick = () => { state.selectedRect = null; state.selectedPolygon = null; state.dragStart = null; updateAgentSpecText(); };
+      document.getElementById('selSelectionMode').onchange = e => { state.selectionMode = e.target.value; state.selectedRect = null; state.selectedPolygon = null; state.dragStart = null; updateAgentSpecText(); };
+
+      document.getElementById('btnPlayPause').onclick = () => {
+        const tl = getActiveTimelineFrames();
+        if (!tl.frames.length) return;
+        if (!state.playing) {
+          if (state.stepIdx >= tl.frames.length - 1) {
+            state.stepIdx = 0;
+          }
+          state.stepElapsedMs = 0;
+          state.playing = true;
+        } else {
+          state.playing = false;
+        }
+        document.getElementById('frameSlider').value = state.stepIdx;
+        highlightFilmstrip();
+        updatePlayButtonUI();
+        updateAgentSpecText();
+      };
+
+      document.getElementById('chkAutoReplay').onchange = e => {
+        state.autoReplayOneshot = e.target.checked;
+      };
+
+      document.getElementById('frameSlider').oninput = e => {
+        state.playing = false;
+        state.stepIdx = Number(e.target.value);
+        state.stepElapsedMs = 0;
+        updatePlayButtonUI();
+        highlightFilmstrip();
+        updateAgentSpecText();
+      };
+      document.getElementById('btnPrevFrame').onclick = () => {
+        state.playing = false;
+        const len = Math.max(1, getActiveTimelineFrames().frames.length);
+        state.stepIdx = (state.stepIdx - 1 + len) % len;
+        state.stepElapsedMs = 0;
+        document.getElementById('frameSlider').value = state.stepIdx;
+        updatePlayButtonUI(); highlightFilmstrip(); updateAgentSpecText();
+      };
+      document.getElementById('btnNextFrame').onclick = () => {
+        state.playing = false;
+        const len = Math.max(1, getActiveTimelineFrames().frames.length);
+        state.stepIdx = (state.stepIdx + 1) % len;
+        state.stepElapsedMs = 0;
+        document.getElementById('frameSlider').value = state.stepIdx;
+        updatePlayButtonUI(); highlightFilmstrip(); updateAgentSpecText();
+      };
+      document.getElementById('selSpeed').onchange = e => { state.speedMult = Number(e.target.value); };
+
+      const canvas = document.getElementById('inspectorCanvas');
+      const toCanvasCoords = (ev) => {
+        const [cw, ch] = getCanvasSize();
+        const rect = canvas.getBoundingClientRect();
+        const sx = (ev.clientX - rect.left) * (canvas.width / rect.width) - RULER_PAD;
+        const sy = (ev.clientY - rect.top) * (canvas.height / rect.height) - RULER_PAD;
+        return {
+          x: Math.max(0, Math.min(cw - 1, Math.floor(sx / state.zoom))),
+          y: Math.max(0, Math.min(ch - 1, Math.floor(sy / state.zoom))),
+        };
+      };
+
+      canvas.style.touchAction = 'none';
+      canvas.addEventListener('pointerdown', ev => {
+        if (!state.activeChar || state.dragStart || (ev.button !== undefined && ev.button !== 0)) return;
+        ev.preventDefault();
+        canvas.setPointerCapture?.(ev.pointerId);
+        state.selectionPointerId = ev.pointerId;
+        state.playing = false; updatePlayButtonUI();
+        renderInspector(); // measure the paused pose, including independent FX
+        const p = toCanvasCoords(ev);
+        state.selectedPolygon = state.selectionMode === 'lasso' ? [p] : null;
+        state.dragStart = p;
+        state.selectedRect = { x: p.x, y: p.y, w: 1, h: 1 };
+        updateAgentSpecText();
+      });
+      const moveSelection = ev => {
+        if (!state.activeChar) return;
+        const p = toCanvasCoords(ev);
+        const px = offCtx.getImageData(p.x, p.y, 1, 1).data;
+        const layers = getLayerFramesForStep(state.activeClipName, state.stepIdx, {elapsedMs:state.stepElapsedMs,fxTicks:state.fxTicks});
+        const hit = sourceLayerAt(layers,p.x,p.y);
+        const topF = (layers.find(l=>l.layer==='Body')||layers[layers.length-1])?.frame;
+        const anc = state.activeChar.map_sync_metrics.foot_anchor_px;
+        document.getElementById('cursorCoord').textContent = `Canvas: (${p.x}, ${p.y}) | Offset chân: (${p.x - anc[0]}, ${p.y - anc[1]})`;
+        if (topF) {
+          document.getElementById('cursorAtlas').textContent = hit ? `Atlas ${hit.item.layer}: (${hit.x}, ${hit.y})` : `Atlas thân: (${topF.x + p.x}, ${topF.y + p.y})`;
+        }
+        document.getElementById('cursorSwatch').style.background = `rgba(${px[0]},${px[1]},${px[2]},${(px[3]/255).toFixed(2)})`;
+        document.getElementById('cursorRgba').textContent = `RGBA: (${px[0]}, ${px[1]}, ${px[2]}, ${px[3]})`;
+
+        if (state.dragStart && ev.pointerId === state.selectionPointerId) {
+          if (state.selectedPolygon) {
+            const last = state.selectedPolygon[state.selectedPolygon.length - 1];
+            if (last.x !== p.x || last.y !== p.y) state.selectedPolygon.push(p);
+            let x = p.x, y = p.y, right = p.x, bottom = p.y;
+            for (const q of state.selectedPolygon) {
+              x = Math.min(x,q.x); y = Math.min(y,q.y);
+              right = Math.max(right,q.x); bottom = Math.max(bottom,q.y);
+            }
+            state.selectedRect = {x, y, w: right-x+1, h: bottom-y+1};
+          } else {
+            const x0 = Math.min(state.dragStart.x, p.x);
+            const y0 = Math.min(state.dragStart.y, p.y);
+            const x1 = Math.max(state.dragStart.x, p.x);
+            const y1 = Math.max(state.dragStart.y, p.y);
+            state.selectedRect = { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+          }
+          updateAgentSpecText();
+        }
+      };
+      canvas.addEventListener('pointermove', moveSelection);
+      const finishSelection = ev => {
+        if (ev.pointerId !== state.selectionPointerId) return;
+        if (ev.type !== 'pointercancel') moveSelection(ev);
+        state.dragStart = null; state.selectionPointerId = null;
+        if (state.selectedPolygon && !selectionPixelRuns(state.selectedRect, state.selectedPolygon).length) {
+          state.selectedPolygon = null; state.selectedRect = null;
+        }
+        updateAgentSpecText();
+      };
+      canvas.addEventListener('pointerup', finishSelection);
+      canvas.addEventListener('pointercancel', ev => {
+        if (ev.pointerId !== state.selectionPointerId) return;
+        state.selectedPolygon = null; state.selectedRect = null;
+        finishSelection(ev);
+      });
+
+      document.querySelectorAll('#tagButtons .tag-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('#tagButtons .tag-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.activeTag = btn.dataset.tag;
+          updateAgentSpecText();
+        };
+      });
+      document.getElementById('inpOwnerNote').oninput = updateAgentSpecText;
+      document.getElementById('btnCopySpec').onclick = async () => {
+        const txt = document.getElementById('txtAgentSpec').value;
+        await navigator.clipboard.writeText(txt);
+        const b = document.getElementById('btnCopySpec');
+        b.textContent = '✅ Đã Copy! Dán thẳng cho Agent';
+        setTimeout(() => { b.textContent = '📋 Copy Thông Số Gửi Agent'; }, 1800);
+      };
+      document.getElementById('btnAddPin').onclick = () => {
+        state.pinnedSpecs.push(document.getElementById('txtAgentSpec').value);
+        document.getElementById('pinnedList').innerHTML =
+          `Đã ghim <b>${state.pinnedSpecs.length}</b> điểm chỉnh sửa. <a href="#" id="copyAllPins" style="color:var(--gold);">Copy tất cả (${state.pinnedSpecs.length})</a>`;
+        document.getElementById('copyAllPins').onclick = async (e) => {
+          e.preventDefault();
+          await navigator.clipboard.writeText(state.pinnedSpecs.join('\n\n'));
+          e.target.textContent = '✅ Đã copy toàn bộ!';
+        };
+      };
+
+      const bindHold = (id, prop) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.onmousedown = el.ontouchstart = () => { arena[prop] = true; };
+        el.onmouseup = el.onmouseleave = el.ontouchend = () => { arena[prop] = false; };
+      };
+      bindHold('btnMoveLeft', 'holdLeft');
+      bindHold('btnMoveRight', 'holdRight');
+      bindHold('btnFlyDown', 'holdFlyDown');
+      const jumpEl = document.getElementById('btnJump');
+      if (jumpEl) {
+        jumpEl.onmousedown = jumpEl.ontouchstart = () => { if (isFlyingBundle()) arena.holdFlyUp = true; };
+        jumpEl.onmouseup = jumpEl.onmouseleave = jumpEl.ontouchend = () => { arena.holdFlyUp = false; };
+        jumpEl.onclick = () => { if (!isFlyingBundle()) triggerArenaJump(); };
+      }
+      document.getElementById('btnPatrol').onclick = (ev) => toggleArenaPatrol(Boolean(ev && ev.shiftKey));
+      document.getElementById('btnSpawnRight').onclick = () => respawnArenaCharacter('right');
+      document.getElementById('btnSpawnLeft').onclick = () => respawnArenaCharacter('left');
+      document.querySelectorAll('#arenaScaleControls button[data-scale]').forEach(btn => {
+        btn.onclick = () => setArenaCharacterScale(Number(btn.dataset.scale));
+      });
+      const rngScale = document.getElementById('rngArenaScale');
+      if (rngScale) rngScale.oninput = e => setArenaCharacterScale(Number(e.target.value));
+      const numScale = document.getElementById('numArenaScale');
+      if (numScale) numScale.onchange = e => setArenaCharacterScale(Number(e.target.value));
+      const rngSpeed = document.getElementById('rngArenaSpeed');
+      if (rngSpeed) rngSpeed.oninput = e => { arena.customSpeedPxPerSec = Math.max(10, Number(e.target.value) || 270); updateArenaSpeedUI(); };
+      const numSpeed = document.getElementById('numArenaSpeed');
+      if (numSpeed) numSpeed.onchange = e => { arena.customSpeedPxPerSec = Math.max(10, Number(e.target.value) || 270); updateArenaSpeedUI(); };
+      const btnResetSpeed = document.getElementById('btnResetSpeed');
+      if (btnResetSpeed) btnResetSpeed.onclick = () => { arena.customSpeedPxPerSec = null; updateArenaSpeedUI(); };
+      const rngFlyAlt = document.getElementById('rngFlyAltY');
+      if (rngFlyAlt) rngFlyAlt.oninput = e => {
+        arena.flyDefaultY = Math.max(arena.flyMinY, Math.min(arena.groundY, Number(e.target.value) || 250));
+        if (isFlyingBundle()) arena.y = arena.flyDefaultY;
+        updateArenaFlightUI();
+      };
+      const btnResetFlyAlt = document.getElementById('btnResetFlyAlt');
+      if (btnResetFlyAlt) btnResetFlyAlt.onclick = () => {
+        arena.flyDefaultY = 250;
+        if (isFlyingBundle()) arena.y = 250;
+        updateArenaFlightUI();
+      };
+      document.querySelectorAll('#arenaDustControls button[data-dust-scale]').forEach(btn => {
+        btn.onclick = () => { arena.burrowDustScale = Number(btn.dataset.dustScale) || 2.65; updateArenaDustScaleUI(); };
+      });
+      const rngDust = document.getElementById('rngBurrowDustScale');
+      if (rngDust) rngDust.oninput = e => { arena.burrowDustScale = Math.max(1.0, Math.min(4.0, Number(e.target.value) || 2.65)); updateArenaDustScaleUI(); };
+      const chkBezel = document.getElementById('chkPhoneBezel');
+      if (chkBezel) chkBezel.onchange = e => { arena.showPhoneBezel = e.target.checked; updateArenaFrameLayout(); };
+      const chkNative = document.getElementById('chkNative1to1');
+      if (chkNative) chkNative.onchange = e => { arena.native1to1 = Boolean(e.target.checked); updateArenaFrameLayout(); };
+      const btnFs = document.getElementById('btnFullscreenArena');
+      if (btnFs) btnFs.onclick = () => {
+        const target = document.getElementById('arenaPhoneFrame') || document.getElementById('arenaCanvas');
+        if (target && target.requestFullscreen) target.requestFullscreen().catch(() => {});
+      };
+      const chkMap = document.getElementById('chkSampleMap');
+      if (chkMap) chkMap.onchange = e => { arena.showSampleMap = e.target.checked; };
+      const chkGrid = document.getElementById('chkArenaGrid');
+      if (chkGrid) chkGrid.onchange = e => { arena.showGridOverlay = e.target.checked; };
+      const chkAi = document.getElementById('chkUtilityAI');
+      if (chkAi) chkAi.onchange = e => setUtilityAiEnabled(e.target.checked);
+      const selEnemy = document.getElementById('selEnemyChar');
+      if (selEnemy) selEnemy.onchange = e => selectEnemyCharacter(e.target.value, true);
+      const btnPullZone = document.getElementById('btnPullIntoZone');
+      if (btnPullZone) btnPullZone.onclick = () => {
+        arena.x = Math.max(arena.minX, Math.min(arena.maxX, arena.enemyAi.zoneMinX + 40));
+        if (!arena.enemyAi.enabled) setUtilityAiEnabled(true);
+      };
+      const btnResetAi = document.getElementById('btnResetEnemyAi');
+      if (btnResetAi) btnResetAi.onclick = () => {
+        selectEnemyCharacter(arena.enemyAi.charId || state.activeChar?.character_id, arena.enemyAi.pinned);
+      };
+
+      window.addEventListener('keydown', ev => {
+        arena.keys[ev.code] = true;
+        if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA') return;
+        if (ev.code === 'Space' && state.activeTab === 'tab-human') {
+          ev.preventDefault();
+          document.getElementById('btnPlayPause').click();
+        } else if (state.activeTab === 'tab-arena' && (ev.code === 'ArrowUp' || ev.code === 'ArrowDown')) {
+          ev.preventDefault();
+          if (!isFlyingBundle() && ev.code === 'ArrowUp') triggerArenaJump();
+        } else if ((ev.code === 'Space' || ev.code === 'KeyW') && state.activeTab === 'tab-arena') {
+          ev.preventDefault();
+          if (!isFlyingBundle()) triggerArenaJump();
+        } else if (ev.code === 'KeyE') {
+          arena.rageMode = !arena.rageMode;
+          state.auraEnabled=arena.rageMode;document.getElementById('chkIndependentAura').checked=state.auraEnabled;
+        } else if (arenaHotkeyClips[ev.code]) {
+          triggerArenaAction(arenaHotkeyClips[ev.code]);
+        }
+      });
+      window.addEventListener('keyup', ev => { arena.keys[ev.code] = false; });
+    }
+
+    globalThis.__TEST__ = {
+      arena,
+      state,
+      computeBodyRect,
+      computeEdgeDistance,
+      resetEnemyAiZone,
+      evaluateUtilityAI,
+      selectEnemyCharacter,
+      setUtilityAiEnabled,
+      stepEnemyAiFrame,
+    };
+
+    initApp();
+  </script>
+</body>
+</html>

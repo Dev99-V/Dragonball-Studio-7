@@ -1,0 +1,6 @@
+{
+  "command": "./loop.sh test",
+  "exit_code": 0,
+  "log": "work/rituals/shenron_summon/v2-flash-hover/evidence/full-test-2.log",
+  "attempt": 2
+}

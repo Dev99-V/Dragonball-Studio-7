@@ -1,0 +1,25 @@
+{
+  "left_roi": [
+    65,
+    212,
+    35,
+    30
+  ],
+  "right_roi": [
+    210,
+    210,
+    40,
+    25
+  ],
+  "frames": {
+    "0": {
+      "tail_left_roi_opaque_pixels": 0,
+      "tail_right_roi_opaque_pixels": 274
+    },
+    "4": {
+      "tail_left_roi_opaque_pixels": 288,
+      "tail_right_roi_opaque_pixels": 0
+    }
+  },
+  "interpretation": "Separate visible tail-fin occupancy in screen-left and screen-right regions; no automatic naturalness verdict."
+}

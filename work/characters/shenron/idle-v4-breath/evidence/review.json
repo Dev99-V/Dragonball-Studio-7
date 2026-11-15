@@ -1,0 +1,18 @@
+{
+  "revision": "idle-v4-breath",
+  "status": "reviewed_pending_owner",
+  "owner_approved": false,
+  "reviewed": [
+    "whole-body frames on light/dark/checker backgrounds",
+    "consecutive frames and 7→0 wrap",
+    "real-time forward playback",
+    "summoning final ground placement"
+  ],
+  "evidence": [
+    "work/characters/shenron/idle-v4-breath/evidence/chest-review-4x.png",
+    "work/characters/shenron/idle-v4-breath/evidence/consecutive-diff.png",
+    "work/characters/shenron/idle-v4-breath/evidence/browser-playback-unrecorded.json",
+    "work/rituals/shenron_summon/v1/evidence/ready-browser.png"
+  ],
+  "unresolved_structural_failures": []
+}

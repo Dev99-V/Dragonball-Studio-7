@@ -42,6 +42,15 @@ func run_test() -> void:
 	var packed := loaded_scene as PackedScene
 
 	var arena := packed.instantiate()
+	var stationary_entry := {"render_contract": {"locomotion": {"kind": "stationary", "speed_px_per_second": 123.0}}}
+	if arena._get_walk_speed_px_per_s(stationary_entry) != 0.0:
+		fail("Stationary entry must never fall back to walk speed")
+		return
+	var stationary_ai := UtilityAIScript.new()
+	var stationary_decision := stationary_ai.evaluate({"is_stationary": true, "facing_left": true, "target_x": 9000.0})
+	if stationary_decision["intent"] != "idle" or stationary_decision["move_dir"] != 0 or not stationary_decision["desired_face_left"]:
+		fail("Stationary AI must idle and preserve facing outside its zone")
+		return
 	if not arena.has_method("get_stage_metrics"):
 		fail("ArenaSandbox script failed to attach cleanly")
 		return
@@ -67,8 +76,8 @@ func run_test() -> void:
 		fail("BackgroundSprite does not fill 1920x1080 exactly: " + str(rendered_bg_size))
 		return
 
-	if arena.roster_characters.size() != 8:
-		fail("Expected 8 characters in roster.json, got " + str(arena.roster_characters.size()))
+	if arena.roster_characters.size() != 9:
+		fail("Expected 9 characters in roster.json, got " + str(arena.roster_characters.size()))
 		return
 
 	for entry in arena.roster_characters:
@@ -109,6 +118,26 @@ func run_test() -> void:
 			if spr.offset != expected_off:
 				fail("Offset mismatch for %s: %s != %s" % [cid, str(spr.offset), str(expected_off)])
 				return
+
+	# Idle-only stationary character uses the live 60Hz engine clock without AI movement.
+	arena.select_character("shenron")
+	await process_frame
+	var shenron_sprite := arena.player_node.get_node("Sprite") as AnimatedSprite2D
+	var stationary_pos: Vector2 = arena.dummy_node.position
+	arena.set_utility_ai_enabled(true)
+	for tick in range(100):
+		var decision: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+		if decision.get("intent", "") != "idle" or arena.dummy_node.position != stationary_pos:
+			fail("Shenron stationary AI moved or attacked")
+			return
+	var seen_idle_frames := {}
+	for tick in range(105):
+		seen_idle_frames[shenron_sprite.frame] = true
+		await physics_frame
+	if seen_idle_frames.size() != 8 or shenron_sprite.animation != &"idle":
+		fail("Shenron must play all eight idle poses on the Godot clock")
+		return
+	arena.set_utility_ai_enabled(false)
 
 	# Verify runtime scale switching (including fractional 1.5x Nearest) preserves anchor & filter
 	arena.select_character("t_rex")
@@ -328,5 +357,5 @@ func run_test() -> void:
 
 	arena.queue_free()
 	await process_frame
-	print("[OK] Godot 4 ArenaSandbox 1920x1080 1:1 parity + Utility AI + 8/8 characters PASSED!")
+	print("[OK] Godot 4 ArenaSandbox 1920x1080 1:1 parity + Utility AI + 9/9 characters PASSED!")
 	quit(0)

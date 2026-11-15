@@ -57,7 +57,7 @@ const apiJsonStr = execFileSync(
   'python3',
   [
     '-c',
-    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'parity': server.verify_engine_localhost_parity()}))`,
+    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'rituals': server.load_rituals(), 'parity': server.verify_engine_localhost_parity()}))`,
   ],
   { cwd: REPO_ROOT, encoding: 'utf8' }
 );
@@ -96,11 +96,16 @@ function makeMockCtx2d(canvas) {
     rotate() {},
     setLineDash() {},
     fillText() { drawCalls++; },
-    drawImage() { drawCalls++; },
+    drawImage(img) {
+      drawCalls++;
+      if (canvas && img && img._mockRgba) canvas._mockRgba = img._mockRgba;
+    },
     createLinearGradient() { return { addColorStop() {} }; },
     getImageData(_x, _y, w, h) {
+      if (canvas && canvas._mockRgba) return { data: canvas._mockRgba };
       return { data: new Uint8ClampedArray(Math.max(1, w) * Math.max(1, h) * 4) };
     },
+    putImageData() {},
   };
 }
 
@@ -199,7 +204,7 @@ const sandbox = {
   },
 };
 
-const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { initApp, state, arena, selectCharacter, setArenaCharacterScale, updateArenaFrameLayout, stepInspectorAnimation, renderInspector, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, respawnArenaCharacter, isSidewaysLocked, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, computeBodyRect, computeEdgeDistance, resetEnemyAiZone, evaluateUtilityAI, selectEnemyCharacter, setUtilityAiEnabled, stepEnemyAiFrame, offCtx };';
+const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { sampleShenronSummon, applyShenronPixelDissolve, startShenronSummon, dismissShenronSummon, initApp, state, arena, selectCharacter, setArenaCharacterScale, updateArenaFrameLayout, stepInspectorAnimation, renderInspector, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, respawnArenaCharacter, isSidewaysLocked, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, computeBodyRect, computeEdgeDistance, resetEnemyAiZone, evaluateUtilityAI, selectEnemyCharacter, setUtilityAiEnabled, stepEnemyAiFrame, offCtx };';
 vm.createContext(sandbox);
 vm.runInContext(instrumentedJs, sandbox);
 
@@ -228,6 +233,20 @@ for (const ch of apiPayload.roster.characters) {
   const contract=bundle.render_contract;
   if (!contract) continue;
   const motion=contract.locomotion?.clip||'idle';
+  if (contract.locomotion?.kind === 'stationary') {
+    T.arena.x=560; T.arena.y=840; T.arena.vy=-1;
+    T.arena.keys={KeyD:true,KeyW:true,Space:true};
+    T.arena.customSpeedPxPerSec=999;
+    const facing=T.arena.flip;
+    T.toggleArenaPatrol();
+    const seen=new Set();
+    for(let tick=0;tick<100;tick++){T.stepAndRenderArena(1000/60);seen.add(T.arena.step);}
+    assert.equal(T.arena.x,560); assert.equal(T.arena.y,840);
+    assert.equal(T.arena.flip,facing); assert.equal(T.arena.patrolEnabled,false);
+    assert.equal(T.arena.clip,'idle'); assert.equal(seen.size,8);
+    T.arena.keys={}; T.arena.customSpeedPxPerSec=null;
+  }
+
   if (contract.aura?.loop_clip && bundle.animations[contract.aura.loop_clip]) {
     const aura=bundle.animations[contract.aura.loop_clip];
     const layers=T.getLayerFramesForStep(motion,0,{auraEnabled:true,fxTicks:0});
@@ -521,6 +540,72 @@ if (crabChar) {
   assert.equal(getEl('arenaSpawnFacingControls').style.display, 'none');
 }
 
+// Summon uses real source crops, shared60Hzcontract and real Rust/WASM flight sampling.
+{
+  T.selectCharacter('t_rex');
+  T.arena.keys={};T.arena.customSpeedPxPerSec=null;
+  assert.equal(T.startShenronSummon(),true);
+  assert.equal(T.startShenronSummon(),false,'Duplicate trigger must not restart the ritual');
+  const config=T.state.api.rituals.shenron_summon;
+  const origin=Array.from(T.arena.summon.origin);
+  for(let i=0;i<7;i++){
+    assert.equal(T.sampleShenronSummon(i*18-1,origin).balls[i].visible,false);
+    const launched=T.sampleShenronSummon(i*18,origin).balls[i];
+    assert.equal(launched.visible,true);assert.equal(launched.number,i+1);
+    assert.deepEqual(Array.from(launched.position),origin);
+  }
+  const gathered=T.sampleShenronSummon(162,origin);
+  for(let i=0;i<7;i++)assert.deepEqual(Array.from(gathered.balls[i].position),config.items[i].formation_offset_px.map((v,k)=>v+config.layout.map_center_px[k]));
+  assert.equal(T.sampleShenronSummon(227,origin).groundAlpha,0);
+  assert.equal(T.sampleShenronSummon(300,origin).dragonAlpha,0);
+  for(const tick of [230,250]){assert.equal(T.sampleShenronSummon(tick,origin).flashAlpha,1);assert.equal(T.sampleShenronSummon(tick,origin).groundAlpha,0);}
+  for(const tick of [240,258,275]){assert.equal(T.sampleShenronSummon(tick,origin).flashAlpha,0);assert.equal(T.sampleShenronSummon(tick,origin).groundAlpha,0);}
+  for(let tick=300;tick<600;tick++)assert.ok(T.sampleShenronSummon(tick,origin).glowAlpha>=0.78);
+  const ready=T.sampleShenronSummon(360,origin);
+  assert.equal(ready.groundRect[2],144);assert.ok(Math.abs(ready.groundRect[1]+ready.groundRect[3]-840)<1e-8);
+  assert.equal(ready.dragonPosition[0],960);assert.equal(ready.dragonAlpha,1);
+  assert.equal(config.reveal.method,'pixel_dissolve');
+  const maskKey='/'+config.reveal.mask;
+  const origMask=T.state.images[maskKey];
+  assert.ok(origMask,'Threshold mask must be preloaded by initApp()');
+  {
+    const mw=config.reveal.mask_size_px[0],mh=config.reveal.mask_size_px[1];
+    const maskRgba=new Uint8ClampedArray(mw*mh*4);
+    maskRgba[0]=250;maskRgba[3]=255;
+    maskRgba[4]=0;maskRgba[7]=255;
+    maskRgba[8]=50;maskRgba[11]=255;
+    T.state.images[maskKey]={_mockRgba:maskRgba};
+    const w=12,h=4;
+    const mkBuf=()=>{const b=new Uint8ClampedArray(w*h*4);for(let x=0;x<w;x++){const k=x*4;b[k]=40;b[k+1]=120;b[k+2]=60;b[k+3]=255;}return b;};
+    let putCount=0,activeBuf=mkBuf();
+    const dissolveCtx={getImageData:()=>({data:activeBuf}),putImageData:(img)=>{putCount++;activeBuf=img.data;}};
+    T.applyShenronPixelDissolve(dissolveCtx,w,h,0.25);
+    assert.equal(putCount,1);
+    assert.equal(activeBuf[3],0,'Cell 0 (threshold 250) must be hidden at progress=0.25');
+    assert.equal(activeBuf[4*4+3],255,'Cell 1 (threshold 0) must be revealed at progress=0.25');
+    assert.equal(activeBuf[4*4],40,'Cell 1 outside edge band keeps source R');
+    assert.equal(activeBuf[8*4+3],255,'Cell 2 (threshold 50) must be revealed at progress=0.25');
+    assert.ok(activeBuf[8*4]>40&&activeBuf[8*4+1]>120&&activeBuf[8*4+2]>60,'Cell 2 inside edge band tints toward edge_color_rgb');
+    const fullBuf=mkBuf();
+    const beforeFull=Array.from(fullBuf);
+    activeBuf=fullBuf;
+    T.applyShenronPixelDissolve(dissolveCtx,w,h,1.0);
+    assert.equal(putCount,1,'progress>=1 must short-circuit without putImageData');
+    assert.deepEqual(Array.from(fullBuf),beforeFull,'progress>=1 preserves pixels untouched');
+    T.state.images[maskKey]=origMask;
+  }
+  T.arena.summon.tick=0;T.stepAndRenderArena(16,100);assert.ok(Math.abs(T.arena.summon.tick-6)<1e-9,'Ritual uses uncapped wall time under slow rendering');
+  const casterX=T.arena.x,casterY=T.arena.y;T.arena.keys={KeyD:true,KeyW:true};
+  T.stepAndRenderArena(1000/60);assert.equal(T.arena.x,casterX);assert.equal(T.arena.y,casterY);
+  T.arena.summon.tick=10000;T.arena.keys={};T.stepAndRenderArena(1000/60);
+  assert.ok(T.arena.summon,'Persist until explicit dismiss');
+  T.dismissShenronSummon();assert.equal(T.arena.summon,null);
+  assert.equal(T.startShenronSummon(),true,'Dismiss permits replay');T.dismissShenronSummon();
+  const ticks=[0,18,27,54,108,162,210,219,228,230,240,246,250,258,275,276,288,300,330,360,408,10000];
+  const trace=ticks.map(tick=>{const s=T.sampleShenronSummon(tick,[560,650]);return {reveal_top:s.revealTop,flash_alpha:s.flashAlpha,tick,phase:s.phase,balls:s.balls.map(b=>({number:b.number,visible:b.visible,alpha:b.alpha,position:Array.from(b.position)})),ground_rect:Array.from(s.groundRect),ground_alpha:s.groundAlpha,glow_alpha:s.glowAlpha,dragon_position:Array.from(s.dragonPosition),dragon_alpha:s.dragonAlpha,dragon_frame:s.dragonFrame};});
+  console.log('SHENRON_SUMMON_TRACE='+JSON.stringify(trace));
+}
+
 // Phase B: Inject synthetic 1-Layer Combined characters to verify dynamic multi-character pipeline
 const makeMockBundle = (id, cw, ch) => {
   const mkFrames = (n, dur = 60.0) => Array.from({ length: n }, (_, idx) => ({
@@ -765,6 +850,16 @@ if (reviewCharacter) {
   const animation=T.state.bundlesById[reviewCharacter.modes.combined_1layer.bundle_id].animations.walk;
   assert.equal(T.state.stepIdx,animation.frames.length-1,'Review frame must clamp to the selected animation');
   assert.equal(getEl('runtimeErrorBanner').textContent,'');
+}
+
+// Stationary AI must idle even outside the patrol zone and retain its facing.
+{
+  const ai = {};
+  const decision = T.evaluateUtilityAI(ai, { is_stationary: true, facing_left: true, target_x: 9000 });
+  assert.equal(decision.intent, 'idle');
+  assert.equal(decision.move_dir, 0);
+  assert.equal(decision.attack_clip, '');
+  assert.equal(decision.desired_face_left, true);
 }
 
 // Phase G: Shared 1:1 Utility AI Verification (Mirror of Godot UtilityAIController.gd + ArenaSandbox.gd)

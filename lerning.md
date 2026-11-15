@@ -419,4 +419,44 @@
 - **Nguyên nhân phát sinh**: Khi một nhân vật trải qua >= 2 lần chốt (`PIPE-007 -> PIPE-009 -> PIPE-016` ở `bat_chiroptera`), kiểm tra chỉ đọc 1 bước `by_id[workflow["superseded_by"]]` trong [test_governance_and_preview.py](file:///workspaces/DR7-Studio/tests/test_governance_and_preview.py) sẽ dừng ở bản trung gian `PIPE-009` (vốn có `approved_atlas_path` từ `calibration-v1`), dẫn đến kỳ vọng nhầm `reviewed_pending_owner` ngay cả sau khi bản mới nhất `PIPE-016` đã `owner_approved`.
 - **Giải pháp đã kiểm chứng**: Lần theo chuỗi `superseded_by` (kèm chống chu trình) tới workflow cuối cùng của nhân vật trong `approved_workflows` trước khi đối chiếu `owner_approved` và `atlas_sha256` live.
 
+### [LRN-060] Đặt guard stationary đúng phạm vi hàm (2026-11-15)
+- Attempt1: thay chuỗi `var sc := scale_override` đầu tiên đặt nhầm guard vào `_configure_fighter_instance` (hàm void, không có `entry`). Godot báo `Identifier "entry" not declared in the current scope.` và `A void function cannot return a value.`; log `work/characters/shenron/idle-v1/evidence/stationary-attempt1.log`.
+- Đã chuyển guard vào `_get_walk_speed_px_per_s(entry, ...)`, thêm test stationary speed0/AI giữ facing, chạy lại `./loop.sh test` attempt2 exit0; bằng chứng `work/characters/shenron/idle-v1/evidence/stationary-test-pass.log`. Khi sửa chuỗi lặp phải neo theo chữ ký hàm và đọc diff trước chạy test.
+
+### [LRN-061] Tích hợp idle-only và import PNG mới trước Godot headless (2026-11-15)
+- Shenron integration attempt1: `KeyError: 'aura'` ở test_independent_fx_contract và count9!=8; attempt2 còn count finalized_characters9!=8. Bổ sung contract aura rỗng với independent_clock=true, projectile=null và thay2assert count bằng số roster thực tế.
+- Attempt3: `No loader found for resource: res://assets/shenron/godot_bundle/godot/shenron-atlas-00.png (expected type: Texture2D)`. PNG mới chưa được import; đã xác minh `--help`, chạy `godot --headless --editor --path ... --import` exit0 rồi full `./loop.sh test` attempt4 exit0. Log tại work/characters/shenron/idle-v1/evidence/integration-test-{1,2,3,4}.log.
+- Stationary front-only không có turn: gate chỉ miễn perspective_turns khi contract idle-only, front_only/directions[front], allow_turn_or_flip=false và có lý do Owner; test bảo đảm ground/turning vẫn bị chặn. Không báo perspective turn PASS giả cho idle.
+- WASM release build riêng tạo hash khác binary preview cũ: copy đúng release artifact rồi Node/WASM E2E exit0; final-parity.json ghi hash2ea7d73502441241595631d791949dd9c818675764acafb70d0e1182bea755f7 cho cả2file.
+
+### [LRN-062] Tăng số pose không tự chứng nhận idle tự nhiên — Shenron undo8→4 (2026-11-15)
+- Owner loại idle8frame: “cảm giác shenron tĩnh nhưng hoạt ảnh trôi quá nhanh”, yêu cầu undo4frame. Bản8 có technical exit0 vẫn là Owner motion rejection; không dùng sốframe/tick/hash để thay nghiệm thu cảm giác chuyển động.
+- Khôi phục byte-identical `work/characters/shenron/idle-v2/snapshot-before` cho assets và `roster-before.json`;4pose12tick tại60Hz,800ms/vòng,scale2.4. Giữ8frame trong work để audit, đánh rejected trong QA8frame.
+- Kiểm chứng `./loop.sh test` exit0, browser4pose3nền/khôngJSerror và servedhash `86fafe02e99a86ef7c3cc58e9d26ac42e4bd44d5fc6c986c8cb56cdd2e25cfc3`; logs/parity tại `work/characters/shenron/idle-v2/rollback-evidence/`.
+
+### [LRN-063] Chóp đuôi sóng cần vùng canvas thực tế và bằng chứng hai hướng (2026-11-15)
+- Shenron wave phase6 có bbox đáy tại canvas y257: canvas256px cũ cắt mất chóp đuôi. Giữ nguyên phép đăng ký/master pixels, thêm16hàng trong suốt phía dưới tất cả whole poses thành384×272; anchor[192,240] vàscale2.76 không đổi. Frame0crop384×256 RGBA khớp master,16hàng thêm alpha0.
+- Thêm test vùng chóp đuôi độc lập: ROItrái[65,212,35,30] frame4=288opaque px/frame0=0; ROIphải[210,210,40,25] frame0=274/frame4=0. Đây chứng minh hiện diện ảnh ở2phía, không tự chứng nhận chuyển động tự nhiên; vẫn review whole-body/nối frame/browser3nền và Owner Human Test riêng.
+- Sau sửa, Godotimport/WASMbuild/full `./loop.sh test` exit0 ngaylần1; bằng chứng tại `work/characters/shenron/idle-v3-wave/evidence/`. Không tăngFPS/lật/xoay mảnh ảnh để thay chuyển động sóng.
+
+
+### [LRN-064] Đồng hồ triệu hồi phải dùng thời gian thực (2026-11-15)
+- Khi quay browser chậm, giới hạn dt 50ms của combat khiến chuỗi 360 tick mất 11055ms. Tách wallDtMs cho timeline triệu hồi; giữ bước combat hiện có. Browser bản cuối đạt ready sau khoảng 5872ms kể từ mốc đo.
+- Test stepAndRenderArena(16,100) tăng timeline 6 tick; full ./loop.sh test exit0. Bằng chứng work/rituals/shenron_summon/v1/evidence/integration-test-final.log và browser-sequence.json.
+
+### [LRN-065] Tham chiếu breathing không được làm trôi pose sóng đã duyệt (2026-11-15)
+- Lượt đầu dùng thêm ảnh breathing cũ làm mắt frame7 trôi từ [181.4146,73.7805] sang [178.5,72.5263]. Giữ take đầu làm bằng chứng và sửa whole-body pose5–7 với duy nhất pose sóng tương ứng; không cắt ghép bộ phận.
+- Đối chiếu ROI đuôi/râu và ngực tại work/characters/shenron/idle-v4-breath/evidence/breath-wave-comparison.json; review ba nền và phát vòng ở tốc độ thực. Full test exit0, motion vẫn chờ Owner Human Test.
+
+
+### [LRN-066] Nhịp thở Shenron là dao động toàn thân theo Owner (2026-11-15)
+- Owner loại nhịp phồng ngực v4: “nhịp thở là nhịp dao động của toàn cơ thể lơ lửng”. Không coi yêu cầu giữ sóng đã duyệt là cho phép sửa hình ngực.
+- Dùng nguyên whole poses v3, dịch toàn ảnh bằng số nguyên dy [0,-1,-2,-1,0,1,2,1] px, không cắt/ghép bộ phận; pixel count và RGBA sau dịch khớp trong test. Giữ8×12tick,1.6s,scale2.76; browser 0→7→0 trên3nền, chưa có Owner nghiệm thu.
+- Fulltest lần1 bắt đường dẫn export trỏ ../clips-v1/animation-clips.json sau copy sang assets: FileNotFoundError. Sửa source.path thành ../clips/animation-clips.json, giữ đúng hash manifest; lần2 ./loop.sh test exit0. Logs work/rituals/shenron_summon/v2-flash-hover/evidence/full-test-{1,2}.log.
+
+### [LRN-067] Godot OpenGL3 Pixel Dissolve Shader & Browser Canvas2D 1:1 Parity (2026-11-15)
+- Kiểm thử fragment shader thực tế trên Godot 4 (`ShenronPixelDissolve.gdshader`) không chạy được với `--headless` (Dummy renderer bỏ qua render GPU); bắt buộc chạy qua `xvfb-run -a ./tools/godot/godot --rendering-driver opengl3` (cùng thư viện `libxcursor1`/`libxinerama1`), và nạp `Texture2D` / `SpriteFrames` qua `load("res://...")` thay vì `Image.load_from_file` để không sinh cảnh báo export. Tách test GPU này (`tests/test_shenron_dissolve_render.gd`) khỏi `./loop.sh test`/CI headless.
+- Để `Shenron.tscn` (`AnimatedSprite2D`, `centered = false`, `offset = Vector2(-192, -240)`) khớp tuyệt đối 0 sai khác pixel (`alpha_diff=0`, `max_rgb_diff=0` ở `0..1`) với Canvas2D `applyShenronPixelDissolve`: truyền `canvas_anchor = -dragon_sprite.offset` `(192, 240)` để `VERTEX + canvas_anchor` ánh xạ về tọa độ canvas `384x272`, dùng mask `96x68` `cell_size = 4.0`, thêm `if (progress >= 1.0) { COLOR = original; }` trên cả Godot lẫn JS và đưa mask `dissolve-threshold.png` (seed `17013`) + `dr7.shenron_summon.v3` vào `tools/pipeline/build_shenron_summon.py`.
+- Bằng chứng sau chỉnh sửa cuối: `native-render-3.log` (`PREFAB_DISSOLVE_HALF_OK visible=14936 mismatches=0`), `browser-dissolve-test.json` (`mismatches=0, removed=0`), `runtime-parity.json` (22 tick, `max_pos_diff=5.77e-05`), `browser-sequence.json` (`flight..ready@360.984`), đối chiếu trực quan `native-0.5.png` / `browser-dissolve-0.5.png` / `tick-330.png`.
+
 <!-- LERNING_ENTRIES_END -->

@@ -1,0 +1,84 @@
+{
+  "character_id": "shenron",
+  "stage": "master_pending_owner_approval",
+  "route": "host_image_generator_plus_deterministic_pocket_first_pixel_reduce",
+  "original_source": {
+    "path": "work/characters/shenron/source/shenron-original.jpg",
+    "size_px": [
+      840,
+      859
+    ],
+    "foreground_bbox_px": [
+      0,
+      143,
+      840,
+      715
+    ],
+    "sha256": "0440297a160f4f3c39e95eb166d6b44d8186a7b1f434879d0edcffc18a1f95bb"
+  },
+  "master": {
+    "file": "/workspaces/DR7-Studio/work/characters/shenron/master-v1/master.png",
+    "file_sha256": "7d32a92302b9af7a4286d8c11f07222d2874c555e3fa51c5f1738e0af87e0526",
+    "canvas_size_px": [
+      384,
+      256
+    ],
+    "body_bbox_px": [
+      45,
+      27,
+      294,
+      201
+    ],
+    "visible_pixels": 30266,
+    "rgb_colors": 96,
+    "edge_acutance_sobel": 419.261,
+    "alpha_hardness_pct": 100.0,
+    "visible_alpha_hardness_pct": 100.0,
+    "minimum_horizontal_constant_rgba_run_px": 1,
+    "single_pixel_run_fraction": 0.807646465572568,
+    "method": "BT709 gray; transparent RGB zeroed; scipy Sobel unnormalized/default reflect; inner binary alpha boundary; binary erosion default connectivity1",
+    "limits": "No automatic visual/anatomy/animation verdict; run lengths do not alone measure perceived sharpness or prove a texel grid."
+  },
+  "target_display_contract_proposal": {
+    "canvas_size_px": [
+      384,
+      256
+    ],
+    "body_bbox_px": [
+      45,
+      27,
+      294,
+      201
+    ],
+    "suggested_anchor_px": [
+      192,
+      228
+    ],
+    "default_scale": 2.0,
+    "displayed_size_1080p_px": [
+      588,
+      402
+    ],
+    "height_pct_1080p": 37.22,
+    "owner_reference_target_px": [
+      561,
+      405
+    ],
+    "owner_reference_pct_1080p": 37.5,
+    "scale_rationale": "2.0x matches Spinosaurus & Sarcosuchus and closely aligns with T-rex 1.75x texel density while preserving crisp fangs, scales, claws, and 1-2px whiskers inside standard 384x256 canvas with 45px left/right whisker margin."
+  },
+  "clean_matte_checks": {
+    "alpha_values_unique": [
+      0,
+      255
+    ],
+    "opaque_blue_key_px": 0,
+    "outer_rim_blue_excess_px": 0,
+    "transparent_coil_loop_count": 21
+  },
+  "files": {
+    "master_png": "work/characters/shenron/master-v1/master.png",
+    "review_3bg_2x": "work/characters/shenron/master-v1/review-master-3bg-2x.png",
+    "compare_1080p": "work/characters/shenron/master-v1/compare-with-trex-1080p.png"
+  }
+}

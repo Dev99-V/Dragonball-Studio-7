@@ -1,0 +1,5 @@
+{
+  "command": "./loop.sh test",
+  "exit_code": 0,
+  "log": "work/rituals/shenron_summon/v1/evidence/integration-test-final.log"
+}

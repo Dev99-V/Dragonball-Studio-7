@@ -1,0 +1,161 @@
+{
+  "character_id": "shenron",
+  "display_name": "Shenron",
+  "faction": "special_beasts",
+  "role_label": "Front-facing hovering dragon — idle only",
+  "tags": [
+    "dragon",
+    "stationary",
+    "front_only",
+    "pixel_art"
+  ],
+  "status": "finalized_combined_1layer",
+  "atlas_stage": "demo_pending_owner",
+  "owner_animation_approval": "pending",
+  "facing_contract": {
+    "camera_view": "front_only",
+    "directions": [
+      "front"
+    ],
+    "owner_instruction": "Owner selected front_only idle-only; no movement, turn or mirror."
+  },
+  "map_sync_metrics": {
+    "canvas_size_px": [
+      384,
+      256
+    ],
+    "foot_anchor_px": [
+      192,
+      240
+    ],
+    "body_only_bbox_px": {
+      "x": 45,
+      "y": 27,
+      "w": 294,
+      "h": 201
+    },
+    "full_fx_bbox_px": {
+      "x": 43,
+      "y": 25,
+      "w": 296,
+      "h": 206
+    },
+    "reference_ppu_64": 64,
+    "world_size_at_64ppu_m": {
+      "body_w_m": 4.59375,
+      "body_h_m": 3.140625,
+      "aura_w_m": 4.625,
+      "aura_h_m": 3.21875
+    },
+    "tile_32px_span": {
+      "body_tiles_w": 9.1875,
+      "body_tiles_h": 6.28125,
+      "full_fx_tiles_w": 9.25,
+      "full_fx_tiles_h": 6.4375
+    }
+  },
+  "pixel_sharpness_metrics": {
+    "texel_scale_ratio": "Native1px gameplay; Nearest",
+    "edge_acutance_sobel": 419.261,
+    "alpha_hardness_pct": 100,
+    "opaque_key_px": 0,
+    "enclosed_key_pockets": 0,
+    "outer_ring_spill_fraction": 0.0,
+    "reference_note": "Blue key measured on keyed candidates; palette restricted to approved master."
+  },
+  "present_clips": [
+    "idle"
+  ],
+  "effect_clips": [],
+  "missing_provisional_clips": [
+    "walk",
+    "run",
+    "jump",
+    "guard",
+    "attack_light",
+    "attack_heavy",
+    "power_up",
+    "aura_loop",
+    "hit",
+    "ko",
+    "win",
+    "turn"
+  ],
+  "not_applicable_clips": {
+    "walk": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "run": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "jump": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "guard": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "attack_light": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "attack_heavy": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "power_up": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "aura_loop": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "hit": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "ko": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "win": "Owner selected front_only stationary idle-only; guard/win excluded project-wide.",
+    "turn": "Owner selected front_only stationary idle-only; guard/win excluded project-wide."
+  },
+  "render_contract": {
+    "body_clips": [
+      "idle"
+    ],
+    "effect_clips": [],
+    "locomotion": {
+      "kind": "stationary",
+      "clip": "idle",
+      "speed_px_per_second": 0.0,
+      "default_scale": 2.4,
+      "allow_turn_or_flip": false,
+      "lock_spawn_facing": true
+    },
+    "facing": {
+      "camera_view": "front_only",
+      "directions": [
+        "front"
+      ],
+      "owner_instruction": "Owner selected front_only idle-only; no movement, turn or mirror."
+    },
+    "turning": {
+      "clip": null,
+      "method": "not_applicable_stationary_front"
+    },
+    "aura": {
+      "loop_clip": null,
+      "charge_clip": null,
+      "independent_clock": true
+    },
+    "projectile": null
+  },
+  "modes": {
+    "combined_1layer": {
+      "label": "Combined 1-Layer — stationary idle",
+      "godot_prefab": "res://scenes/Shenron.tscn",
+      "bundle_id": "shenron"
+    }
+  },
+  "motion_quality": {
+    "status": "reviewed_pending_owner",
+    "method": "imagegen_complete_body_keyframes",
+    "atlas_sha256": "86fafe02e99a86ef7c3cc58e9d26ac42e4bd44d5fc6c986c8cb56cdd2e25cfc3",
+    "owner_approved": false,
+    "checks": {
+      "body_connections": true,
+      "whole_pose_sequence": true,
+      "perspective_turns": false,
+      "phase_timing": true,
+      "three_backgrounds": true,
+      "character_identity": true
+    },
+    "not_applicable_checks": {
+      "perspective_turns": "Owner chose front_only stationary idle-only; no turn requested."
+    },
+    "unresolved_structural_failures": [],
+    "review_evidence": "work/characters/shenron/idle-v1/evidence/review.json",
+    "naturalness_verdict": "reviewed_pending_owner"
+  },
+  "qa_report": "docs/characters/shenron-idle-v1-qa.json",
+  "canonical_identity": {
+    "path": "work/characters/shenron/master-v1/master.png",
+    "sha256": "7d32a92302b9af7a4286d8c11f07222d2874c555e3fa51c5f1738e0af87e0526"
+  }
+}

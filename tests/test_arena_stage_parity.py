@@ -78,8 +78,8 @@ class ArenaStageParityTests(unittest.TestCase):
         # Server parity + Godot ZIP
         parity = preview_server.verify_engine_localhost_parity()
         self.assertTrue(parity["ok"], parity)
-        self.assertEqual(parity["checked_bundles"], 8)
-        self.assertEqual(parity["finalized_characters"], 8)
+        self.assertEqual(parity["checked_bundles"], len(json.loads((REPO_ROOT / "assets/roster.json").read_text())["characters"]))
+        self.assertEqual(parity["finalized_characters"], len(json.loads((REPO_ROOT / "assets/roster.json").read_text())["characters"]))
 
         zf = zipfile.ZipFile(io.BytesIO(preview_server.build_godot_zip_bytes()))
         names = set(zf.namelist())

@@ -97,6 +97,10 @@ func _patrol_step(self_x: float) -> Dictionary:
 
 
 func evaluate(params: Dictionary) -> Dictionary:
+	if bool(params.get("is_stationary", false)):
+		last_intent = "idle"
+		last_reason = "stationary"
+		return {"intent": "idle", "move_dir": 0, "attack_clip": "", "desired_face_left": bool(params.get("facing_left", false)), "edge_dist": -1.0, "reason": last_reason}
 	var cid: String = str(params.get("character_id", ""))
 	var is_flying: bool = bool(params.get("is_flying", false))
 	var has_heavy: bool = bool(params.get("has_heavy", false))

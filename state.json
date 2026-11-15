@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-15T05:54:08Z",
+  "updated_at": "2026-11-15T13:15:06Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.12.0",
+    "version": "0.13.1",
     "version_history": [
       {
         "version": "0.1.0",
@@ -89,6 +89,16 @@
         "version": "0.11.2",
         "date": "2026-11-13T10:50:00+00:00",
         "summary": "Owner-approved Bat turn-v1 (PIPE-009): 5 whole-body perspective turn poses (ticks [5,4,3,4,5]), outer white rim & turn_01 pocket cleanup, bidirectional & two-endpoint runtime while preserving v0.10.0 61 frames/FX and Chilopoda v0.11.1. Turn TODO 1/4 complete; starting T-rex audit."
+      },
+      {
+        "version": "0.13.0",
+        "date": "2026-11-15T12:36:59.698744+00:00",
+        "summary": "Owner nghiệm thu Shenron idle-v5-hover và combo gọi7ngọc/two flashes/pixel ground/persistent aura. PIPE-017."
+      },
+      {
+        "version": "0.13.1",
+        "date": "2026-11-15T13:11:10+00:00",
+        "summary": "Owner nghiệm thu & chốt v3-pixel-dissolve cho hiệu ứng xuất hiện Shenron (96x68 cell 4x4, viền [255,236,156]) đồng bộ 1:1 Godot OpenGL3 shader, Rust/WASM và Browser Canvas2D; PIPE-018 supersedes phần reveal PIPE-017."
       }
     ],
     "genre": "2D Dragon Ball Real-Time Mass Action / RPG",
@@ -129,11 +139,29 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "ALL-CHAR-FINAL-012",
-    "status": "completed_owner_approved",
-    "summary": "Hoàn tất chốt 8/8 nhân vật theo quy trình v0.12.0 (PIPE-011..PIPE-016 cho Spinosaurus, Tasmanian King Crab, Sarcosuchus, Dilophosaurus, Chilopoda, Bat; giữ xác nhận T-rex PIPE-010 & Pteranodon PIPE-002), lưu trữ receipt cũ tại docs/releases/, đóng băng approved-final-frames, dọn sạch uniform-walk-v1 (534 files / 20.1 MB) + 417 stage PNG trùng lặp (20.4 MB) và chuẩn bị push lên main để chuyển sang nhân vật tiếp theo.",
-    "character_id": null,
-    "master_image": null
+    "active_task_id": "SHENRON-PIXEL-DISSOLVE",
+    "status": "completed",
+    "summary": "Owner đã nghiệm thu & chốt v0.13.1 (PIPE-018): pixel_dissolve 96x68 (cell 4x4, viền [255,236,156]) đồng bộ 1:1 Godot OpenGL3 shader, Rust/WASM và Browser Canvas2D.",
+    "character_id": "shenron",
+    "todo_file": "docs/shenron-idle-todo.md",
+    "master_image": "work/characters/shenron/master-v1/master.png",
+    "extractor_script": "work/characters/shenron/idle-v1/extract_shenron_frame.py",
+    "generated_frames_ready": [
+      "work/characters/shenron/idle-v5-hover/idle_00.png",
+      "work/characters/shenron/idle-v5-hover/idle_01.png",
+      "work/characters/shenron/idle-v5-hover/idle_02.png",
+      "work/characters/shenron/idle-v5-hover/idle_03.png",
+      "work/characters/shenron/idle-v5-hover/idle_04.png",
+      "work/characters/shenron/idle-v5-hover/idle_05.png",
+      "work/characters/shenron/idle-v5-hover/idle_06.png",
+      "work/characters/shenron/idle-v5-hover/idle_07.png"
+    ],
+    "next_steps_summary": [
+      "Đã nghiệm thu & chốt v0.13.1 (PIPE-018) kèm toàn bộ kiểm thử Godot/Rust/WASM/Browser, chuẩn bị push lên origin/main."
+    ],
+    "review_report": "docs/characters/shenron-idle-v5-hover-qa.json",
+    "preview_url": "http://localhost:8080/?tab=arena",
+    "summon_review_report": "docs/characters/shenron-summon-v3-qa.json"
   },
   "open_issues": [],
   "resolved_issues": [
@@ -726,6 +754,54 @@
       "timestamp": "2026-11-15T05:54:08Z",
       "status": "completed",
       "summary": "Owner chốt toàn bộ 8 nhân vật (v0.12.0): phát hành owner_approval.json cho spinosaurus (PIPE-011), tasmanian_king_crab (PIPE-012), sarcosuchus (PIPE-013), dilophosaurus (PIPE-014), chilopoda (PIPE-015), bat_chiroptera (PIPE-016); lưu trữ receipt cũ tại docs/releases/; cập nhật roster.json, skills.md, engine-export.json, QA JSONs, contract tests, dọn PNG dư thừa và ghi nhận vào docs/releases/v0.12.0-all-characters-finalization.json."
+    },
+    {
+      "id": "SHENRON-IDLE-HOST-DRAFT",
+      "timestamp": "2026-11-15T08:39:05.955614+00:00",
+      "status": "motion_review_pending",
+      "summary": "Đã tiếp tục Shenron bằng built-in image_gen: sinh idle_02/03 toàn thân, tách nền/palette, build4frame [12,12,12,12]60Hz/800ms và export1page trong work. Đã mở filmstrip3nền; motion actual-speed review pending, chưa thêm roster. Stationary runtime Godot/web + AI đã kiểm thử ./loop.sh test exit0 (attempt2 sau sửa vị trí speed guard)."
+    },
+    {
+      "id": "SHENRON-IDLE-INTEGRATED",
+      "timestamp": "2026-11-15T09:02:35.887934+00:00",
+      "status": "ready_for_owner_human_test",
+      "summary": "Shenron idle đã tích hợp4frame/800ms/60Hz,1atlas778x522,canvas384x256,anchor[192,240],scale2.4; reviewed_pending_owner. Full loop.sh test lần4 exit0, WASMrelease build+NodeE2Eexit0,9bundleparity; localhost sẵn sàng tại ?character=shenron&clip=idle."
+    },
+    {
+      "id": "SHENRON-IDLE-V2-8FRAMES",
+      "timestamp": "2026-11-15T09:15:18.255114+00:00",
+      "status": "ready_for_owner_human_test",
+      "summary": "Shenron idle nâng4→8pose toàn thân: giữ nguyên4pose gốc ở0/2/4/6, thêm4inbetween;6tick/pose tại60Hz,800ms/cycle,scale2.4;atlas1page1166x782. Full ./loop.sh test exit0 ngaylần1;WASMbuildexit0; trìnhduyệt3nền phát0→7→0,servedRGBA/hashkhớp;chờOwnerHumanTest."
+    },
+    {
+      "id": "SHENRON-UNDO-8-TO-4",
+      "timestamp": "2026-11-15T09:19:19.310687+00:00",
+      "status": "completed",
+      "summary": "Đã undo Shenron8→4frame theo Owner, khôi phục byte-identical snapshot cả assets/roster;12tick/pose,800ms/vòng,scale2.4. Full ./loop.sh test exit0; trìnhduyệt3nền và localhost xác nhận4frame,hashđúng; bản8 bịOwnerloại và chỉgiữaudit trong work."
+    },
+    {
+      "id": "SHENRON-SCALE-PLUS15",
+      "timestamp": "2026-11-15T09:32:07.693374+00:00",
+      "status": "completed",
+      "summary": "Scale2.76(+15%);fulltestexit0;waveanimationtimingawaitingOwner."
+    },
+    {
+      "id": "SHENRON-IDLE-V3-WAVE",
+      "timestamp": "2026-11-15T09:44:31.056582+00:00",
+      "status": "ready_for_owner_human_test",
+      "summary": "Đã dựng Shenron wave idle 8 pose toàn thân: đuôi có pha sang trái/phải và hai râu đổi độ cong theo sóng; 12 tick/pose ở 60 Hz = 1.6 giây/vòng. Scale 2.76 (+15%). Canvas 384×272 thêm16px trong suốt dưới để giữ chóp đuôi, anchor[192,240] giữ nguyên. Full ./loop.sh test exit0, WASM build exit0, browser3nền và served atlas khớp; chờ Owner Human Test."
+    },
+    {
+      "id": "SHENRON-SUMMON-WITH-BREATH",
+      "timestamp": "2026-11-15T12:36:59.698744+00:00",
+      "status": "owner_approved",
+      "summary": "Owner chốt idle-v5-hover + summon-v2; PIPE-017, v0.13.0."
+    },
+    {
+      "id": "SHENRON-PIXEL-DISSOLVE",
+      "timestamp": "2026-11-15T13:15:06Z",
+      "status": "completed",
+      "summary": "Owner đã nghiệm thu & chốt v0.13.1 (PIPE-018): pixel_dissolve 96x68 (cell 4x4, viền [255,236,156]) đồng bộ 1:1 Godot OpenGL3 shader, Rust/WASM và Browser Canvas2D."
     }
   ],
   "quick_resume_commands": [
@@ -734,10 +810,11 @@
     "./loop.sh test"
   ],
   "session_resume": {
-    "next_action": "8/8 nhân vật đã đạt owner_approved hoàn chỉnh trên main (v0.12.0); sẵn sàng nhận concept/atlas nhân vật mới từ Owner.",
-    "asset_status": "8/8 nhân vật đạt finalized_owner_approved / motion_quality=owner_approved (t_rex PIPE-010, pteranodon PIPE-002, spinosaurus PIPE-011, tasmanian_king_crab PIPE-012, sarcosuchus PIPE-013, dilophosaurus PIPE-014, chilopoda PIPE-015, bat_chiroptera PIPE-016) & parity 1:1 Godot <-> localhost.",
-    "approval_file": "assets/spinosaurus/owner_approval.json",
-    "cleanup_report": "docs/releases/v0.12.0-all-characters-finalization.json",
+    "next_action": "9/9 nhân vật đã đạt owner_approved trên main (v0.13.1 / PIPE-018, bao gồm Shenron idle-v5-hover & summon v3-pixel-dissolve); sẵn sàng nhận concept/atlas mới từ Owner.",
+    "asset_status": "9/9 nhân vật đạt finalized_owner_approved / motion_quality=owner_approved (8 nhân vật v0.12.0 + shenron PIPE-017/PIPE-018) & parity 1:1 Godot <-> Rust/WASM <-> localhost.",
+    "approval_file": "assets/shenron/owner_approval.json",
+    "ritual_approval_file": "assets/rituals/shenron_summon/owner_approval.json",
+    "cleanup_report": "docs/releases/v0.13.1-shenron-pixel-dissolve-finalization.json",
     "verification": "work/characters/pteranodon/turn-v1/quota-blocker.json",
     "git_checkpoint": {
       "branch": "main",
@@ -753,8 +830,8 @@
     "review_evidence": "work/characters/t_rex/turn-v1/review/keyframe-review.json",
     "latest_delivery": "assets/roster.json",
     "preview_url": "http://localhost:8080/?tab=arena",
-    "local_version": "0.12.0",
-    "handoff_guide": "docs/AGY-TURN-HANDOFF.md",
+    "local_version": "0.13.1",
+    "handoff_guide": "docs/shenron-idle-todo.md",
     "previous_git_checkpoint": {
       "branch": "main",
       "remote": "origin",
@@ -913,6 +990,27 @@
       "approval_file": "assets/bat_chiroptera/owner_approval.json",
       "supersedes": "PIPE-009",
       "summary": "Bat - Chiroptera v0.12.0 (calibration-v1): hiệu chỉnh bay 1920x1080 (scale 1.1, 115 px/s, flight Y=250) và tăng tốc turn [2,3,4,3,3]."
+    },
+    {
+      "id": "PIPE-017",
+      "character_id": "shenron",
+      "approved_at": "2026-11-15T12:36:59.698744+00:00",
+      "approval_file": "docs/releases/shenron-v0.13.0-approval.json",
+      "ritual_approval_file": "docs/releases/shenron_summon-v0.13.0-approval.json",
+      "superseded_by": "PIPE-018",
+      "summary": "Shenron hovering eight-frame idle + full Dragon Ball summon combo (v0.13.0), Owner approved."
+    },
+    {
+      "id": "PIPE-018",
+      "character_id": "shenron",
+      "approved_at": "2026-11-15T13:11:10+00:00",
+      "approval_file": "assets/shenron/owner_approval.json",
+      "ritual_approval_file": "assets/rituals/shenron_summon/owner_approval.json",
+      "supersedes": "PIPE-017",
+      "atlas_sha256": "e94502bbed02ed036f66aa8a5a3dcbf42f111898b3c83deb90b0a4c0669688b2",
+      "ritual_atlas_sha256": "c82ec5e8460a2bf01ef515793e87cfdf2be96f448eeab1b914d9e9fec7215aba",
+      "dissolve_mask_sha256": "fbede0b918a87743dac48c8e97abc3a6a32fbd4af30fcf2bdf33e052d790800f",
+      "summary": "Shenron v0.13.1 (v3-pixel-dissolve): đổi riêng reveal sang pixel dissolve 96x68 (cell 4x4, viền [255,236,156]) đồng bộ 1:1 Godot OpenGL3 shader, Rust/WASM và Browser Canvas2D; giữ nguyên thân idle-v5-hover, bay 7 ngọc, 2 flash trắng, cụm 144x136 và aura."
     }
   ],
   "owner_defaults": {
@@ -995,12 +1093,25 @@
     "scope": "Documentation-only handoff for Bat -> T-rex -> Pteranodon -> Sarcosuchus turn retrofit;0/4 unchanged. Chilopoda already Owner-approved; no runtime/art edits."
   },
   "pickup_release": {
-    "version": "0.12.0",
-    "branch": "main",
-    "remote": "origin",
-    "requested_at": "2026-11-15T05:52:31.727116+00:00",
-    "status": "finalizing_all_characters_v0.12.0",
-    "release_manifest": "docs/releases/v0.12.0-all-characters-finalization.json",
-    "characters_approved": 8
+    "version": "0.13.1",
+    "status": "completed",
+    "release_manifest": "docs/releases/v0.13.1-shenron-pixel-dissolve-finalization.json",
+    "characters_approved": 9,
+    "approved_at": "2026-11-15T13:11:10+00:00",
+    "verification_log": "docs/releases/v0.13.1-shenron-tests.log"
+  },
+  "local_preview": {
+    "url": "http://localhost:8080/?character=shenron&clip=idle",
+    "status": "running",
+    "verified_http_status": 200,
+    "shenron_in_roster": true,
+    "idle_frames": 8,
+    "cycle_ms": 1600,
+    "default_scale": 2.76,
+    "summon_url": "http://localhost:8080/?character=t_rex&clip=idle",
+    "body_revision": "idle-v5-hover",
+    "ritual_revision": "v3-pixel-dissolve",
+    "release_version": "0.13.1",
+    "owner_approved": true
   }
 }

@@ -1,0 +1,89 @@
+{
+  "url": "http://localhost:8080/?character=t_rex&clip=idle",
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "pageErrors": [],
+  "buttonStates": {
+    "textBefore": "✨ Gọi Shenron",
+    "textDuring": "Thu hồi Shenron",
+    "textAfterDismiss": "✨ Gọi Shenron",
+    "textOnReplay": "Thu hồi Shenron"
+  },
+  "telemetry": {
+    "phases": [
+      {
+        "phase": "flight",
+        "tick": 3.9959999999999947,
+        "wall_ms": 0
+      },
+      {
+        "phase": "gather",
+        "tick": 162.98999999999987,
+        "wall_ms": 2624
+      },
+      {
+        "phase": "vanish",
+        "tick": 210.98999999999987,
+        "wall_ms": 3425
+      },
+      {
+        "phase": "flash",
+        "tick": 228.98999999999984,
+        "wall_ms": 3717
+      },
+      {
+        "phase": "ground_glow",
+        "tick": 276.98400000000004,
+        "wall_ms": 4525
+      },
+      {
+        "phase": "dragon_reveal",
+        "tick": 300.99000000000024,
+        "wall_ms": 4916
+      },
+      {
+        "phase": "ready",
+        "tick": 360.98400000000044,
+        "wall_ms": 5915
+      }
+    ],
+    "launches": [
+      {
+        "number": 1,
+        "tick": 3.9959999999999947
+      },
+      {
+        "number": 2,
+        "tick": 18
+      },
+      {
+        "number": 3,
+        "tick": 36.995999999999995
+      },
+      {
+        "number": 4,
+        "tick": 54.995999999999995
+      },
+      {
+        "number": 5,
+        "tick": 72.996
+      },
+      {
+        "number": 6,
+        "tick": 92.994
+      },
+      {
+        "number": 7,
+        "tick": 109.99199999999998
+      }
+    ],
+    "tick": 390.9840000000007
+  },
+  "dismiss": true,
+  "replay": true,
+  "bodyAtlasSha": "e94502bbed02ed036f66aa8a5a3dcbf42f111898b3c83deb90b0a4c0669688b2",
+  "badAssetResponses": [],
+  "appConsoleErrors": [],
+  "consoleErrorsNote": "Verified via Playwright console.location + response listener: the only 404 is browser auto-request http://localhost:8080/favicon.ico; all asset/WASM/API responses returned HTTP 200."
+}

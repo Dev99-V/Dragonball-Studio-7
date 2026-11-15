@@ -29,6 +29,21 @@ BENCHMARK_JSON = REPO_ROOT / "engines" / "benchmark_report.json"
 ROSTER_JSON = ASSETS_DIR / "roster.json"
 
 
+def load_rituals() -> dict:
+    path = ASSETS_DIR / "rituals/shenron_summon/sequence.json"
+    if not path.is_file():
+        return {}
+    sequence = json.loads(path.read_text())
+    atlas = REPO_ROOT / sequence["atlas"]
+    if sha256_file(atlas) != sequence["atlas_sha256"]:
+        raise ValueError("Summon atlas hash mismatch")
+    if sequence.get("reveal"):
+        reveal = sequence["reveal"]
+        if sha256_file(REPO_ROOT / reveal["mask"]) != reveal["mask_sha256"]:
+            raise ValueError("Summon dissolve mask hash mismatch")
+    return {"shenron_summon": sequence}
+
+
 def verify_motion_quality() -> dict:
     """Keep anatomical acceptance separate from technical parity."""
     try:
@@ -354,6 +369,10 @@ def verify_engine_localhost_parity() -> dict:
         if not b["sha256_atlases"]:
             errors.append(f"Thiếu mã băm SHA-256 atlas PNG ở {bid}")
 
+    try:
+        load_rituals()
+    except (ValueError, OSError, KeyError) as exc:
+        errors.append("Summon contract/atlas: " + str(exc))
     errors.extend(verify_arena_stage_parity())
     return {
         "ok": len(errors) == 0,
@@ -438,6 +457,7 @@ def build_godot_zip_bytes() -> bytes:
         REPO_ROOT / "scenes",
         REPO_ROOT / "tests",
         ASSETS_DIR / "maps",
+        ASSETS_DIR / "rituals",
         ROSTER_JSON,
     ]
     if ASSETS_DIR.exists():
@@ -502,6 +522,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "roster": roster,
                 "setups": build_setups(bundles, roster),
                 "arena_stage": load_arena_stage(),
+                "rituals": load_rituals(),
                 "parity": parity,
                 "motion_quality": verify_motion_quality(),
             }

@@ -7,6 +7,11 @@ extends Node2D
 
 const STAGE_JSON_PATH := "res://assets/maps/rocky_plateau/arena-stage.json"
 const ROSTER_JSON_PATH := "res://assets/roster.json"
+const ShenronSummonScript := preload("res://scenes/ShenronSummon2D.gd")
+
+var shenron_summon: ShenronSummon2D
+var summon_button: Button
+
 const UtilityAIControllerScript := preload("res://scenes/UtilityAIController.gd")
 
 @export var default_character_id: String = "t_rex"
@@ -61,11 +66,37 @@ var _char_index: int = 0
 func _ready() -> void:
 	load_stage_and_roster()
 	_apply_stage_layout()
+	_setup_summon_control()
 	if not roster_characters.is_empty():
 		var start_id := default_character_id
 		if _find_character_entry(start_id).is_empty():
 			start_id = str(roster_characters[0].get("character_id", ""))
 		select_character(start_id)
+
+
+func _setup_summon_control() -> void:
+	shenron_summon = ShenronSummonScript.new()
+	add_child(shenron_summon)
+	summon_button = Button.new()
+	summon_button.position = Vector2(1500, 78)
+	summon_button.size = Vector2(280, 56)
+	summon_button.text = "Gọi Shenron"
+	get_node("HUDLayer").add_child(summon_button)
+	summon_button.pressed.connect(_on_summon_button_pressed)
+
+func _on_summon_button_pressed() -> void:
+	if shenron_summon.active:
+		shenron_summon.dismiss()
+		summon_button.text = "Gọi Shenron"
+	elif player_node != null:
+		var entry := _find_character_entry(active_character_id)
+		var dims := _get_body_dims(entry)
+		var source_pos := player_node.position - Vector2(0, float(dims.y) * char_scale * 0.5)
+		if shenron_summon.start_from(source_pos):
+			_play_fighter_clip(player_node, "idle")
+			player_vy = 0.0
+			summon_button.text = "Thu hồi Shenron"
+
 
 
 func load_stage_and_roster() -> void:
@@ -297,6 +328,7 @@ func _resolve_enemy_capabilities(entry: Dictionary, fighter: Node2D) -> Dictiona
 	var loco_clip := "fly" if (frames != null and frames.has_animation(&"fly")) else "walk"
 	return {
 		"character_id": str(entry.get("character_id", enemy_character_id)),
+		"is_stationary": _is_stationary_entry(entry),
 		"is_flying": _is_flying_entry(entry),
 		"sideways_locked": _is_sideways_locked(entry),
 		"has_heavy": has_heavy,
@@ -388,6 +420,8 @@ func step_utility_ai(delta: float) -> Dictionary:
 
 	var res := ai_controller.evaluate({
 		"character_id": caps["character_id"],
+		"is_stationary": caps["is_stationary"],
+		"facing_left": enemy_facing_left,
 		"is_flying": caps["is_flying"],
 		"has_heavy": caps["has_heavy"],
 		"light_clip": caps["light_clip"],
@@ -513,6 +547,10 @@ func _is_flying_entry(entry: Dictionary) -> bool:
 	return str(loc.get("kind", "ground")) == "flight"
 
 
+func _is_stationary_entry(entry: Dictionary) -> bool:
+	return str(entry.get("render_contract", {}).get("locomotion", {}).get("kind", "")) == "stationary"
+
+
 func _get_body_dims(entry: Dictionary) -> Vector2i:
 	var m: Dictionary = entry.get("map_sync_metrics", {})
 	var bbox: Variant = m.get("body_only_bbox_px", null)
@@ -524,6 +562,8 @@ func _get_body_dims(entry: Dictionary) -> Vector2i:
 
 
 func _get_walk_speed_px_per_s(entry: Dictionary, scale_override: float = -1.0) -> float:
+	if _is_stationary_entry(entry):
+		return 0.0
 	var sc := scale_override if scale_override > 0.0 else char_scale
 	var rc: Dictionary = entry.get("render_contract", {})
 	var loc: Dictionary = rc.get("locomotion", {})
@@ -553,6 +593,9 @@ func _physics_process(delta: float) -> void:
 	if player_node == null:
 		return
 
+	if shenron_summon != null and shenron_summon.is_casting():
+		player_vy = 0.0
+		return
 	var entry := _find_character_entry(active_character_id)
 	var is_flying := _is_flying_entry(entry)
 
@@ -561,6 +604,8 @@ func _physics_process(delta: float) -> void:
 		dir += 1
 	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
 		dir -= 1
+	if _is_stationary_entry(entry):
+		dir = 0
 	var is_run := Input.is_key_pressed(KEY_SHIFT)
 
 	var fly_dir_y := 0
@@ -570,6 +615,8 @@ func _physics_process(delta: float) -> void:
 		if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
 			fly_dir_y += 1
 		step_flight_vertical(float(fly_dir_y), delta)
+	elif _is_stationary_entry(entry):
+		player_vy = 0.0
 	else:
 		if (Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_UP)) and player_node.position.y >= ground_y - 1.0:
 			player_vy = jump_velocity_px_per_s

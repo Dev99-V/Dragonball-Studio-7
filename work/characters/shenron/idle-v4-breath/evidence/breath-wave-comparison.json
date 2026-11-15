@@ -1,0 +1,169 @@
+{
+  "regions_canvas_xyxy": {
+    "tail": [
+      50,
+      194,
+      280,
+      272
+    ],
+    "left_whisker_outer": [
+      40,
+      35,
+      90,
+      100
+    ],
+    "right_whisker_outer": [
+      300,
+      35,
+      350,
+      90
+    ]
+  },
+  "records": [
+    {
+      "frame": 0,
+      "wave_regions": {
+        "tail": {
+          "alpha_iou": 1.0,
+          "changed_rgba_pixels": 0
+        },
+        "left_whisker_outer": {
+          "alpha_iou": 1.0,
+          "changed_rgba_pixels": 0
+        },
+        "right_whisker_outer": {
+          "alpha_iou": 1.0,
+          "changed_rgba_pixels": 0
+        }
+      },
+      "chest_yellow_pixels_roi_195_105_75_53": 1861
+    },
+    {
+      "frame": 1,
+      "wave_regions": {
+        "tail": {
+          "alpha_iou": 0.9650170648464164,
+          "changed_rgba_pixels": 910
+        },
+        "left_whisker_outer": {
+          "alpha_iou": 0.9701492537313433,
+          "changed_rgba_pixels": 382
+        },
+        "right_whisker_outer": {
+          "alpha_iou": 0.9680851063829787,
+          "changed_rgba_pixels": 145
+        }
+      },
+      "chest_yellow_pixels_roi_195_105_75_53": 2006
+    },
+    {
+      "frame": 2,
+      "wave_regions": {
+        "tail": {
+          "alpha_iou": 0.9633187772925764,
+          "changed_rgba_pixels": 751
+        },
+        "left_whisker_outer": {
+          "alpha_iou": 0.9655797101449275,
+          "changed_rgba_pixels": 326
+        },
+        "right_whisker_outer": {
+          "alpha_iou": 0.9470588235294117,
+          "changed_rgba_pixels": 112
+        }
+      },
+      "chest_yellow_pixels_roi_195_105_75_53": 1894
+    },
+    {
+      "frame": 3,
+      "wave_regions": {
+        "tail": {
+          "alpha_iou": 0.9832361516034985,
+          "changed_rgba_pixels": 794
+        },
+        "left_whisker_outer": {
+          "alpha_iou": 0.9635157545605307,
+          "changed_rgba_pixels": 395
+        },
+        "right_whisker_outer": {
+          "alpha_iou": 0.9512195121951219,
+          "changed_rgba_pixels": 155
+        }
+      },
+      "chest_yellow_pixels_roi_195_105_75_53": 1914
+    },
+    {
+      "frame": 4,
+      "wave_regions": {
+        "tail": {
+          "alpha_iou": 1.0,
+          "changed_rgba_pixels": 0
+        },
+        "left_whisker_outer": {
+          "alpha_iou": 1.0,
+          "changed_rgba_pixels": 0
+        },
+        "right_whisker_outer": {
+          "alpha_iou": 1.0,
+          "changed_rgba_pixels": 0
+        }
+      },
+      "chest_yellow_pixels_roi_195_105_75_53": 1808
+    },
+    {
+      "frame": 5,
+      "wave_regions": {
+        "tail": {
+          "alpha_iou": 0.9778846153846154,
+          "changed_rgba_pixels": 600
+        },
+        "left_whisker_outer": {
+          "alpha_iou": 0.9846153846153847,
+          "changed_rgba_pixels": 350
+        },
+        "right_whisker_outer": {
+          "alpha_iou": 0.992,
+          "changed_rgba_pixels": 90
+        }
+      },
+      "chest_yellow_pixels_roi_195_105_75_53": 1446
+    },
+    {
+      "frame": 6,
+      "wave_regions": {
+        "tail": {
+          "alpha_iou": 0.9788359788359788,
+          "changed_rgba_pixels": 689
+        },
+        "left_whisker_outer": {
+          "alpha_iou": 0.9784768211920529,
+          "changed_rgba_pixels": 342
+        },
+        "right_whisker_outer": {
+          "alpha_iou": 0.9685863874345549,
+          "changed_rgba_pixels": 125
+        }
+      },
+      "chest_yellow_pixels_roi_195_105_75_53": 1402
+    },
+    {
+      "frame": 7,
+      "wave_regions": {
+        "tail": {
+          "alpha_iou": 0.9691300280636108,
+          "changed_rgba_pixels": 631
+        },
+        "left_whisker_outer": {
+          "alpha_iou": 0.9855334538878843,
+          "changed_rgba_pixels": 303
+        },
+        "right_whisker_outer": {
+          "alpha_iou": 0.9681528662420382,
+          "changed_rgba_pixels": 86
+        }
+      },
+      "chest_yellow_pixels_roi_195_105_75_53": 1423
+    }
+  ],
+  "limits": "Pixel/alpha differences document generation changes; they are not an automatic breathing or anatomy verdict. Corresponding wave phase and root connections must be reviewed visually."
+}

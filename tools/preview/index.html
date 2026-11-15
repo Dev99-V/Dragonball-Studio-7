@@ -577,6 +577,7 @@
             <button class="btn" id="btnSpawnRight" title="Hồi sinh nhìn Phải (+X) — mặc định và khóa suốt vòng đời">↪ Hồi sinh Phải (+X)</button>
             <button class="btn" id="btnSpawnLeft" title="Hồi sinh nhìn Trái (-X) và khóa suốt vòng đời">↩ Hồi sinh Trái (-X)</button>
           </span>
+          <button class="btn btn-gold" id="btnSummonShenron">✨ Gọi Shenron</button>
           <span id="arenaSkillButtons" style="display:inline-flex; gap:5px; flex-wrap:wrap;"></span>
         </div>
       </div>
@@ -755,6 +756,7 @@
 
         const preloadUrlSet = new Set();
         if (arena.mapWebPath) preloadUrlSet.add(arena.mapWebPath);
+      if(bRes.rituals?.shenron_summon){preloadUrlSet.add("/"+bRes.rituals.shenron_summon.atlas);if(bRes.rituals.shenron_summon.reveal)preloadUrlSet.add("/"+bRes.rituals.shenron_summon.reveal.mask);}
         for (const b of bRes.bundles) {
           state.bundlesById[b.id] = b;
           for (const anim of Object.values(b.animations)) {
@@ -835,7 +837,9 @@
     function selectCharacter(charId) {
       const ch = (state.api.roster.characters || []).find(c => c.character_id === charId);
       if (!ch) return;
+      dismissShenronSummon();
       state.activeChar = ch;
+      updateSummonButton();
       const selectedBundle = getCharBundle(ch);
       const isFlight = isFlyingBundle(selectedBundle);
       arena.actionClip=null; arena.turnTargetFlip=null; arena.clip='idle'; arena.step=0; arena.elapsed=0;
@@ -855,7 +859,7 @@
       if(independent) { state.activeClipName='idle'; state.auraEnabled=false; state.fxTicks=0; arena.rageMode=false; }
       document.getElementById('chkIndependentAura').disabled=!hasAura;
       document.getElementById('chkIndependentAura').checked=Boolean(hasAura && state.auraEnabled);
-      document.getElementById('attachmentRuntimeNote').textContent=independent ? 'Thân và FX độc lập • chung một atlas • có thêm quad khi bật FX.' : '';
+      document.getElementById('attachmentRuntimeNote').textContent=isStationaryBundle(selectedBundle) ? 'Đứng yên • hoạt ảnh idle' : independent ? 'Thân và FX độc lập • chung một atlas • có thêm quad khi bật FX.' : '';
       const btnJump = document.getElementById('btnJump');
       const btnFlyDown = document.getElementById('btnFlyDown');
       if (btnJump) {
@@ -1862,8 +1866,13 @@
       return targetDir * ((p - 0.38) / 0.62);
     }
 
+    function isStationaryBundle(b = getCharBundle()) {
+      return b?.render_contract?.locomotion?.kind === 'stationary';
+    }
+
     function getContractWalkSpeedPxPerS(b = getCharBundle(), scale = arena.charScale, patrolActive = arena.patrolEnabled) {
       const loc = b?.render_contract?.locomotion;
+      if (isStationaryBundle(b)) return 0;
       if (loc?.speed_px_per_second) {
         return Number(loc.speed_px_per_second) * scale;
       }
@@ -1875,6 +1884,7 @@
     }
 
     function getEffectiveWalkSpeedPxPerS(b = getCharBundle(), scale = arena.charScale, patrolActive = arena.patrolEnabled) {
+      if (isStationaryBundle(b)) return 0;
       if (arena.customSpeedPxPerSec !== null && Number.isFinite(arena.customSpeedPxPerSec)) {
         return Math.max(10, arena.customSpeedPxPerSec);
       }
@@ -1977,6 +1987,11 @@
     }
 
     function evaluateUtilityAI(aiState, params, cfg = arena.utilityAiCfg) {
+      if (params.is_stationary) {
+        aiState.lastIntent = 'idle';
+        aiState.lastReason = 'stationary';
+        return { intent: 'idle', move_dir: 0, attack_clip: '', desired_face_left: Boolean(params.facing_left), edge_dist: -1, reason: 'stationary' };
+      }
       const closeEdge = Number(cfg.close_edge_px ?? 50);
       const midMaxEdge = Number(cfg.mid_max_edge_px ?? 200);
       const heavyMaxEdge = Number(cfg.heavy_max_edge_px ?? 200);
@@ -2229,6 +2244,8 @@
         };
         const res = evaluateUtilityAI(ai, {
           character_id: caps.character_id,
+          is_stationary: isStationaryBundle(eb),
+          facing_left: ai.flip,
           is_flying: caps.is_flying,
           has_heavy: caps.has_heavy,
           light_clip: caps.light_clip,
@@ -2439,9 +2456,11 @@
       const rng = document.getElementById('rngArenaSpeed');
       const num = document.getElementById('numArenaSpeed');
       const lbl = document.getElementById('arenaSpeedReadout');
-      if (rng) rng.value = String(Math.min(600, Math.max(20, Math.round(eff))));
-      if (num) num.value = String(Math.round(eff));
-      if (lbl) {
+      if (rng) { rng.disabled = isStationaryBundle(b); rng.value = String(Math.min(600, Math.max(20, Math.round(eff)))); }
+      if (num) { num.disabled = isStationaryBundle(b); num.value = String(Math.round(eff)); }
+      if (lbl && isStationaryBundle(b)) {
+        lbl.textContent = 'Đứng yên • 0 px/s';
+      } else if (lbl) {
         const crossSec = (1640 / Math.max(1, eff)).toFixed(1);
         const isCustom = arena.customSpeedPxPerSec !== null;
         lbl.textContent = `${Math.round(eff)} px/s (~${crossSec}s hết sân | Base 1×: ${Math.round(base1x)} px/s${isCustom ? ' • Tùy chỉnh' : ''})`;
@@ -2536,7 +2555,7 @@
       const hasTurnPatrol = Boolean(b?.render_contract?.turning?.clip && b?.animations?.[b.render_contract.turning.clip] && (b?.render_contract?.locomotion?.patrol || b?.render_contract?.chilopoda));
       const hasSidewaysPatrol = Boolean(isSidewaysLocked(b) && b?.render_contract?.locomotion?.patrol?.enabled && b?.animations?.[locClip]);
       const hasFlipPatrol = canFlipPatrolWithoutTurn(b);
-      const hasPatrol = hasTurnPatrol || hasSidewaysPatrol || hasFlipPatrol;
+      const hasPatrol = !isStationaryBundle(b) && (hasTurnPatrol || hasSidewaysPatrol || hasFlipPatrol);
       btn.style.display = hasPatrol ? '' : 'none';
       btn.disabled = !hasPatrol;
       const active = b?.render_contract?.chilopoda ? arena.chiloPatrol : arena.patrolEnabled;
@@ -2546,7 +2565,7 @@
 
     function toggleArenaPatrol(useRun = false) {
       const b = getCharBundle();
-      if (!b || arena.turnTargetFlip !== null) return;
+      if (!b || isStationaryBundle(b) || arena.turnTargetFlip !== null) return;
       if (b.render_contract?.chilopoda) {
         arena.chiloPatrol = !arena.chiloPatrol;
         if (arena.chiloPatrol) arena.chiloPatrolDir = arena.flip ? -1 : 1;
@@ -2568,7 +2587,99 @@
       updatePatrolButtonUI();
     }
 
+    function getSummonConfig() { return state.api?.rituals?.shenron_summon || null; }
+    function isSummonCasting() { const c=getSummonConfig();return Boolean(c&&arena.summon&&arena.summon.tick<c.timeline.ready_tick); }
+    function updateSummonButton() {
+      const btn=document.getElementById('btnSummonShenron');if(!btn)return;
+      btn.disabled=!state.activeChar||!getSummonConfig();
+      btn.textContent=arena.summon?'Thu hồi Shenron':'✨ Gọi Shenron';
+    }
+    function startShenronSummon() {
+      const c=getSummonConfig();if(!c||!state.activeChar||arena.summon)return false;
+      const dragon=state.api.roster.characters.find(ch=>ch.character_id===c.behavior.dragon_character_id);
+      if(!dragon||!getCharBundle(dragon))return false;
+      const [,h]=getBodyDims(state.activeChar);
+      arena.summon={tick:0,origin:[arena.x,arena.y-h*arena.charScale*0.5]};
+      arena.patrolEnabled=false;arena.chiloPatrol=false;arena.vy=0;
+      arena.actionClip=null;arena.clip='idle';arena.step=0;arena.elapsed=0;
+      updateSummonButton();return true;
+    }
+    function dismissShenronSummon() { arena.summon=null;updateSummonButton(); }
+    function summonFlightProgress(tick,index,stride,duration) {
+      if(state.wasmExports?.wasm_summon_flight_progress)
+        return state.wasmExports.wasm_summon_flight_progress(tick,index,stride,duration);
+      const elapsed=tick-index*stride;return elapsed<0?-1:Math.max(0,Math.min(1,elapsed/Math.max(1,duration)));
+    }
+    function sampleShenronSummon(tick,origin) {
+      const c=getSummonConfig();if(!c)return null;
+      const t=c.timeline,l=c.layout,clamp=x=>Math.max(0,Math.min(1,x));
+      const vanish=1-clamp((tick-t.vanish_start_tick)/(t.flash_start_ticks[0]-t.vanish_start_tick));
+      let flashAlpha=0;
+      for(const start of t.flash_start_ticks){const e=tick-start;if(e>=0)flashAlpha=Math.max(flashAlpha,Math.min(clamp(e/t.flash_rise_ticks),clamp((t.flash_rise_ticks+t.flash_hold_ticks+t.flash_fall_ticks-e)/t.flash_fall_ticks)));}
+      const balls=c.items.map((item,index)=>{
+        const p=summonFlightProgress(tick,index,t.launch_stride_ticks,t.flight_ticks),u=Math.max(0,p),e=u*u*(3-2*u);
+        const target=[l.map_center_px[0]+item.formation_offset_px[0],l.map_center_px[1]+item.formation_offset_px[1]];
+        return {number:item.number,region:item.region,visible:p>=0&&tick<t.flash_start_ticks[0],alpha:vanish,
+          position:[origin[0]+(target[0]-origin[0])*e,origin[1]+(target[1]-origin[1])*e-l.flight_arc_height_px*4*u*(1-u)]};
+      });
+      const gr=c.regions.ground,gs=l.ground_display_width_px/gr[2],gh=gr[3]*gs;
+      const groundRect=[l.map_center_px[0]-l.ground_display_width_px/2,l.ground_y-gh,l.ground_display_width_px,gh];
+      const groundAlpha=clamp((tick-t.ground_start_tick)/24);
+      const glowAlpha=groundAlpha*(0.78+0.22*(0.5+0.5*Math.sin(2*Math.PI*(tick-t.ground_start_tick)/t.glow_period_ticks)));
+      const dragon=state.api.roster.characters.find(ch=>ch.character_id===c.behavior.dragon_character_id),bundle=getCharBundle(dragon);
+      const scale=l.dragon_scale,anchor=bundle?.anchor_px||[192,240];
+      const dragonPosition=[l.map_center_px[0],groundRect[1]+(anchor[1]-l.dragon_reference_bottom_canvas_y)*scale-l.dragon_gap_px];
+      const dragonAlpha=clamp((tick-t.dragon_start_tick)/(t.ready_tick-t.dragon_start_tick));
+
+      const clip=bundle?.animations[c.behavior.dragon_clip];const durations=clip?.frames.map(f=>f.duration_ticks)||[];
+      const total=durations.reduce((a,b)=>a+b,0);let rest=Math.max(0,tick-t.dragon_start_tick)%(total||1),dragonFrame=0;
+      while(dragonFrame<durations.length-1&&rest>=durations[dragonFrame])rest-=durations[dragonFrame++];
+      const phase=tick<t.last_arrival_tick?'flight':tick<t.vanish_start_tick?'gather':tick<t.flash_start_ticks[0]?'vanish':tick<t.ground_start_tick?'flash':tick<t.dragon_start_tick?'ground_glow':tick<t.ready_tick?'dragon_reveal':'ready';
+      return {revealTop:0,flashAlpha,phase,balls,groundRect,groundAlpha,glowAlpha,dragonPosition,dragonAlpha,dragonFrame,dragon,bundle};
+    }
+    let summonDissolveMaskCache=null;
+    function applyShenronPixelDissolve(ctx,w,h,progress) {
+      if(progress>=1)return;
+      const c=getSummonConfig(),r=c.reveal,mask=state.images['/'+r.mask];if(!mask)return;
+      if(!summonDissolveMaskCache||summonDissolveMaskCache.image!==mask){
+        const canvas=document.createElement('canvas');canvas.width=r.mask_size_px[0];canvas.height=r.mask_size_px[1];
+        const mc=canvas.getContext('2d');mc.drawImage(mask,0,0);
+        summonDissolveMaskCache={image:mask,data:mc.getImageData(0,0,canvas.width,canvas.height).data};
+      }
+      const pixels=ctx.getImageData(0,0,w,h),data=pixels.data,mw=r.mask_size_px[0],cell=r.cell_size_canvas_px,thresholds=summonDissolveMaskCache.data;
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const k=(y*w+x)*4;if(!data[k+3])continue;
+        const threshold=(thresholds[(Math.floor(y/cell)*mw+Math.floor(x/cell))*4]+0.5)/256;
+        if(progress<threshold){data[k+3]=0;continue;}
+        const edge=Math.max(0,Math.min(1,1-(progress-threshold)/r.edge_width))*0.85;
+        for(let channel=0;channel<3;channel++)data[k+channel]=Math.round(data[k+channel]*(1-edge)+r.edge_color_rgb[channel]*edge);
+      }
+      ctx.putImageData(pixels,0,0);
+    }
+    function drawShenronSummon(ctx) {
+      if(!arena.summon)return;
+      const c=getSummonConfig(),s=sampleShenronSummon(arena.summon.tick,arena.summon.origin);
+      const atlas=state.images['/'+c.atlas];if(!s||!atlas)return;
+      const region=(r,rect,alpha)=>{if(alpha<=0)return;ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha*=alpha;ctx.drawImage(atlas,...r,...rect);ctx.restore();};
+      for(const ball of s.balls){if(!ball.visible)continue;const w=c.layout.ball_display_width_px,h=w*ball.region[3]/ball.region[2];region(ball.region,[ball.position[0]-w/2,ball.position[1]-h/2,w,h],ball.alpha);}
+      const glowScale=c.layout.ground_display_width_px/256;
+      const glowRect=[s.groundRect[0]-32*glowScale,s.groundRect[1]-32*glowScale,c.regions.glow[2]*glowScale,c.regions.glow[3]*glowScale];
+      const grow=(r,n)=>[r[0]-n,r[1]-n,r[2]+2*n,r[3]+2*n];
+      const aw=c.layout.aura_width_px,ah=c.layout.aura_height_px;
+      region(c.regions.glow,[c.layout.map_center_px[0]-aw/2,c.layout.ground_y-ah,aw,ah],s.glowAlpha*0.75);
+      region(c.regions.glow,grow(glowRect,56),s.glowAlpha);region(c.regions.ground,s.groundRect,s.groundAlpha);region(c.regions.core,grow(glowRect,12),s.glowAlpha*0.86);
+      if(s.dragonAlpha>0&&s.bundle){
+        const [w,h]=s.bundle.frame_size,scale=c.layout.dragon_scale,[ax,ay]=s.bundle.anchor_px;
+        ensureOffscreenSize(w,h);offCtx.clearRect(0,0,w,h);
+        drawCompositeStep(offCtx,c.behavior.dragon_clip,s.dragonFrame,1,1,{bundle:s.bundle,character:s.dragon,auraEnabled:false,fxTicks:arena.summon.tick,elapsedMs:0});
+        applyShenronPixelDissolve(offCtx,w,h,s.dragonAlpha);
+        ctx.save();ctx.imageSmoothingEnabled=false;
+        ctx.drawImage(offscreenCanvas,s.dragonPosition[0]-ax*scale,s.dragonPosition[1]-ay*scale,w*scale,h*scale);ctx.restore();
+      }
+    }
+
     function triggerArenaAction(clipName) {
+      if(isSummonCasting())return;
       if (arena.turnTargetFlip !== null) return;
       const b = getCharBundle();
       if (!b || !b.animations[clipName]) return;
@@ -2614,6 +2725,8 @@
     }
 
     function triggerArenaJump() {
+      if(isSummonCasting())return;
+      if (isStationaryBundle()) return;
       const b = getCharBundle();
       if (isFlyingBundle(b)) {
         arena.y = Math.max(arena.flyMinY, arena.y - 60);
@@ -2651,10 +2764,11 @@
       }
     }
 
-    function stepAndRenderArena(dtMs) {
+    function stepAndRenderArena(dtMs, ritualDtMs = dtMs) {
       const canvas = document.getElementById('arenaCanvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
+      if(arena.summon)arena.summon.tick+=ritualDtMs*0.06;
       ctx.imageSmoothingEnabled = false;
 
       const drawStageBackdrop = () => {
@@ -2728,7 +2842,7 @@
       if (arena.hitstop > 0) {
         arena.hitstop -= dtMs;
       } else {
-        enemyInfo = stepEnemyAiFrame(dtMs);
+        enemyInfo = isSummonCasting() ? null : stepEnemyAiFrame(dtMs);
         const goRight = arena.keys['ArrowRight'] || arena.keys['KeyD'] || arena.holdRight;
         const goLeft = arena.keys['ArrowLeft'] || arena.keys['KeyA'] || arena.holdLeft;
         const isRun = Boolean((arena.keys['ShiftLeft'] || arena.keys['ShiftRight'] || (arena.patrolEnabled && arena.patrolRun)) && b.animations['run']);
@@ -2741,6 +2855,7 @@
           if (dir !== 0) arena.patrolDir = dir;
           else dir = arena.patrolDir;
         }
+        if (isStationaryBundle(b)||isSummonCasting()) dir = 0;
         arena.turnBoostMs = Math.max(0, (arena.turnBoostMs || 0) - dtMs);
         const sidewaysLocked = isSidewaysLocked(b);
         const turnClip=b.render_contract?.turning?.clip;
@@ -2805,12 +2920,14 @@
         }
 
         let flyDirY = 0;
-        if (isFlight) {
+        if (isFlight && !isSummonCasting()) {
           const flyUp = arena.keys['KeyW'] || arena.keys['ArrowUp'] || arena.holdFlyUp;
           const flyDown = arena.keys['KeyS'] || arena.keys['ArrowDown'] || arena.holdFlyDown;
           flyDirY = (flyDown ? 1 : 0) - (flyUp ? 1 : 0);
           const flySpeedY = (arena.flyVerticalSpeedPxPerS || 240) * scaleFactor / 1000;
           arena.y = Math.max(arena.flyMinY, Math.min(arena.groundY, arena.y + flyDirY * flySpeedY * dtMs));
+          arena.vy = 0;
+        } else if (isStationaryBundle(b)||isSummonCasting()) {
           arena.vy = 0;
         } else {
           arena.y += arena.vy * dtMs;
@@ -3033,6 +3150,8 @@
         ctx.restore();
       }
 
+      drawShenronSummon(ctx);
+
       // 3. Floating Damage / Burst Popups
       for (const p of arena.popups) {
         ctx.fillStyle = '#facc15';
@@ -3046,13 +3165,14 @@
       ctx.fillStyle = '#e6ecff';
       ctx.font = 'bold 17px monospace';
       const hudDir = (arena.keys['ArrowRight'] || arena.keys['KeyD'] || arena.holdRight ? 1 : 0) - (arena.keys['ArrowLeft'] || arena.keys['KeyA'] || arena.holdLeft ? 1 : 0) || (arena.patrolEnabled ? arena.patrolDir : 0);
-      const hudLock = isSidewaysLocked(b) ? ` | Mặt khóa: ${arena.flip ? 'Trái (-X)' : 'Phải (+X)'} (${hudDir === 0 ? 'Đứng' : ((hudDir > 0) !== arena.flip ? 'Tiến' : 'Lùi')})` : '';
+      const hudLock = isStationaryBundle(b) ? ' | Chính diện • Đứng yên' : isSidewaysLocked(b) ? ` | Mặt khóa: ${arena.flip ? 'Trái (-X)' : 'Phải (+X)'} (${hudDir === 0 ? 'Đứng' : ((hudDir > 0) !== arena.flip ? 'Tiến' : 'Lùi')})` : '';
       const screenSizeNote = bodyW > 0 ? ` | Thân ${scaleLabel}×: ${Math.round(bodyW * scale)}×${Math.round(bodyH * scale)}px (${(bodyH * scale / canvas.height * 100).toFixed(1)}% màn)` : '';
       const effSpeedNow = Math.round(getEffectiveWalkSpeedPxPerS(b, scale, arena.patrolEnabled));
       ctx.fillText(
         `1920×1080 (16:9) | ${state.activeChar.character_id} | ${scaleLabel}× Nearest${screenSizeNote} | Speed: ${effSpeedNow} px/s | Clip: ${arena.clip} (#${arena.step}) | Pos: (${Math.round(arena.x)}, ${Math.round(arena.y)})${hudLock}`,
         28, 41
       );
+      if(arena.summon){const flash=sampleShenronSummon(arena.summon.tick,arena.summon.origin).flashAlpha;if(flash>0){ctx.save();ctx.globalAlpha=flash;ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();}}
     }
 
     // =========================================================================
@@ -3061,7 +3181,8 @@
     let prevNow = performance.now();
     function mainLoop(now) {
       requestAnimationFrame(mainLoop);
-      const dtMs = Math.min(50, Math.max(1, now - prevNow));
+      const wallDtMs = Math.max(0, now - prevNow);
+      const dtMs = Math.min(50, Math.max(1, wallDtMs));
       prevNow = now;
 
       try {
@@ -3069,7 +3190,7 @@
           stepInspectorAnimation(dtMs);
           renderInspector();
         } else if (state.activeTab === 'tab-arena') {
-          stepAndRenderArena(dtMs);
+          stepAndRenderArena(dtMs, wallDtMs);
         }
       } catch (err) {
         showRuntimeError(state.activeTab, err);
@@ -3077,6 +3198,7 @@
     }
 
     function setupEventListeners() {
+      document.getElementById('btnSummonShenron').onclick=()=>{if(arena.summon)dismissShenronSummon();else startShenronSummon();};
       document.getElementById('chkIndependentAura').onchange=e=>{state.auraEnabled=e.target.checked;arena.rageMode=e.target.checked;renderInspector();};
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.onclick = () => {

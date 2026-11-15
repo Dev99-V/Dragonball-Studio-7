@@ -1,0 +1,11 @@
+{
+  "native_samples": 22,
+  "browser_wasm_samples": 22,
+  "errors": [],
+  "maximum_numeric_difference": [
+    5.7705970903043635e-05,
+    "/4/balls/2/position/0"
+  ],
+  "numeric_tolerance": 0.0002,
+  "precision_note": "Godot Vector2 float32 versus JS float64; identical textures, regions and ticks."
+}

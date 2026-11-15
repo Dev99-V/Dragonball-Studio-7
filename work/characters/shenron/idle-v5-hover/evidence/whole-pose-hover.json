@@ -1,0 +1,62 @@
+{
+  "method": "Integer translation of entire approved wave pose; no body-part decomposition, deformation or redraw",
+  "reference": "idle-v1/extract_host_frames.py old dy=-2,-1",
+  "frames": [
+    {
+      "frame": 0,
+      "source": "work/characters/shenron/idle-v3-wave/idle_00.png",
+      "whole_pose_dy_px": 0,
+      "source_visible_pixels": 30266,
+      "output_visible_pixels": 30266
+    },
+    {
+      "frame": 1,
+      "source": "work/characters/shenron/idle-v3-wave/idle_01.png",
+      "whole_pose_dy_px": -1,
+      "source_visible_pixels": 29853,
+      "output_visible_pixels": 29853
+    },
+    {
+      "frame": 2,
+      "source": "work/characters/shenron/idle-v3-wave/idle_02.png",
+      "whole_pose_dy_px": -2,
+      "source_visible_pixels": 29660,
+      "output_visible_pixels": 29660
+    },
+    {
+      "frame": 3,
+      "source": "work/characters/shenron/idle-v3-wave/idle_03.png",
+      "whole_pose_dy_px": -1,
+      "source_visible_pixels": 30145,
+      "output_visible_pixels": 30145
+    },
+    {
+      "frame": 4,
+      "source": "work/characters/shenron/idle-v3-wave/idle_04.png",
+      "whole_pose_dy_px": 0,
+      "source_visible_pixels": 30685,
+      "output_visible_pixels": 30685
+    },
+    {
+      "frame": 5,
+      "source": "work/characters/shenron/idle-v3-wave/idle_05.png",
+      "whole_pose_dy_px": 1,
+      "source_visible_pixels": 29727,
+      "output_visible_pixels": 29727
+    },
+    {
+      "frame": 6,
+      "source": "work/characters/shenron/idle-v3-wave/idle_06.png",
+      "whole_pose_dy_px": 2,
+      "source_visible_pixels": 29910,
+      "output_visible_pixels": 29910
+    },
+    {
+      "frame": 7,
+      "source": "work/characters/shenron/idle-v3-wave/idle_07.png",
+      "whole_pose_dy_px": 1,
+      "source_visible_pixels": 29877,
+      "output_visible_pixels": 29877
+    }
+  ]
+}

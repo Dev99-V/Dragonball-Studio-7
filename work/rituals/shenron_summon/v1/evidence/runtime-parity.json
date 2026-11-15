@@ -1,0 +1,11 @@
+{
+  "godot_trace_samples": 15,
+  "browser_wasm_trace_samples": 15,
+  "worst_numeric_difference": [
+    5.7705970903043635e-05,
+    "/4/balls/2/position/0"
+  ],
+  "numeric_tolerance": 0.0002,
+  "errors": [],
+  "scope": "15timeline checkpoints: launch order,7ballpositions/alpha,groundrect/glow,dragonposition/frame/alpha; nativeVector2float32 vsJS/WASM."
+}
