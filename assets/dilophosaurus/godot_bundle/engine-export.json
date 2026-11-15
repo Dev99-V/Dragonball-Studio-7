@@ -2661,7 +2661,7 @@
     "source_fx_pose_count": 1,
     "new_AI_FX": false,
     "body_part_cut_warp": false,
-    "owner_approved": false,
+    "owner_approved": true,
     "atlas_demo_only": false,
     "revision": "motion-v2",
     "motion_revision_scope": [
@@ -2669,14 +2669,16 @@
       "power_up"
     ],
     "turn_retained": true,
-    "approved_at": "2026-11-13T04:57:15.924909+00:00",
-    "release_version": "0.9.1",
-    "owner_animation_approved": false,
+    "approved_at": "2026-11-15T05:52:31.727116+00:00",
+    "release_version": "0.12.0",
+    "owner_animation_approved": true,
     "step2_visual_fix_at": "2026-11-14T09:26:26.764136+00:00",
     "step2_visual_fix_summary": "Step-2 visual fix: Nearest-rescale walk_00..07 (95.5/104 anchored at [176,224]) so walk matches idle ~95px height with all walk feet grounded at y=223; ground idle_01/08 & soften idle_01..11 luminance variance toward idle_00.",
     "previous_owner_approval_file": "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
     "previous_atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157",
-    "previous_revision_atlas_sha256": "5c2bcdfcde2a71a6b9733b1128d20ed781250597bebdfc3e8fb23b5290328cbf",
-    "calibration_update": "turn[1..3] downscaled via Nearest to ~95-96px matching idle/walk; default_scale=1.75, screen_speed=155px/s; turn ticks [2,5,5,2] (+43% speed)"
+    "previous_revision_atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157",
+    "calibration_update": "turn[1..3] downscaled via Nearest to ~95-96px matching idle/walk; default_scale=1.75, screen_speed=155px/s; turn ticks [2,5,5,2] (+43% speed)",
+    "owner_approval_file": "assets/dilophosaurus/owner_approval.json",
+    "workflow_id": "PIPE-014"
   }
 }

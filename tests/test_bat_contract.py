@@ -10,21 +10,18 @@ R=Path(__file__).resolve().parents[1]
 def read(path):return json.loads((R/path).read_text())
 class BatContract(unittest.TestCase):
     def test_owner_approved_revision_is_frozen(self):
-        receipt=read('assets/bat_chiroptera/owner_approval.json')
+        prev_cal_receipt=read('docs/releases/bat_chiroptera-v0.11.2-approval.json')
         snap='work/characters/bat_chiroptera/calibration-v1/snapshot-before'
-        self.assertEqual(receipt,read(f'{snap}/owner_approval.json'))
+        self.assertEqual(prev_cal_receipt,read(f'{snap}/owner_approval.json'))
+        self.assertEqual(prev_cal_receipt['workflow_id'],'PIPE-009')
+        receipt=read('assets/bat_chiroptera/owner_approval.json')
         self.assertEqual(receipt['status'],'owner_approved')
-        self.assertEqual(receipt['workflow_id'],'PIPE-009')
-        self.assertEqual(receipt['approved_revision'],'turn-v1 / v0.11.2')
+        self.assertEqual(receipt['workflow_id'],'PIPE-016')
+        self.assertEqual(receipt['approved_revision'],'calibration-v1 / v0.12.0')
         self.assertEqual(hashlib.sha256((R/receipt['atlas_path']).read_bytes()).hexdigest(),receipt['atlas_sha256'])
-        self.assertEqual(hashlib.sha256((R/f'{snap}/godot_bundle/engine-export.json').read_bytes()).hexdigest(),receipt['engine_export_sha256'])
-        unchanged_non_png={'scenes/BatChiroptera.tscn'}
+        self.assertEqual(hashlib.sha256((R/receipt['engine_export_path']).read_bytes()).hexdigest(),receipt['engine_export_sha256'])
         for path,expected in receipt['approved_runtime_files_sha256'].items():
-            if path.startswith('assets/bat_chiroptera/'):
-                snap_file=R/snap/path.removeprefix('assets/bat_chiroptera/')
-                self.assertEqual(hashlib.sha256(snap_file.read_bytes()).hexdigest(),expected,f'snapshot:{path}')
-            if (path.endswith('.png') and path!='assets/bat_chiroptera/clips/review/filmstrip-08.png') or path in unchanged_non_png:
-                self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),expected,path)
+            self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),expected,path)
         export=read('assets/bat_chiroptera/godot_bundle/engine-export.json')
         loc=export['render_contract']['locomotion']
         self.assertAlmostEqual(loc['default_scale'],1.1,places=4)
@@ -77,13 +74,13 @@ class BatContract(unittest.TestCase):
         self.assertIn('res://scenes/BatChiropteraFighter2D.gd',(R/'scenes/BatChiroptera.tscn').read_text())
         roster=read('assets/roster.json')
         ch=next(c for c in roster['characters'] if c['character_id']=='bat_chiroptera')
-        self.assertEqual(ch['status'],'finalized_pending_owner_reapproval')
-        self.assertFalse(ch['motion_quality']['owner_approved'])
-        self.assertEqual(ch['motion_quality']['status'],'reviewed_pending_owner')
-        self.assertEqual(ch['owner_animation_approval']['workflow_id'],'PIPE-009')
+        self.assertEqual(ch['status'],'finalized_owner_approved')
+        self.assertTrue(ch['motion_quality']['owner_approved'])
+        self.assertEqual(ch['motion_quality']['status'],'owner_approved')
+        self.assertEqual(ch['owner_animation_approval']['workflow_id'],'PIPE-016')
         receipt=read('assets/bat_chiroptera/owner_approval.json')
         self.assertEqual(ch['motion_quality']['atlas_sha256'],receipt['atlas_sha256'])
-        self.assertEqual(ch['motion_quality']['previous_revision_atlas_sha256'],receipt['atlas_sha256'])
+        self.assertEqual(ch['motion_quality']['previous_revision_atlas_sha256'],receipt['previous_atlas_sha256'])
 
     def test_master_size_identity_and_independent_fast_flight(self):
         m=read('assets/bat_chiroptera/clips/animation-clips.json');base=R/'assets/bat_chiroptera/clips'

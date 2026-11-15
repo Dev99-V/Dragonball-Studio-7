@@ -81,22 +81,26 @@ class ChilopodaContract(unittest.TestCase):
         self.assertEqual(areas,sorted(areas))
 
     def test_owner_approved_runtime_is_frozen(self):
-        receipt=read('assets/chilopoda/owner_approval.json')
+        prev_receipt=read('docs/releases/chilopoda-v0.11.1-approval.json')
         snap='work/characters/chilopoda/fireball-v1/snapshot-before'
-        self.assertEqual(receipt,read(f'{snap}/owner_approval.json'))
+        self.assertEqual(prev_receipt,read(f'{snap}/owner_approval.json'))
+        self.assertEqual(prev_receipt['workflow_id'],'PIPE-008')
+        receipt=read('assets/chilopoda/owner_approval.json')
         self.assertEqual(receipt['status'],'owner_approved')
-        self.assertEqual(receipt['approved_revision'],'identity-v2 / v0.11.1')
-        self.assertEqual(hashlib.sha256((R/f'{snap}/godot_bundle/engine-export.json').read_bytes()).hexdigest(),receipt['engine_export_sha256'])
+        self.assertEqual(receipt['workflow_id'],'PIPE-015')
+        self.assertEqual(receipt['approved_revision'],'fireball-v1 / v0.12.0')
+        self.assertEqual(hashlib.sha256((R/receipt['atlas_path']).read_bytes()).hexdigest(),receipt['atlas_sha256'])
+        self.assertEqual(hashlib.sha256((R/receipt['engine_export_path']).read_bytes()).hexdigest(),receipt['engine_export_sha256'])
         for path,expected in receipt['approved_runtime_files_sha256'].items():
-            if path=='scenes/ChilopodaFighter2D.gd':
-                gd=(R/path).read_text()
-                self.assertIn('burrow_dust_scale: float = 2.65',gd)
-                self.assertIn('fireball_sprite',gd)
-                continue
-            if path.startswith('assets/chilopoda/'):
-                self.assertEqual(hashlib.sha256((R/snap/path.removeprefix('assets/chilopoda/')).read_bytes()).hexdigest(),expected,f'snapshot:{path}')
-        for idx in range(84):
-            rel=f'assets/chilopoda/clips/frames/frame-{idx:02d}.png'
-            self.assertEqual(hashlib.sha256((R/rel).read_bytes()).hexdigest(),receipt['approved_runtime_files_sha256'][rel],rel)
-        frozen=read('work/characters/chilopoda/approved-final-frames/animation-clips.json')
-        snap_clips=read(f'{snap}/clips/animation-clips.json');self.assertEqual(frozen,snap_clips)
+            self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),expected,path)
+        frozen=R/receipt['frozen_source'];live=R/receipt['clips_manifest_path']
+        self.assertEqual(frozen.read_bytes(),live.read_bytes())
+        for f in json.loads(frozen.read_text())['frames']:
+            self.assertEqual((frozen.parent/f['file']).read_bytes(),(live.parent/f['file']).read_bytes(),f['file'])
+        ch=next(c for c in read('assets/roster.json')['characters'] if c['character_id']=='chilopoda')
+        self.assertEqual(ch['status'],'finalized_owner_approved')
+        self.assertTrue(ch['motion_quality']['owner_approved'])
+        self.assertEqual(ch['motion_quality']['status'],'owner_approved')
+        self.assertEqual(ch['owner_animation_approval']['workflow_id'],'PIPE-015')
+        self.assertEqual(ch['motion_quality']['atlas_sha256'],receipt['atlas_sha256'])
+        self.assertEqual(ch['motion_quality']['previous_revision_atlas_sha256'],prev_receipt['atlas_sha256'])

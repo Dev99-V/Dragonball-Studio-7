@@ -33,13 +33,23 @@
         "dual_laser",
         "pixel_art"
       ],
-      "status": "finalized_pending_owner_reapproval",
+      "status": "finalized_owner_approved",
       "atlas_stage": "finalized_owner_approved",
       "owner_animation_approval": {
         "status": "owner_approved",
-        "approved_at": "2026-11-13T08:22:39.853349+00:00",
+        "workflow_id": "PIPE-015",
+        "revision": "fireball-v1",
+        "release_version": "0.12.0",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
         "approval_file": "assets/chilopoda/owner_approval.json",
-        "atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d"
+        "atlas_sha256": "0561212a81a8203b33a96981e61c2a38502613026820becbadbed447b0dadeba",
+        "previous_workflow_id": "PIPE-008",
+        "previous_approval_archive": [
+          "work/characters/chilopoda/fireball-v1/snapshot-before/owner_approval.json",
+          "docs/releases/chilopoda-v0.11.1-approval.json"
+        ],
+        "previous_atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d"
       },
       "canonical_identity": {
         "path": "work/characters/chilopoda/identity-v2/canonical/master.png",
@@ -379,7 +389,7 @@
         }
       },
       "motion_quality": {
-        "status": "reviewed_pending_owner",
+        "status": "owner_approved",
         "method": "imagegen_complete_body_keyframes",
         "atlas_sha256": "0561212a81a8203b33a96981e61c2a38502613026820becbadbed447b0dadeba",
         "checks": {
@@ -394,15 +404,18 @@
         "not_applicable_checks": {
           "perspective_turns": "Owner approved burrow/reorient/emerge in place instead of surface rotation."
         },
-        "owner_approved": false,
-        "naturalness_verdict": "reviewed_pending_owner",
+        "owner_approved": true,
+        "naturalness_verdict": "owner_approved",
         "unresolved_structural_failures": [],
         "review_evidence": "work/characters/chilopoda/identity-v2/review/identity-review.json",
         "notes": "Calibrated 1.35x scale / 140 px/s speed / 2.65x burrow dust; replaced power_up dual red lasers with single mouth-condensing growing fireball (10 cleaned stages from Owner art).",
-        "approved_at": "2026-11-13T08:22:39.853349+00:00",
-        "owner_message": "todo thêm turn cho các nhân vật kia em làm xong chưa? tính toán xem còn 7% quota có thể hoàn thành được không? sau khi xong chilopoda giúp anh chốt nhân vật sau đó trả lời 2 câu hỏi trên",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
         "previous_revision_atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d",
-        "reviewed_at": "2026-11-14T15:14:28.999238+00:00"
+        "reviewed_at": "2026-11-14T15:14:28.999238+00:00",
+        "revision": "fireball-v1",
+        "owner_accepted_motion": true,
+        "workflow_id": "PIPE-015"
       },
       "qa_report": "docs/characters/chilopoda-identity-v2-qa.json"
     },
@@ -418,7 +431,7 @@
         "pixel_art",
         "purple_sonic_wave"
       ],
-      "status": "finalized_pending_owner_reapproval",
+      "status": "finalized_owner_approved",
       "facing_contract": {
         "camera_view": "side_view_2d_three_quarter_same_as_pteranodon",
         "default_atlas_facing": "right (+X)",
@@ -592,15 +605,15 @@
       },
       "atlas_stage": "finalized_owner_approved",
       "motion_quality": {
-        "status": "reviewed_pending_owner",
-        "revision": "turn-v1",
-        "owner_approved": false,
+        "status": "owner_approved",
+        "revision": "calibration-v1",
+        "owner_approved": true,
         "previous_revision_atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
         "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
         "review_evidence": "work/characters/bat_chiroptera/turn-v1/review/keyframe-review.json",
         "method": "imagegen_complete_body_keyframes",
         "turn_method": "complete_perspective_poses",
-        "naturalness_verdict": "reviewed_pending_owner",
+        "naturalness_verdict": "owner_approved",
         "checks": {
           "body_connections": true,
           "whole_pose_sequence": true,
@@ -619,11 +632,12 @@
           260.27
         ],
         "unresolved_structural_failures": [],
-        "approved_at": "2026-11-13T10:50:00+00:00",
-        "owner_message": "ok bat anh chốt giúp anh sang nhân vật tiếp theo trong todo",
-        "workflow_id": "PIPE-009",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
+        "workflow_id": "PIPE-016",
         "reviewed_at": "2026-11-14T15:14:28.999238+00:00",
-        "notes": "Calibrated 1.1x scale / 115 px/s speed / fly Y=250; turn sped up +40% ([2,3,4,3,3] = 15 ticks / 250ms) and walk-turn hitch eliminated."
+        "notes": "Calibrated 1.1x scale / 115 px/s speed / fly Y=250; turn sped up +40% ([2,3,4,3,3] = 15 ticks / 250ms) and walk-turn hitch eliminated.",
+        "owner_accepted_motion": true
       },
       "qa_report": "docs/characters/bat-chiroptera-turn-v1-qa.json",
       "canonical_identity": {
@@ -632,12 +646,19 @@
       },
       "owner_animation_approval": {
         "status": "owner_approved",
-        "workflow_id": "PIPE-009",
-        "revision": "turn-v1",
-        "release_version": "0.11.2",
-        "approved_at": "2026-11-13T10:50:00+00:00",
+        "workflow_id": "PIPE-016",
+        "revision": "calibration-v1",
+        "release_version": "0.12.0",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
         "approval_file": "assets/bat_chiroptera/owner_approval.json",
-        "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084"
+        "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
+        "previous_workflow_id": "PIPE-009",
+        "previous_approval_archive": [
+          "work/characters/bat_chiroptera/calibration-v1/snapshot-before/owner_approval.json",
+          "docs/releases/bat_chiroptera-v0.11.2-approval.json"
+        ],
+        "previous_atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084"
       }
     },
     {
@@ -651,7 +672,7 @@
         "pixel_art",
         "projectile_fx"
       ],
-      "status": "finalized_pending_owner_reapproval",
+      "status": "finalized_owner_approved",
       "facing_contract": {
         "camera_view": "side_view_2d",
         "default_atlas_facing": "right (+X)",
@@ -674,22 +695,22 @@
           "h": 74
         },
         "full_fx_bbox_px": {
-          "x": 87,
-          "y": 104,
-          "w": 274,
-          "h": 120
+          "x": 82,
+          "y": 134,
+          "w": 279,
+          "h": 90
         },
         "world_size_at_64ppu_m": {
           "body_w_m": 2.453,
           "body_h_m": 1.156,
-          "aura_w_m": 4.281,
-          "aura_h_m": 1.875
+          "aura_w_m": 4.359,
+          "aura_h_m": 1.406
         },
         "tile_32px_span": {
           "body_tiles_w": 4.906,
           "body_tiles_h": 2.312,
-          "full_fx_tiles_w": 8.562,
-          "full_fx_tiles_h": 3.75
+          "full_fx_tiles_w": 8.719,
+          "full_fx_tiles_h": 2.812
         },
         "reference_ppu_64": 64
       },
@@ -758,8 +779,8 @@
             7
           ],
           "default_scale": 2.0,
-          "screen_speed_px_per_second": 130,
-          "speed_px_per_second": 65.0
+          "screen_speed_px_per_second": 170,
+          "speed_px_per_second": 85.0
         },
         "aura": {
           "loop_clip": null,
@@ -811,21 +832,29 @@
       },
       "owner_master_approval": "work/characters/spinosaurus/approved-master/approval.json",
       "owner_animation_approval": {
-        "status": "pending_owner_reapproval",
-        "previous_approved_at": "2026-11-12T07:38:36.605057+00:00",
-        "previous_approval_file": "work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
-        "previous_atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
-        "atlas_sha256": "bd812e4deec4810517293183b82a1c6a00c7bbfe1e28cf287385c777f65da005",
-        "reason": "Step-2 visual fix: register walk_00..07 horizontal torso centroid consistently at ~183.5px (removing +/-11px snap) and ground floating walk_01,02,03,06 onto y=223; non-walk clips byte-identical."
+        "status": "owner_approved",
+        "workflow_id": "PIPE-011",
+        "revision": "walk-edge-uniform-v1",
+        "release_version": "0.12.0",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
+        "approval_file": "assets/spinosaurus/owner_approval.json",
+        "atlas_sha256": "51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e",
+        "previous_workflow_id": "PIPE-003",
+        "previous_approval_archive": [
+          "work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+          "docs/releases/spinosaurus-v0.6.0-approval.json"
+        ],
+        "previous_atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4"
       },
       "qa_report": "docs/characters/spinosaurus-final-qa.json",
       "owner_visual_override": "Owner requires demo-v2 detail/color fidelity instead of coarse100texel/16color/gain201.3; body hard alpha, small translucent bite VFX.",
       "motion_quality": {
-        "status": "reviewed_pending_owner",
+        "status": "owner_approved",
         "method": "existing_complete_source_frames",
-        "atlas_sha256": "5e37c84475badd57382880395f177f97159db8796f4009f2f3928a96c3ca196d",
+        "atlas_sha256": "51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e",
         "previous_revision_atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
-        "reviewed_at": "2026-11-14T15:14:28.999238+00:00",
+        "reviewed_at": "2026-11-15T05:24:42.044574+00:00",
         "checks": {
           "body_connections": true,
           "whole_pose_sequence": true,
@@ -835,9 +864,9 @@
           "character_identity": true
         },
         "unresolved_structural_failures": [],
-        "naturalness_verdict": "reviewed_pending_owner",
-        "owner_approved": false,
-        "notes": "Calibrated 2.0x scale / 130 px/s speed; Nearest-upscaled walk frames grounded at y=224 (torso_x spread 0.8px) to match idle/turn height; turn sped up to [2,6,5,3] (16 ticks / 267ms) + hitch fix.",
+        "naturalness_verdict": "owner_approved",
+        "owner_approved": true,
+        "notes": "Walk-edge-uniform-v1: kept idle, walk_01..06, attack_*, power_up, hit, ko, turn, fireball_fx (69/71 PNGs) byte-identical to calibration-v1 (speed 170 px/s); rebuilt ONLY walk_00 & walk_07 from 887x887 walk-seam-v6 source via single Nearest resize (thr=224, h=74, area=4542/4564px, ground=224, torso_x spread=0.75px) to eliminate end-of-loop bloat.",
         "filmstrips_opened": [
           "filmstrip-00.png",
           "filmstrip-01.png",
@@ -854,10 +883,15 @@
           "dark",
           "checker"
         ],
-        "review_evidence": "work/characters/spinosaurus/step2-visual-fix/keyframe-review.json"
+        "review_evidence": "work/characters/spinosaurus/walk-edge-uniform-v1/keyframe-review.json",
+        "revision": "walk-edge-uniform-v1",
+        "owner_accepted_motion": true,
+        "workflow_id": "PIPE-011",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác"
       },
-      "atlas_stage": "reviewed_pending_owner",
-      "atlas_sha256": "5e37c84475badd57382880395f177f97159db8796f4009f2f3928a96c3ca196d"
+      "atlas_stage": "finalized_owner_approved",
+      "atlas_sha256": "51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e"
     },
     {
       "character_id": "t_rex",
@@ -1286,7 +1320,7 @@
         "pixel_art",
         "projectile_fx"
       ],
-      "status": "finalized_pending_owner_reapproval",
+      "status": "finalized_owner_approved",
       "facing_contract": {
         "camera_view": "side_view_2d_three_quarter",
         "default_atlas_facing": "right(+X);huge anatomicalright claw near camera, smallleft claw far",
@@ -1337,7 +1371,7 @@
       },
       "pixel_sharpness_metrics": {
         "texel_scale_ratio": "Native gameplay PNG1px, Nearest; one whole-frame scale per action; no LUT/sharpen/palette forcing",
-        "edge_acutance_sobel": 349.243,
+        "edge_acutance_sobel": 307.778,
         "alpha_hardness_pct": 100,
         "visible_alpha_hardness_pct": 100,
         "opaque_key_px": 0,
@@ -1470,25 +1504,33 @@
           "bundle_id": "tasmanian_king_crab"
         }
       },
-      "atlas_stage": "reviewed_pending_owner",
+      "atlas_stage": "finalized_owner_approved",
       "owner_animation_approval": {
-        "status": "pending_owner_reapproval",
-        "previous_approved_at": "2026-11-12T09:51:08.495780+00:00",
-        "previous_approval_file": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json",
-        "previous_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
-        "atlas_sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c",
-        "reason": "Step-2 visual fix: match idle_01..07 tonal curve/alignment to idle_00 (master.png) to eliminate frame-0 flash, and ground idle_02, idle_03, walk_01 feet onto y=223 (y224 baseline)."
+        "status": "owner_approved",
+        "workflow_id": "PIPE-012",
+        "revision": "uniform-color-v1",
+        "release_version": "0.12.0",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
+        "approval_file": "assets/tasmanian_king_crab/owner_approval.json",
+        "atlas_sha256": "c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d",
+        "previous_workflow_id": "PIPE-004",
+        "previous_approval_archive": [
+          "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json",
+          "docs/releases/tasmanian_king_crab-v0.7.0-approval.json"
+        ],
+        "previous_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1"
       },
       "canonical_identity": {
         "path": "work/characters/tasmanian_king_crab/size-master/master.png",
-        "sha256": "5c93785ff07a1578c9c504cd5ca683da0df50bb9075bb877301efc38b62722ea"
+        "sha256": "020b0494ed66e90dac831e93b2ca758b436cda698a4c012eb7dfa87c6c704b0d"
       },
       "motion_quality": {
-        "status": "reviewed_pending_owner",
+        "status": "owner_approved",
         "method": "imagegen_complete_body_keyframes",
-        "atlas_sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c",
+        "atlas_sha256": "c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d",
         "previous_revision_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
-        "reviewed_at": "2026-11-14T09:26:26.764136+00:00",
+        "reviewed_at": "2026-11-15T04:36:50.583682+00:00",
         "checks": {
           "body_connections": true,
           "whole_pose_sequence": true,
@@ -1498,9 +1540,9 @@
           "character_identity": true
         },
         "unresolved_structural_failures": [],
-        "naturalness_verdict": "reviewed_pending_owner",
-        "owner_approved": false,
-        "notes": "Step-2 visual fix: match idle_01..07 tonal curve/alignment to idle_00 (master.png) to eliminate frame-0 flash, and ground idle_02, idle_03, walk_01 feet onto y=223 (y224 baseline).",
+        "naturalness_verdict": "owner_approved",
+        "owner_approved": true,
+        "notes": "Uniform-color-v1: removed idle glare/white flash and unified all 5 body clips (idle, attack_nomal, power_up, hit, ko) to canonical walk luminance CDF & RGB tone curve; walk & orb FX unchanged.",
         "filmstrips_opened": [
           "filmstrip-00.png",
           "filmstrip-01.png",
@@ -1516,10 +1558,15 @@
           "dark",
           "checker"
         ],
-        "review_evidence": "work/characters/tasmanian_king_crab/step2-visual-fix/keyframe-review.json"
+        "review_evidence": "work/characters/tasmanian_king_crab/uniform-color-v1/keyframe-review.json",
+        "revision": "uniform-color-v1",
+        "owner_accepted_motion": true,
+        "workflow_id": "PIPE-012",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác"
       },
       "qa_report": "docs/characters/tasmanian-king-crab-atlas-v1-qa.json",
-      "atlas_sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c"
+      "atlas_sha256": "c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d"
     },
     {
       "character_id": "sarcosuchus",
@@ -1533,7 +1580,7 @@
         "pixel_art",
         "projectile_fx"
       ],
-      "status": "finalized_pending_owner_reapproval",
+      "status": "finalized_owner_approved",
       "facing_contract": {
         "camera_view": "side_view_2d_three_quarter",
         "default_atlas_facing": "right(+X); four legs, olive armor, long crocodilian jaws",
@@ -1713,21 +1760,29 @@
           "bundle_id": "sarcosuchus"
         }
       },
-      "atlas_stage": "reviewed_pending_owner",
+      "atlas_stage": "finalized_owner_approved",
       "owner_animation_approval": {
-        "status": "pending_owner_reapproval",
-        "previous_approved_at": "2026-11-13T02:57:36.459561+00:00",
-        "previous_approval_file": "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/owner_approval.json",
-        "previous_atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951",
+        "status": "owner_approved",
+        "workflow_id": "PIPE-013",
+        "revision": "step2-visual-fix+calibration-v1",
+        "release_version": "0.12.0",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
+        "approval_file": "assets/sarcosuchus/owner_approval.json",
         "atlas_sha256": "81595756c2d1d7d4ca7ddf530bb972eca8964427311db69a38905502fed2a959",
-        "reason": "Step-2 visual fix: stabilize idle luminance (idle_00..11 + turn_00..03), ground hovering frames (idle_05..10, walk_07, hit_00..01, ko_00..06, turn_01/03) onto y=223, soften white toe confetti and plant dark sole contacts at y=223."
+        "previous_workflow_id": "PIPE-005",
+        "previous_approval_archive": [
+          "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/owner_approval.json",
+          "docs/releases/sarcosuchus-v0.8.1-approval.json"
+        ],
+        "previous_atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951"
       },
       "canonical_identity": {
         "path": "work/characters/sarcosuchus/master-review/master-gameplay-v1.png",
         "sha256": "8adeda8cbb99493640c296748c76cb05df7110cee909e43b84b844a5e8675ddc"
       },
       "motion_quality": {
-        "status": "reviewed_pending_owner",
+        "status": "owner_approved",
         "method": "imagegen_complete_body_keyframes",
         "atlas_sha256": "81595756c2d1d7d4ca7ddf530bb972eca8964427311db69a38905502fed2a959",
         "previous_revision_atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951",
@@ -1741,8 +1796,8 @@
           "character_identity": true
         },
         "unresolved_structural_failures": [],
-        "naturalness_verdict": "reviewed_pending_owner",
-        "owner_approved": false,
+        "naturalness_verdict": "owner_approved",
+        "owner_approved": true,
         "notes": "Calibrated 2.0x scale / 135 px/s speed; turn sped up to [2,5,6,3] (16 ticks / 267ms) + walk-turn hitch eliminated.",
         "filmstrips_opened": [
           "filmstrip-00.png",
@@ -1760,7 +1815,12 @@
           "dark",
           "checker"
         ],
-        "review_evidence": "work/characters/sarcosuchus/step2-visual-fix/keyframe-review.json"
+        "review_evidence": "work/characters/sarcosuchus/step2-visual-fix/keyframe-review.json",
+        "revision": "step2-visual-fix+calibration-v1",
+        "owner_accepted_motion": true,
+        "workflow_id": "PIPE-013",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác"
       },
       "qa_report": "docs/characters/sarcosuchus-power-up-v2-qa.json",
       "atlas_sha256": "81595756c2d1d7d4ca7ddf530bb972eca8964427311db69a38905502fed2a959"
@@ -1778,15 +1838,23 @@
         "target_slashes",
         "pixel_art"
       ],
-      "status": "finalized_pending_owner_reapproval",
-      "atlas_stage": "reviewed_pending_owner",
+      "status": "finalized_owner_approved",
+      "atlas_stage": "finalized_owner_approved",
       "owner_animation_approval": {
-        "status": "pending_owner_reapproval",
-        "previous_approved_at": "2026-11-13T04:57:15.924909+00:00",
-        "previous_approval_file": "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
-        "previous_atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157",
-        "atlas_sha256": "5c2bcdfcde2a71a6b9733b1128d20ed781250597bebdfc3e8fb23b5290328cbf",
-        "reason": "Step-2 visual fix: Nearest-rescale walk_00..07 (95.5/104 anchored at [176,224]) so walk matches idle ~95px height with all walk feet grounded at y=223; ground idle_01/08 & soften idle_01..11 luminance variance toward idle_00."
+        "status": "owner_approved",
+        "workflow_id": "PIPE-014",
+        "revision": "step2-visual-fix+calibration-v1",
+        "release_version": "0.12.0",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
+        "approval_file": "assets/dilophosaurus/owner_approval.json",
+        "atlas_sha256": "b56bdb47d903f14ea8072831dda6eb039f7d883a5cdadbbecf9548c9458e097b",
+        "previous_workflow_id": "PIPE-006",
+        "previous_approval_archive": [
+          "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+          "docs/releases/dilophosaurus-v0.9.1-approval.json"
+        ],
+        "previous_atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157"
       },
       "canonical_identity": {
         "path": "work/characters/dilophosaurus/master-review/frill-v2/master-gameplay-v2.png",
@@ -1977,7 +2045,7 @@
         }
       },
       "motion_quality": {
-        "status": "reviewed_pending_owner",
+        "status": "owner_approved",
         "method": "imagegen_complete_body_keyframes",
         "atlas_sha256": "b56bdb47d903f14ea8072831dda6eb039f7d883a5cdadbbecf9548c9458e097b",
         "previous_revision_atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157",
@@ -1991,8 +2059,8 @@
           "character_identity": true
         },
         "unresolved_structural_failures": [],
-        "naturalness_verdict": "reviewed_pending_owner",
-        "owner_approved": false,
+        "naturalness_verdict": "owner_approved",
+        "owner_approved": true,
         "notes": "Calibrated 1.75x scale / 155 px/s speed; Nearest-downscaled turn[1..3] grounded at y=224 to ~95-96px matching idle/walk; turn sped up to [2,5,5,2] (14 ticks / 233ms) + hitch fix.",
         "filmstrips_opened": [
           "filmstrip-00.png",
@@ -2011,10 +2079,16 @@
           "dark",
           "checker"
         ],
-        "review_evidence": "work/characters/dilophosaurus/step2-visual-fix/keyframe-review.json"
+        "review_evidence": "work/characters/dilophosaurus/step2-visual-fix/keyframe-review.json",
+        "revision": "step2-visual-fix+calibration-v1",
+        "owner_accepted_motion": true,
+        "workflow_id": "PIPE-014",
+        "approved_at": "2026-11-15T05:52:31.727116+00:00",
+        "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác"
       },
       "qa_report": "docs/characters/dilophosaurus-motion-v2-qa.json",
       "atlas_sha256": "b56bdb47d903f14ea8072831dda6eb039f7d883a5cdadbbecf9548c9458e097b"
     }
-  ]
+  ],
+  "updated_at": "2026-11-15T05:52:31.727116+00:00"
 }

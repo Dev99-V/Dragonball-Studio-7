@@ -91,4 +91,34 @@
 - **Bảo toàn nguồn & khử `ISS-TREX-TICK-LEGACY` theo chốt Owner**: giữ nguyên `73/73` PNG non-turn (`frame-00..72.png` đối soát SHA-256/RGBA), thứ tự 9 clip cũ, `duration_ms`, events và `attack_heavy` 360°; xuất lại bằng `--godot-fps auto` theo chốt Owner để `godot.relative_durations` khớp chính xác authored ticks 60Hz (sửa dứt điểm frame 5 `attack_heavy` `0.96 -> 1.0` tick trên Godot/WASM/localhost). Độ sắc `turn_00..04`: alpha cứng `100%` `[0,255]`, `n_comp == 1`, `Sobel [218.251, 203.449, 177.687, 220.831, 181.419]`.
 - **QA & bàn giao**: `78` frame / `10` clip (`9` thân + `fireball_fx`) trên `1` trang atlas `3494×2342` Nearest; QA `docs/characters/t-rex-turn-v1-qa.json` (`10/10` gate = `100/100`), dọn `258` stage PNG trùng byte theo `docs/releases/v0.11.2-t_rex-turn-finalization.json`.
 
+### [PIPE-011] Quy trình Spinosaurus `walk-edge-uniform-v1` & Calibration `1920x1080` (`v0.12.0`, Owner Approved 2026-11-15 — supersedes `[PIPE-003]`)
+- **Đầu vào**: Bản `PIPE-003` đã duyệt (`89d9696e...`), cập nhật `step2-visual-fix` (căn `torso_x`, hạ chân chạm đất `y=223`), hiệu chỉnh arena `1920x1080` (`default_scale = 2.0`, `screen_speed_px_per_second = 170`, `turn` `[2,6,5,3]`) và nguồn `887x887` (`work/characters/spinosaurus/walk-seam-v6` / `walk-edge-uniform-v1`).
+- **Quy trình áp dụng**: Giữ nguyên byte-for-byte `idle`, `walk_01..06`, `attack_*`, `power_up`, `hit`, `ko`, `turn`, `fireball_fx` (`69/71` PNGs); chỉ thu đồng đều 1 nhịp `Nearest` (`thr=224`, `h=74`, `ground=224`) cho duy nhất 2 frame biên `walk_00` và `walk_07` để triệt tiêu phình cỡ ở biên vòng lặp mà không gây khựng (`LRN-057`/`LRN-058`).
+- **Nghiệm thu & Đóng băng**: Atlas SHA `51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e`, lưu receipt [assets/spinosaurus/owner_approval.json](file:///workspaces/DR7-Studio/assets/spinosaurus/owner_approval.json) (bản `PIPE-003` lưu tại `docs/releases/spinosaurus-v0.6.0-approval.json`), đóng băng [work/characters/spinosaurus/approved-final-frames](file:///workspaces/DR7-Studio/work/characters/spinosaurus/approved-final-frames) và dọn sạch `uniform-walk-v1` + stage PNG trùng lặp.
+
+### [PIPE-012] Quy trình Tasmanian King Crab `uniform-color-v1` & Facing Flip Contract (`v0.12.0`, Owner Approved 2026-11-15 — supersedes `[PIPE-004]`)
+- **Đầu vào**: Bản `PIPE-004` đã duyệt (`bf079cf2...`), `step2-visual-fix` và toàn bộ 5 clip thân (`idle`, `attack_nomal`, `power_up`, `hit`, `ko`) so với mẫu chuẩn `walk` + hợp đồng lật ngang không cần `turn`.
+- **Quy trình áp dụng**: Khử chớp sáng trắng (`glare/flash`) ở `idle` và khớp đường cong sắc độ/luminance CDF của toàn bộ `5` clip thân về đúng tông chuẩn của `walk` (`uniform-color-v1`, giữ nguyên `walk` và `power_orb_*`), cấu hình `default_scale = 1.25`, `screen_speed_px_per_second = 115`, `turn_speed_multiplier = 1.3`.
+- **Nghiệm thu & Đóng băng**: Atlas SHA `c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d`, lưu receipt [assets/tasmanian_king_crab/owner_approval.json](file:///workspaces/DR7-Studio/assets/tasmanian_king_crab/owner_approval.json) (bản `PIPE-004` lưu tại `docs/releases/tasmanian_king_crab-v0.7.0-approval.json`) và đóng băng `approved-final-frames`.
+
+### [PIPE-013] Quy trình Sarcosuchus `step2-visual-fix` & Calibration `1920x1080` (`v0.12.0`, Owner Approved 2026-11-15 — supersedes `[PIPE-005]`)
+- **Đầu vào**: Bản `PIPE-005` đã duyệt (`4a8751e8...`).
+- **Quy trình áp dụng**: Ổn định luminance `idle`/`turn`, hạ chân lơ lửng (`idle_05..10`, `walk_07`, `hit_00..01`, `ko_00..06`, `turn_01/03`) chạm nền `y=223`, hiệu chỉnh arena `default_scale = 2.0`, `screen_speed_px_per_second = 135`, tăng tốc `turn` `[2,5,6,3]` (`16` ticks) và loại hitch chuyển pha `walk -> turn`.
+- **Nghiệm thu & Đóng băng**: Atlas SHA `81595756c2d1d7d4ca7ddf530bb972eca8964427311db69a38905502fed2a959`, lưu receipt [assets/sarcosuchus/owner_approval.json](file:///workspaces/DR7-Studio/assets/sarcosuchus/owner_approval.json) (bản `PIPE-005` lưu tại `docs/releases/sarcosuchus-v0.8.1-approval.json`) và cập nhật `approved-final-frames`.
+
+### [PIPE-014] Quy trình Dilophosaurus `step2-visual-fix` & Calibration `1920x1080` (`v0.12.0`, Owner Approved 2026-11-15 — supersedes `[PIPE-006]`)
+- **Đầu vào**: Bản `PIPE-006` đã duyệt (`3dc6d037...`).
+- **Quy trình áp dụng**: Rescale `Nearest` chuỗi `walk_00..07` và `turn[1..3]` về cỡ ~`95–96px` đồng nhất `idle` bám nền `y=223..224`, ổn định sắc độ `idle_01..11` theo `idle_00`, hiệu chỉnh arena `default_scale = 1.75`, `screen_speed_px_per_second = 155`, `turn` `[2,5,5,2]` (`14` ticks).
+- **Nghiệm thu & Đóng băng**: Atlas SHA `b56bdb47d903f14ea8072831dda6eb039f7d883a5cdadbbecf9548c9458e097b`, lưu receipt [assets/dilophosaurus/owner_approval.json](file:///workspaces/DR7-Studio/assets/dilophosaurus/owner_approval.json) (bản `PIPE-006` lưu tại `docs/releases/dilophosaurus-v0.9.1-approval.json`) và cập nhật `approved-final-frames`.
+
+### [PIPE-015] Quy trình Chilopoda `fireball-v1` & Calibration `1920x1080` (`v0.12.0`, Owner Approved 2026-11-15 — supersedes `[PIPE-008]`)
+- **Đầu vào**: Bản `PIPE-008` đã duyệt (`6fae7127...`) và asset cầu lửa nguồn Owner (`work/characters/chilopoda/fireball-v1/source`).
+- **Quy trình áp dụng**: Thay laser đỏ kép trong `power_up` bằng cầu lửa tích tụ đơn tại miệng (`fireball_fx`: `10` frame cứng alpha không viền xanh, Neo đúng tọa độ miệng từng frame), giữ nguyên chu kỳ độn thổ `attack_light` và `turn` (`[burrow_reorient_while_hidden]`), hiệu chỉnh `default_scale = 1.35`, `screen_speed_px_per_second = 140`, `burrow_dust_scale = 2.65`.
+- **Nghiệm thu & Đóng băng**: Atlas SHA `0561212a81a8203b33a96981e61c2a38502613026820becbadbed447b0dadeba`, lưu receipt [assets/chilopoda/owner_approval.json](file:///workspaces/DR7-Studio/assets/chilopoda/owner_approval.json) (bản `PIPE-008` lưu tại `docs/releases/chilopoda-v0.11.1-approval.json`) và đóng băng `approved-final-frames`.
+
+### [PIPE-016] Quy trình Bat - Chiroptera `calibration-v1` (`v0.12.0`, Owner Approved 2026-11-15 — supersedes `[PIPE-009]`)
+- **Đầu vào**: Bản `PIPE-009` đã duyệt (`4e4ee4b8...`).
+- **Quy trình áp dụng**: Hiệu chỉnh bay chuẩn arena `1920x1080` (`default_scale = 1.1`, `screen_speed_px_per_second = 115`, `flight_default_y = 250`), tăng tốc nhịp `turn` `+40%` (`[2,3,4,3,3] = 15` ticks / `250ms`) và triệt tiêu khựng chuyển pha `walk -> turn`.
+- **Nghiệm thu & Đóng băng**: Atlas SHA `4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084`, lưu receipt [assets/bat_chiroptera/owner_approval.json](file:///workspaces/DR7-Studio/assets/bat_chiroptera/owner_approval.json) (bản `PIPE-009` lưu tại `docs/releases/bat_chiroptera-v0.11.2-approval.json`) và đóng băng `approved-final-frames`.
+
 <!-- SKILLS_ENTRIES_END -->

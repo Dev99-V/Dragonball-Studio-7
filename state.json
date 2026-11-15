@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-14T15:35:00Z",
+  "updated_at": "2026-11-15T05:54:08Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.11.2",
+    "version": "0.12.0",
     "version_history": [
       {
         "version": "0.1.0",
@@ -129,11 +129,11 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "CRAB-003",
-    "status": "ready_for_owner_human_test",
-    "summary": "Hoàn tất gỡ khóa bò ngang CRAB-002 cho tasmanian_king_crab theo yêu cầu Owner (2026-11-14): khôi phục xoay hướng ngang flip_h / scale.x không cần clip turn (sideways_strafe=false, lock_spawn_facing=false, allow_turn_or_flip=true) trên engine-export.json, roster.json, TasmanianFighter2D.gd, ArenaSandbox.gd và tools/preview/index.html (bao gồm Utility AI tự xoay mặt về phía địch sau lưng trước khi bắn power_up/attack_nomal và Tuần tra 2 đầu); giữ nguyên 100% 54 PNG Bước 2 & Sarcosuchus turn. TURN-003 Pteranodon đã cập nhật TODO/blocker (v1..v3 + turn_anchor_ref_3pose.png) chờ quota reset 2026-11-14T18:36:31Z.",
-    "character_id": "tasmanian_king_crab",
-    "master_image": "work/characters/tasmanian_king_crab/size-master/master.png"
+    "active_task_id": "ALL-CHAR-FINAL-012",
+    "status": "completed_owner_approved",
+    "summary": "Hoàn tất chốt 8/8 nhân vật theo quy trình v0.12.0 (PIPE-011..PIPE-016 cho Spinosaurus, Tasmanian King Crab, Sarcosuchus, Dilophosaurus, Chilopoda, Bat; giữ xác nhận T-rex PIPE-010 & Pteranodon PIPE-002), lưu trữ receipt cũ tại docs/releases/, đóng băng approved-final-frames, dọn sạch uniform-walk-v1 (534 files / 20.1 MB) + 417 stage PNG trùng lặp (20.4 MB) và chuẩn bị push lên main để chuyển sang nhân vật tiếp theo.",
+    "character_id": null,
+    "master_image": null
   },
   "open_issues": [],
   "resolved_issues": [
@@ -702,6 +702,30 @@
       "timestamp": "2026-11-14T15:35:00Z",
       "status": "ready_for_owner_human_test",
       "summary": "Hoàn tất đồng bộ cân chỉnh 8 nhân vật 1:1 Godot 4 <-> localhost:8080 theo bảng thông số Owner chốt: Chilopoda (scale 1.35, speed 140 px/s, dust 2.65x, thay 2 tia laser bằng 1 cầu lửa fireball_fx 10 frame tụ tại miệng & phóng lớn dần khi bay tới mục tiêu gây 250 sát thương), Bat (scale 1.1, 115 px/s, Y=250, turn [2,3,4,3,3] +40%), Spinosaurus (scale 2.0, 130 px/s, walk upscale khớp idle/turn, turn [2,6,5,3] +25%), T-rex (scale 1.75, 120 px/s), Pteranodon (scale 1.5, 140 px/s, Y=250, hủy TURN-003 & instant flip +20%), King Crab (scale 1.25, 115 px/s, instant flip +30%), Sarcosuchus (scale 2.0, 135 px/s, turn [2,5,6,3] +25%), Dilophosaurus (scale 1.75, 155 px/s, turn downscale khớp idle/walk, turn [2,5,5,2] +43%). Khử khựng nối walk<->turn (momentum êm + nối mid-stride frame 1 không chớp idle); cập nhật toàn bộ contract/action/arena/E2E/governance tests."
+    },
+    {
+      "id": "UNIFORM-WALK-COLOR-001",
+      "timestamp": "2026-11-15T04:41:00Z",
+      "status": "superseded_for_spinosaurus_crab_kept",
+      "summary": "Cập nhật Hiến pháp AGENTS.md (Điều 2.3: đồng nhất tuyệt đối kích thước, hình dạng, màu sắc khi có 1 mẫu chuẩn), hoàn tất Tasmanian King Crab uniform-color-v1 (giữ nguyên cho Owner chốt); phần Spinosaurus uniform-walk-v1 được undo về bản calibration-v1 theo yêu cầu Owner."
+    },
+    {
+      "id": "SPINO-UNDO-SPEED-170",
+      "timestamp": "2026-11-15T04:52:00Z",
+      "status": "completed",
+      "summary": "Undo Spinosaurus hoàn toàn về snapshot trước uniform-walk-v1 (atlas SHA 5e37c84475badd57382880395f177f97159db8796f4009f2f3928a96c3ca196d, 71 PNG, .tres, bbox, timings gốc) theo phản ánh khựng từ Owner, đồng thời tăng tốc độ di chuyển lên 170 px/s (screen_speed_px_per_second=170, speed_px_per_second=85.0 với scale 2.0) trong roster.json, engine-export.json, QA doc, test_spinosaurus_contract.py và test_arena_sandbox.gd; giữ nguyên 100% Tasmanian King Crab và các nhân vật còn lại."
+    },
+    {
+      "id": "SPINO-WALK-UNIFORM-002",
+      "timestamp": "2026-11-15T05:26:00Z",
+      "status": "completed",
+      "summary": "Theo Owner chốt 2 phương án: thay riêng walk_00 (#0: 168x74, 4542 px) và walk_07 (#7: 167x74, 4564 px) bằng 1 nhịp Nearest thẳng từ nguồn walk-seam-v6 887x887 (thr=224, ground=224, Sobel 248.324/247.665, giữ mắt cam & torso_x spread 0.752 px), khớp khít walk_01..06 (4502..4627 px, h=72..76); giữ byte-identical idle, walk_01..06 và toàn bộ 69/71 PNG còn lại cùng tốc độ 170 px/s (atlas SHA 51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e)."
+    },
+    {
+      "id": "ALL-CHAR-FINAL-012",
+      "timestamp": "2026-11-15T05:54:08Z",
+      "status": "completed",
+      "summary": "Owner chốt toàn bộ 8 nhân vật (v0.12.0): phát hành owner_approval.json cho spinosaurus (PIPE-011), tasmanian_king_crab (PIPE-012), sarcosuchus (PIPE-013), dilophosaurus (PIPE-014), chilopoda (PIPE-015), bat_chiroptera (PIPE-016); lưu trữ receipt cũ tại docs/releases/; cập nhật roster.json, skills.md, engine-export.json, QA JSONs, contract tests, dọn PNG dư thừa và ghi nhận vào docs/releases/v0.12.0-all-characters-finalization.json."
     }
   ],
   "quick_resume_commands": [
@@ -710,10 +734,10 @@
     "./loop.sh test"
   ],
   "session_resume": {
-    "next_action": "Chờ Owner Human Test trên http://localhost:8080: kiểm tra 8 nhân vật đã cân chỉnh (scale, speed, Y=250 cho bay, độ mượt walk<->turn, hiệu ứng cầu lửa Chilopoda power_up + 2.65x bụi độn thổ, cỡ walk Spinosaurus, cỡ turn Dilophosaurus, tốc độ xoay instant flip Pteranodon/King Crab); nếu đạt, xác nhận nghiệm thu cho 6 nhân vật đang reviewed_pending_owner (chilopoda, bat_chiroptera, spinosaurus, tasmanian_king_crab, sarcosuchus, dilophosaurus).",
-    "asset_status": "8/8 nhân vật pass kiểm định kỹ thuật & parity 1:1 Godot <-> localhost; t_rex & pteranodon đang owner_approved (cùng locomotion mới), 6 nhân vật còn lại đang finalized_pending_owner_reapproval / reviewed_pending_owner chờ Owner nghiệm thu cuối.",
-    "approval_file": "assets/t_rex/owner_approval.json",
-    "cleanup_report": "docs/releases/v0.11.2-t_rex-turn-finalization.json",
+    "next_action": "8/8 nhân vật đã đạt owner_approved hoàn chỉnh trên main (v0.12.0); sẵn sàng nhận concept/atlas nhân vật mới từ Owner.",
+    "asset_status": "8/8 nhân vật đạt finalized_owner_approved / motion_quality=owner_approved (t_rex PIPE-010, pteranodon PIPE-002, spinosaurus PIPE-011, tasmanian_king_crab PIPE-012, sarcosuchus PIPE-013, dilophosaurus PIPE-014, chilopoda PIPE-015, bat_chiroptera PIPE-016) & parity 1:1 Godot <-> localhost.",
+    "approval_file": "assets/spinosaurus/owner_approval.json",
+    "cleanup_report": "docs/releases/v0.12.0-all-characters-finalization.json",
     "verification": "work/characters/pteranodon/turn-v1/quota-blocker.json",
     "git_checkpoint": {
       "branch": "main",
@@ -727,9 +751,9 @@
     },
     "active_character_concept": "work/characters/bat_chiroptera/turn-v1/source/",
     "review_evidence": "work/characters/t_rex/turn-v1/review/keyframe-review.json",
-    "latest_delivery": "assets/t_rex/godot_bundle",
-    "preview_url": "http://localhost:8080/?character=t_rex&clip=turn&frame=0&paused=1",
-    "local_version": "0.11.2",
+    "latest_delivery": "assets/roster.json",
+    "preview_url": "http://localhost:8080/?tab=arena",
+    "local_version": "0.12.0",
     "handoff_guide": "docs/AGY-TURN-HANDOFF.md",
     "previous_git_checkpoint": {
       "branch": "main",
@@ -766,36 +790,40 @@
       "character_id": "spinosaurus",
       "display_name": "Spinosaurus",
       "approved_at": "2026-11-12T07:38:36.605057+00:00",
-      "approval_file": "work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+      "approval_file": "docs/releases/spinosaurus-v0.6.0-approval.json",
       "atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
-      "approved_atlas_path": "work/characters/spinosaurus/step2-visual-fix/snapshot-before/spinosaurus-atlas-00.png"
+      "approved_atlas_path": "work/characters/spinosaurus/step2-visual-fix/snapshot-before/spinosaurus-atlas-00.png",
+      "superseded_by": "PIPE-011"
     },
     {
       "id": "PIPE-004",
       "character_id": "tasmanian_king_crab",
       "display_name": "Tasmanian King Crab",
       "approved_at": "2026-11-12T09:51:08.495780+00:00",
-      "approval_file": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json",
+      "approval_file": "docs/releases/tasmanian_king_crab-v0.7.0-approval.json",
       "atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
-      "approved_atlas_path": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/tasmanian_king_crab-atlas-00.png"
+      "approved_atlas_path": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/tasmanian_king_crab-atlas-00.png",
+      "superseded_by": "PIPE-012"
     },
     {
       "id": "PIPE-005",
       "character_id": "sarcosuchus",
       "display_name": "Sarcosuchus",
       "approved_at": "2026-11-13T02:57:36.459561+00:00",
-      "approval_file": "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/owner_approval.json",
+      "approval_file": "docs/releases/sarcosuchus-v0.8.1-approval.json",
       "atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951",
-      "approved_atlas_path": "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/sarcosuchus-atlas-00.png"
+      "approved_atlas_path": "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/sarcosuchus-atlas-00.png",
+      "superseded_by": "PIPE-013"
     },
     {
       "id": "PIPE-006",
       "character_id": "dilophosaurus",
       "display_name": "Dilophosaurus",
       "approved_at": "2026-11-13T04:57:15.924909+00:00",
-      "approval_file": "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+      "approval_file": "docs/releases/dilophosaurus-v0.9.1-approval.json",
       "atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157",
-      "approved_atlas_path": "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/dilophosaurus-atlas-00.png"
+      "approved_atlas_path": "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/dilophosaurus-atlas-00.png",
+      "superseded_by": "PIPE-014"
     },
     {
       "id": "PIPE-007",
@@ -813,19 +841,21 @@
       "character_id": "chilopoda",
       "display_name": "Chilopoda",
       "approved_at": "2026-11-13T08:22:39.853349+00:00",
-      "approval_file": "assets/chilopoda/owner_approval.json",
+      "approval_file": "docs/releases/chilopoda-v0.11.1-approval.json",
       "atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d",
-      "approved_atlas_path": "work/characters/chilopoda/fireball-v1/snapshot-before/godot_bundle/godot/chilopoda-atlas-00.png"
+      "approved_atlas_path": "work/characters/chilopoda/fireball-v1/snapshot-before/godot_bundle/godot/chilopoda-atlas-00.png",
+      "superseded_by": "PIPE-015"
     },
     {
       "id": "PIPE-009",
       "character_id": "bat_chiroptera",
       "display_name": "Bat - Chiroptera",
       "approved_at": "2026-11-13T10:50:00+00:00",
-      "approval_file": "assets/bat_chiroptera/owner_approval.json",
+      "approval_file": "docs/releases/bat_chiroptera-v0.11.2-approval.json",
       "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
       "approved_atlas_path": "work/characters/bat_chiroptera/calibration-v1/snapshot-before/godot_bundle/godot/bat_chiroptera-atlas-00.png",
-      "revision": "turn-v1 / v0.11.2"
+      "revision": "turn-v1 / v0.11.2",
+      "superseded_by": "PIPE-016"
     },
     {
       "id": "PIPE-010",
@@ -835,6 +865,54 @@
       "approval_file": "assets/t_rex/owner_approval.json",
       "atlas_sha256": "ee46c57864381ba0e4511e2d1ffa943ad7c1639f5bbe604448600653d57ff55c",
       "revision": "turn-v1 / v0.11.2"
+    },
+    {
+      "id": "PIPE-011",
+      "character_id": "spinosaurus",
+      "approved_at": "2026-11-15T05:52:31.727116+00:00",
+      "approval_file": "assets/spinosaurus/owner_approval.json",
+      "supersedes": "PIPE-003",
+      "summary": "Spinosaurus v0.12.0 (walk-edge-uniform-v1 + 170 px/s + step2-visual-fix): giữ idle/walk_01..06/69 PNG gốc, thu đồng đều 1 nhịp Nearest cho walk_00 & walk_07."
+    },
+    {
+      "id": "PIPE-012",
+      "character_id": "tasmanian_king_crab",
+      "approved_at": "2026-11-15T05:52:31.727116+00:00",
+      "approval_file": "assets/tasmanian_king_crab/owner_approval.json",
+      "supersedes": "PIPE-004",
+      "summary": "Tasmanian King Crab v0.12.0 (uniform-color-v1 + facing flip): khử chớp sáng idle và đồng nhất toàn bộ 5 clip thân theo tông chuẩn walk."
+    },
+    {
+      "id": "PIPE-013",
+      "character_id": "sarcosuchus",
+      "approved_at": "2026-11-15T05:52:31.727116+00:00",
+      "approval_file": "assets/sarcosuchus/owner_approval.json",
+      "supersedes": "PIPE-005",
+      "summary": "Sarcosuchus v0.12.0 (step2-visual-fix + calibration-v1): chân chạm đất y=223, ổn định luminance idle, scale 2.0 / 135 px/s, turn [2,5,6,3]."
+    },
+    {
+      "id": "PIPE-014",
+      "character_id": "dilophosaurus",
+      "approved_at": "2026-11-15T05:52:31.727116+00:00",
+      "approval_file": "assets/dilophosaurus/owner_approval.json",
+      "supersedes": "PIPE-006",
+      "summary": "Dilophosaurus v0.12.0 (step2-visual-fix + calibration-v1): đồng nhất cỡ walk/turn ~95-96px theo idle chạm y=223..224, scale 1.75 / 155 px/s, turn [2,5,5,2]."
+    },
+    {
+      "id": "PIPE-015",
+      "character_id": "chilopoda",
+      "approved_at": "2026-11-15T05:52:31.727116+00:00",
+      "approval_file": "assets/chilopoda/owner_approval.json",
+      "supersedes": "PIPE-008",
+      "summary": "Chilopoda v0.12.0 (fireball-v1 + calibration): thay laser đỏ bằng cầu lửa tích tụ đơn tại miệng trong power_up, giữ burrow timing/turn, scale 1.35 / 140 px/s."
+    },
+    {
+      "id": "PIPE-016",
+      "character_id": "bat_chiroptera",
+      "approved_at": "2026-11-15T05:52:31.727116+00:00",
+      "approval_file": "assets/bat_chiroptera/owner_approval.json",
+      "supersedes": "PIPE-009",
+      "summary": "Bat - Chiroptera v0.12.0 (calibration-v1): hiệu chỉnh bay 1920x1080 (scale 1.1, 115 px/s, flight Y=250) và tăng tốc turn [2,3,4,3,3]."
     }
   ],
   "owner_defaults": {
@@ -917,18 +995,12 @@
     "scope": "Documentation-only handoff for Bat -> T-rex -> Pteranodon -> Sarcosuchus turn retrofit;0/4 unchanged. Chilopoda already Owner-approved; no runtime/art edits."
   },
   "pickup_release": {
-    "version": "0.11.1",
+    "version": "0.12.0",
     "branch": "main",
     "remote": "origin",
-    "requested_at": "2026-11-13T08:45:02.779468+00:00",
-    "status": "published_source_ci_verified",
-    "handoff": "docs/AGY-TURN-HANDOFF.md",
-    "turn_backlog_completed": 0,
-    "turn_backlog_total": 4,
-    "checks": "docs/releases/v0.11.1-pickup-checks.json",
-    "source_code_commit": "19da17b62aad8262229e9447f7a54113bb4e3ff5",
-    "ci_status": "success",
-    "ci_run_url": "https://github.com/pquangvinh1999-arch/DR7-Studio/actions/runs/43396006048",
-    "verified_at": "2026-11-13T08:49:58.701962+00:00"
+    "requested_at": "2026-11-15T05:52:31.727116+00:00",
+    "status": "finalizing_all_characters_v0.12.0",
+    "release_manifest": "docs/releases/v0.12.0-all-characters-finalization.json",
+    "characters_approved": 8
   }
 }

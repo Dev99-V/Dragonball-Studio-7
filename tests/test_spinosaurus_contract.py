@@ -42,11 +42,15 @@ class SpinosaurusContract(unittest.TestCase):
   self.assertEqual(manifest['clips']['walk']['ticks'],[7,8]*4)
   meta=json.loads((ROOT/'assets/spinosaurus/godot_bundle/engine-export.json').read_text())
   self.assertNotIn('run',meta['render_contract']['body_clips'])
-  self.assertEqual(meta['render_contract']['locomotion'],{'kind':'ground','clip':'walk','walk_cycle_order':list(range(8)),'default_scale':2.0,'screen_speed_px_per_second':130,'speed_px_per_second':65.0})
+  self.assertEqual(meta['render_contract']['locomotion'],{'kind':'ground','clip':'walk','walk_cycle_order':list(range(8)),'default_scale':2.0,'screen_speed_px_per_second':170,'speed_px_per_second':85.0})
   self.assertEqual(meta['clips']['turn']['ticks'],[2,6,5,3])
   self.assertEqual(meta['render_contract']['turning']['duration_ticks'],16)
  def test_gait_scope_preserves_other_clips_and_walk_middle(self):
   before=json.loads((WORK/'before-final-no-run.json').read_text())
+  edge_hashes=json.loads((WORK/'walk-edge-uniform-v1/frame-hashes.json').read_text())
+  walk_snap=WORK/'walk-edge-uniform-v1/snapshot-before/clips'
+  walk_snap_clips=json.loads((walk_snap/'animation-clips.json').read_text())
+  walk_snap_map={f['name']:hashlib.sha256((walk_snap/f['file']).read_bytes()).hexdigest() for f in walk_snap_clips['frames']}
   walk_torso_x=[]
   for f in self.data['frames']:
    name=f['name'];actual=hashlib.sha256((self.base/f['file']).read_bytes()).hexdigest()
@@ -55,7 +59,12 @@ class SpinosaurusContract(unittest.TestCase):
     ys,xs=np.where(im[:195,:,3]>0)
     walk_torso_x.append(float(xs.mean()))
     bb=Image.fromarray(im).getbbox()
-    self.assertIsNotNone(bb);self.assertTrue(72<=bb[3]-bb[1]<=79,(name,bb));self.assertEqual(bb[3],224,(name,bb))
+    area=int((im[:,:,3]>0).sum())
+    eye=int(((im[:,:,0]>=180)&(im[:,:,1]>=80)&(im[:,:,1]<=190)&(im[:,:,2]<=60)&(im[:,:,3]>0)).sum())
+    self.assertIsNotNone(bb);self.assertTrue(72<=bb[3]-bb[1]<=76,(name,bb));self.assertEqual(bb[3],224,(name,bb))
+    self.assertTrue(4450<=area<=4700,(name,area));self.assertGreaterEqual(eye,1,(name,eye))
+    self.assertEqual(actual,edge_hashes['frames'][name],name)
+    if name not in ('walk_00','walk_07'):self.assertEqual(actual,walk_snap_map[name],name)
     continue
    if not name.startswith('run_'):self.assertEqual(actual,before['frames'][name],name)
   self.assertLessEqual(max(walk_torso_x)-min(walk_torso_x),2.0,walk_torso_x)
@@ -65,19 +74,33 @@ class SpinosaurusContract(unittest.TestCase):
    self.assertEqual(c['godot'],before['clips'][name]['godot'])
    self.assertEqual(c['events_ms'],before['clips'][name]['events_ms'])
  def test_owner_approval_is_bound_to_final_no_run_atlas(self):
-  receipt=json.loads((ROOT/'work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json').read_text())
-  atlas=ROOT/'work/characters/spinosaurus/step2-visual-fix/snapshot-before/spinosaurus-atlas-00.png'
+  prev_receipt=json.loads((ROOT/'docs/releases/spinosaurus-v0.6.0-approval.json').read_text())
+  snap_receipt=json.loads((ROOT/'work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json').read_text())
+  self.assertEqual(prev_receipt,snap_receipt)
+  snap_atlas=ROOT/'work/characters/spinosaurus/step2-visual-fix/snapshot-before/spinosaurus-atlas-00.png'
+  self.assertEqual(prev_receipt['status'],'owner_approved')
+  self.assertEqual(prev_receipt['atlas_sha256'],hashlib.sha256(snap_atlas.read_bytes()).hexdigest())
+  self.assertEqual(prev_receipt['workflow_id'],'PIPE-003')
+  receipt=json.loads((ROOT/'assets/spinosaurus/owner_approval.json').read_text())
   self.assertEqual(receipt['status'],'owner_approved')
-  self.assertEqual(receipt['atlas_sha256'],hashlib.sha256(atlas.read_bytes()).hexdigest())
+  self.assertEqual(receipt['workflow_id'],'PIPE-011')
+  self.assertEqual(receipt['approved_revision'],'walk-edge-uniform-v1 / v0.12.0')
   self.assertIn('run',receipt['excluded_clips'])
   self.assertNotIn('run',receipt['present_clips'])
-  self.assertEqual(receipt['workflow_id'],'PIPE-003')
+  self.assertEqual(receipt['atlas_sha256'],hashlib.sha256((ROOT/receipt['atlas_path']).read_bytes()).hexdigest())
+  for rel,exp in receipt['approved_runtime_files_sha256'].items():
+   self.assertEqual(hashlib.sha256((ROOT/rel).read_bytes()).hexdigest(),exp,rel)
+  frozen=ROOT/receipt['frozen_source']
+  self.assertEqual(frozen.read_bytes(),(ROOT/receipt['clips_manifest_path']).read_bytes())
   roster=json.loads((ROOT/'assets/roster.json').read_text())
   entry=next(ch for ch in roster['characters'] if ch['character_id']=='spinosaurus')
-  self.assertEqual(entry['status'],'finalized_pending_owner_reapproval')
-  self.assertEqual(entry['motion_quality']['status'],'reviewed_pending_owner')
-  self.assertFalse(entry['motion_quality']['owner_approved'])
-  self.assertEqual(entry['motion_quality']['previous_revision_atlas_sha256'],receipt['atlas_sha256'])
+  self.assertEqual(entry['status'],'finalized_owner_approved')
+  self.assertEqual(entry['atlas_stage'],'finalized_owner_approved')
+  self.assertEqual(entry['motion_quality']['status'],'owner_approved')
+  self.assertTrue(entry['motion_quality']['owner_approved'])
+  self.assertEqual(entry['owner_animation_approval']['workflow_id'],'PIPE-011')
+  self.assertEqual(entry['motion_quality']['atlas_sha256'],receipt['atlas_sha256'])
+  self.assertEqual(entry['motion_quality']['previous_revision_atlas_sha256'],prev_receipt['atlas_sha256'])
  def test_heavy_body_preserved_and_contact_effect_starts_at_five(self):
   tail=self.qa['tail_impact'];self.assertEqual(tail['contact_frame'],5);self.assertTrue(tail['body_pixels_preserved'])
   self.assertEqual([r['frame'] for r in tail['phases']],[5,6,7]);self.assertTrue(all(r['effect_pixels']>0 for r in tail['phases']))

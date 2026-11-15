@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips/animation-clips.json",
-    "sha256": "9cef2e3bcd234b55fa75c76ebc1c080b8927aad791001b6a0e965a9fd2dd73c9",
-    "bytes": 126720,
+    "sha256": "ba4944c3b3307cb5f53319643578eee9fb82759aaa6061279f654f297e6bf4ca",
+    "bytes": 126060,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -975,8 +975,8 @@
   "files": [
     {
       "path": "aseprite/spinosaurus.png",
-      "sha256": "5e37c84475badd57382880395f177f97159db8796f4009f2f3928a96c3ca196d",
-      "bytes": 837261
+      "sha256": "51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e",
+      "bytes": 838052
     },
     {
       "path": "aseprite/spinosaurus.json",
@@ -985,8 +985,8 @@
     },
     {
       "path": "godot/spinosaurus-atlas-00.png",
-      "sha256": "5e37c84475badd57382880395f177f97159db8796f4009f2f3928a96c3ca196d",
-      "bytes": 837261
+      "sha256": "51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e",
+      "bytes": 838052
     },
     {
       "path": "godot/spinosaurus.tres",
@@ -1060,8 +1060,8 @@
     },
     {
       "path": "godot-sprite3d/frames/frame-012.png",
-      "sha256": "3f723c7f46e4696c1c4f3359615eb75d335b1d69069de686b9206c6bdf7295fe",
-      "bytes": 12871
+      "sha256": "9eae6d24a6e2c145eaa42c0610a3af2a3f01e5671c55974751c7e080bce59eca",
+      "bytes": 13339
     },
     {
       "path": "godot-sprite3d/frames/frame-013.png",
@@ -1095,8 +1095,8 @@
     },
     {
       "path": "godot-sprite3d/frames/frame-019.png",
-      "sha256": "eb496f3c189a0a099a75bd5539f7d3f3a8a34c2144661ddab4830f94d7df0cf8",
-      "bytes": 13078
+      "sha256": "49773210fb7dc8adf3dabf3fc711a1046859963ca1efbe868b3633debca5a496",
+      "bytes": 13590
     },
     {
       "path": "godot-sprite3d/frames/frame-020.png",
@@ -1360,7 +1360,7 @@
     },
     {
       "path": "godot-sprite3d/action-walk.json",
-      "sha256": "6a5bc593d6060723df76b81f061e32e8b0ea565b0c742aea5e638c290f913360",
+      "sha256": "913ce58b21041e1ba4c90e01aab63897adad1476eb00a05f91d2c49c2370392e",
       "bytes": 1665
     },
     {
@@ -1492,362 +1492,362 @@
     ],
     "inputs": [
       {
-        "path": "../spinosaurus_clips2/animation-clips.json",
-        "sha256": "9cef2e3bcd234b55fa75c76ebc1c080b8927aad791001b6a0e965a9fd2dd73c9",
-        "bytes": 126720
+        "path": "../clips/animation-clips.json",
+        "sha256": "ba4944c3b3307cb5f53319643578eee9fb82759aaa6061279f654f297e6bf4ca",
+        "bytes": 126060
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-00.png",
+        "path": "../clips/frames/frame-00.png",
         "sha256": "60335b85c9df04dd70d2c8f5308b0f665626407cffff38cf645b09a5c2037c1f",
         "bytes": 13491
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-01.png",
+        "path": "../clips/frames/frame-01.png",
         "sha256": "94ac1740e30769b2bf66f11353efc8192c1d9d6410fd19b7e14278ad2fe91a21",
         "bytes": 13515
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-02.png",
+        "path": "../clips/frames/frame-02.png",
         "sha256": "a340b22132ce36666318f87a80cb1146f28fb56fcfad69e65e740804efdfc3cf",
         "bytes": 13659
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-03.png",
+        "path": "../clips/frames/frame-03.png",
         "sha256": "5a61d143c5bb5a2ea1bae82705a6488c56844400edac80bce2ca61d0067d873d",
         "bytes": 13749
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-04.png",
+        "path": "../clips/frames/frame-04.png",
         "sha256": "a16470a2e9ba2fe41d74aa11719402dfebe48cd815aa4554ed945443add0beb4",
         "bytes": 13980
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-05.png",
+        "path": "../clips/frames/frame-05.png",
         "sha256": "4a1bc08513eaf4ce2bab88bd847d884428f09ba96cb6e93bc08e2d36c3c8204a",
         "bytes": 13931
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-06.png",
+        "path": "../clips/frames/frame-06.png",
         "sha256": "b4e6e0f96de0d47ea8de123dab9fa39310ad3f826819b0c0f566ddb087df67e6",
         "bytes": 13849
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-07.png",
+        "path": "../clips/frames/frame-07.png",
         "sha256": "9aafafae62585be863a32c2f1e6a6d5064b5e3ea4c1f5aee4731e4b7ebeff491",
         "bytes": 13821
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-08.png",
+        "path": "../clips/frames/frame-08.png",
         "sha256": "db2cb3a4dfb12495b9a44ab5cb306d26cf99bbcd7dc59ef99261fe44279258a5",
         "bytes": 13753
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-09.png",
+        "path": "../clips/frames/frame-09.png",
         "sha256": "2579c9b1b0c563b82ff8c31cc2052b14854875e7c7afd2c561335f1f1955865b",
         "bytes": 13547
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-10.png",
+        "path": "../clips/frames/frame-10.png",
         "sha256": "87cca661095a6562bd99c605c6548f9008bdccc021e1cb495272d89eb892e4ad",
         "bytes": 13435
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-11.png",
+        "path": "../clips/frames/frame-11.png",
         "sha256": "c6504f6113e070ff27ac8190da31bcf44b230b2c7d631736421100f32a5b3675",
         "bytes": 13350
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-12.png",
-        "sha256": "3f723c7f46e4696c1c4f3359615eb75d335b1d69069de686b9206c6bdf7295fe",
-        "bytes": 12871
+        "path": "../clips/frames/frame-12.png",
+        "sha256": "9eae6d24a6e2c145eaa42c0610a3af2a3f01e5671c55974751c7e080bce59eca",
+        "bytes": 13339
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-13.png",
+        "path": "../clips/frames/frame-13.png",
         "sha256": "93ed51986b12ec37745a4d662656748719adf7ca428533ae6744af0fc5b18017",
         "bytes": 12220
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-14.png",
+        "path": "../clips/frames/frame-14.png",
         "sha256": "3a1ed17c76771151660d3ad56daf79ef796b627daf3a4e7fadff927f6a5837f2",
         "bytes": 12297
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-15.png",
+        "path": "../clips/frames/frame-15.png",
         "sha256": "5f76360afe930cfd18951b4a54211ab2e786b484c3373f8a2e7e4f656f1f11d4",
         "bytes": 12222
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-16.png",
+        "path": "../clips/frames/frame-16.png",
         "sha256": "300cba546b73cb2c298c97a34eab59d493dcd7b3f6e60da7a5c56067cf5ece31",
         "bytes": 12258
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-17.png",
+        "path": "../clips/frames/frame-17.png",
         "sha256": "e075e433440e5f47c38d90d3a214724202f044b9825c6d2343f76c182fb9d805",
         "bytes": 12111
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-18.png",
+        "path": "../clips/frames/frame-18.png",
         "sha256": "462a3a7651a469c4e43e89afcf2780fc7cbe019b5f87bd8cc0eb742fa372381b",
         "bytes": 12421
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-19.png",
-        "sha256": "eb496f3c189a0a099a75bd5539f7d3f3a8a34c2144661ddab4830f94d7df0cf8",
-        "bytes": 13078
+        "path": "../clips/frames/frame-19.png",
+        "sha256": "49773210fb7dc8adf3dabf3fc711a1046859963ca1efbe868b3633debca5a496",
+        "bytes": 13590
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-20.png",
+        "path": "../clips/frames/frame-20.png",
         "sha256": "b1baabb1944bb7c916ccfe8f0153954c984e6ea80d29c346186698c76e16d594",
         "bytes": 13309
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-21.png",
+        "path": "../clips/frames/frame-21.png",
         "sha256": "79ce4fb5e2c717f278475b9bbf213da4907013b3359ce1d55c851e5593c23883",
         "bytes": 13448
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-22.png",
+        "path": "../clips/frames/frame-22.png",
         "sha256": "2e762378a2f29dddab8d332daa258f4aff161d11326986430f3d9226f9442a10",
         "bytes": 13420
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-23.png",
+        "path": "../clips/frames/frame-23.png",
         "sha256": "930e808d95ab9c0d0d74a8f4abb897cd87fc16524c86da2fdcab52fd9fe760fa",
         "bytes": 13116
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-24.png",
+        "path": "../clips/frames/frame-24.png",
         "sha256": "c053c2a840f72e2ec008da0633921aa2e2d529661305025b82e592cfaec1839f",
         "bytes": 13102
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-25.png",
+        "path": "../clips/frames/frame-25.png",
         "sha256": "9dbe254eb3da45d85adf48db3fbf3ea6be84fe0ed45e5ffcd2d730b77a5bb2b2",
         "bytes": 13319
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-26.png",
+        "path": "../clips/frames/frame-26.png",
         "sha256": "8f2be70331984777986282facf59065eb384057c76a28c27e7d36e78f4192a3f",
         "bytes": 13564
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-27.png",
+        "path": "../clips/frames/frame-27.png",
         "sha256": "ff51d18289a1a181a09f32976d4ab8e245e12904f66ac6dc27e2623093a48136",
         "bytes": 13925
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-28.png",
+        "path": "../clips/frames/frame-28.png",
         "sha256": "3ad83027a50778a0cd3be3c8cc435456adc768e2b518d698de8abe6c9a55d2e8",
         "bytes": 14133
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-29.png",
+        "path": "../clips/frames/frame-29.png",
         "sha256": "b111a9dfc8d30aee349307454f6984ded47dd1016360d8ce21fa9fb2a5303244",
         "bytes": 14657
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-30.png",
+        "path": "../clips/frames/frame-30.png",
         "sha256": "16b8c3b3eb524a9da397ed5ced316b89a93530ce40ab31ab0918ae1de8ed77e1",
         "bytes": 14550
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-31.png",
+        "path": "../clips/frames/frame-31.png",
         "sha256": "f6920c04ef5a6a7de666382449beec9487247f73911f152053c30f31eafefccd",
         "bytes": 13919
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-32.png",
+        "path": "../clips/frames/frame-32.png",
         "sha256": "a04c69dd31b208d9f09667e7706154f0dd254c838c85967b6ff24a5cef92dc8a",
         "bytes": 10886
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-33.png",
+        "path": "../clips/frames/frame-33.png",
         "sha256": "701908480ca2332930d4d1b5d41d8f0670a788f82a4a7c0284dc38930de37dad",
         "bytes": 14254
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-34.png",
+        "path": "../clips/frames/frame-34.png",
         "sha256": "a1ca6b8bb5934fd3d491d51ee668a07e51627970af08562581126484c67cc36a",
         "bytes": 12707
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-35.png",
+        "path": "../clips/frames/frame-35.png",
         "sha256": "41db8fc9ccc9f3ebedb04954902d9b03a33c2d617cd479cfb5bec56d7c536d02",
         "bytes": 8867
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-36.png",
+        "path": "../clips/frames/frame-36.png",
         "sha256": "38e535020dd9d9dd2ce5eae4cdd2a42bc872458c60be29ee6f8c3c608b273590",
         "bytes": 10933
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-37.png",
+        "path": "../clips/frames/frame-37.png",
         "sha256": "902bc880bf5932dc9a7ce36598302964aeb14334afb862367100a395d07e2ca5",
         "bytes": 13275
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-38.png",
+        "path": "../clips/frames/frame-38.png",
         "sha256": "aa1f3a2039a51326afa63fe489fffbd999e47ba900ad9adfd22a935237e16cc3",
         "bytes": 14200
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-39.png",
+        "path": "../clips/frames/frame-39.png",
         "sha256": "9bd4ac4af2a7b0370f39ede71bd420f04e3dded9f3f282f3da6267018f888c67",
         "bytes": 14372
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-40.png",
+        "path": "../clips/frames/frame-40.png",
         "sha256": "af331f0ddce0db9efac8d15f81b2bcf75f98a11f1d0ec1cba51ef07f960eb9f3",
         "bytes": 14631
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-41.png",
+        "path": "../clips/frames/frame-41.png",
         "sha256": "caa0dc253b6c564d28168093e09388d806f6df27f73be28d8c4ec34058fb8ef2",
         "bytes": 14306
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-42.png",
+        "path": "../clips/frames/frame-42.png",
         "sha256": "33582a0ceb84bd01842cdc472b9965f3ac03689ee21fc49c1836ad7517c98b6a",
         "bytes": 14723
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-43.png",
+        "path": "../clips/frames/frame-43.png",
         "sha256": "5b76814af6a267421df6c3de44d1f7f88e6a76b76ba4dbf0169fb2b4f9f9770f",
         "bytes": 14327
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-44.png",
+        "path": "../clips/frames/frame-44.png",
         "sha256": "c61b59c6869eb0a2b16e2321c11a071a643b3743390ed9c4ed0db338d0f11273",
         "bytes": 14515
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-45.png",
+        "path": "../clips/frames/frame-45.png",
         "sha256": "548107aafddaf48efd90bf919067c60f20ceee4a0a535f53ea53c275a236c0ac",
         "bytes": 14240
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-46.png",
+        "path": "../clips/frames/frame-46.png",
         "sha256": "6c37d1938da8106ecabfa80b67649cfc9eb6e7cf6b4563fd680a820e1487728e",
         "bytes": 14221
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-47.png",
+        "path": "../clips/frames/frame-47.png",
         "sha256": "5c1c9de2f6a06de7326694487e69cdd09be3ec92237dbc4e4856e55bce8c99a7",
         "bytes": 14177
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-48.png",
+        "path": "../clips/frames/frame-48.png",
         "sha256": "80cb0295ed10d658c0b2a5bdf6f57f0734e5ff1eb4d7fd0a4e50de4f4ad35153",
         "bytes": 14151
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-49.png",
+        "path": "../clips/frames/frame-49.png",
         "sha256": "92e9af13c3151ff4c4921d22f8e50e82d03168b3ae68712864da254396b48e23",
         "bytes": 14899
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-50.png",
+        "path": "../clips/frames/frame-50.png",
         "sha256": "4df929e4878a954dd660ffa8c032a502600c9eb412284939ab055ec9d1f0c7a0",
         "bytes": 14954
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-51.png",
+        "path": "../clips/frames/frame-51.png",
         "sha256": "e70d1f8a714a6699ffd94405fd59925eaec01537c3c375286f5995c8c5cfb051",
         "bytes": 14918
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-52.png",
+        "path": "../clips/frames/frame-52.png",
         "sha256": "3ea8c0c0dc1dd670585252a6329fbc513a8615f56f773f7fa72a0db3bd3df86c",
         "bytes": 14647
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-53.png",
+        "path": "../clips/frames/frame-53.png",
         "sha256": "e5c1a419b4474d5672589aac3b4e450953db0c639703a682e1ca699f75b0550d",
         "bytes": 14565
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-54.png",
+        "path": "../clips/frames/frame-54.png",
         "sha256": "d0be2fbe34f9fd9ec4111a985cbee9816e1a2e94b4ab22da064baea20006108c",
         "bytes": 14807
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-55.png",
+        "path": "../clips/frames/frame-55.png",
         "sha256": "157f349262104610e718a3b0f2929ea324749fd41977d8438db46b645ea81127",
         "bytes": 14424
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-56.png",
+        "path": "../clips/frames/frame-56.png",
         "sha256": "c125358a50200167068f86fd5d459b12227ce456e9a016474f474f6807c2fd04",
         "bytes": 14358
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-57.png",
+        "path": "../clips/frames/frame-57.png",
         "sha256": "f902be30e84e1e57c2cec069f081e2d90667d2bd2e62127090b9c2025491fa73",
         "bytes": 14362
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-58.png",
+        "path": "../clips/frames/frame-58.png",
         "sha256": "22dcf8fe0c03ad789ab373b4653a754231ce496e4eb08837d1c67d11609f665d",
         "bytes": 13198
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-59.png",
+        "path": "../clips/frames/frame-59.png",
         "sha256": "5c321cce119b4acbcb235de0a636bb8b2ae27f33cd4a3ded8aa93ad73e7aae41",
         "bytes": 11993
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-60.png",
+        "path": "../clips/frames/frame-60.png",
         "sha256": "c7810296d3cde3adb485b10a93bc12de2cabf7100f5a68f41ed2edc5e668ea6e",
         "bytes": 12153
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-61.png",
+        "path": "../clips/frames/frame-61.png",
         "sha256": "23bf2c160173747f02fa3951a22ba24652c0e97d4be406c717dcd9eb09229fe8",
         "bytes": 11357
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-62.png",
+        "path": "../clips/frames/frame-62.png",
         "sha256": "1e59b7bf7079fa6b6dabaf5ddea26cb41e8d1d59c0d5cdc8a206ea223801f3f5",
         "bytes": 9974
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-63.png",
+        "path": "../clips/frames/frame-63.png",
         "sha256": "3ad83027a50778a0cd3be3c8cc435456adc768e2b518d698de8abe6c9a55d2e8",
         "bytes": 14133
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-64.png",
+        "path": "../clips/frames/frame-64.png",
         "sha256": "f6920c04ef5a6a7de666382449beec9487247f73911f152053c30f31eafefccd",
         "bytes": 13919
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-65.png",
+        "path": "../clips/frames/frame-65.png",
         "sha256": "a04c69dd31b208d9f09667e7706154f0dd254c838c85967b6ff24a5cef92dc8a",
         "bytes": 10886
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-66.png",
+        "path": "../clips/frames/frame-66.png",
         "sha256": "bf727a31fa23bda1d24941b39457de70db8215229ab57de817afc67f55c60448",
         "bytes": 12950
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-67.png",
+        "path": "../clips/frames/frame-67.png",
         "sha256": "6793901aa57568c20fc250905eed54ca9715f25cbf5c3af4ed76424e137735fe",
         "bytes": 1278
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-68.png",
+        "path": "../clips/frames/frame-68.png",
         "sha256": "c0dcae0edf8057c9b804482e0733b497abe81cd121664ddf57719f6a71e30add",
         "bytes": 1006
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-69.png",
+        "path": "../clips/frames/frame-69.png",
         "sha256": "53076137484d6120872c48b143732c133f67667d6601e09d9be1a57fcbc2bbc0",
         "bytes": 1002
       },
       {
-        "path": "../spinosaurus_clips2/frames/frame-70.png",
+        "path": "../clips/frames/frame-70.png",
         "sha256": "ddd1af409a948f51c12b5ea7759970ce9f6be1ac0fcbc3841220dbd04a0128a6",
         "bytes": 945
       }
@@ -1855,7 +1855,7 @@
     "outputs": [
       {
         "path": "aseprite/spinosaurus.png",
-        "sha256": "5e37c84475badd57382880395f177f97159db8796f4009f2f3928a96c3ca196d"
+        "sha256": "51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e"
       },
       {
         "path": "aseprite/spinosaurus.json",
@@ -1863,7 +1863,7 @@
       },
       {
         "path": "godot/spinosaurus-atlas-00.png",
-        "sha256": "5e37c84475badd57382880395f177f97159db8796f4009f2f3928a96c3ca196d"
+        "sha256": "51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e"
       },
       {
         "path": "godot/spinosaurus.tres",
@@ -1923,7 +1923,7 @@
       },
       {
         "path": "godot-sprite3d/frames/frame-012.png",
-        "sha256": "3f723c7f46e4696c1c4f3359615eb75d335b1d69069de686b9206c6bdf7295fe"
+        "sha256": "9eae6d24a6e2c145eaa42c0610a3af2a3f01e5671c55974751c7e080bce59eca"
       },
       {
         "path": "godot-sprite3d/frames/frame-013.png",
@@ -1951,7 +1951,7 @@
       },
       {
         "path": "godot-sprite3d/frames/frame-019.png",
-        "sha256": "eb496f3c189a0a099a75bd5539f7d3f3a8a34c2144661ddab4830f94d7df0cf8"
+        "sha256": "49773210fb7dc8adf3dabf3fc711a1046859963ca1efbe868b3633debca5a496"
       },
       {
         "path": "godot-sprite3d/frames/frame-020.png",
@@ -2163,7 +2163,7 @@
       },
       {
         "path": "godot-sprite3d/action-walk.json",
-        "sha256": "6a5bc593d6060723df76b81f061e32e8b0ea565b0c742aea5e638c290f913360"
+        "sha256": "913ce58b21041e1ba4c90e01aab63897adad1476eb00a05f91d2c49c2370392e"
       },
       {
         "path": "godot-sprite3d/action-attack_light.json",
@@ -2239,8 +2239,8 @@
         7
       ],
       "default_scale": 2.0,
-      "screen_speed_px_per_second": 130,
-      "speed_px_per_second": 65.0
+      "screen_speed_px_per_second": 170,
+      "speed_px_per_second": 85.0
     },
     "aura": {
       "loop_clip": null,
@@ -2289,18 +2289,22 @@
     "source_review": "work/characters/spinosaurus/review-final/keyframe-review.json",
     "body_processing": "Owner-approved PNGs copied byte-for-byte; atlas repack only, no redraw or anatomical editing",
     "owner_master_approved": true,
-    "owner_animation_approved": false,
+    "owner_animation_approved": true,
     "atlas_demo_only": false,
     "owner_excluded_clips": [
       "run"
     ],
-    "owner_approved": false,
-    "release_version": "0.6.0",
+    "owner_approved": true,
+    "release_version": "0.12.0",
     "step2_visual_fix_at": "2026-11-14T09:26:26.764136+00:00",
     "step2_visual_fix_summary": "Step-2 visual fix: register walk_00..07 horizontal torso centroid consistently at ~183.5px (removing +/-11px snap) and ground floating walk_01,02,03,06 onto y=223; non-walk clips byte-identical.",
     "previous_owner_approval_file": "work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
     "previous_atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
-    "previous_revision_atlas_sha256": "bd812e4deec4810517293183b82a1c6a00c7bbfe1e28cf287385c777f65da005",
-    "calibration_update": "walk upscaled 1.13x Nearest to match idle/turn (~74-79px); default_scale=2.0, screen_speed=130px/s; turn ticks [2,6,5,3] (+25% speed)"
+    "previous_revision_atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
+    "calibration_update": "Walk-edge-uniform-v1: kept idle, walk_01..06, attack_*, power_up, hit, ko, turn, fireball_fx (69/71 PNGs) byte-identical to calibration-v1 (speed 170 px/s); rebuilt ONLY walk_00 & walk_07 from 887x887 walk-seam-v6 source via single Nearest resize (thr=224, h=74, area=4542/4564px, ground=224, torso_x spread=0.75px) to eliminate end-of-loop bloat.",
+    "walk_edge_uniform_v1_at": "2026-11-15T05:24:42.044574+00:00",
+    "owner_approval_file": "assets/spinosaurus/owner_approval.json",
+    "workflow_id": "PIPE-011",
+    "approved_at": "2026-11-15T05:52:31.727116+00:00"
   }
 }

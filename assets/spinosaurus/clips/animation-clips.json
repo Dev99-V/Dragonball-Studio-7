@@ -1,7 +1,7 @@
 {
   "schema": "generate2dsprite.animation_clips.v2",
   "source_manifest": {
-    "path": "../spinosaurus_in2/manifest.json",
+    "path": "../stage_src/manifest.json",
     "file_sha256": "6e0027750936a55f093d6b148d95846f5f3c892efc1ecb694563715191593d87",
     "copy": "source-manifest.json"
   },
@@ -28,7 +28,7 @@
       "index": 0,
       "name": "idle_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_00.png",
+        "path": "../stage_src/raw_frames/idle_00.png",
         "file_sha256": "60335b85c9df04dd70d2c8f5308b0f665626407cffff38cf645b09a5c2037c1f",
         "bytes": 13491,
         "size": [
@@ -48,7 +48,7 @@
       "index": 1,
       "name": "idle_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_01.png",
+        "path": "../stage_src/raw_frames/idle_01.png",
         "file_sha256": "94ac1740e30769b2bf66f11353efc8192c1d9d6410fd19b7e14278ad2fe91a21",
         "bytes": 13515,
         "size": [
@@ -68,7 +68,7 @@
       "index": 2,
       "name": "idle_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_02.png",
+        "path": "../stage_src/raw_frames/idle_02.png",
         "file_sha256": "a340b22132ce36666318f87a80cb1146f28fb56fcfad69e65e740804efdfc3cf",
         "bytes": 13659,
         "size": [
@@ -88,7 +88,7 @@
       "index": 3,
       "name": "idle_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_03.png",
+        "path": "../stage_src/raw_frames/idle_03.png",
         "file_sha256": "5a61d143c5bb5a2ea1bae82705a6488c56844400edac80bce2ca61d0067d873d",
         "bytes": 13749,
         "size": [
@@ -108,7 +108,7 @@
       "index": 4,
       "name": "idle_04",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_04.png",
+        "path": "../stage_src/raw_frames/idle_04.png",
         "file_sha256": "a16470a2e9ba2fe41d74aa11719402dfebe48cd815aa4554ed945443add0beb4",
         "bytes": 13980,
         "size": [
@@ -128,7 +128,7 @@
       "index": 5,
       "name": "idle_05",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_05.png",
+        "path": "../stage_src/raw_frames/idle_05.png",
         "file_sha256": "4a1bc08513eaf4ce2bab88bd847d884428f09ba96cb6e93bc08e2d36c3c8204a",
         "bytes": 13931,
         "size": [
@@ -148,7 +148,7 @@
       "index": 6,
       "name": "idle_06",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_06.png",
+        "path": "../stage_src/raw_frames/idle_06.png",
         "file_sha256": "b4e6e0f96de0d47ea8de123dab9fa39310ad3f826819b0c0f566ddb087df67e6",
         "bytes": 13849,
         "size": [
@@ -168,7 +168,7 @@
       "index": 7,
       "name": "idle_07",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_07.png",
+        "path": "../stage_src/raw_frames/idle_07.png",
         "file_sha256": "9aafafae62585be863a32c2f1e6a6d5064b5e3ea4c1f5aee4731e4b7ebeff491",
         "bytes": 13821,
         "size": [
@@ -188,7 +188,7 @@
       "index": 8,
       "name": "idle_08",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_08.png",
+        "path": "../stage_src/raw_frames/idle_08.png",
         "file_sha256": "db2cb3a4dfb12495b9a44ab5cb306d26cf99bbcd7dc59ef99261fe44279258a5",
         "bytes": 13753,
         "size": [
@@ -208,7 +208,7 @@
       "index": 9,
       "name": "idle_09",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_09.png",
+        "path": "../stage_src/raw_frames/idle_09.png",
         "file_sha256": "2579c9b1b0c563b82ff8c31cc2052b14854875e7c7afd2c561335f1f1955865b",
         "bytes": 13547,
         "size": [
@@ -228,7 +228,7 @@
       "index": 10,
       "name": "idle_10",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_10.png",
+        "path": "../stage_src/raw_frames/idle_10.png",
         "file_sha256": "87cca661095a6562bd99c605c6548f9008bdccc021e1cb495272d89eb892e4ad",
         "bytes": 13435,
         "size": [
@@ -248,7 +248,7 @@
       "index": 11,
       "name": "idle_11",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/idle_11.png",
+        "path": "../stage_src/raw_frames/idle_11.png",
         "file_sha256": "c6504f6113e070ff27ac8190da31bcf44b230b2c7d631736421100f32a5b3675",
         "bytes": 13350,
         "size": [
@@ -268,18 +268,18 @@
       "index": 12,
       "name": "walk_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/walk_00.png",
-        "file_sha256": "3f723c7f46e4696c1c4f3359615eb75d335b1d69069de686b9206c6bdf7295fe",
-        "bytes": 12871,
+        "path": "../stage_src/raw_frames/walk_00.png",
+        "file_sha256": "9eae6d24a6e2c145eaa42c0610a3af2a3f01e5671c55974751c7e080bce59eca",
+        "bytes": 13339,
         "size": [
           384,
           256
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "caf523c0cbf3079c64bb2f806e72aea0759b1ca506af48522ef5c22eeb7e35f8",
-      "transparent_pixel_count": 93155,
-      "visible_pixel_count": 5149,
+      "rgba_pixel_sha256": "07bf6934704002bf74b07708206929139a7619f0d2935fb3f772dcabc4ddca12",
+      "transparent_pixel_count": 93762,
+      "visible_pixel_count": 4542,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-12.png"
@@ -288,7 +288,7 @@
       "index": 13,
       "name": "walk_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/walk_01.png",
+        "path": "../stage_src/raw_frames/walk_01.png",
         "file_sha256": "93ed51986b12ec37745a4d662656748719adf7ca428533ae6744af0fc5b18017",
         "bytes": 12220,
         "size": [
@@ -308,7 +308,7 @@
       "index": 14,
       "name": "walk_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/walk_02.png",
+        "path": "../stage_src/raw_frames/walk_02.png",
         "file_sha256": "3a1ed17c76771151660d3ad56daf79ef796b627daf3a4e7fadff927f6a5837f2",
         "bytes": 12297,
         "size": [
@@ -328,7 +328,7 @@
       "index": 15,
       "name": "walk_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/walk_03.png",
+        "path": "../stage_src/raw_frames/walk_03.png",
         "file_sha256": "5f76360afe930cfd18951b4a54211ab2e786b484c3373f8a2e7e4f656f1f11d4",
         "bytes": 12222,
         "size": [
@@ -348,7 +348,7 @@
       "index": 16,
       "name": "walk_04",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/walk_04.png",
+        "path": "../stage_src/raw_frames/walk_04.png",
         "file_sha256": "300cba546b73cb2c298c97a34eab59d493dcd7b3f6e60da7a5c56067cf5ece31",
         "bytes": 12258,
         "size": [
@@ -368,7 +368,7 @@
       "index": 17,
       "name": "walk_05",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/walk_05.png",
+        "path": "../stage_src/raw_frames/walk_05.png",
         "file_sha256": "e075e433440e5f47c38d90d3a214724202f044b9825c6d2343f76c182fb9d805",
         "bytes": 12111,
         "size": [
@@ -388,7 +388,7 @@
       "index": 18,
       "name": "walk_06",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/walk_06.png",
+        "path": "../stage_src/raw_frames/walk_06.png",
         "file_sha256": "462a3a7651a469c4e43e89afcf2780fc7cbe019b5f87bd8cc0eb742fa372381b",
         "bytes": 12421,
         "size": [
@@ -408,18 +408,18 @@
       "index": 19,
       "name": "walk_07",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/walk_07.png",
-        "file_sha256": "eb496f3c189a0a099a75bd5539f7d3f3a8a34c2144661ddab4830f94d7df0cf8",
-        "bytes": 13078,
+        "path": "../stage_src/raw_frames/walk_07.png",
+        "file_sha256": "49773210fb7dc8adf3dabf3fc711a1046859963ca1efbe868b3633debca5a496",
+        "bytes": 13590,
         "size": [
           384,
           256
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "234591a69ee9bd52f77d3071b971d9d6e81c670106d6fef1b3f13e51cc9a3d38",
-      "transparent_pixel_count": 93114,
-      "visible_pixel_count": 5190,
+      "rgba_pixel_sha256": "0173e836ae00db062033383a556de45f86859ca78c8ac6bc5df855d625cc17fb",
+      "transparent_pixel_count": 93740,
+      "visible_pixel_count": 4564,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-19.png"
@@ -428,7 +428,7 @@
       "index": 20,
       "name": "attack_light_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_00.png",
+        "path": "../stage_src/raw_frames/attack_light_00.png",
         "file_sha256": "b1baabb1944bb7c916ccfe8f0153954c984e6ea80d29c346186698c76e16d594",
         "bytes": 13309,
         "size": [
@@ -448,7 +448,7 @@
       "index": 21,
       "name": "attack_light_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_01.png",
+        "path": "../stage_src/raw_frames/attack_light_01.png",
         "file_sha256": "79ce4fb5e2c717f278475b9bbf213da4907013b3359ce1d55c851e5593c23883",
         "bytes": 13448,
         "size": [
@@ -468,7 +468,7 @@
       "index": 22,
       "name": "attack_light_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_02.png",
+        "path": "../stage_src/raw_frames/attack_light_02.png",
         "file_sha256": "2e762378a2f29dddab8d332daa258f4aff161d11326986430f3d9226f9442a10",
         "bytes": 13420,
         "size": [
@@ -488,7 +488,7 @@
       "index": 23,
       "name": "attack_light_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_03.png",
+        "path": "../stage_src/raw_frames/attack_light_03.png",
         "file_sha256": "930e808d95ab9c0d0d74a8f4abb897cd87fc16524c86da2fdcab52fd9fe760fa",
         "bytes": 13116,
         "size": [
@@ -508,7 +508,7 @@
       "index": 24,
       "name": "attack_light_04",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_04.png",
+        "path": "../stage_src/raw_frames/attack_light_04.png",
         "file_sha256": "c053c2a840f72e2ec008da0633921aa2e2d529661305025b82e592cfaec1839f",
         "bytes": 13102,
         "size": [
@@ -528,7 +528,7 @@
       "index": 25,
       "name": "attack_light_05",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_05.png",
+        "path": "../stage_src/raw_frames/attack_light_05.png",
         "file_sha256": "9dbe254eb3da45d85adf48db3fbf3ea6be84fe0ed45e5ffcd2d730b77a5bb2b2",
         "bytes": 13319,
         "size": [
@@ -548,7 +548,7 @@
       "index": 26,
       "name": "attack_light_06",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_06.png",
+        "path": "../stage_src/raw_frames/attack_light_06.png",
         "file_sha256": "8f2be70331984777986282facf59065eb384057c76a28c27e7d36e78f4192a3f",
         "bytes": 13564,
         "size": [
@@ -568,7 +568,7 @@
       "index": 27,
       "name": "attack_light_07",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_07.png",
+        "path": "../stage_src/raw_frames/attack_light_07.png",
         "file_sha256": "ff51d18289a1a181a09f32976d4ab8e245e12904f66ac6dc27e2623093a48136",
         "bytes": 13925,
         "size": [
@@ -588,7 +588,7 @@
       "index": 28,
       "name": "attack_heavy_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_00.png",
+        "path": "../stage_src/raw_frames/attack_heavy_00.png",
         "file_sha256": "3ad83027a50778a0cd3be3c8cc435456adc768e2b518d698de8abe6c9a55d2e8",
         "bytes": 14133,
         "size": [
@@ -610,7 +610,7 @@
       "index": 29,
       "name": "attack_heavy_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_01.png",
+        "path": "../stage_src/raw_frames/attack_heavy_01.png",
         "file_sha256": "b111a9dfc8d30aee349307454f6984ded47dd1016360d8ce21fa9fb2a5303244",
         "bytes": 14657,
         "size": [
@@ -630,7 +630,7 @@
       "index": 30,
       "name": "attack_heavy_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_02.png",
+        "path": "../stage_src/raw_frames/attack_heavy_02.png",
         "file_sha256": "16b8c3b3eb524a9da397ed5ced316b89a93530ce40ab31ab0918ae1de8ed77e1",
         "bytes": 14550,
         "size": [
@@ -650,7 +650,7 @@
       "index": 31,
       "name": "attack_heavy_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_03.png",
+        "path": "../stage_src/raw_frames/attack_heavy_03.png",
         "file_sha256": "f6920c04ef5a6a7de666382449beec9487247f73911f152053c30f31eafefccd",
         "bytes": 13919,
         "size": [
@@ -672,7 +672,7 @@
       "index": 32,
       "name": "attack_heavy_04",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_04.png",
+        "path": "../stage_src/raw_frames/attack_heavy_04.png",
         "file_sha256": "a04c69dd31b208d9f09667e7706154f0dd254c838c85967b6ff24a5cef92dc8a",
         "bytes": 10886,
         "size": [
@@ -694,7 +694,7 @@
       "index": 33,
       "name": "attack_heavy_05",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_05.png",
+        "path": "../stage_src/raw_frames/attack_heavy_05.png",
         "file_sha256": "701908480ca2332930d4d1b5d41d8f0670a788f82a4a7c0284dc38930de37dad",
         "bytes": 14254,
         "size": [
@@ -714,7 +714,7 @@
       "index": 34,
       "name": "attack_heavy_06",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_06.png",
+        "path": "../stage_src/raw_frames/attack_heavy_06.png",
         "file_sha256": "a1ca6b8bb5934fd3d491d51ee668a07e51627970af08562581126484c67cc36a",
         "bytes": 12707,
         "size": [
@@ -734,7 +734,7 @@
       "index": 35,
       "name": "attack_heavy_07",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_07.png",
+        "path": "../stage_src/raw_frames/attack_heavy_07.png",
         "file_sha256": "41db8fc9ccc9f3ebedb04954902d9b03a33c2d617cd479cfb5bec56d7c536d02",
         "bytes": 8867,
         "size": [
@@ -754,7 +754,7 @@
       "index": 36,
       "name": "attack_heavy_08",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_08.png",
+        "path": "../stage_src/raw_frames/attack_heavy_08.png",
         "file_sha256": "38e535020dd9d9dd2ce5eae4cdd2a42bc872458c60be29ee6f8c3c608b273590",
         "bytes": 10933,
         "size": [
@@ -774,7 +774,7 @@
       "index": 37,
       "name": "attack_heavy_09",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_09.png",
+        "path": "../stage_src/raw_frames/attack_heavy_09.png",
         "file_sha256": "902bc880bf5932dc9a7ce36598302964aeb14334afb862367100a395d07e2ca5",
         "bytes": 13275,
         "size": [
@@ -794,7 +794,7 @@
       "index": 38,
       "name": "attack_heavy_10",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_10.png",
+        "path": "../stage_src/raw_frames/attack_heavy_10.png",
         "file_sha256": "aa1f3a2039a51326afa63fe489fffbd999e47ba900ad9adfd22a935237e16cc3",
         "bytes": 14200,
         "size": [
@@ -814,7 +814,7 @@
       "index": 39,
       "name": "attack_heavy_11",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_11.png",
+        "path": "../stage_src/raw_frames/attack_heavy_11.png",
         "file_sha256": "9bd4ac4af2a7b0370f39ede71bd420f04e3dded9f3f282f3da6267018f888c67",
         "bytes": 14372,
         "size": [
@@ -834,7 +834,7 @@
       "index": 40,
       "name": "power_up_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_00.png",
+        "path": "../stage_src/raw_frames/power_up_00.png",
         "file_sha256": "af331f0ddce0db9efac8d15f81b2bcf75f98a11f1d0ec1cba51ef07f960eb9f3",
         "bytes": 14631,
         "size": [
@@ -854,7 +854,7 @@
       "index": 41,
       "name": "power_up_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_01.png",
+        "path": "../stage_src/raw_frames/power_up_01.png",
         "file_sha256": "caa0dc253b6c564d28168093e09388d806f6df27f73be28d8c4ec34058fb8ef2",
         "bytes": 14306,
         "size": [
@@ -874,7 +874,7 @@
       "index": 42,
       "name": "power_up_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_02.png",
+        "path": "../stage_src/raw_frames/power_up_02.png",
         "file_sha256": "33582a0ceb84bd01842cdc472b9965f3ac03689ee21fc49c1836ad7517c98b6a",
         "bytes": 14723,
         "size": [
@@ -894,7 +894,7 @@
       "index": 43,
       "name": "power_up_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_03.png",
+        "path": "../stage_src/raw_frames/power_up_03.png",
         "file_sha256": "5b76814af6a267421df6c3de44d1f7f88e6a76b76ba4dbf0169fb2b4f9f9770f",
         "bytes": 14327,
         "size": [
@@ -914,7 +914,7 @@
       "index": 44,
       "name": "power_up_04",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_04.png",
+        "path": "../stage_src/raw_frames/power_up_04.png",
         "file_sha256": "c61b59c6869eb0a2b16e2321c11a071a643b3743390ed9c4ed0db338d0f11273",
         "bytes": 14515,
         "size": [
@@ -934,7 +934,7 @@
       "index": 45,
       "name": "power_up_05",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_05.png",
+        "path": "../stage_src/raw_frames/power_up_05.png",
         "file_sha256": "548107aafddaf48efd90bf919067c60f20ceee4a0a535f53ea53c275a236c0ac",
         "bytes": 14240,
         "size": [
@@ -954,7 +954,7 @@
       "index": 46,
       "name": "power_up_06",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_06.png",
+        "path": "../stage_src/raw_frames/power_up_06.png",
         "file_sha256": "6c37d1938da8106ecabfa80b67649cfc9eb6e7cf6b4563fd680a820e1487728e",
         "bytes": 14221,
         "size": [
@@ -974,7 +974,7 @@
       "index": 47,
       "name": "power_up_07",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_07.png",
+        "path": "../stage_src/raw_frames/power_up_07.png",
         "file_sha256": "5c1c9de2f6a06de7326694487e69cdd09be3ec92237dbc4e4856e55bce8c99a7",
         "bytes": 14177,
         "size": [
@@ -994,7 +994,7 @@
       "index": 48,
       "name": "power_up_08",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/power_up_08.png",
+        "path": "../stage_src/raw_frames/power_up_08.png",
         "file_sha256": "80cb0295ed10d658c0b2a5bdf6f57f0734e5ff1eb4d7fd0a4e50de4f4ad35153",
         "bytes": 14151,
         "size": [
@@ -1014,7 +1014,7 @@
       "index": 49,
       "name": "hit_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/hit_00.png",
+        "path": "../stage_src/raw_frames/hit_00.png",
         "file_sha256": "92e9af13c3151ff4c4921d22f8e50e82d03168b3ae68712864da254396b48e23",
         "bytes": 14899,
         "size": [
@@ -1034,7 +1034,7 @@
       "index": 50,
       "name": "hit_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/hit_01.png",
+        "path": "../stage_src/raw_frames/hit_01.png",
         "file_sha256": "4df929e4878a954dd660ffa8c032a502600c9eb412284939ab055ec9d1f0c7a0",
         "bytes": 14954,
         "size": [
@@ -1054,7 +1054,7 @@
       "index": 51,
       "name": "hit_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/hit_02.png",
+        "path": "../stage_src/raw_frames/hit_02.png",
         "file_sha256": "e70d1f8a714a6699ffd94405fd59925eaec01537c3c375286f5995c8c5cfb051",
         "bytes": 14918,
         "size": [
@@ -1074,7 +1074,7 @@
       "index": 52,
       "name": "hit_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/hit_03.png",
+        "path": "../stage_src/raw_frames/hit_03.png",
         "file_sha256": "3ea8c0c0dc1dd670585252a6329fbc513a8615f56f773f7fa72a0db3bd3df86c",
         "bytes": 14647,
         "size": [
@@ -1094,7 +1094,7 @@
       "index": 53,
       "name": "hit_04",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/hit_04.png",
+        "path": "../stage_src/raw_frames/hit_04.png",
         "file_sha256": "e5c1a419b4474d5672589aac3b4e450953db0c639703a682e1ca699f75b0550d",
         "bytes": 14565,
         "size": [
@@ -1114,7 +1114,7 @@
       "index": 54,
       "name": "hit_05",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/hit_05.png",
+        "path": "../stage_src/raw_frames/hit_05.png",
         "file_sha256": "d0be2fbe34f9fd9ec4111a985cbee9816e1a2e94b4ab22da064baea20006108c",
         "bytes": 14807,
         "size": [
@@ -1134,7 +1134,7 @@
       "index": 55,
       "name": "ko_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/ko_00.png",
+        "path": "../stage_src/raw_frames/ko_00.png",
         "file_sha256": "157f349262104610e718a3b0f2929ea324749fd41977d8438db46b645ea81127",
         "bytes": 14424,
         "size": [
@@ -1154,7 +1154,7 @@
       "index": 56,
       "name": "ko_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/ko_01.png",
+        "path": "../stage_src/raw_frames/ko_01.png",
         "file_sha256": "c125358a50200167068f86fd5d459b12227ce456e9a016474f474f6807c2fd04",
         "bytes": 14358,
         "size": [
@@ -1174,7 +1174,7 @@
       "index": 57,
       "name": "ko_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/ko_02.png",
+        "path": "../stage_src/raw_frames/ko_02.png",
         "file_sha256": "f902be30e84e1e57c2cec069f081e2d90667d2bd2e62127090b9c2025491fa73",
         "bytes": 14362,
         "size": [
@@ -1194,7 +1194,7 @@
       "index": 58,
       "name": "ko_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/ko_03.png",
+        "path": "../stage_src/raw_frames/ko_03.png",
         "file_sha256": "22dcf8fe0c03ad789ab373b4653a754231ce496e4eb08837d1c67d11609f665d",
         "bytes": 13198,
         "size": [
@@ -1214,7 +1214,7 @@
       "index": 59,
       "name": "ko_04",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/ko_04.png",
+        "path": "../stage_src/raw_frames/ko_04.png",
         "file_sha256": "5c321cce119b4acbcb235de0a636bb8b2ae27f33cd4a3ded8aa93ad73e7aae41",
         "bytes": 11993,
         "size": [
@@ -1234,7 +1234,7 @@
       "index": 60,
       "name": "ko_05",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/ko_05.png",
+        "path": "../stage_src/raw_frames/ko_05.png",
         "file_sha256": "c7810296d3cde3adb485b10a93bc12de2cabf7100f5a68f41ed2edc5e668ea6e",
         "bytes": 12153,
         "size": [
@@ -1254,7 +1254,7 @@
       "index": 61,
       "name": "ko_06",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/ko_06.png",
+        "path": "../stage_src/raw_frames/ko_06.png",
         "file_sha256": "23bf2c160173747f02fa3951a22ba24652c0e97d4be406c717dcd9eb09229fe8",
         "bytes": 11357,
         "size": [
@@ -1274,7 +1274,7 @@
       "index": 62,
       "name": "ko_07",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/ko_07.png",
+        "path": "../stage_src/raw_frames/ko_07.png",
         "file_sha256": "1e59b7bf7079fa6b6dabaf5ddea26cb41e8d1d59c0d5cdc8a206ea223801f3f5",
         "bytes": 9974,
         "size": [
@@ -1294,7 +1294,7 @@
       "index": 63,
       "name": "turn_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/turn_00.png",
+        "path": "../stage_src/raw_frames/turn_00.png",
         "file_sha256": "3ad83027a50778a0cd3be3c8cc435456adc768e2b518d698de8abe6c9a55d2e8",
         "bytes": 14133,
         "size": [
@@ -1316,7 +1316,7 @@
       "index": 64,
       "name": "turn_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/turn_01.png",
+        "path": "../stage_src/raw_frames/turn_01.png",
         "file_sha256": "f6920c04ef5a6a7de666382449beec9487247f73911f152053c30f31eafefccd",
         "bytes": 13919,
         "size": [
@@ -1338,7 +1338,7 @@
       "index": 65,
       "name": "turn_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/turn_02.png",
+        "path": "../stage_src/raw_frames/turn_02.png",
         "file_sha256": "a04c69dd31b208d9f09667e7706154f0dd254c838c85967b6ff24a5cef92dc8a",
         "bytes": 10886,
         "size": [
@@ -1360,7 +1360,7 @@
       "index": 66,
       "name": "turn_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/turn_03.png",
+        "path": "../stage_src/raw_frames/turn_03.png",
         "file_sha256": "bf727a31fa23bda1d24941b39457de70db8215229ab57de817afc67f55c60448",
         "bytes": 12950,
         "size": [
@@ -1380,7 +1380,7 @@
       "index": 67,
       "name": "fireball_fx_00",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/fireball_fx_00.png",
+        "path": "../stage_src/raw_frames/fireball_fx_00.png",
         "file_sha256": "6793901aa57568c20fc250905eed54ca9715f25cbf5c3af4ed76424e137735fe",
         "bytes": 1278,
         "size": [
@@ -1400,7 +1400,7 @@
       "index": 68,
       "name": "fireball_fx_01",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/fireball_fx_01.png",
+        "path": "../stage_src/raw_frames/fireball_fx_01.png",
         "file_sha256": "c0dcae0edf8057c9b804482e0733b497abe81cd121664ddf57719f6a71e30add",
         "bytes": 1006,
         "size": [
@@ -1420,7 +1420,7 @@
       "index": 69,
       "name": "fireball_fx_02",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/fireball_fx_02.png",
+        "path": "../stage_src/raw_frames/fireball_fx_02.png",
         "file_sha256": "53076137484d6120872c48b143732c133f67667d6601e09d9be1a57fcbc2bbc0",
         "bytes": 1002,
         "size": [
@@ -1440,7 +1440,7 @@
       "index": 70,
       "name": "fireball_fx_03",
       "source": {
-        "path": "../spinosaurus_in2/raw_frames/fireball_fx_03.png",
+        "path": "../stage_src/raw_frames/fireball_fx_03.png",
         "file_sha256": "ddd1af409a948f51c12b5ea7759970ce9f6be1ac0fcbc3841220dbd04a0128a6",
         "bytes": 945,
         "size": [
@@ -1654,7 +1654,8 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "9ea786fe28b6577da1578e31a317327a6b5774ae01f58b48833045430111769c"
+        "file_sha256": "b836eeb40e55a0a91b17d7c7252833756f741897766f1ba63ec396c218d4e22c",
+        "scale": 2
       },
       "transitions": [
         {
@@ -1821,15 +1822,15 @@
       "holds": [],
       "seam": {
         "frames": 8,
-        "seam": 1.04641,
+        "seam": 1.330569,
         "adjacent_median": 2.350126,
-        "adjacent_p95": 3.640197,
-        "adjacent_max": 3.744634,
-        "seam_over_median": 0.445257,
-        "seam_over_p95": 0.28746,
+        "adjacent_p95": 2.616678,
+        "adjacent_max": 2.656194,
+        "seam_over_median": 0.566169,
+        "seam_over_p95": 0.508496,
         "method": "premultiplied RGBA mean absolute difference (0-255); seam = last -> first",
-        "adjacent_mean": 2.61514,
-        "wrap_ratio": 0.400135
+        "adjacent_mean": 2.312965,
+        "wrap_ratio": 0.575265
       },
       "preview": {
         "file": "clips/clip-01.webp",
@@ -1906,15 +1907,16 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "61d8337d1afb8607faa7c73ef9453a28c6208e66a6a72c201f76f3016d2a10b3"
+        "file_sha256": "ab3de80c2081249b284fca88a63cf51d57612935d01ad6798635926c05b65535",
+        "scale": 2
       },
       "transitions": [
         {
           "from_position": 0,
           "to_position": 1,
-          "premultiplied_rgb_mae": 2.761146,
-          "alpha_mae": 6.695099,
-          "changed_visible_pixels": 6157
+          "premultiplied_rgb_mae": 2.092414,
+          "alpha_mae": 4.347534,
+          "changed_visible_pixels": 5401
         },
         {
           "from_position": 1,
@@ -1954,16 +1956,16 @@
         {
           "from_position": 6,
           "to_position": 7,
-          "premultiplied_rgb_mae": 2.595293,
-          "alpha_mae": 5.800171,
-          "changed_visible_pixels": 6013
+          "premultiplied_rgb_mae": 1.93182,
+          "alpha_mae": 3.683472,
+          "changed_visible_pixels": 5300
         }
       ],
       "last_to_first": {
         "applies_to_playback": true,
-        "premultiplied_rgb_mae": 0.74412,
-        "alpha_mae": 1.953278,
-        "changed_visible_pixels": 5351
+        "premultiplied_rgb_mae": 1.047774,
+        "alpha_mae": 2.178955,
+        "changed_visible_pixels": 4898
       }
     },
     "attack_light": {
@@ -2132,7 +2134,8 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "383a78a6a638429c58aeff912a40953c1282c7930958ca6f193ea11a7acd2070"
+        "file_sha256": "0de2f23ae56be792f2760f5812d559806fbece986cc73080cd24b512adadef93",
+        "scale": 2
       },
       "transitions": [
         {
@@ -2406,7 +2409,8 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "8b4baedca433aa0c913c9da8b857d661981c38ef67aebe6d83d5a4b6f1c234f3"
+        "file_sha256": "d71490d082fa656b49715abc15acd49b8514609501a26917b85366b7003497d0",
+        "scale": 2
       },
       "transitions": [
         {
@@ -2668,7 +2672,8 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "c896c2b3008ded03fbec2ca0f08346f89d89b15931fc64ad50fb21a8521e2f5c"
+        "file_sha256": "00949843dff7e785c34b87524ea52bc459e89b6b28acf2604b000e48fbe889c5",
+        "scale": 2
       },
       "transitions": [
         {
@@ -2846,7 +2851,8 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "e35f8078ee47f8547f429b40caaebaaa1298a9fb8c7fb0609a453f41c9bd319e"
+        "file_sha256": "4296b03c56fd9cdffb30ea67280efd1a2d8f1d1c55771a6815c741e3ec38dd84",
+        "scale": 2
       },
       "transitions": [
         {
@@ -3027,7 +3033,8 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "0294b26c00fed823385eb361a9de977e79e5881763dabc8e08a7e183c15a3125"
+        "file_sha256": "22cf8f95d6831571405f49ce67b308a326877437b32dfcb8527f88cc2bccbdb6",
+        "scale": 2
       },
       "transitions": [
         {
@@ -3174,7 +3181,8 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "ad0f0ff0c6757f7aa9bcbfc315e122cbceead2ce0490bde91b66a8543a21b098"
+        "file_sha256": "5eb7d1d57c28acdac9c2ce4b36511541d8e43969f71b0c912b84e259a40597c9",
+        "scale": 2
       },
       "transitions": [
         {
@@ -3294,7 +3302,8 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "d109fb1c720eaa2e95d93100d792fd4ed75667a40d174451dc9f5a9703d165df"
+        "file_sha256": "04bafcbccb4d80267936ae05e7dcc60d6a916b9a14462e794ebebc599936f189",
+        "scale": 2
       },
       "transitions": [
         {
@@ -3378,14 +3387,14 @@
     "file": "contact-sheet.png",
     "native_scale": true,
     "scale": 1,
-    "requested_scale": 1,
+    "requested_scale": 2,
     "annotated_with_shared_root": true,
     "not_a_runtime_atlas": true,
-    "file_sha256": "a69039edde79907e55cc0119a748294e283378fa0d9ebdbd4a2563c638f754ee"
+    "file_sha256": "f8c5f770f7aca27c588bc74a90eb15ffe2c79b3105a8082db1b340be8752fd90"
   },
   "review": {
-    "scale": 1,
-    "requested_scale": 1,
+    "scale": 2,
+    "requested_scale": 2,
     "backgrounds": [
       "light",
       "dark",
@@ -3552,154 +3561,154 @@
         {
           "clip": "idle",
           "frame": 0,
-          "anchor_screen_x": 216,
+          "anchor_screen_x": 424,
           "rows": [
             [
               32,
-              288
+              544
             ],
             [
-              304,
-              560
+              560,
+              1072
             ]
           ],
-          "mirrored_offset_px": -32,
+          "mirrored_offset_px": -64,
           "turn_slide_px": 24.0
         },
         {
           "clip": "walk",
           "frame": 12,
-          "anchor_screen_x": 648,
+          "anchor_screen_x": 1272,
           "rows": [
             [
               32,
-              288
+              544
             ],
             [
-              304,
-              560
+              560,
+              1072
             ]
           ],
-          "mirrored_offset_px": -32,
-          "turn_slide_px": 21.0
+          "mirrored_offset_px": -64,
+          "turn_slide_px": 19.0
         },
         {
           "clip": "attack_light",
           "frame": 20,
-          "anchor_screen_x": 1080,
+          "anchor_screen_x": 2120,
           "rows": [
             [
               32,
-              288
+              544
             ],
             [
-              304,
-              560
+              560,
+              1072
             ]
           ],
-          "mirrored_offset_px": -32,
+          "mirrored_offset_px": -64,
           "turn_slide_px": 13.0
         },
         {
           "clip": "attack_heavy",
           "frame": 28,
-          "anchor_screen_x": 1512,
+          "anchor_screen_x": 2968,
           "rows": [
             [
               32,
-              288
+              544
             ],
             [
-              304,
-              560
+              560,
+              1072
             ]
           ],
-          "mirrored_offset_px": -32,
+          "mirrored_offset_px": -64,
           "turn_slide_px": 13.0
         },
         {
           "clip": "power_up",
           "frame": 40,
-          "anchor_screen_x": 1944,
+          "anchor_screen_x": 3816,
           "rows": [
             [
               32,
-              288
+              544
             ],
             [
-              304,
-              560
+              560,
+              1072
             ]
           ],
-          "mirrored_offset_px": -32,
+          "mirrored_offset_px": -64,
           "turn_slide_px": 10.0
         },
         {
           "clip": "hit",
           "frame": 49,
-          "anchor_screen_x": 2376,
+          "anchor_screen_x": 4664,
           "rows": [
             [
               32,
-              288
+              544
             ],
             [
-              304,
-              560
+              560,
+              1072
             ]
           ],
-          "mirrored_offset_px": -32,
+          "mirrored_offset_px": -64,
           "turn_slide_px": 0.0
         },
         {
           "clip": "ko",
           "frame": 55,
-          "anchor_screen_x": 216,
+          "anchor_screen_x": 424,
           "rows": [
             [
-              608,
-              864
+              1120,
+              1632
             ],
             [
-              880,
-              1136
+              1648,
+              2160
             ]
           ],
-          "mirrored_offset_px": -32,
+          "mirrored_offset_px": -64,
           "turn_slide_px": 11.0
         },
         {
           "clip": "turn",
           "frame": 63,
-          "anchor_screen_x": 648,
+          "anchor_screen_x": 1272,
           "rows": [
             [
-              608,
-              864
+              1120,
+              1632
             ],
             [
-              880,
-              1136
+              1648,
+              2160
             ]
           ],
-          "mirrored_offset_px": -32,
+          "mirrored_offset_px": -64,
           "turn_slide_px": 13.0
         },
         {
           "clip": "fireball_fx",
           "frame": 67,
-          "anchor_screen_x": 1080,
+          "anchor_screen_x": 2120,
           "rows": [
             [
-              608,
-              864
+              1120,
+              1632
             ],
             [
-              880,
-              1136
+              1648,
+              2160
             ]
           ],
-          "mirrored_offset_px": -32,
+          "mirrored_offset_px": -64,
           "turn_slide_px": 20.0
         }
       ],
@@ -3758,7 +3767,7 @@
       {
         "id": "loop_seam",
         "status": "needs-visual-review",
-        "value": 0.550462,
+        "value": 0.575265,
         "threshold": null
       },
       {
@@ -3770,362 +3779,362 @@
     ],
     "inputs": [
       {
-        "path": "../spinosaurus_in2/manifest.json",
+        "path": "../stage_src/manifest.json",
         "sha256": "6e0027750936a55f093d6b148d95846f5f3c892efc1ecb694563715191593d87",
         "bytes": 11008
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_00.png",
+        "path": "../stage_src/raw_frames/idle_00.png",
         "sha256": "60335b85c9df04dd70d2c8f5308b0f665626407cffff38cf645b09a5c2037c1f",
         "bytes": 13491
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_01.png",
+        "path": "../stage_src/raw_frames/idle_01.png",
         "sha256": "94ac1740e30769b2bf66f11353efc8192c1d9d6410fd19b7e14278ad2fe91a21",
         "bytes": 13515
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_02.png",
+        "path": "../stage_src/raw_frames/idle_02.png",
         "sha256": "a340b22132ce36666318f87a80cb1146f28fb56fcfad69e65e740804efdfc3cf",
         "bytes": 13659
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_03.png",
+        "path": "../stage_src/raw_frames/idle_03.png",
         "sha256": "5a61d143c5bb5a2ea1bae82705a6488c56844400edac80bce2ca61d0067d873d",
         "bytes": 13749
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_04.png",
+        "path": "../stage_src/raw_frames/idle_04.png",
         "sha256": "a16470a2e9ba2fe41d74aa11719402dfebe48cd815aa4554ed945443add0beb4",
         "bytes": 13980
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_05.png",
+        "path": "../stage_src/raw_frames/idle_05.png",
         "sha256": "4a1bc08513eaf4ce2bab88bd847d884428f09ba96cb6e93bc08e2d36c3c8204a",
         "bytes": 13931
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_06.png",
+        "path": "../stage_src/raw_frames/idle_06.png",
         "sha256": "b4e6e0f96de0d47ea8de123dab9fa39310ad3f826819b0c0f566ddb087df67e6",
         "bytes": 13849
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_07.png",
+        "path": "../stage_src/raw_frames/idle_07.png",
         "sha256": "9aafafae62585be863a32c2f1e6a6d5064b5e3ea4c1f5aee4731e4b7ebeff491",
         "bytes": 13821
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_08.png",
+        "path": "../stage_src/raw_frames/idle_08.png",
         "sha256": "db2cb3a4dfb12495b9a44ab5cb306d26cf99bbcd7dc59ef99261fe44279258a5",
         "bytes": 13753
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_09.png",
+        "path": "../stage_src/raw_frames/idle_09.png",
         "sha256": "2579c9b1b0c563b82ff8c31cc2052b14854875e7c7afd2c561335f1f1955865b",
         "bytes": 13547
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_10.png",
+        "path": "../stage_src/raw_frames/idle_10.png",
         "sha256": "87cca661095a6562bd99c605c6548f9008bdccc021e1cb495272d89eb892e4ad",
         "bytes": 13435
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/idle_11.png",
+        "path": "../stage_src/raw_frames/idle_11.png",
         "sha256": "c6504f6113e070ff27ac8190da31bcf44b230b2c7d631736421100f32a5b3675",
         "bytes": 13350
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/walk_00.png",
-        "sha256": "3f723c7f46e4696c1c4f3359615eb75d335b1d69069de686b9206c6bdf7295fe",
-        "bytes": 12871
+        "path": "../stage_src/raw_frames/walk_00.png",
+        "sha256": "9eae6d24a6e2c145eaa42c0610a3af2a3f01e5671c55974751c7e080bce59eca",
+        "bytes": 13339
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/walk_01.png",
+        "path": "../stage_src/raw_frames/walk_01.png",
         "sha256": "93ed51986b12ec37745a4d662656748719adf7ca428533ae6744af0fc5b18017",
         "bytes": 12220
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/walk_02.png",
+        "path": "../stage_src/raw_frames/walk_02.png",
         "sha256": "3a1ed17c76771151660d3ad56daf79ef796b627daf3a4e7fadff927f6a5837f2",
         "bytes": 12297
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/walk_03.png",
+        "path": "../stage_src/raw_frames/walk_03.png",
         "sha256": "5f76360afe930cfd18951b4a54211ab2e786b484c3373f8a2e7e4f656f1f11d4",
         "bytes": 12222
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/walk_04.png",
+        "path": "../stage_src/raw_frames/walk_04.png",
         "sha256": "300cba546b73cb2c298c97a34eab59d493dcd7b3f6e60da7a5c56067cf5ece31",
         "bytes": 12258
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/walk_05.png",
+        "path": "../stage_src/raw_frames/walk_05.png",
         "sha256": "e075e433440e5f47c38d90d3a214724202f044b9825c6d2343f76c182fb9d805",
         "bytes": 12111
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/walk_06.png",
+        "path": "../stage_src/raw_frames/walk_06.png",
         "sha256": "462a3a7651a469c4e43e89afcf2780fc7cbe019b5f87bd8cc0eb742fa372381b",
         "bytes": 12421
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/walk_07.png",
-        "sha256": "eb496f3c189a0a099a75bd5539f7d3f3a8a34c2144661ddab4830f94d7df0cf8",
-        "bytes": 13078
+        "path": "../stage_src/raw_frames/walk_07.png",
+        "sha256": "49773210fb7dc8adf3dabf3fc711a1046859963ca1efbe868b3633debca5a496",
+        "bytes": 13590
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_00.png",
+        "path": "../stage_src/raw_frames/attack_light_00.png",
         "sha256": "b1baabb1944bb7c916ccfe8f0153954c984e6ea80d29c346186698c76e16d594",
         "bytes": 13309
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_01.png",
+        "path": "../stage_src/raw_frames/attack_light_01.png",
         "sha256": "79ce4fb5e2c717f278475b9bbf213da4907013b3359ce1d55c851e5593c23883",
         "bytes": 13448
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_02.png",
+        "path": "../stage_src/raw_frames/attack_light_02.png",
         "sha256": "2e762378a2f29dddab8d332daa258f4aff161d11326986430f3d9226f9442a10",
         "bytes": 13420
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_03.png",
+        "path": "../stage_src/raw_frames/attack_light_03.png",
         "sha256": "930e808d95ab9c0d0d74a8f4abb897cd87fc16524c86da2fdcab52fd9fe760fa",
         "bytes": 13116
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_04.png",
+        "path": "../stage_src/raw_frames/attack_light_04.png",
         "sha256": "c053c2a840f72e2ec008da0633921aa2e2d529661305025b82e592cfaec1839f",
         "bytes": 13102
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_05.png",
+        "path": "../stage_src/raw_frames/attack_light_05.png",
         "sha256": "9dbe254eb3da45d85adf48db3fbf3ea6be84fe0ed45e5ffcd2d730b77a5bb2b2",
         "bytes": 13319
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_06.png",
+        "path": "../stage_src/raw_frames/attack_light_06.png",
         "sha256": "8f2be70331984777986282facf59065eb384057c76a28c27e7d36e78f4192a3f",
         "bytes": 13564
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_light_07.png",
+        "path": "../stage_src/raw_frames/attack_light_07.png",
         "sha256": "ff51d18289a1a181a09f32976d4ab8e245e12904f66ac6dc27e2623093a48136",
         "bytes": 13925
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_00.png",
+        "path": "../stage_src/raw_frames/attack_heavy_00.png",
         "sha256": "3ad83027a50778a0cd3be3c8cc435456adc768e2b518d698de8abe6c9a55d2e8",
         "bytes": 14133
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_01.png",
+        "path": "../stage_src/raw_frames/attack_heavy_01.png",
         "sha256": "b111a9dfc8d30aee349307454f6984ded47dd1016360d8ce21fa9fb2a5303244",
         "bytes": 14657
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_02.png",
+        "path": "../stage_src/raw_frames/attack_heavy_02.png",
         "sha256": "16b8c3b3eb524a9da397ed5ced316b89a93530ce40ab31ab0918ae1de8ed77e1",
         "bytes": 14550
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_03.png",
+        "path": "../stage_src/raw_frames/attack_heavy_03.png",
         "sha256": "f6920c04ef5a6a7de666382449beec9487247f73911f152053c30f31eafefccd",
         "bytes": 13919
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_04.png",
+        "path": "../stage_src/raw_frames/attack_heavy_04.png",
         "sha256": "a04c69dd31b208d9f09667e7706154f0dd254c838c85967b6ff24a5cef92dc8a",
         "bytes": 10886
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_05.png",
+        "path": "../stage_src/raw_frames/attack_heavy_05.png",
         "sha256": "701908480ca2332930d4d1b5d41d8f0670a788f82a4a7c0284dc38930de37dad",
         "bytes": 14254
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_06.png",
+        "path": "../stage_src/raw_frames/attack_heavy_06.png",
         "sha256": "a1ca6b8bb5934fd3d491d51ee668a07e51627970af08562581126484c67cc36a",
         "bytes": 12707
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_07.png",
+        "path": "../stage_src/raw_frames/attack_heavy_07.png",
         "sha256": "41db8fc9ccc9f3ebedb04954902d9b03a33c2d617cd479cfb5bec56d7c536d02",
         "bytes": 8867
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_08.png",
+        "path": "../stage_src/raw_frames/attack_heavy_08.png",
         "sha256": "38e535020dd9d9dd2ce5eae4cdd2a42bc872458c60be29ee6f8c3c608b273590",
         "bytes": 10933
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_09.png",
+        "path": "../stage_src/raw_frames/attack_heavy_09.png",
         "sha256": "902bc880bf5932dc9a7ce36598302964aeb14334afb862367100a395d07e2ca5",
         "bytes": 13275
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_10.png",
+        "path": "../stage_src/raw_frames/attack_heavy_10.png",
         "sha256": "aa1f3a2039a51326afa63fe489fffbd999e47ba900ad9adfd22a935237e16cc3",
         "bytes": 14200
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/attack_heavy_11.png",
+        "path": "../stage_src/raw_frames/attack_heavy_11.png",
         "sha256": "9bd4ac4af2a7b0370f39ede71bd420f04e3dded9f3f282f3da6267018f888c67",
         "bytes": 14372
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_00.png",
+        "path": "../stage_src/raw_frames/power_up_00.png",
         "sha256": "af331f0ddce0db9efac8d15f81b2bcf75f98a11f1d0ec1cba51ef07f960eb9f3",
         "bytes": 14631
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_01.png",
+        "path": "../stage_src/raw_frames/power_up_01.png",
         "sha256": "caa0dc253b6c564d28168093e09388d806f6df27f73be28d8c4ec34058fb8ef2",
         "bytes": 14306
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_02.png",
+        "path": "../stage_src/raw_frames/power_up_02.png",
         "sha256": "33582a0ceb84bd01842cdc472b9965f3ac03689ee21fc49c1836ad7517c98b6a",
         "bytes": 14723
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_03.png",
+        "path": "../stage_src/raw_frames/power_up_03.png",
         "sha256": "5b76814af6a267421df6c3de44d1f7f88e6a76b76ba4dbf0169fb2b4f9f9770f",
         "bytes": 14327
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_04.png",
+        "path": "../stage_src/raw_frames/power_up_04.png",
         "sha256": "c61b59c6869eb0a2b16e2321c11a071a643b3743390ed9c4ed0db338d0f11273",
         "bytes": 14515
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_05.png",
+        "path": "../stage_src/raw_frames/power_up_05.png",
         "sha256": "548107aafddaf48efd90bf919067c60f20ceee4a0a535f53ea53c275a236c0ac",
         "bytes": 14240
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_06.png",
+        "path": "../stage_src/raw_frames/power_up_06.png",
         "sha256": "6c37d1938da8106ecabfa80b67649cfc9eb6e7cf6b4563fd680a820e1487728e",
         "bytes": 14221
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_07.png",
+        "path": "../stage_src/raw_frames/power_up_07.png",
         "sha256": "5c1c9de2f6a06de7326694487e69cdd09be3ec92237dbc4e4856e55bce8c99a7",
         "bytes": 14177
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/power_up_08.png",
+        "path": "../stage_src/raw_frames/power_up_08.png",
         "sha256": "80cb0295ed10d658c0b2a5bdf6f57f0734e5ff1eb4d7fd0a4e50de4f4ad35153",
         "bytes": 14151
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/hit_00.png",
+        "path": "../stage_src/raw_frames/hit_00.png",
         "sha256": "92e9af13c3151ff4c4921d22f8e50e82d03168b3ae68712864da254396b48e23",
         "bytes": 14899
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/hit_01.png",
+        "path": "../stage_src/raw_frames/hit_01.png",
         "sha256": "4df929e4878a954dd660ffa8c032a502600c9eb412284939ab055ec9d1f0c7a0",
         "bytes": 14954
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/hit_02.png",
+        "path": "../stage_src/raw_frames/hit_02.png",
         "sha256": "e70d1f8a714a6699ffd94405fd59925eaec01537c3c375286f5995c8c5cfb051",
         "bytes": 14918
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/hit_03.png",
+        "path": "../stage_src/raw_frames/hit_03.png",
         "sha256": "3ea8c0c0dc1dd670585252a6329fbc513a8615f56f773f7fa72a0db3bd3df86c",
         "bytes": 14647
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/hit_04.png",
+        "path": "../stage_src/raw_frames/hit_04.png",
         "sha256": "e5c1a419b4474d5672589aac3b4e450953db0c639703a682e1ca699f75b0550d",
         "bytes": 14565
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/hit_05.png",
+        "path": "../stage_src/raw_frames/hit_05.png",
         "sha256": "d0be2fbe34f9fd9ec4111a985cbee9816e1a2e94b4ab22da064baea20006108c",
         "bytes": 14807
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/ko_00.png",
+        "path": "../stage_src/raw_frames/ko_00.png",
         "sha256": "157f349262104610e718a3b0f2929ea324749fd41977d8438db46b645ea81127",
         "bytes": 14424
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/ko_01.png",
+        "path": "../stage_src/raw_frames/ko_01.png",
         "sha256": "c125358a50200167068f86fd5d459b12227ce456e9a016474f474f6807c2fd04",
         "bytes": 14358
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/ko_02.png",
+        "path": "../stage_src/raw_frames/ko_02.png",
         "sha256": "f902be30e84e1e57c2cec069f081e2d90667d2bd2e62127090b9c2025491fa73",
         "bytes": 14362
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/ko_03.png",
+        "path": "../stage_src/raw_frames/ko_03.png",
         "sha256": "22dcf8fe0c03ad789ab373b4653a754231ce496e4eb08837d1c67d11609f665d",
         "bytes": 13198
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/ko_04.png",
+        "path": "../stage_src/raw_frames/ko_04.png",
         "sha256": "5c321cce119b4acbcb235de0a636bb8b2ae27f33cd4a3ded8aa93ad73e7aae41",
         "bytes": 11993
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/ko_05.png",
+        "path": "../stage_src/raw_frames/ko_05.png",
         "sha256": "c7810296d3cde3adb485b10a93bc12de2cabf7100f5a68f41ed2edc5e668ea6e",
         "bytes": 12153
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/ko_06.png",
+        "path": "../stage_src/raw_frames/ko_06.png",
         "sha256": "23bf2c160173747f02fa3951a22ba24652c0e97d4be406c717dcd9eb09229fe8",
         "bytes": 11357
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/ko_07.png",
+        "path": "../stage_src/raw_frames/ko_07.png",
         "sha256": "1e59b7bf7079fa6b6dabaf5ddea26cb41e8d1d59c0d5cdc8a206ea223801f3f5",
         "bytes": 9974
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/turn_00.png",
+        "path": "../stage_src/raw_frames/turn_00.png",
         "sha256": "3ad83027a50778a0cd3be3c8cc435456adc768e2b518d698de8abe6c9a55d2e8",
         "bytes": 14133
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/turn_01.png",
+        "path": "../stage_src/raw_frames/turn_01.png",
         "sha256": "f6920c04ef5a6a7de666382449beec9487247f73911f152053c30f31eafefccd",
         "bytes": 13919
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/turn_02.png",
+        "path": "../stage_src/raw_frames/turn_02.png",
         "sha256": "a04c69dd31b208d9f09667e7706154f0dd254c838c85967b6ff24a5cef92dc8a",
         "bytes": 10886
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/turn_03.png",
+        "path": "../stage_src/raw_frames/turn_03.png",
         "sha256": "bf727a31fa23bda1d24941b39457de70db8215229ab57de817afc67f55c60448",
         "bytes": 12950
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/fireball_fx_00.png",
+        "path": "../stage_src/raw_frames/fireball_fx_00.png",
         "sha256": "6793901aa57568c20fc250905eed54ca9715f25cbf5c3af4ed76424e137735fe",
         "bytes": 1278
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/fireball_fx_01.png",
+        "path": "../stage_src/raw_frames/fireball_fx_01.png",
         "sha256": "c0dcae0edf8057c9b804482e0733b497abe81cd121664ddf57719f6a71e30add",
         "bytes": 1006
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/fireball_fx_02.png",
+        "path": "../stage_src/raw_frames/fireball_fx_02.png",
         "sha256": "53076137484d6120872c48b143732c133f67667d6601e09d9be1a57fcbc2bbc0",
         "bytes": 1002
       },
       {
-        "path": "../spinosaurus_in2/raw_frames/fireball_fx_03.png",
+        "path": "../stage_src/raw_frames/fireball_fx_03.png",
         "sha256": "ddd1af409a948f51c12b5ea7759970ce9f6be1ac0fcbc3841220dbd04a0128a6",
         "bytes": 945
       }
@@ -4193,8 +4202,8 @@
       },
       {
         "path": "frames/frame-12.png",
-        "sha256": "3f723c7f46e4696c1c4f3359615eb75d335b1d69069de686b9206c6bdf7295fe",
-        "bytes": 12871
+        "sha256": "9eae6d24a6e2c145eaa42c0610a3af2a3f01e5671c55974751c7e080bce59eca",
+        "bytes": 13339
       },
       {
         "path": "frames/frame-13.png",
@@ -4228,8 +4237,8 @@
       },
       {
         "path": "frames/frame-19.png",
-        "sha256": "eb496f3c189a0a099a75bd5539f7d3f3a8a34c2144661ddab4830f94d7df0cf8",
-        "bytes": 13078
+        "sha256": "49773210fb7dc8adf3dabf3fc711a1046859963ca1efbe868b3633debca5a496",
+        "bytes": 13590
       },
       {
         "path": "frames/frame-20.png",
@@ -4488,148 +4497,148 @@
       },
       {
         "path": "clips/clip-00.webp",
-        "sha256": "9ea786fe28b6577da1578e31a317327a6b5774ae01f58b48833045430111769c",
-        "bytes": 99348
+        "sha256": "b836eeb40e55a0a91b17d7c7252833756f741897766f1ba63ec396c218d4e22c",
+        "bytes": 115116
       },
       {
         "path": "clips/clip-01.webp",
-        "sha256": "61d8337d1afb8607faa7c73ef9453a28c6208e66a6a72c201f76f3016d2a10b3",
-        "bytes": 60436
+        "sha256": "ab3de80c2081249b284fca88a63cf51d57612935d01ad6798635926c05b65535",
+        "bytes": 70296
       },
       {
         "path": "clips/clip-02.webp",
-        "sha256": "383a78a6a638429c58aeff912a40953c1282c7930958ca6f193ea11a7acd2070",
-        "bytes": 65886
+        "sha256": "0de2f23ae56be792f2760f5812d559806fbece986cc73080cd24b512adadef93",
+        "bytes": 76398
       },
       {
         "path": "clips/clip-03.webp",
-        "sha256": "8b4baedca433aa0c913c9da8b857d661981c38ef67aebe6d83d5a4b6f1c234f3",
-        "bytes": 93200
+        "sha256": "d71490d082fa656b49715abc15acd49b8514609501a26917b85366b7003497d0",
+        "bytes": 108926
       },
       {
         "path": "clips/clip-04.webp",
-        "sha256": "c896c2b3008ded03fbec2ca0f08346f89d89b15931fc64ad50fb21a8521e2f5c",
-        "bytes": 79820
+        "sha256": "00949843dff7e785c34b87524ea52bc459e89b6b28acf2604b000e48fbe889c5",
+        "bytes": 92276
       },
       {
         "path": "clips/clip-05.webp",
-        "sha256": "e35f8078ee47f8547f429b40caaebaaa1298a9fb8c7fb0609a453f41c9bd319e",
-        "bytes": 53640
+        "sha256": "4296b03c56fd9cdffb30ea67280efd1a2d8f1d1c55771a6815c741e3ec38dd84",
+        "bytes": 62428
       },
       {
         "path": "clips/clip-06.webp",
-        "sha256": "0294b26c00fed823385eb361a9de977e79e5881763dabc8e08a7e183c15a3125",
-        "bytes": 61526
+        "sha256": "22cf8f95d6831571405f49ce67b308a326877437b32dfcb8527f88cc2bccbdb6",
+        "bytes": 71876
       },
       {
         "path": "clips/clip-07.webp",
-        "sha256": "ad0f0ff0c6757f7aa9bcbfc315e122cbceead2ce0490bde91b66a8543a21b098",
-        "bytes": 30708
+        "sha256": "5eb7d1d57c28acdac9c2ce4b36511541d8e43969f71b0c912b84e259a40597c9",
+        "bytes": 35714
       },
       {
         "path": "clips/clip-08.webp",
-        "sha256": "d109fb1c720eaa2e95d93100d792fd4ed75667a40d174451dc9f5a9703d165df",
-        "bytes": 998
+        "sha256": "04bafcbccb4d80267936ae05e7dcc60d6a916b9a14462e794ebebc599936f189",
+        "bytes": 1214
       },
       {
         "path": "contact-sheet.png",
-        "sha256": "a69039edde79907e55cc0119a748294e283378fa0d9ebdbd4a2563c638f754ee",
-        "bytes": 857121
+        "sha256": "f8c5f770f7aca27c588bc74a90eb15ffe2c79b3105a8082db1b340be8752fd90",
+        "bytes": 857663
       },
       {
         "path": "review/filmstrip-00.png",
-        "sha256": "c4688bf4190bd8f3026b0b56f867ab427faade984aa500bf56c61be7afee274d",
-        "bytes": 477377
+        "sha256": "e87ba351037ce883396e5bf6b97f8823af14dedc6ee10a08f68806b570e672b8",
+        "bytes": 663906
       },
       {
         "path": "review/onion-00.png",
-        "sha256": "556d7d081dd311d53cc04fe63c25ff7bf267f247477bfc6fd7ad2ac985d184b0",
-        "bytes": 175495
+        "sha256": "0124b56b7eb363947ee5b35766ad78878187969b366757bac8ca10c8654c48eb",
+        "bytes": 240827
       },
       {
         "path": "review/filmstrip-01.png",
-        "sha256": "0b76b836d07aa7b9e7f734701d0b49d42570bf8fc16461255d7ea49295d3cf17",
-        "bytes": 291423
+        "sha256": "7f32e7a9f7e40489186b47c66f4ec8a942dd6939e7255099fb934da96e4ef6ab",
+        "bytes": 396395
       },
       {
         "path": "review/onion-01.png",
-        "sha256": "a3d8f2a482c1ceb9f5e654092fb4ef136d3c4ac9993092ad45a7330f350c3c03",
-        "bytes": 110449
+        "sha256": "4e1cd7d777309a91846103adea9fbabfd1dee9d591bda04aa3b5b912f7eee76b",
+        "bytes": 148585
       },
       {
         "path": "review/filmstrip-02.png",
-        "sha256": "31d200a8e2a6c39077d96734ba486f4239536d736ee4def016ff8d7a84857f0f",
-        "bytes": 312546
+        "sha256": "628dc027d20c441f3077a4f15f149b2346a09a65df03519085d766624346f1cb",
+        "bytes": 426592
       },
       {
         "path": "review/onion-02.png",
-        "sha256": "c86e784434e15e9f5c2bc8741760eee09479936f6701b97a883d31ad00d8e343",
-        "bytes": 116941
+        "sha256": "bc97460ed38cddae265acd9b54edbba6dd314598a0a8911c9555d072bbcf7d12",
+        "bytes": 157153
       },
       {
         "path": "review/filmstrip-03.png",
-        "sha256": "9b0daa9093b9554cefd0b8ee2e5d97bd659fdbc4f9538e78cd71b86f8e0d4864",
-        "bytes": 467420
+        "sha256": "66c6d5d9da77bf4035b7b8561a165204e9e50c468a6eb86544d0faf1f0329d1a",
+        "bytes": 649277
       },
       {
         "path": "review/onion-03.png",
-        "sha256": "91e202d2f7dee3c45176247ff01ff261a900d87a7f842a04a552f5757cd9c1a0",
-        "bytes": 176860
+        "sha256": "1e50120e85dd9f00c338543f8e92a84891c7f7181d0ea1e9f4ec35ba0c455ecd",
+        "bytes": 242295
       },
       {
         "path": "review/filmstrip-04.png",
-        "sha256": "b6b59571a47ce14cf7be040808d71de58d69c0a50b633442b2395a382632e194",
-        "bytes": 389815
+        "sha256": "ba8d6bf66cb578365cc6ccd6db5dc0278c8caec726d1a3a58b391ad88d5f074a",
+        "bytes": 544986
       },
       {
         "path": "review/onion-04.png",
-        "sha256": "789403573396347d18939ab9c4bcd1b67be64579cb6e9160e8433cdc4ef02be4",
-        "bytes": 141767
+        "sha256": "18a3755ff39598e37c24ac7a66c3e2143a2c46b2967110d603c0b30004cc07fe",
+        "bytes": 196500
       },
       {
         "path": "review/filmstrip-05.png",
-        "sha256": "a6f51b30b054ad742923fcd817d555786b93b6822d195e876b9a08be3e43636d",
-        "bytes": 259821
+        "sha256": "6c33076564673d9ca395bb4ff7927bfa8d5115b0492a901f4edf3a86586f06a3",
+        "bytes": 352657
       },
       {
         "path": "review/onion-05.png",
-        "sha256": "a85e50669cb244f4fc7675996f684be5f66ed2bbc58efb2800effe978cf4571a",
-        "bytes": 95002
+        "sha256": "87536e4f2d9affa0cb5ac276b360d9b31e18d40e2b2e3679feff166002566e45",
+        "bytes": 128766
       },
       {
         "path": "review/filmstrip-06.png",
-        "sha256": "3d8849ec5f3a91239f871e18306cc93cea6ac1c3ce3ce4a72cca1279edf9c227",
-        "bytes": 297390
+        "sha256": "a1e6d36fb91e37aa46370c2c255ae7f5f0e097da0234f8f3152a2862fe46d719",
+        "bytes": 405571
       },
       {
         "path": "review/onion-06.png",
-        "sha256": "1fce950177a099bae4f46e17bb54887dba8819fc920af7f9449e1041323b0046",
-        "bytes": 111403
+        "sha256": "78e72ae025209c9b7e735f00f980c13234159703b563f6ad24376b5e89555814",
+        "bytes": 150846
       },
       {
         "path": "review/filmstrip-07.png",
-        "sha256": "2fc1d06cc3c14c28ab97fc9bc2904f1ebc4ffbc09ac3e96a22104e7bd3d96bed",
-        "bytes": 158921
+        "sha256": "1b1ebbbb904164a7287175b0121bc8de773aba3e9aaecd9b0fe373a742ce8126",
+        "bytes": 219793
       },
       {
         "path": "review/onion-07.png",
-        "sha256": "fa683a0addb1de43101671452ba32c2d3c349346e15821fe8baf0541fd4a6307",
-        "bytes": 59474
+        "sha256": "94dbdf0f08ed6b4de6a06a21c7cf97ad72163f2c2a39992f4b0dfc72b262c302",
+        "bytes": 81210
       },
       {
         "path": "review/filmstrip-08.png",
-        "sha256": "d4f93929b15629cab0a04b1af16db46aa1573309cc8d7965dc0ba0d66cfd51e8",
-        "bytes": 32462
+        "sha256": "05d5cfd4e62a2fd9a14809250133e7aae5976d4193e4f936ca8f3af3e0bbf2aa",
+        "bytes": 49303
       },
       {
         "path": "review/onion-08.png",
-        "sha256": "f3a61ec0224bf5790586c7a9aedb9b90b35685720a2358eed99fec4c5193a0b3",
-        "bytes": 13101
+        "sha256": "4bb557eed6fce997e5b5040cf49dc59c1f7b1dfe9f5448f35171c7ddb7e7d03a",
+        "bytes": 19818
       },
       {
         "path": "review/turn-test.png",
-        "sha256": "9e66c1ffa4480975077fbd2986a2872b3d8cafd00c9e8c031e72915223e092eb",
-        "bytes": 230269
+        "sha256": "6a58e99d31d192c5450f694c65fe902b9e53161478721d5670a1580cc2e9edf3",
+        "bytes": 341067
       }
     ],
     "tool": {

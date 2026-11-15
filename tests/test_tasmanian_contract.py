@@ -49,16 +49,29 @@ class TasmanianContract(unittest.TestCase):
   self.assertEqual(meta['render_contract']['turning']['method'],'instant_flip')
   self.assertEqual(meta['render_contract']['turning']['turn_speed_multiplier'],1.3)
   self.assertNotIn('turn',meta['clips'])
-  approval=read('work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json')
+  prev_approval=read('docs/releases/tasmanian_king_crab-v0.7.0-approval.json')
   snap=R/'work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before'
-  self.assertEqual(hashlib.sha256((snap/'tasmanian_king_crab-atlas-00.png').read_bytes()).hexdigest(),approval['atlas_sha256'])
-  self.assertEqual(hashlib.sha256((snap/'tasmanian_king_crab.tres').read_bytes()).hexdigest(),approval['tres_sha256'])
-  self.assertEqual(hashlib.sha256((R/'scenes/TasmanianKingCrab.tscn').read_bytes()).hexdigest(),approval['prefab_sha256'])
+  self.assertEqual(prev_approval,read('work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json'))
+  self.assertEqual(prev_approval['workflow_id'],'PIPE-004')
+  self.assertEqual(hashlib.sha256((snap/'tasmanian_king_crab-atlas-00.png').read_bytes()).hexdigest(),prev_approval['atlas_sha256'])
+  self.assertEqual(hashlib.sha256((snap/'tasmanian_king_crab.tres').read_bytes()).hexdigest(),prev_approval['tres_sha256'])
+  receipt=read('assets/tasmanian_king_crab/owner_approval.json')
+  self.assertEqual(receipt['status'],'owner_approved')
+  self.assertEqual(receipt['workflow_id'],'PIPE-012')
+  self.assertEqual(receipt['approved_revision'],'uniform-color-v1 / v0.12.0')
+  self.assertEqual(hashlib.sha256((R/receipt['atlas_path']).read_bytes()).hexdigest(),receipt['atlas_sha256'])
+  for rel,exp in receipt['approved_runtime_files_sha256'].items():
+   self.assertEqual(hashlib.sha256((R/rel).read_bytes()).hexdigest(),exp,rel)
+  frozen=R/receipt['frozen_source']
+  self.assertEqual(frozen.read_bytes(),(R/receipt['clips_manifest_path']).read_bytes())
   roster_entry=next(c for c in read('assets/roster.json')['characters'] if c['character_id']=='tasmanian_king_crab')
-  self.assertEqual(roster_entry['status'],'finalized_pending_owner_reapproval')
-  self.assertEqual(roster_entry['motion_quality']['status'],'reviewed_pending_owner')
-  self.assertFalse(roster_entry['motion_quality']['owner_approved'])
-  self.assertEqual(roster_entry['motion_quality']['previous_revision_atlas_sha256'],approval['atlas_sha256'])
+  self.assertEqual(roster_entry['status'],'finalized_owner_approved')
+  self.assertEqual(roster_entry['atlas_stage'],'finalized_owner_approved')
+  self.assertEqual(roster_entry['motion_quality']['status'],'owner_approved')
+  self.assertTrue(roster_entry['motion_quality']['owner_approved'])
+  self.assertEqual(roster_entry['owner_animation_approval']['workflow_id'],'PIPE-012')
+  self.assertEqual(roster_entry['motion_quality']['atlas_sha256'],receipt['atlas_sha256'])
+  self.assertEqual(roster_entry['motion_quality']['previous_revision_atlas_sha256'],prev_approval['atlas_sha256'])
   from PIL import Image
   clips_m=read('assets/tasmanian_king_crab/clips/animation-clips.json')
   idle_lums=[]
@@ -70,3 +83,25 @@ class TasmanianContract(unittest.TestCase):
      px=[r*0.299+g*0.587+b*0.114 for (r,g,b,a) in im.get_flattened_data() if a>0]
      idle_lums.append(sum(px)/len(px))
   self.assertLessEqual(max(idle_lums)-min(idle_lums),2.5)
+ def test_all_body_clips_match_canonical_walk_luminance_and_palette(self):
+  import numpy as np
+  clips_m=read('assets/tasmanian_king_crab/clips/animation-clips.json')
+  w_luma=np.array([0.299,0.587,0.114],dtype=np.float64)
+  def stats_for(cname):
+   lums=[];p95s=[];hi180=[];rgbs=[]
+   for fi in clips_m['clips'][cname]['frames']:
+    arr=np.array(Image.open(R/'assets/tasmanian_king_crab/clips'/clips_m['frames'][fi]['file']).convert('RGBA'))
+    px=arr[arr[:,:,3]>0,:3].astype(np.float64)
+    l=px@w_luma
+    lums.append(float(l.mean()))
+    p95s.append(float(np.percentile(l,95)))
+    hi180.append(float((l>180).mean()*100.0))
+    rgbs.append(px.mean(axis=0))
+   return float(np.mean(lums)),max(p95s),max(hi180),np.mean(rgbs,axis=0)
+  walk_lum,walk_p95,walk_hi,walk_rgb=stats_for('walk')
+  for cname in ('idle','attack_nomal','power_up','hit','ko'):
+   lum,p95,hi,rgb=stats_for(cname)
+   self.assertLessEqual(abs(lum-walk_lum),3.0,(cname,lum,walk_lum))
+   self.assertLessEqual(p95,walk_p95+5.0,(cname,p95,walk_p95))
+   self.assertLessEqual(hi,2.5,(cname,hi))
+   self.assertLessEqual(float(np.max(np.abs(rgb-walk_rgb))),3.5,(cname,rgb,walk_rgb))

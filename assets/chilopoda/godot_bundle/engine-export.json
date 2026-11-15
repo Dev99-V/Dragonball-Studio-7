@@ -2659,7 +2659,7 @@
       "method": "burrow_reorient_while_hidden",
       "mirror_sequence_for_reverse": false,
       "facing_commit_tick": 16,
-      "owner_instruction": "Owner: Chilopoda chui xu\u1ed1ng \u0111\u1ea5t \u0111\u1ed5i h\u01b0\u1edbng r\u1ed3i tr\u1ed3i l\u00ean h\u01b0\u1edbng \u0111\u1ea7u ng\u01b0\u1ee3c l\u1ea1i, thay xoay v\u00f2ng."
+      "owner_instruction": "Owner: Chilopoda chui xuống đất đổi hướng rồi trồi lên hướng đầu ngược lại, thay xoay vòng."
     },
     "fx_pivot_px": [
       176,
@@ -2851,13 +2851,13 @@
     "canonical_identity": "work/characters/chilopoda/identity-v2/canonical/master.png",
     "canonical_identity_sha256": "e0ac076682825160ee3723d363269b2d3ead0da463743af8ae3da184c82a04a3",
     "owner_master_approved": true,
-    "owner_approved": false,
+    "owner_approved": true,
     "atlas_demo_only": false,
     "body_part_cut_warp": false,
     "registration": "work/characters/chilopoda/identity-v2/registration.json",
     "identity_revision": {
       "source": "previous power_up frame1, exactPNG",
-      "owner_instruction": "Frame1 power_up \u0111\u1eb9p v\u00e0 n\u00e9t h\u01a1n; d\u00f9ng l\u00e0m h\u00ecnh d\u1ea1ng chu\u1ea9n \u0111\u1ed3ng b\u1ed9 to\u00e0n b\u1ed9 ho\u1ea1t \u1ea3nh Chilopoda.",
+      "owner_instruction": "Frame1 power_up đẹp và nét hơn; dùng làm hình dạng chuẩn đồng bộ toàn bộ hoạt ảnh Chilopoda.",
       "canonical_approval": "work/characters/chilopoda/identity-v2/canonical/approval.json",
       "power_mapping": "new0..9=old1..10;new10=canonicalold1. Old0+old1 hold merged8ticks;42ticks total/release16 unchanged.",
       "new_body_sources": [
@@ -2871,12 +2871,13 @@
       "fx_pixels_unchanged": true
     },
     "turn_source": "New complete walk and attack poses, runtime changes facing only while fully hidden; no visible cardflip.",
-    "owner_animation_approved": false,
+    "owner_animation_approved": true,
     "owner_approval_file": "assets/chilopoda/owner_approval.json",
-    "approved_at": "2026-11-13T08:22:39.853349+00:00",
-    "release_version": "0.11.1",
+    "approved_at": "2026-11-15T05:52:31.727116+00:00",
+    "release_version": "0.12.0",
     "fireball_revision": "fireball-v1",
     "previous_revision_atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d",
-    "calibration_update": "default_scale=1.35, screen_speed=140px/s, burrow_dust_scale=2.65, single mouth-condensing growing fireball in power_up"
+    "calibration_update": "default_scale=1.35, screen_speed=140px/s, burrow_dust_scale=2.65, single mouth-condensing growing fireball in power_up",
+    "workflow_id": "PIPE-015"
   }
 }

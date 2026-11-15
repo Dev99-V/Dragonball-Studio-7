@@ -293,7 +293,7 @@ func run_test() -> void:
 	var expected_screen_speeds := {
 		"chilopoda": 140.0,
 		"bat_chiroptera": 115.0,
-		"spinosaurus": 130.0,
+		"spinosaurus": 170.0,
 		"t_rex": 120.0,
 		"pteranodon": 140.0,
 		"tasmanian_king_crab": 115.0,

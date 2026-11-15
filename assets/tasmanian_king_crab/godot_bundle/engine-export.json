@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips/animation-clips.json",
-    "sha256": "7331b39b1bd6be9b89df7722349f51cab75eb19f965be4c5a4aa850cae1b1e59",
-    "bytes": 102138,
+    "sha256": "c78f81714f23451f01cda4c85402ee13e79b26e457a4ad1c21a846b42f9bc4c4",
+    "bytes": 102122,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -872,8 +872,8 @@
   "files": [
     {
       "path": "aseprite/tasmanian_king_crab.png",
-      "sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c",
-      "bytes": 834856
+      "sha256": "c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d",
+      "bytes": 824336
     },
     {
       "path": "aseprite/tasmanian_king_crab.json",
@@ -882,8 +882,8 @@
     },
     {
       "path": "godot/tasmanian_king_crab-atlas-00.png",
-      "sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c",
-      "bytes": 834856
+      "sha256": "c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d",
+      "bytes": 824336
     },
     {
       "path": "godot/tasmanian_king_crab.tres",
@@ -897,43 +897,43 @@
     },
     {
       "path": "godot-sprite3d/frames/frame-000.png",
-      "sha256": "5c93785ff07a1578c9c504cd5ca683da0df50bb9075bb877301efc38b62722ea",
-      "bytes": 18325
+      "sha256": "020b0494ed66e90dac831e93b2ca758b436cda698a4c012eb7dfa87c6c704b0d",
+      "bytes": 17968
     },
     {
       "path": "godot-sprite3d/frames/frame-001.png",
-      "sha256": "a638f3ff576ad8047619fa1099c989d95f043cf9d9dadd40aa3973c81bf2d2a6",
-      "bytes": 19293
+      "sha256": "9d48106b46010f7c0159091e32f5d0016e0f76b9578b6d27aed1ce35fd88a60a",
+      "bytes": 18711
     },
     {
       "path": "godot-sprite3d/frames/frame-002.png",
-      "sha256": "4dfdf4ff5cbe12d0a30f2639fa1da78cb4b71678d8f15823395c55e0029f024c",
-      "bytes": 20110
+      "sha256": "118819158f46cce4606329c1a9c198e9ea92674fd145c3300f0fa3db5590caef",
+      "bytes": 19504
     },
     {
       "path": "godot-sprite3d/frames/frame-003.png",
-      "sha256": "72c8b2058093a24bfdb85e8193e25148d1c56bbdf1b3a28c92786e0f4efa004e",
-      "bytes": 20409
+      "sha256": "8d0fdcc6f517932238217e501107c83f64251415cdf328d1d5d77b0e5c273143",
+      "bytes": 19733
     },
     {
       "path": "godot-sprite3d/frames/frame-004.png",
-      "sha256": "4999ddcb134539445f9814466f8adb025f1dfc4a6a41b5f5429eb345003ddcc8",
-      "bytes": 19858
+      "sha256": "b9dbf51fa68d3b48ad21981a9b60526f2667f1e07b5280f917c216961ce33c50",
+      "bytes": 19262
     },
     {
       "path": "godot-sprite3d/frames/frame-005.png",
-      "sha256": "21ab13fe280700ae7edaf55473bb17b8c41230d4788c34c6b2b56fda08fa779a",
-      "bytes": 19060
+      "sha256": "758dc66ca0642638b28677c8ce115a223ea6680ce15aafc9c932749c589c2fd1",
+      "bytes": 18487
     },
     {
       "path": "godot-sprite3d/frames/frame-006.png",
-      "sha256": "a1db69943e164617495c3dccca01e1832e98404580724c2f2fe0643ecd1c750c",
-      "bytes": 19479
+      "sha256": "5cfad5d35dba61492667ac47411c3b23a4039a896e17d6d902026799d372b2f0",
+      "bytes": 18876
     },
     {
       "path": "godot-sprite3d/frames/frame-007.png",
-      "sha256": "b6f63e663375378a400326953f5c8f3a987dc8408bc88096d4d5ef179988896c",
-      "bytes": 19570
+      "sha256": "959be0679007fe5377d2345f4674b1369685b66fae8e75b0df2ccb478f7752f4",
+      "bytes": 18960
     },
     {
       "path": "godot-sprite3d/frames/frame-008.png",
@@ -977,153 +977,153 @@
     },
     {
       "path": "godot-sprite3d/frames/frame-016.png",
-      "sha256": "2b46fa2e3525017977b6e9f9c888ed62f2f3a79154972a300c8c68b6afe0dc58",
-      "bytes": 17984
+      "sha256": "d8eb97ef107a554025399b22753032b3e9651337250fdb808d1fa00e1eadc025",
+      "bytes": 17680
     },
     {
       "path": "godot-sprite3d/frames/frame-017.png",
-      "sha256": "dac2e7428e0580b758b3d49d139ab4a4871ceca913e4552f89bba22534ad4ed5",
-      "bytes": 17844
+      "sha256": "73e8ba5c0dd45349b45accc0d2b3390148cf9c27750513706dc23b029b3364c4",
+      "bytes": 17501
     },
     {
       "path": "godot-sprite3d/frames/frame-018.png",
-      "sha256": "3914072b720e07947bd640fe4e429a21f38817a9d1f49f3a984cdd409af01956",
-      "bytes": 18234
+      "sha256": "7ed428eaa999ba5e9b63bcc14bc58f280d89c715d895509cfb6748015ac918ce",
+      "bytes": 17908
     },
     {
       "path": "godot-sprite3d/frames/frame-019.png",
-      "sha256": "91fa3efa51523bf69256afe16e15eff48be698e055bd4cb897725dda4175d819",
-      "bytes": 18563
+      "sha256": "d6cc77f3efcf0f7a5506e11222572031dd3a79795c0a2e2a2adb5e4ffea4d094",
+      "bytes": 18238
     },
     {
       "path": "godot-sprite3d/frames/frame-020.png",
-      "sha256": "3d4d12d208af171a27c1a8de86cf4cb8fee06103b61568e9c451cc2a08209935",
-      "bytes": 18888
+      "sha256": "3ea9f06d4c69ba782786a69ac9356493c46bef777faa9e6ae0b9e1ff1d8e1aff",
+      "bytes": 18559
     },
     {
       "path": "godot-sprite3d/frames/frame-021.png",
-      "sha256": "b772544e6021c00aec847c57a7487001d2b0950d543ecc40251787a476132908",
-      "bytes": 18002
+      "sha256": "e9cab17f662eb47922e7d0e94a984fb1b8a2dca8ab7bac52438b3bee6388e16a",
+      "bytes": 17750
     },
     {
       "path": "godot-sprite3d/frames/frame-022.png",
-      "sha256": "90a31316994bb519dc44bbb49202725d2f2012f19ba5864810a9157a8406a4bf",
-      "bytes": 17935
+      "sha256": "66b96093a55a716bc6b2783933da04ddfdf077dd6cccd53f2da78bdb0c4e0fb3",
+      "bytes": 17633
     },
     {
       "path": "godot-sprite3d/frames/frame-023.png",
-      "sha256": "051816331f20f27fcc6d9ddce6dcb1f0974b551380dd0b4b57fb2c9ee3d9bc74",
-      "bytes": 17970
+      "sha256": "4f2779c7834062925f9a7749e467bbddeb21fb1a08d2c6b0992c564f3a046736",
+      "bytes": 17706
     },
     {
       "path": "godot-sprite3d/frames/frame-024.png",
-      "sha256": "92a60fd958cf303d7f7a113cc3d51e42fc5a75f83418e6b9130f91730e6f9616",
-      "bytes": 16566
+      "sha256": "10d23ff12f5e3112a3f7cb13bb13b6918dc9367e89965b63201778d60e866081",
+      "bytes": 16605
     },
     {
       "path": "godot-sprite3d/frames/frame-025.png",
-      "sha256": "26de15a67e4c9633253f5a1b461e7fb4276b6ff9c205511c5705cff0d7193c51",
-      "bytes": 19433
+      "sha256": "07e060194f889768b629a4797a705f8b0f3baa5da60fd82698ba24496088038c",
+      "bytes": 19495
     },
     {
       "path": "godot-sprite3d/frames/frame-026.png",
-      "sha256": "4a84f4d23cedabf18f850199175289a5657f58211443cf69fb82fee742ece871",
-      "bytes": 20033
+      "sha256": "a90e878b5715343f6c8685ddda1e6803d4fdf66fa05310201f5cfbddc9c3970a",
+      "bytes": 20048
     },
     {
       "path": "godot-sprite3d/frames/frame-027.png",
-      "sha256": "5da96e68ab2064d6cf9f30613f891288fee46a6fe3f6e9b1a482976966eb8e04",
-      "bytes": 20019
+      "sha256": "cb91f6fd477b781a097a725fa697897e05c11c2bad31eeaf331c671024528a81",
+      "bytes": 20072
     },
     {
       "path": "godot-sprite3d/frames/frame-028.png",
-      "sha256": "c324e5c764b2e683db4baa3aae949ec6d81247d089013106733b5f2e9be72673",
-      "bytes": 19928
+      "sha256": "c53409c757964483763b5df979e2093f4d80e305f2651af00ffe04e2f46a7190",
+      "bytes": 19933
     },
     {
       "path": "godot-sprite3d/frames/frame-029.png",
-      "sha256": "581ec98f7ad5adbccfe3f3efcaa2f4aa37c76365aed9dfba8520994aeda2d8bc",
-      "bytes": 17803
+      "sha256": "65ad840932a71f31572435173cdbd4f4c690eb8778c2e2386bc4d51c28a805d6",
+      "bytes": 17800
     },
     {
       "path": "godot-sprite3d/frames/frame-030.png",
-      "sha256": "5f78032a565a007b346f12631db1c080c918de0bc71bfe44af5d02612f8f7f7c",
-      "bytes": 17243
+      "sha256": "0242515f18a1528b7eaf40c52147a3c74505477b8b80b5e600d45756c0dc5140",
+      "bytes": 17255
     },
     {
       "path": "godot-sprite3d/frames/frame-031.png",
-      "sha256": "9c52408dcec2dfedf744814cfe976b1f5a93e2dc171f34782f0f18c59b75c06a",
-      "bytes": 17170
+      "sha256": "4ea09018071a699467477f45bbae4d711160abab26f719b4416ebd85ec22fd06",
+      "bytes": 17194
     },
     {
       "path": "godot-sprite3d/frames/frame-032.png",
-      "sha256": "fd4c260ec40df1bfb886098c685540e46f4dee90d373854fdbe661c7feeb0a68",
-      "bytes": 18746
+      "sha256": "7363f5e386dadae3a732432d9f90280e3a8dc7534003e99dc70a86e811714c2c",
+      "bytes": 18613
     },
     {
       "path": "godot-sprite3d/frames/frame-033.png",
-      "sha256": "84a1e1d2043869189e635466884ea8c27a9e73378d1f3ef533be82461c579f3e",
-      "bytes": 18010
+      "sha256": "da65e95ebc4db81896f537e4ea1cea694c1f783f62f2348c7a0adff5f6a20ab2",
+      "bytes": 17934
     },
     {
       "path": "godot-sprite3d/frames/frame-034.png",
-      "sha256": "bcc7e764f6dc5497cd3dd5ac32ef71cc2ef2d82fd7322ac56331dc5e10149946",
-      "bytes": 17237
+      "sha256": "85a04d1091368ca5f4975d3a67823f910bbe29c781935e856e653b77844e66f5",
+      "bytes": 17124
     },
     {
       "path": "godot-sprite3d/frames/frame-035.png",
-      "sha256": "29ef3209c6770444789356802bc659aa9bfcb7c14ed502aabe3e4afcf1a97822",
-      "bytes": 16678
+      "sha256": "9b076c5a3829da86a88a069dcd7d7222c3e8b801cd51fea978fa8bab42b91f8e",
+      "bytes": 16565
     },
     {
       "path": "godot-sprite3d/frames/frame-036.png",
-      "sha256": "a4053d2d023dab7081d3d63862f9ae88c7386942073ce54361b1bfacb7e8f0a4",
-      "bytes": 17530
+      "sha256": "a620963d736c7f1e536f8c0a2babd7a40b3c6eb9e70cf70c2355b9067fe39544",
+      "bytes": 17446
     },
     {
       "path": "godot-sprite3d/frames/frame-037.png",
-      "sha256": "2a739642e8fac4b20a64bedaf68f675bd3180451f6725de1f296e5649fd331e4",
-      "bytes": 17759
+      "sha256": "e15fa3cd0f1f8061baf83f7a2daed5dbe4597cb5801aa6815afa96d438926cfc",
+      "bytes": 17681
     },
     {
       "path": "godot-sprite3d/frames/frame-038.png",
-      "sha256": "20c0289d711cf4bf260a9e0dcb72edfe97690e31807124425d9ec5e6e1e35c8e",
-      "bytes": 20918
+      "sha256": "bac6cb2615de18c9ccd3f66899f43bebf9ec5efb59bc96bdc7b5cc301c8f43ca",
+      "bytes": 20443
     },
     {
       "path": "godot-sprite3d/frames/frame-039.png",
-      "sha256": "80f493448adb675c4131905c505d47518f6660cc499dfed56f6e002c15645570",
-      "bytes": 20292
+      "sha256": "1f55b7fb14ea7c072bd29de773bbdfc417e796cf6136b5a4af6ce889e3652bca",
+      "bytes": 19782
     },
     {
       "path": "godot-sprite3d/frames/frame-040.png",
-      "sha256": "91850436bb9795cc47e563a7b4e24cf4d01d8b0f97b1591d5e59b9633409aa1e",
-      "bytes": 19203
+      "sha256": "e5d050a1af38a9aa9869b1255d424d26f433155522276a44ecfc4d6aaf54cfce",
+      "bytes": 18759
     },
     {
       "path": "godot-sprite3d/frames/frame-041.png",
-      "sha256": "9d151c57e781da1c3dceb15b111a271c51a3be224f89b2999126b89cf2ff69af",
-      "bytes": 17370
+      "sha256": "08bb1925e2be9174cd51905829fe3e36f4402b1508df491cd5deb67247c57b27",
+      "bytes": 16949
     },
     {
       "path": "godot-sprite3d/frames/frame-042.png",
-      "sha256": "2d9d2363c6150fc785083b469e1e22c80b6d1e0e06a26cb7162b7ee76db21329",
-      "bytes": 17413
+      "sha256": "9d25882e5f4f87f8a4f0fc92301f2005a9f883774f4a5e00039d937d484d45be",
+      "bytes": 17002
     },
     {
       "path": "godot-sprite3d/frames/frame-043.png",
-      "sha256": "a1906c8bfafd2ec052921b29b50bf6c5941cc377bdc93a701e6d9b0a1c0d99b8",
-      "bytes": 16763
+      "sha256": "ca7ed590e8a0ed7b438e4d4421a89a69e0bdca63fb51ce8667c7d7e4165c0834",
+      "bytes": 16395
     },
     {
       "path": "godot-sprite3d/frames/frame-044.png",
-      "sha256": "260959782174174ca26d3374599d40cfbf10d5eb8f9d877ec58f847f5cdca770",
-      "bytes": 15942
+      "sha256": "c95e20b933322f47ba10751624d27839b3c61d60bc9427d79bbb289a2b2accff",
+      "bytes": 15560
     },
     {
       "path": "godot-sprite3d/frames/frame-045.png",
-      "sha256": "d3501c25f7d62f2868a8b1001fff2e4435ca2328f57d60dabd72ce19c4adcb43",
-      "bytes": 15643
+      "sha256": "829cf1b65cf083c702a7287c55b42d1ecd2828a65c02e05ffaf496cce87464c4",
+      "bytes": 15284
     },
     {
       "path": "godot-sprite3d/frames/frame-046.png",
@@ -1167,7 +1167,7 @@
     },
     {
       "path": "godot-sprite3d/action-idle.json",
-      "sha256": "f1811c9212863fd14cbad9bd0ef2bca499555a127f7cf5bfa2f128f128647902",
+      "sha256": "3daa9f9ddca832aef18efe24a32120e5565de0c703b09af92fe6da47c39dc01e",
       "bytes": 1494
     },
     {
@@ -1177,22 +1177,22 @@
     },
     {
       "path": "godot-sprite3d/action-attack_nomal.json",
-      "sha256": "60532146cc6838afb480539e8d3b6398f7064a3d3cac97a26602f7bc8e099475",
+      "sha256": "27553c91ba8f7a622b283904569fb1b0d335e867139dc4619a135231b97e3ca2",
       "bytes": 1772
     },
     {
       "path": "godot-sprite3d/action-power_up.json",
-      "sha256": "d78f75e1573a5bf3a4f9ee545ff10fcacc739141c74743d1cd7a9b10adb4e6ae",
+      "sha256": "ef6b2c2900762d6917831f4d9be66f5b238c67d3c3828be0f4fbc8c34b40168b",
       "bytes": 1823
     },
     {
       "path": "godot-sprite3d/action-hit.json",
-      "sha256": "a9493b8faccc34f9787387147edb6b2e523804f0ecd668c13c46c4092b2c0539",
+      "sha256": "804229b00a3b1ef02d2e02a3dab990b27cd319d8c5627c90cd02fc2336cee331",
       "bytes": 1449
     },
     {
       "path": "godot-sprite3d/action-ko.json",
-      "sha256": "43a153eb2a39a6c9473020f3b49a4fccb9e474e6806eaf2556dff319fea9166b",
+      "sha256": "eee1266d3838eac45f8245044237c4072c80cd365952f311fa7c44a6ba02e5cb",
       "bytes": 1657
     },
     {
@@ -1299,277 +1299,277 @@
     ],
     "inputs": [
       {
-        "path": "../stage-clips/animation-clips.json",
-        "sha256": "7331b39b1bd6be9b89df7722349f51cab75eb19f965be4c5a4aa850cae1b1e59",
-        "bytes": 102138
+        "path": "../clips/animation-clips.json",
+        "sha256": "c78f81714f23451f01cda4c85402ee13e79b26e457a4ad1c21a846b42f9bc4c4",
+        "bytes": 102122
       },
       {
-        "path": "../stage-clips/frames/frame-00.png",
-        "sha256": "5c93785ff07a1578c9c504cd5ca683da0df50bb9075bb877301efc38b62722ea",
-        "bytes": 18325
+        "path": "../clips/frames/frame-00.png",
+        "sha256": "020b0494ed66e90dac831e93b2ca758b436cda698a4c012eb7dfa87c6c704b0d",
+        "bytes": 17968
       },
       {
-        "path": "../stage-clips/frames/frame-01.png",
-        "sha256": "a638f3ff576ad8047619fa1099c989d95f043cf9d9dadd40aa3973c81bf2d2a6",
-        "bytes": 19293
+        "path": "../clips/frames/frame-01.png",
+        "sha256": "9d48106b46010f7c0159091e32f5d0016e0f76b9578b6d27aed1ce35fd88a60a",
+        "bytes": 18711
       },
       {
-        "path": "../stage-clips/frames/frame-02.png",
-        "sha256": "4dfdf4ff5cbe12d0a30f2639fa1da78cb4b71678d8f15823395c55e0029f024c",
-        "bytes": 20110
+        "path": "../clips/frames/frame-02.png",
+        "sha256": "118819158f46cce4606329c1a9c198e9ea92674fd145c3300f0fa3db5590caef",
+        "bytes": 19504
       },
       {
-        "path": "../stage-clips/frames/frame-03.png",
-        "sha256": "72c8b2058093a24bfdb85e8193e25148d1c56bbdf1b3a28c92786e0f4efa004e",
-        "bytes": 20409
+        "path": "../clips/frames/frame-03.png",
+        "sha256": "8d0fdcc6f517932238217e501107c83f64251415cdf328d1d5d77b0e5c273143",
+        "bytes": 19733
       },
       {
-        "path": "../stage-clips/frames/frame-04.png",
-        "sha256": "4999ddcb134539445f9814466f8adb025f1dfc4a6a41b5f5429eb345003ddcc8",
-        "bytes": 19858
+        "path": "../clips/frames/frame-04.png",
+        "sha256": "b9dbf51fa68d3b48ad21981a9b60526f2667f1e07b5280f917c216961ce33c50",
+        "bytes": 19262
       },
       {
-        "path": "../stage-clips/frames/frame-05.png",
-        "sha256": "21ab13fe280700ae7edaf55473bb17b8c41230d4788c34c6b2b56fda08fa779a",
-        "bytes": 19060
+        "path": "../clips/frames/frame-05.png",
+        "sha256": "758dc66ca0642638b28677c8ce115a223ea6680ce15aafc9c932749c589c2fd1",
+        "bytes": 18487
       },
       {
-        "path": "../stage-clips/frames/frame-06.png",
-        "sha256": "a1db69943e164617495c3dccca01e1832e98404580724c2f2fe0643ecd1c750c",
-        "bytes": 19479
+        "path": "../clips/frames/frame-06.png",
+        "sha256": "5cfad5d35dba61492667ac47411c3b23a4039a896e17d6d902026799d372b2f0",
+        "bytes": 18876
       },
       {
-        "path": "../stage-clips/frames/frame-07.png",
-        "sha256": "b6f63e663375378a400326953f5c8f3a987dc8408bc88096d4d5ef179988896c",
-        "bytes": 19570
+        "path": "../clips/frames/frame-07.png",
+        "sha256": "959be0679007fe5377d2345f4674b1369685b66fae8e75b0df2ccb478f7752f4",
+        "bytes": 18960
       },
       {
-        "path": "../stage-clips/frames/frame-08.png",
+        "path": "../clips/frames/frame-08.png",
         "sha256": "96519a5f5b14cc858a6f0489769cc4b758c44b6cf8e0d46509a2f3fc36593843",
         "bytes": 17155
       },
       {
-        "path": "../stage-clips/frames/frame-09.png",
+        "path": "../clips/frames/frame-09.png",
         "sha256": "1453aadb8bc4ae6875522afcad359535290f38385983b54d96ec14c089545ce4",
         "bytes": 16677
       },
       {
-        "path": "../stage-clips/frames/frame-10.png",
+        "path": "../clips/frames/frame-10.png",
         "sha256": "c0e2e4c2b6e82b414be503508b35e9686d37a1fa2fd433b2532c3cf33e0b5abb",
         "bytes": 16448
       },
       {
-        "path": "../stage-clips/frames/frame-11.png",
+        "path": "../clips/frames/frame-11.png",
         "sha256": "3ec1c0e2e555346cf327a7d126acdd5ef480dac1cf0f29d0817a26d34586a286",
         "bytes": 17000
       },
       {
-        "path": "../stage-clips/frames/frame-12.png",
+        "path": "../clips/frames/frame-12.png",
         "sha256": "3a277df01ee6c65dfb2a79e3145fa05571694d09e92adfd21224276e555d411a",
         "bytes": 16888
       },
       {
-        "path": "../stage-clips/frames/frame-13.png",
+        "path": "../clips/frames/frame-13.png",
         "sha256": "b0ffe3bc86286be681149c1a0b84c72c1e771e4228bfa8a0be29a34f446ae1fc",
         "bytes": 16866
       },
       {
-        "path": "../stage-clips/frames/frame-14.png",
+        "path": "../clips/frames/frame-14.png",
         "sha256": "6f1cba749bd65a7e9893e41598d83fb03a6e4297644439b69482012c909829c8",
         "bytes": 17030
       },
       {
-        "path": "../stage-clips/frames/frame-15.png",
+        "path": "../clips/frames/frame-15.png",
         "sha256": "e9a54bd732200010b72d2ec2d49e689c7495fa8d97e1c924ea1ad1b5b0a0c9e7",
         "bytes": 17151
       },
       {
-        "path": "../stage-clips/frames/frame-16.png",
-        "sha256": "2b46fa2e3525017977b6e9f9c888ed62f2f3a79154972a300c8c68b6afe0dc58",
-        "bytes": 17984
+        "path": "../clips/frames/frame-16.png",
+        "sha256": "d8eb97ef107a554025399b22753032b3e9651337250fdb808d1fa00e1eadc025",
+        "bytes": 17680
       },
       {
-        "path": "../stage-clips/frames/frame-17.png",
-        "sha256": "dac2e7428e0580b758b3d49d139ab4a4871ceca913e4552f89bba22534ad4ed5",
-        "bytes": 17844
+        "path": "../clips/frames/frame-17.png",
+        "sha256": "73e8ba5c0dd45349b45accc0d2b3390148cf9c27750513706dc23b029b3364c4",
+        "bytes": 17501
       },
       {
-        "path": "../stage-clips/frames/frame-18.png",
-        "sha256": "3914072b720e07947bd640fe4e429a21f38817a9d1f49f3a984cdd409af01956",
-        "bytes": 18234
+        "path": "../clips/frames/frame-18.png",
+        "sha256": "7ed428eaa999ba5e9b63bcc14bc58f280d89c715d895509cfb6748015ac918ce",
+        "bytes": 17908
       },
       {
-        "path": "../stage-clips/frames/frame-19.png",
-        "sha256": "91fa3efa51523bf69256afe16e15eff48be698e055bd4cb897725dda4175d819",
-        "bytes": 18563
+        "path": "../clips/frames/frame-19.png",
+        "sha256": "d6cc77f3efcf0f7a5506e11222572031dd3a79795c0a2e2a2adb5e4ffea4d094",
+        "bytes": 18238
       },
       {
-        "path": "../stage-clips/frames/frame-20.png",
-        "sha256": "3d4d12d208af171a27c1a8de86cf4cb8fee06103b61568e9c451cc2a08209935",
-        "bytes": 18888
+        "path": "../clips/frames/frame-20.png",
+        "sha256": "3ea9f06d4c69ba782786a69ac9356493c46bef777faa9e6ae0b9e1ff1d8e1aff",
+        "bytes": 18559
       },
       {
-        "path": "../stage-clips/frames/frame-21.png",
-        "sha256": "b772544e6021c00aec847c57a7487001d2b0950d543ecc40251787a476132908",
-        "bytes": 18002
+        "path": "../clips/frames/frame-21.png",
+        "sha256": "e9cab17f662eb47922e7d0e94a984fb1b8a2dca8ab7bac52438b3bee6388e16a",
+        "bytes": 17750
       },
       {
-        "path": "../stage-clips/frames/frame-22.png",
-        "sha256": "90a31316994bb519dc44bbb49202725d2f2012f19ba5864810a9157a8406a4bf",
-        "bytes": 17935
+        "path": "../clips/frames/frame-22.png",
+        "sha256": "66b96093a55a716bc6b2783933da04ddfdf077dd6cccd53f2da78bdb0c4e0fb3",
+        "bytes": 17633
       },
       {
-        "path": "../stage-clips/frames/frame-23.png",
-        "sha256": "051816331f20f27fcc6d9ddce6dcb1f0974b551380dd0b4b57fb2c9ee3d9bc74",
-        "bytes": 17970
+        "path": "../clips/frames/frame-23.png",
+        "sha256": "4f2779c7834062925f9a7749e467bbddeb21fb1a08d2c6b0992c564f3a046736",
+        "bytes": 17706
       },
       {
-        "path": "../stage-clips/frames/frame-24.png",
-        "sha256": "92a60fd958cf303d7f7a113cc3d51e42fc5a75f83418e6b9130f91730e6f9616",
-        "bytes": 16566
+        "path": "../clips/frames/frame-24.png",
+        "sha256": "10d23ff12f5e3112a3f7cb13bb13b6918dc9367e89965b63201778d60e866081",
+        "bytes": 16605
       },
       {
-        "path": "../stage-clips/frames/frame-25.png",
-        "sha256": "26de15a67e4c9633253f5a1b461e7fb4276b6ff9c205511c5705cff0d7193c51",
-        "bytes": 19433
+        "path": "../clips/frames/frame-25.png",
+        "sha256": "07e060194f889768b629a4797a705f8b0f3baa5da60fd82698ba24496088038c",
+        "bytes": 19495
       },
       {
-        "path": "../stage-clips/frames/frame-26.png",
-        "sha256": "4a84f4d23cedabf18f850199175289a5657f58211443cf69fb82fee742ece871",
-        "bytes": 20033
+        "path": "../clips/frames/frame-26.png",
+        "sha256": "a90e878b5715343f6c8685ddda1e6803d4fdf66fa05310201f5cfbddc9c3970a",
+        "bytes": 20048
       },
       {
-        "path": "../stage-clips/frames/frame-27.png",
-        "sha256": "5da96e68ab2064d6cf9f30613f891288fee46a6fe3f6e9b1a482976966eb8e04",
-        "bytes": 20019
+        "path": "../clips/frames/frame-27.png",
+        "sha256": "cb91f6fd477b781a097a725fa697897e05c11c2bad31eeaf331c671024528a81",
+        "bytes": 20072
       },
       {
-        "path": "../stage-clips/frames/frame-28.png",
-        "sha256": "c324e5c764b2e683db4baa3aae949ec6d81247d089013106733b5f2e9be72673",
-        "bytes": 19928
+        "path": "../clips/frames/frame-28.png",
+        "sha256": "c53409c757964483763b5df979e2093f4d80e305f2651af00ffe04e2f46a7190",
+        "bytes": 19933
       },
       {
-        "path": "../stage-clips/frames/frame-29.png",
-        "sha256": "581ec98f7ad5adbccfe3f3efcaa2f4aa37c76365aed9dfba8520994aeda2d8bc",
-        "bytes": 17803
+        "path": "../clips/frames/frame-29.png",
+        "sha256": "65ad840932a71f31572435173cdbd4f4c690eb8778c2e2386bc4d51c28a805d6",
+        "bytes": 17800
       },
       {
-        "path": "../stage-clips/frames/frame-30.png",
-        "sha256": "5f78032a565a007b346f12631db1c080c918de0bc71bfe44af5d02612f8f7f7c",
-        "bytes": 17243
+        "path": "../clips/frames/frame-30.png",
+        "sha256": "0242515f18a1528b7eaf40c52147a3c74505477b8b80b5e600d45756c0dc5140",
+        "bytes": 17255
       },
       {
-        "path": "../stage-clips/frames/frame-31.png",
-        "sha256": "9c52408dcec2dfedf744814cfe976b1f5a93e2dc171f34782f0f18c59b75c06a",
-        "bytes": 17170
+        "path": "../clips/frames/frame-31.png",
+        "sha256": "4ea09018071a699467477f45bbae4d711160abab26f719b4416ebd85ec22fd06",
+        "bytes": 17194
       },
       {
-        "path": "../stage-clips/frames/frame-32.png",
-        "sha256": "fd4c260ec40df1bfb886098c685540e46f4dee90d373854fdbe661c7feeb0a68",
-        "bytes": 18746
+        "path": "../clips/frames/frame-32.png",
+        "sha256": "7363f5e386dadae3a732432d9f90280e3a8dc7534003e99dc70a86e811714c2c",
+        "bytes": 18613
       },
       {
-        "path": "../stage-clips/frames/frame-33.png",
-        "sha256": "84a1e1d2043869189e635466884ea8c27a9e73378d1f3ef533be82461c579f3e",
-        "bytes": 18010
+        "path": "../clips/frames/frame-33.png",
+        "sha256": "da65e95ebc4db81896f537e4ea1cea694c1f783f62f2348c7a0adff5f6a20ab2",
+        "bytes": 17934
       },
       {
-        "path": "../stage-clips/frames/frame-34.png",
-        "sha256": "bcc7e764f6dc5497cd3dd5ac32ef71cc2ef2d82fd7322ac56331dc5e10149946",
-        "bytes": 17237
+        "path": "../clips/frames/frame-34.png",
+        "sha256": "85a04d1091368ca5f4975d3a67823f910bbe29c781935e856e653b77844e66f5",
+        "bytes": 17124
       },
       {
-        "path": "../stage-clips/frames/frame-35.png",
-        "sha256": "29ef3209c6770444789356802bc659aa9bfcb7c14ed502aabe3e4afcf1a97822",
-        "bytes": 16678
+        "path": "../clips/frames/frame-35.png",
+        "sha256": "9b076c5a3829da86a88a069dcd7d7222c3e8b801cd51fea978fa8bab42b91f8e",
+        "bytes": 16565
       },
       {
-        "path": "../stage-clips/frames/frame-36.png",
-        "sha256": "a4053d2d023dab7081d3d63862f9ae88c7386942073ce54361b1bfacb7e8f0a4",
-        "bytes": 17530
+        "path": "../clips/frames/frame-36.png",
+        "sha256": "a620963d736c7f1e536f8c0a2babd7a40b3c6eb9e70cf70c2355b9067fe39544",
+        "bytes": 17446
       },
       {
-        "path": "../stage-clips/frames/frame-37.png",
-        "sha256": "2a739642e8fac4b20a64bedaf68f675bd3180451f6725de1f296e5649fd331e4",
-        "bytes": 17759
+        "path": "../clips/frames/frame-37.png",
+        "sha256": "e15fa3cd0f1f8061baf83f7a2daed5dbe4597cb5801aa6815afa96d438926cfc",
+        "bytes": 17681
       },
       {
-        "path": "../stage-clips/frames/frame-38.png",
-        "sha256": "20c0289d711cf4bf260a9e0dcb72edfe97690e31807124425d9ec5e6e1e35c8e",
-        "bytes": 20918
+        "path": "../clips/frames/frame-38.png",
+        "sha256": "bac6cb2615de18c9ccd3f66899f43bebf9ec5efb59bc96bdc7b5cc301c8f43ca",
+        "bytes": 20443
       },
       {
-        "path": "../stage-clips/frames/frame-39.png",
-        "sha256": "80f493448adb675c4131905c505d47518f6660cc499dfed56f6e002c15645570",
-        "bytes": 20292
+        "path": "../clips/frames/frame-39.png",
+        "sha256": "1f55b7fb14ea7c072bd29de773bbdfc417e796cf6136b5a4af6ce889e3652bca",
+        "bytes": 19782
       },
       {
-        "path": "../stage-clips/frames/frame-40.png",
-        "sha256": "91850436bb9795cc47e563a7b4e24cf4d01d8b0f97b1591d5e59b9633409aa1e",
-        "bytes": 19203
+        "path": "../clips/frames/frame-40.png",
+        "sha256": "e5d050a1af38a9aa9869b1255d424d26f433155522276a44ecfc4d6aaf54cfce",
+        "bytes": 18759
       },
       {
-        "path": "../stage-clips/frames/frame-41.png",
-        "sha256": "9d151c57e781da1c3dceb15b111a271c51a3be224f89b2999126b89cf2ff69af",
-        "bytes": 17370
+        "path": "../clips/frames/frame-41.png",
+        "sha256": "08bb1925e2be9174cd51905829fe3e36f4402b1508df491cd5deb67247c57b27",
+        "bytes": 16949
       },
       {
-        "path": "../stage-clips/frames/frame-42.png",
-        "sha256": "2d9d2363c6150fc785083b469e1e22c80b6d1e0e06a26cb7162b7ee76db21329",
-        "bytes": 17413
+        "path": "../clips/frames/frame-42.png",
+        "sha256": "9d25882e5f4f87f8a4f0fc92301f2005a9f883774f4a5e00039d937d484d45be",
+        "bytes": 17002
       },
       {
-        "path": "../stage-clips/frames/frame-43.png",
-        "sha256": "a1906c8bfafd2ec052921b29b50bf6c5941cc377bdc93a701e6d9b0a1c0d99b8",
-        "bytes": 16763
+        "path": "../clips/frames/frame-43.png",
+        "sha256": "ca7ed590e8a0ed7b438e4d4421a89a69e0bdca63fb51ce8667c7d7e4165c0834",
+        "bytes": 16395
       },
       {
-        "path": "../stage-clips/frames/frame-44.png",
-        "sha256": "260959782174174ca26d3374599d40cfbf10d5eb8f9d877ec58f847f5cdca770",
-        "bytes": 15942
+        "path": "../clips/frames/frame-44.png",
+        "sha256": "c95e20b933322f47ba10751624d27839b3c61d60bc9427d79bbb289a2b2accff",
+        "bytes": 15560
       },
       {
-        "path": "../stage-clips/frames/frame-45.png",
-        "sha256": "d3501c25f7d62f2868a8b1001fff2e4435ca2328f57d60dabd72ce19c4adcb43",
-        "bytes": 15643
+        "path": "../clips/frames/frame-45.png",
+        "sha256": "829cf1b65cf083c702a7287c55b42d1ecd2828a65c02e05ffaf496cce87464c4",
+        "bytes": 15284
       },
       {
-        "path": "../stage-clips/frames/frame-46.png",
+        "path": "../clips/frames/frame-46.png",
         "sha256": "57014f069e778e0b68480d314c9995e117e96c03ca1bb47a1517a9dc928953db",
         "bytes": 1001
       },
       {
-        "path": "../stage-clips/frames/frame-47.png",
+        "path": "../clips/frames/frame-47.png",
         "sha256": "2e35e9b8bcf8853f09c003cb4f7f10927568396a8031f19cd58aff0d25ca1c98",
         "bytes": 2276
       },
       {
-        "path": "../stage-clips/frames/frame-48.png",
+        "path": "../clips/frames/frame-48.png",
         "sha256": "8c488651823e807791b1c5c12829d2a14a3b6a8d04d741aba3b725c598e10ac2",
         "bytes": 3829
       },
       {
-        "path": "../stage-clips/frames/frame-49.png",
+        "path": "../clips/frames/frame-49.png",
         "sha256": "72f520b08b897472aedc0319aff593c8fcc291a93289e1ba763bd1a71e50a7ab",
         "bytes": 3904
       },
       {
-        "path": "../stage-clips/frames/frame-50.png",
+        "path": "../clips/frames/frame-50.png",
         "sha256": "ac86eda4d1d9dd610b15c15e36adc46c759218e96838e5f10886090a2ab813bd",
         "bytes": 3548
       },
       {
-        "path": "../stage-clips/frames/frame-51.png",
+        "path": "../clips/frames/frame-51.png",
         "sha256": "12469482162a1623314c55226ae3b8fc3c7a4a3c76f696cc7aa87c8c426e32d5",
         "bytes": 2556
       },
       {
-        "path": "../stage-clips/frames/frame-52.png",
+        "path": "../clips/frames/frame-52.png",
         "sha256": "305aa98f07896a573097033522c48be54cd888c87d08b7314d8ebabd8b890b7f",
         "bytes": 2490
       },
       {
-        "path": "../stage-clips/frames/frame-53.png",
+        "path": "../clips/frames/frame-53.png",
         "sha256": "12e3cfd8966b79bf6b00713661abc98c03f4c755d651ff1b6b9aa71b66835d2f",
         "bytes": 1167
       }
@@ -1577,7 +1577,7 @@
     "outputs": [
       {
         "path": "aseprite/tasmanian_king_crab.png",
-        "sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c"
+        "sha256": "c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d"
       },
       {
         "path": "aseprite/tasmanian_king_crab.json",
@@ -1585,7 +1585,7 @@
       },
       {
         "path": "godot/tasmanian_king_crab-atlas-00.png",
-        "sha256": "9321a34b4aa7e4405583aa829f40d33d2aabc33a6bf796151dc5d7292fc43f0c"
+        "sha256": "c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d"
       },
       {
         "path": "godot/tasmanian_king_crab.tres",
@@ -1597,35 +1597,35 @@
       },
       {
         "path": "godot-sprite3d/frames/frame-000.png",
-        "sha256": "5c93785ff07a1578c9c504cd5ca683da0df50bb9075bb877301efc38b62722ea"
+        "sha256": "020b0494ed66e90dac831e93b2ca758b436cda698a4c012eb7dfa87c6c704b0d"
       },
       {
         "path": "godot-sprite3d/frames/frame-001.png",
-        "sha256": "a638f3ff576ad8047619fa1099c989d95f043cf9d9dadd40aa3973c81bf2d2a6"
+        "sha256": "9d48106b46010f7c0159091e32f5d0016e0f76b9578b6d27aed1ce35fd88a60a"
       },
       {
         "path": "godot-sprite3d/frames/frame-002.png",
-        "sha256": "4dfdf4ff5cbe12d0a30f2639fa1da78cb4b71678d8f15823395c55e0029f024c"
+        "sha256": "118819158f46cce4606329c1a9c198e9ea92674fd145c3300f0fa3db5590caef"
       },
       {
         "path": "godot-sprite3d/frames/frame-003.png",
-        "sha256": "72c8b2058093a24bfdb85e8193e25148d1c56bbdf1b3a28c92786e0f4efa004e"
+        "sha256": "8d0fdcc6f517932238217e501107c83f64251415cdf328d1d5d77b0e5c273143"
       },
       {
         "path": "godot-sprite3d/frames/frame-004.png",
-        "sha256": "4999ddcb134539445f9814466f8adb025f1dfc4a6a41b5f5429eb345003ddcc8"
+        "sha256": "b9dbf51fa68d3b48ad21981a9b60526f2667f1e07b5280f917c216961ce33c50"
       },
       {
         "path": "godot-sprite3d/frames/frame-005.png",
-        "sha256": "21ab13fe280700ae7edaf55473bb17b8c41230d4788c34c6b2b56fda08fa779a"
+        "sha256": "758dc66ca0642638b28677c8ce115a223ea6680ce15aafc9c932749c589c2fd1"
       },
       {
         "path": "godot-sprite3d/frames/frame-006.png",
-        "sha256": "a1db69943e164617495c3dccca01e1832e98404580724c2f2fe0643ecd1c750c"
+        "sha256": "5cfad5d35dba61492667ac47411c3b23a4039a896e17d6d902026799d372b2f0"
       },
       {
         "path": "godot-sprite3d/frames/frame-007.png",
-        "sha256": "b6f63e663375378a400326953f5c8f3a987dc8408bc88096d4d5ef179988896c"
+        "sha256": "959be0679007fe5377d2345f4674b1369685b66fae8e75b0df2ccb478f7752f4"
       },
       {
         "path": "godot-sprite3d/frames/frame-008.png",
@@ -1661,123 +1661,123 @@
       },
       {
         "path": "godot-sprite3d/frames/frame-016.png",
-        "sha256": "2b46fa2e3525017977b6e9f9c888ed62f2f3a79154972a300c8c68b6afe0dc58"
+        "sha256": "d8eb97ef107a554025399b22753032b3e9651337250fdb808d1fa00e1eadc025"
       },
       {
         "path": "godot-sprite3d/frames/frame-017.png",
-        "sha256": "dac2e7428e0580b758b3d49d139ab4a4871ceca913e4552f89bba22534ad4ed5"
+        "sha256": "73e8ba5c0dd45349b45accc0d2b3390148cf9c27750513706dc23b029b3364c4"
       },
       {
         "path": "godot-sprite3d/frames/frame-018.png",
-        "sha256": "3914072b720e07947bd640fe4e429a21f38817a9d1f49f3a984cdd409af01956"
+        "sha256": "7ed428eaa999ba5e9b63bcc14bc58f280d89c715d895509cfb6748015ac918ce"
       },
       {
         "path": "godot-sprite3d/frames/frame-019.png",
-        "sha256": "91fa3efa51523bf69256afe16e15eff48be698e055bd4cb897725dda4175d819"
+        "sha256": "d6cc77f3efcf0f7a5506e11222572031dd3a79795c0a2e2a2adb5e4ffea4d094"
       },
       {
         "path": "godot-sprite3d/frames/frame-020.png",
-        "sha256": "3d4d12d208af171a27c1a8de86cf4cb8fee06103b61568e9c451cc2a08209935"
+        "sha256": "3ea9f06d4c69ba782786a69ac9356493c46bef777faa9e6ae0b9e1ff1d8e1aff"
       },
       {
         "path": "godot-sprite3d/frames/frame-021.png",
-        "sha256": "b772544e6021c00aec847c57a7487001d2b0950d543ecc40251787a476132908"
+        "sha256": "e9cab17f662eb47922e7d0e94a984fb1b8a2dca8ab7bac52438b3bee6388e16a"
       },
       {
         "path": "godot-sprite3d/frames/frame-022.png",
-        "sha256": "90a31316994bb519dc44bbb49202725d2f2012f19ba5864810a9157a8406a4bf"
+        "sha256": "66b96093a55a716bc6b2783933da04ddfdf077dd6cccd53f2da78bdb0c4e0fb3"
       },
       {
         "path": "godot-sprite3d/frames/frame-023.png",
-        "sha256": "051816331f20f27fcc6d9ddce6dcb1f0974b551380dd0b4b57fb2c9ee3d9bc74"
+        "sha256": "4f2779c7834062925f9a7749e467bbddeb21fb1a08d2c6b0992c564f3a046736"
       },
       {
         "path": "godot-sprite3d/frames/frame-024.png",
-        "sha256": "92a60fd958cf303d7f7a113cc3d51e42fc5a75f83418e6b9130f91730e6f9616"
+        "sha256": "10d23ff12f5e3112a3f7cb13bb13b6918dc9367e89965b63201778d60e866081"
       },
       {
         "path": "godot-sprite3d/frames/frame-025.png",
-        "sha256": "26de15a67e4c9633253f5a1b461e7fb4276b6ff9c205511c5705cff0d7193c51"
+        "sha256": "07e060194f889768b629a4797a705f8b0f3baa5da60fd82698ba24496088038c"
       },
       {
         "path": "godot-sprite3d/frames/frame-026.png",
-        "sha256": "4a84f4d23cedabf18f850199175289a5657f58211443cf69fb82fee742ece871"
+        "sha256": "a90e878b5715343f6c8685ddda1e6803d4fdf66fa05310201f5cfbddc9c3970a"
       },
       {
         "path": "godot-sprite3d/frames/frame-027.png",
-        "sha256": "5da96e68ab2064d6cf9f30613f891288fee46a6fe3f6e9b1a482976966eb8e04"
+        "sha256": "cb91f6fd477b781a097a725fa697897e05c11c2bad31eeaf331c671024528a81"
       },
       {
         "path": "godot-sprite3d/frames/frame-028.png",
-        "sha256": "c324e5c764b2e683db4baa3aae949ec6d81247d089013106733b5f2e9be72673"
+        "sha256": "c53409c757964483763b5df979e2093f4d80e305f2651af00ffe04e2f46a7190"
       },
       {
         "path": "godot-sprite3d/frames/frame-029.png",
-        "sha256": "581ec98f7ad5adbccfe3f3efcaa2f4aa37c76365aed9dfba8520994aeda2d8bc"
+        "sha256": "65ad840932a71f31572435173cdbd4f4c690eb8778c2e2386bc4d51c28a805d6"
       },
       {
         "path": "godot-sprite3d/frames/frame-030.png",
-        "sha256": "5f78032a565a007b346f12631db1c080c918de0bc71bfe44af5d02612f8f7f7c"
+        "sha256": "0242515f18a1528b7eaf40c52147a3c74505477b8b80b5e600d45756c0dc5140"
       },
       {
         "path": "godot-sprite3d/frames/frame-031.png",
-        "sha256": "9c52408dcec2dfedf744814cfe976b1f5a93e2dc171f34782f0f18c59b75c06a"
+        "sha256": "4ea09018071a699467477f45bbae4d711160abab26f719b4416ebd85ec22fd06"
       },
       {
         "path": "godot-sprite3d/frames/frame-032.png",
-        "sha256": "fd4c260ec40df1bfb886098c685540e46f4dee90d373854fdbe661c7feeb0a68"
+        "sha256": "7363f5e386dadae3a732432d9f90280e3a8dc7534003e99dc70a86e811714c2c"
       },
       {
         "path": "godot-sprite3d/frames/frame-033.png",
-        "sha256": "84a1e1d2043869189e635466884ea8c27a9e73378d1f3ef533be82461c579f3e"
+        "sha256": "da65e95ebc4db81896f537e4ea1cea694c1f783f62f2348c7a0adff5f6a20ab2"
       },
       {
         "path": "godot-sprite3d/frames/frame-034.png",
-        "sha256": "bcc7e764f6dc5497cd3dd5ac32ef71cc2ef2d82fd7322ac56331dc5e10149946"
+        "sha256": "85a04d1091368ca5f4975d3a67823f910bbe29c781935e856e653b77844e66f5"
       },
       {
         "path": "godot-sprite3d/frames/frame-035.png",
-        "sha256": "29ef3209c6770444789356802bc659aa9bfcb7c14ed502aabe3e4afcf1a97822"
+        "sha256": "9b076c5a3829da86a88a069dcd7d7222c3e8b801cd51fea978fa8bab42b91f8e"
       },
       {
         "path": "godot-sprite3d/frames/frame-036.png",
-        "sha256": "a4053d2d023dab7081d3d63862f9ae88c7386942073ce54361b1bfacb7e8f0a4"
+        "sha256": "a620963d736c7f1e536f8c0a2babd7a40b3c6eb9e70cf70c2355b9067fe39544"
       },
       {
         "path": "godot-sprite3d/frames/frame-037.png",
-        "sha256": "2a739642e8fac4b20a64bedaf68f675bd3180451f6725de1f296e5649fd331e4"
+        "sha256": "e15fa3cd0f1f8061baf83f7a2daed5dbe4597cb5801aa6815afa96d438926cfc"
       },
       {
         "path": "godot-sprite3d/frames/frame-038.png",
-        "sha256": "20c0289d711cf4bf260a9e0dcb72edfe97690e31807124425d9ec5e6e1e35c8e"
+        "sha256": "bac6cb2615de18c9ccd3f66899f43bebf9ec5efb59bc96bdc7b5cc301c8f43ca"
       },
       {
         "path": "godot-sprite3d/frames/frame-039.png",
-        "sha256": "80f493448adb675c4131905c505d47518f6660cc499dfed56f6e002c15645570"
+        "sha256": "1f55b7fb14ea7c072bd29de773bbdfc417e796cf6136b5a4af6ce889e3652bca"
       },
       {
         "path": "godot-sprite3d/frames/frame-040.png",
-        "sha256": "91850436bb9795cc47e563a7b4e24cf4d01d8b0f97b1591d5e59b9633409aa1e"
+        "sha256": "e5d050a1af38a9aa9869b1255d424d26f433155522276a44ecfc4d6aaf54cfce"
       },
       {
         "path": "godot-sprite3d/frames/frame-041.png",
-        "sha256": "9d151c57e781da1c3dceb15b111a271c51a3be224f89b2999126b89cf2ff69af"
+        "sha256": "08bb1925e2be9174cd51905829fe3e36f4402b1508df491cd5deb67247c57b27"
       },
       {
         "path": "godot-sprite3d/frames/frame-042.png",
-        "sha256": "2d9d2363c6150fc785083b469e1e22c80b6d1e0e06a26cb7162b7ee76db21329"
+        "sha256": "9d25882e5f4f87f8a4f0fc92301f2005a9f883774f4a5e00039d937d484d45be"
       },
       {
         "path": "godot-sprite3d/frames/frame-043.png",
-        "sha256": "a1906c8bfafd2ec052921b29b50bf6c5941cc377bdc93a701e6d9b0a1c0d99b8"
+        "sha256": "ca7ed590e8a0ed7b438e4d4421a89a69e0bdca63fb51ce8667c7d7e4165c0834"
       },
       {
         "path": "godot-sprite3d/frames/frame-044.png",
-        "sha256": "260959782174174ca26d3374599d40cfbf10d5eb8f9d877ec58f847f5cdca770"
+        "sha256": "c95e20b933322f47ba10751624d27839b3c61d60bc9427d79bbb289a2b2accff"
       },
       {
         "path": "godot-sprite3d/frames/frame-045.png",
-        "sha256": "d3501c25f7d62f2868a8b1001fff2e4435ca2328f57d60dabd72ce19c4adcb43"
+        "sha256": "829cf1b65cf083c702a7287c55b42d1ecd2828a65c02e05ffaf496cce87464c4"
       },
       {
         "path": "godot-sprite3d/frames/frame-046.png",
@@ -1813,7 +1813,7 @@
       },
       {
         "path": "godot-sprite3d/action-idle.json",
-        "sha256": "f1811c9212863fd14cbad9bd0ef2bca499555a127f7cf5bfa2f128f128647902"
+        "sha256": "3daa9f9ddca832aef18efe24a32120e5565de0c703b09af92fe6da47c39dc01e"
       },
       {
         "path": "godot-sprite3d/action-walk.json",
@@ -1821,19 +1821,19 @@
       },
       {
         "path": "godot-sprite3d/action-attack_nomal.json",
-        "sha256": "60532146cc6838afb480539e8d3b6398f7064a3d3cac97a26602f7bc8e099475"
+        "sha256": "27553c91ba8f7a622b283904569fb1b0d335e867139dc4619a135231b97e3ca2"
       },
       {
         "path": "godot-sprite3d/action-power_up.json",
-        "sha256": "d78f75e1573a5bf3a4f9ee545ff10fcacc739141c74743d1cd7a9b10adb4e6ae"
+        "sha256": "ef6b2c2900762d6917831f4d9be66f5b238c67d3c3828be0f4fbc8c34b40168b"
       },
       {
         "path": "godot-sprite3d/action-hit.json",
-        "sha256": "a9493b8faccc34f9787387147edb6b2e523804f0ecd668c13c46c4092b2c0539"
+        "sha256": "804229b00a3b1ef02d2e02a3dab990b27cd319d8c5627c90cd02fc2336cee331"
       },
       {
         "path": "godot-sprite3d/action-ko.json",
-        "sha256": "43a153eb2a39a6c9473020f3b49a4fccb9e474e6806eaf2556dff319fea9166b"
+        "sha256": "eee1266d3838eac45f8245044237c4072c80cd365952f311fa7c44a6ba02e5cb"
       },
       {
         "path": "godot-sprite3d/action-power_orb_loop.json",
@@ -1952,22 +1952,27 @@
   "provenance": {
     "body_art_source": "built-in imagegen complete whole-body keyframes",
     "identity_reference": "work/characters/tasmanian_king_crab/size-master/master.png",
-    "identity_sha256": "5c93785ff07a1578c9c504cd5ca683da0df50bb9075bb877301efc38b62722ea",
+    "identity_sha256": "020b0494ed66e90dac831e93b2ca758b436cda698a4c012eb7dfa87c6c704b0d",
     "fx_source": "work/characters/tasmanian_king_crab/atlas-v1/source/power-orb-owner.png",
     "fx_source_sha256": "2772a0e7e7b6cef7062cb47221c8c55b84d1311d19f0ee29b404a3745079c5ee",
     "source_fx_pose_count": 6,
     "new_bridge_pose_count": 2,
     "body_part_cut_warp": false,
     "registration": "Fixed whole-frame scale peraction, shared row ground;2Dcomponent ownership includes dissolve islands. Original idle0 retained exactly.",
-    "owner_approved": false,
+    "owner_approved": true,
     "atlas_demo_only": false,
     "timing_fix": "Export automatic tick basis at60Hz, not rounded integer-ms fixedFPS. Authored ticks unchanged.",
-    "approved_at": "2026-11-12T09:51:08.495780+00:00",
-    "release_version": "0.7.0",
-    "owner_animation_approved": false,
+    "approved_at": "2026-11-15T05:52:31.727116+00:00",
+    "release_version": "0.12.0",
+    "owner_animation_approved": true,
     "step2_visual_fix_at": "2026-11-14T09:26:26.764136+00:00",
     "step2_visual_fix_summary": "Step-2 visual fix: match idle_01..07 tonal curve/alignment to idle_00 (master.png) to eliminate frame-0 flash, and ground idle_02, idle_03, walk_01 feet onto y=223 (y224 baseline).",
     "previous_owner_approval_file": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json",
-    "previous_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1"
+    "previous_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
+    "previous_revision_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
+    "uniform_color_v1_at": "2026-11-15T04:36:50.583682+00:00",
+    "uniform_color_v1_summary": "Uniform-color-v1: removed idle glare/white flash and unified all 5 body clips (idle, attack_nomal, power_up, hit, ko) to canonical walk luminance CDF & RGB tone curve; walk & orb FX unchanged.",
+    "owner_approval_file": "assets/tasmanian_king_crab/owner_approval.json",
+    "workflow_id": "PIPE-012"
   }
 }

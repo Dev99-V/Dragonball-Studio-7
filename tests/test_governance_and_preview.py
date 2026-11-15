@@ -95,7 +95,13 @@ class GovernanceAndPreviewTests(unittest.TestCase):
                 review = ch["motion_quality"]
                 sup_id = workflow.get("superseded_by")
                 if sup_id:
-                    sup = by_id[sup_id]
+                    seen = {workflow["id"]}
+                    cur_id = sup_id
+                    while cur_id:
+                        self.assertNotIn(cur_id, seen, "Cycle in superseded_by chain")
+                        seen.add(cur_id)
+                        sup = by_id[cur_id]
+                        cur_id = sup.get("superseded_by")
                     sup_receipt = json.loads((REPO_ROOT / sup["approval_file"]).read_text())
                     self.assertEqual(sup["character_id"], receipt["character_id"])
                     self.assertEqual(sup_receipt["status"], "owner_approved")

@@ -7,18 +7,27 @@ def read(p):return json.loads((R/p).read_text())
 class DilophosaurusContract(unittest.TestCase):
  def data(self):return read('assets/dilophosaurus/clips/animation-clips.json'),read('assets/dilophosaurus/godot_bundle/engine-export.json')
  def test_owner_approved_revision_is_frozen(self):
-  receipt=read('work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json');self.assertEqual(receipt['status'],'owner_approved');self.assertEqual(receipt['workflow_id'],'PIPE-006')
-  snap=R/'work/characters/dilophosaurus/step2-visual-fix/snapshot-before'
-  self.assertEqual(hashlib.sha256((snap/'dilophosaurus-atlas-00.png').read_bytes()).hexdigest(),receipt['atlas_sha256'])
-  self.assertEqual(hashlib.sha256((snap/'dilophosaurus.tres').read_bytes()).hexdigest(),receipt['tres_sha256'])
+  prev_receipt=read('docs/releases/dilophosaurus-v0.9.1-approval.json');snap=R/'work/characters/dilophosaurus/step2-visual-fix/snapshot-before'
+  self.assertEqual(prev_receipt,read('work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json'))
+  self.assertEqual(prev_receipt['status'],'owner_approved');self.assertEqual(prev_receipt['workflow_id'],'PIPE-006')
+  self.assertEqual(hashlib.sha256((snap/'dilophosaurus-atlas-00.png').read_bytes()).hexdigest(),prev_receipt['atlas_sha256'])
+  self.assertEqual(hashlib.sha256((snap/'dilophosaurus.tres').read_bytes()).hexdigest(),prev_receipt['tres_sha256'])
+  receipt=read('assets/dilophosaurus/owner_approval.json');self.assertEqual(receipt['status'],'owner_approved');self.assertEqual(receipt['workflow_id'],'PIPE-014');self.assertEqual(receipt['approved_revision'],'step2-visual-fix+calibration-v1 / v0.12.0')
+  self.assertEqual(hashlib.sha256((R/receipt['atlas_path']).read_bytes()).hexdigest(),receipt['atlas_sha256'])
   for path,digest in receipt['approved_runtime_files_sha256'].items():
-   if path.startswith('scenes/'):
-    self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),digest,path)
+   self.assertEqual(hashlib.sha256((R/path).read_bytes()).hexdigest(),digest,path)
+  frozen=R/receipt['frozen_source'];live=R/receipt['clips_manifest_path'];self.assertEqual(frozen.read_bytes(),live.read_bytes())
+  manifest=json.loads(frozen.read_text())
+  for f in manifest['frames']:
+   self.assertEqual((frozen.parent/f['file']).read_bytes(),(live.parent/f['file']).read_bytes(),f['file'])
   roster_entry=next(ch for ch in read('assets/roster.json')['characters'] if ch['character_id']=='dilophosaurus')
-  self.assertEqual(roster_entry['status'],'finalized_pending_owner_reapproval')
-  self.assertEqual(roster_entry['motion_quality']['status'],'reviewed_pending_owner')
-  self.assertFalse(roster_entry['motion_quality']['owner_approved'])
-  self.assertEqual(roster_entry['motion_quality']['previous_revision_atlas_sha256'],receipt['atlas_sha256'])
+  self.assertEqual(roster_entry['status'],'finalized_owner_approved')
+  self.assertEqual(roster_entry['atlas_stage'],'finalized_owner_approved')
+  self.assertEqual(roster_entry['motion_quality']['status'],'owner_approved')
+  self.assertTrue(roster_entry['motion_quality']['owner_approved'])
+  self.assertEqual(roster_entry['owner_animation_approval']['workflow_id'],'PIPE-014')
+  self.assertEqual(roster_entry['motion_quality']['atlas_sha256'],receipt['atlas_sha256'])
+  self.assertEqual(roster_entry['motion_quality']['previous_revision_atlas_sha256'],prev_receipt['atlas_sha256'])
  def test_owner_scope_and_master_identity(self):
   m,e=self.data();body=['idle','walk','attack_light','hit','ko','turn','power_up'];self.assertEqual(set(e['render_contract']['body_clips']),set(body));self.assertEqual(set(m['clips']),set(body+e['render_contract']['effect_clips']))
   for n in ['attack_heavy','run','jump','aura_loop','guard','win']:self.assertNotIn(n,m['clips'])

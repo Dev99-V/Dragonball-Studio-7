@@ -12,14 +12,11 @@ Tài liệu `AGENTS.md` này là **Hiến pháp tối cao và duy nhất** ở t
 
 ---
 
-## Điều 2. Cổng Đánh Giá Độ Rõ Ràng Trước Khi Code (Pre-Task Clarity Gate)
+## Điều 2. Cổng Rõ Ràng & Đồng Nhất Mẫu Chuẩn (Pre-Task Clarity Gate)
 
-1. **Đánh giá bắt buộc trước khi thực thi**: Trước khi viết code, sửa kiến trúc hoặc chạy pipeline xử lý asset, Agent bắt buộc tự rà soát:
-   - Mục tiêu cuối cùng của Owner trong task này đã rõ 100% chưa?
-   - Logic nghiệp vụ, thông số đầu vào/đầu ra, ràng buộc hiệu năng hoặc nền tảng còn điểm nào mơ hồ không?
-2. **Mơ hồ = Dừng lại & Hỏi rõ Owner**:
-   - Nếu còn bất kỳ điểm nào chưa rõ từ yêu cầu của Owner hoặc từ `state.json` / `skills.md`: **BẮT BUỘC dừng việc triển khai và hỏi lại Owner**.
-   - Khi hỏi, trình bày khách quan các phương án khả thi kèm ưu/nhược điểm kỹ thuật để Owner chốt nhanh, tuyệt đối không tự đoán ý làm trước.
+1. **Rà soát trước khi làm**: Trước khi viết code, sửa kiến trúc hay xử lý asset, Agent phải xác nhận rõ 100% mục tiêu, logic, đầu vào/ra, hiệu năng, nền tảng.
+2. **Mơ hồ = Dừng & Hỏi Owner**: Còn điểm chưa rõ từ Owner, `state.json`, `skills.md` thì **BẮT BUỘC dừng triển khai, hỏi lại Owner** kèm phương án và ưu/nhược điểm; cấm đoán mò làm trước.
+3. **Đồng nhất theo mẫu chuẩn**: Nhận 1 mẫu chuẩn thì toàn bộ **kích thước, hình dạng, màu sắc** mọi hoạt ảnh phải đồng nhất toàn bộ; không hiểu điểm nào phải hỏi lại ngay, cấm tự ý đoán mò gây lệch hình dạng, kích thước, màu sắc giữa các hoạt ảnh.
 
 ---
 

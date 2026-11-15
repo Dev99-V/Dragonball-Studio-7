@@ -16,10 +16,11 @@
   ],
   "sampling": "nearest",
   "alpha_hardness_pct": 100,
-  "master_sha256": "5c93785ff07a1578c9c504cd5ca683da0df50bb9075bb877301efc38b62722ea",
+  "master_sha256": "020b0494ed66e90dac831e93b2ca758b436cda698a4c012eb7dfa87c6c704b0d",
   "source": "work/reviews/character-size-v1/tasmanian_king_crab-sample.png",
   "size_reference": "Spinosaurus idle0 width157px;0.85*157=133.45 rounded133",
   "atlas_status": "owner_approved_atlas_v1",
   "owner_approval_file": "assets/tasmanian_king_crab/owner_approval.json",
-  "approved_at": "2026-11-12T09:51:08.495780+00:00"
+  "approved_at": "2026-11-12T09:51:08.495780+00:00",
+  "note": "Uniform-color-v1: idle_00..07, attack_nomal, power_up, hit, and ko matched to canonical walk luminance & palette (removing idle glare/flash); geometry, alpha, and 133x64 idle bbox preserved."
 }
