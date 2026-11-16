@@ -105,6 +105,7 @@ func evaluate(params: Dictionary) -> Dictionary:
 	var cid: String = str(params.get("character_id", ""))
 	var is_flying: bool = bool(params.get("is_flying", false))
 	var has_heavy: bool = bool(params.get("has_heavy", false))
+	var has_power_up: bool = bool(params.get("has_power_up", true))
 	var light_clip: String = str(params.get("light_clip", "attack_light"))
 	var self_rect: Rect2 = params.get("self_rect", Rect2())
 	var target_rect: Rect2 = params.get("target_rect", Rect2())
@@ -155,7 +156,7 @@ func evaluate(params: Dictionary) -> Dictionary:
 		cooldown_remaining = attack_cooldown_s
 		return {"intent": "attack", "move_dir": 0, "attack_clip": chosen, "desired_face_left": face_left, "edge_dist": edge_dist, "reason": last_reason}
 
-	# Special Case 2: Flying mobs hover/patrol at air lane, never chase ground/far targets; use power_up at >=50px, light only when <50px.
+	# Special Case 2: Flying mobs hover/patrol at air lane, never chase ground/far targets; use power_up (or light_clip if none) at >=50px, light when <50px.
 	if is_flying:
 		if edge_dist >= close_edge_px:
 			light_chain_count = 0
@@ -165,10 +166,11 @@ func evaluate(params: Dictionary) -> Dictionary:
 				pat["reason"] = "flying_hover_cooldown"
 				last_reason = pat["reason"]
 				return pat
+			var ranged_clip := "power_up" if has_power_up else light_clip
 			last_intent = "attack"
 			last_reason = "flying_ranged_far"
 			cooldown_remaining = attack_cooldown_s
-			return {"intent": "attack", "move_dir": 0, "attack_clip": "power_up", "desired_face_left": face_left, "edge_dist": edge_dist, "reason": last_reason}
+			return {"intent": "attack", "move_dir": 0, "attack_clip": ranged_clip, "desired_face_left": face_left, "edge_dist": edge_dist, "reason": last_reason}
 		if cooldown_remaining > 0.0:
 			last_intent = "wait_cooldown"
 			last_reason = "flying_melee_cooldown"

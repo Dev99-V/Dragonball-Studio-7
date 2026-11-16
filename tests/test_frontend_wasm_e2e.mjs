@@ -57,7 +57,7 @@ const apiJsonStr = execFileSync(
   'python3',
   [
     '-c',
-    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'terrain': server.load_map_terrain(), 'device_profiles': server.load_device_profiles(), 'godot_web_ready': (server.REPO_ROOT / 'build' / 'web' / 'index.html').is_file(), 'android_apk': server.get_android_apk_info(), 'rituals': server.load_rituals(), 'items': server.load_items(), 'parity': server.verify_engine_localhost_parity()}))`,
+    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'terrain': server.load_map_terrain(), 'device_profiles': server.load_device_profiles(), 'godot_web_ready': (server.REPO_ROOT / 'build' / 'web' / 'index.html').is_file(), 'android_apk': server.get_android_apk_info(), 'rituals': server.load_rituals(), 'items': server.load_items(), 'parity': server.verify_engine_localhost_parity(), 'review': server.load_review_content()}))`,
   ],
   { cwd: REPO_ROOT, encoding: 'utf8' }
 );
@@ -217,6 +217,52 @@ await new Promise(r => setTimeout(r, 60));
 const T = sandbox.__TEST__;
 
 assert.equal(getEl('runtimeErrorBanner').textContent, '', 'initApp must produce ZERO runtime errors');
+assert.ok(apiPayload.roster.characters.some(c => c.character_id === 'floating_camera'), 'Floating Camera must be finalized in roster.json');
+assert.equal(T.state.api.roster.characters.length, 11, 'Finalized roster must include all 11 approved characters');
+T.selectCharacter('floating_camera');
+assert.equal(T.state.activeChar.character_id, 'floating_camera', 'Floating Camera must select inside Human Test');
+assert.deepEqual(Array.from(T.getBodyDims(T.state.activeChar)), [70, 74], 'Floating Camera body bbox must be 70x74');
+assert.equal(T.arena.spawnFacing, 'right', 'Source muzzle faces +X');
+assert.equal(T.arena.flyDefaultY, 300, 'Floating Camera must spawn 50px lower than Bat');
+assert.equal(T.arena.charScale, 1.0, 'Floating Camera native body is 70x74 at 1x');
+assert.equal(getEl('runtimeErrorBanner').textContent, '', 'Floating Camera selection must not fail');
+{
+  // Seamless walk <-> idle continuity when stopping & resuming movement
+  T.arena.keys = { KeyD: true };
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.clip, 'walk');
+  T.arena.step = 5; T.arena.elapsed = 12;
+  T.arena.keys = {};
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.clip, 'idle');
+  assert.equal(T.arena.step, 5, 'Floating Camera stopping walk->idle must preserve bobbing frame seamlessly');
+  T.arena.keys = { KeyD: true };
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.clip, 'walk');
+  assert.equal(T.arena.step, 5, 'Floating Camera resuming idle->walk must preserve bobbing frame seamlessly');
+  T.arena.keys = {};
+
+  // Player attack_light launches projectile_fx at release_frame=1
+  const attackLayers = T.getLayerFramesForStep('attack_light', 1, { auraEnabled: false });
+  assert.ok(Array.isArray(attackLayers) && attackLayers.some(l => l.layer === 'Body'), 'Floating Camera attack_light inspector layers must render without TypeError');
+  T.arena.projectiles = [];
+  T.triggerArenaAction('attack_light');
+  for (let i = 0; i < 20; i++) T.stepAndRenderArena(1000 / 60);
+  assert.ok(T.arena.projectiles.some(p => p.clip === 'projectile_fx' && p.owner === 'player'), 'Floating Camera attack_light must launch projectile_fx');
+  T.arena.hitstop = 0;
+  T.arena.actionClip = null;
+  T.arena.projectiles = [];
+
+  // Flying AI without power_up fires attack_light at >=50px
+  T.selectEnemyCharacter('floating_camera', true);
+  T.setUtilityAiEnabled(true);
+  T.arena.enemyAi.x = 1500;
+  T.arena.x = 1200;
+  T.stepEnemyAiFrame(16.67);
+  assert.equal(T.arena.enemyAi.lastAttackClip, 'attack_light', 'Floating Camera AI at >=50px must attack with attack_light');
+  T.setUtilityAiEnabled(false);
+  T.arena.projectiles = [];
+}
 
 // Drum Monster AI + Manual Testability + Player/AI Arena Dropdowns E2E Check
 {
@@ -488,16 +534,17 @@ for (const ch of apiPayload.roster.characters) {
     T.arena.keys={};
   }
   if (ch.render_contract?.locomotion?.kind === 'flight') {
-    assert.equal(T.arena.y, 250, `${ch.character_id} must spawn at hover altitude Y=250`);
+    const expectedFlightY = Number(ch.render_contract?.locomotion?.flight_default_y ?? 250);
+    assert.equal(T.arena.y, expectedFlightY, `${ch.character_id} must spawn at hover altitude Y=${expectedFlightY}`);
     T.arena.keys = { KeyW: true };
     T.stepAndRenderArena(100);
-    assert.ok(T.arena.y < 250 && T.arena.y >= T.arena.flyMinY, `${ch.character_id} KeyW flies upward without gravity snap`);
+    assert.ok(T.arena.y < expectedFlightY && T.arena.y >= T.arena.flyMinY, `${ch.character_id} KeyW flies upward without gravity snap`);
     const highY = T.arena.y;
     T.arena.keys = { KeyS: true };
     T.stepAndRenderArena(200);
     assert.ok(T.arena.y > highY && T.arena.y <= T.arena.groundY, `${ch.character_id} KeyS flies downward`);
     T.arena.keys = {};
-    T.arena.y = 250;
+    T.arena.y = expectedFlightY;
   }
   T.renderInspector();
   assert.equal(getEl('runtimeErrorBanner').textContent,'');

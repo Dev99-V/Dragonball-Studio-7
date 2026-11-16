@@ -2454,7 +2454,176 @@
         "notes": "Walk v6 rebuilt from canonical idle_00 via Codex (local CLI) locking 1:1 GBA size parity (55-57x50-51px, area 1692-1801px matching idle_00 56x50 / 1733px), natural alternating light foot lift (~2-3px) + short forward step (0..3 left, 4..7 right), speed calibrated to 140 px/s (56.0 * 2.5x), finalized scale 2.5x Nearest (140x125px / 11.6% 1080p), exact GBA palette, {0,255} alpha, 0 pockets, and 3-bg filmstrip verification.",
         "naturalness_verdict": "owner_approved"
       }
+    },
+    {
+      "character_id": "floating_camera",
+      "display_name": "Floating Camera",
+      "faction": "special_beasts",
+      "combat_role": "monster",
+      "role_label": "Quái bay · bắn đạn từ nòng súng",
+      "tags": [
+        "monster",
+        "flying",
+        "camera",
+        "pixel_art"
+      ],
+      "status": "finalized_owner_approved",
+      "map_sync_metrics": {
+        "canvas_size_px": [
+          192,
+          160
+        ],
+        "foot_anchor_px": [
+          96,
+          112
+        ],
+        "body_only_bbox_px": {
+          "x": 61,
+          "y": 38,
+          "w": 70,
+          "h": 74
+        },
+        "full_fx_bbox_px": {
+          "x": 47,
+          "y": 28,
+          "w": 116,
+          "h": 115
+        },
+        "reference_ppu_64": 64,
+        "world_size_at_64ppu_m": {
+          "body_w_m": 1.09375,
+          "body_h_m": 1.15625,
+          "aura_w_m": 1.8125,
+          "aura_h_m": 1.796875
+        },
+        "tile_32px_span": {
+          "body_tiles_w": 2.1875,
+          "body_tiles_h": 2.3125,
+          "full_fx_tiles_w": 3.625,
+          "full_fx_tiles_h": 3.59375
+        }
+      },
+      "pixel_sharpness_metrics": {
+        "texel_scale_ratio": "Nearest SX=3.5, SY=3.0833 từ nguồn 20×24 (1-pass direct)",
+        "edge_acutance_sobel": 133.691,
+        "alpha_hardness_pct": 100.0,
+        "visible_alpha_hardness_pct": 100.0,
+        "opaque_key_px": 0,
+        "enclosed_key_pockets": 0,
+        "outer_ring_spill_fraction": 0.0,
+        "reference_note": "1-pass Nearest direct extraction from 20x24 FloatingCamera.gif source (13 exact colors, zero blur, zero AI redraw)."
+      },
+      "present_clips": [
+        "idle",
+        "walk",
+        "attack_light",
+        "projectile_fx",
+        "hit",
+        "ko"
+      ],
+      "effect_clips": [
+        "projectile_fx"
+      ],
+      "missing_provisional_clips": [
+        "run",
+        "jump",
+        "attack_heavy",
+        "aura_loop",
+        "turn"
+      ],
+      "not_applicable_clips": {
+        "run": "Owner only requested flight from row 1 poses.",
+        "jump": "Flying monster hovering in mid-air (no ground jump).",
+        "guard": "guard/win excluded project-wide per Owner rule.",
+        "win": "guard/win excluded project-wide per Owner rule.",
+        "attack_heavy": "Owner scoped attack to row 2 skill + projectile_fx (no separate attack_heavy).",
+        "aura_loop": "No continuous body aura in source sheet.",
+        "turn": "Owner scoped finalized 70x74 asset to available source poses with instant horizontal flip (+X muzzle forward)."
+      },
+      "render_contract": {
+        "body_clips": [
+          "idle",
+          "walk",
+          "attack_light",
+          "hit",
+          "ko"
+        ],
+        "effect_clips": [
+          "projectile_fx"
+        ],
+        "locomotion": {
+          "kind": "flight",
+          "clip": "walk",
+          "default_scale": 1.0,
+          "screen_speed_px_per_second": 150,
+          "speed_px_per_second": 150,
+          "flight_default_y": 300,
+          "default_spawn_facing": "right",
+          "allow_turn_or_flip": true,
+          "preserve_phase_on_idle_walk": true,
+          "patrol": {
+            "enabled": true,
+            "clip": "walk",
+            "speed_px_per_second": 150,
+            "min_x": 300,
+            "max_x": 1620
+          }
+        },
+        "turning": {
+          "method": "instant_flip",
+          "clip": null
+        },
+        "fx_pivot_px": [
+          96,
+          70
+        ],
+        "projectile": {
+          "body_clip": "attack_light",
+          "projectile_clip": "projectile_fx",
+          "release_frame": 1,
+          "origin_local_px": [
+            21,
+            -6
+          ],
+          "velocity_px_per_second": [
+            380,
+            0
+          ],
+          "source_forward": "right (+X)"
+        },
+        "aura": {
+          "loop_clip": null,
+          "charge_clip": null,
+          "independent_clock": true
+        }
+      },
+      "modes": {
+        "combined_1layer": {
+          "label": "Combined 1-Layer Floating Camera + Independent Projectile FX (70×74 1-Pass Nearest)",
+          "godot_prefab": "res://scenes/FloatingCamera.tscn",
+          "bundle_id": "floating_camera"
+        }
+      },
+      "atlas_stage": "finalized_owner_approved",
+      "motion_quality": {
+        "status": "owner_approved",
+        "method": "existing_complete_source_frames",
+        "turn_method": "instant_flip",
+        "atlas_sha256": "c40954fa72f5bee0f5dd5f6a6d47ad42b8827f214e213b58c6ee7e330e4d607e",
+        "owner_approved": true,
+        "checks": {
+          "body_connections": true,
+          "whole_pose_sequence": true,
+          "perspective_turns": true,
+          "phase_timing": true,
+          "three_backgrounds": true
+        },
+        "unresolved_structural_failures": [],
+        "review_evidence": "assets/floating_camera/clips/review/filmstrip-00.png",
+        "notes": "Floating Camera 70x74 via 1-pass direct Nearest from 20x24 source (13 colors, {0,255} alpha, 0 pockets/spill), idle=walk seamless hover phase continuity, flight_default_y=300 at 150 px/s, +X muzzle projectile_fx top_level, 3-bg filmstrips & localhost/Godot Web/Android APK Human Test approved.",
+        "naturalness_verdict": "owner_approved"
+      }
     }
   ],
-  "updated_at": "2026-11-15T16:08:00.000000+00:00"
+  "updated_at": "2026-11-16T15:27:40.485077+00:00"
 }

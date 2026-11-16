@@ -67,6 +67,11 @@ Chi tiết kỹ thuật chốt tại [docs/adr/0001-architecture-and-scale-roadm
    - Mọi demo, asset, UI/SafeArea, cấu hình map & bước tick `60Hz` phải dùng **cùng 1 nguồn** (`assets/`, `arena-stage.json`, `device-profiles.json`, `atlas.png`, `.tres`, `engine-export.json`, kiểm SHA-256 & `get_stage_metrics()`).
 3. **Dọn `/work` & Chỉ lưu Asset Hoàn Thiện (Chốt D6)**:
    - Sau khi nhân vật/item chốt quy trình và duyệt chuyển char mới, **xóa toàn bộ file demo/trung gian trong `/work`**; không giữ rác, char nháp hay video thừa trong git, `assets/`, `scenes/`, `roster.json`.
+4. **Hai nơi Human Test bắt buộc, không đổi trang khi chọn nhân vật (Owner 2026-11-16)**:
+   - **Tab Human Test tại `localhost:8080`** là nơi xem từng clip và từng frame với scrubber, thước tọa độ, nền sáng/tối/ô cờ và tốc độ thật. Chọn nhân vật trong danh sách phải cập nhật ngay trong tab này; **cấm chuyển sang URL/trang demo khác**. Nhân vật đang chờ Owner duyệt được ghi rõ là `Human Test`, phân loại tướng/quái/boss đúng yêu cầu, tách khỏi roster phát hành.
+   - **Tab Sân Tập** là nơi thử gameplay thực trên **Godot Web** và **APK trên màn Android thực tế**. Trước khi mời Owner test, phải đưa cùng atlas, `.tres`, prefab, thông số size/speed/flight và hành vi tấn công/trúng đòn/chết vào Godot, export Web/APK, kiểm SHA-256 và chạy thử. Canvas2D riêng hoặc trang HTML giả lập không được nhận là Godot Web/Sân Tập thực.
+   - Asset chờ duyệt có thể nằm trong vùng `review/` được export có kiểm soát cho Godot Web/APK; không ghi là `finalized` trong `assets/roster.json`. Sau Owner Human Test OK mới chuyển vào bundle chính thức và dọn nguồn demo `/work`, `review/`.
+   - Với quái bay, xác nhận **hướng nòng súng/đầu trên pose nguồn** bằng pixel cụ thể; chiều chuyển động, hướng nhìn, điểm phát skill và lật ngang phải đồng bộ theo hướng đó ở Human Test, Godot Web và APK. Cấm suy hướng từ thứ tự ô trong sheet hoặc giữ hướng bay ngược nòng súng.
 
 ---
 

@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-16T09:42:12Z",
+  "updated_at": "2026-11-16T15:29:21Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.15.0",
+    "version": "0.16.0",
     "version_history": [
       {
         "version": "0.1.0",
@@ -109,6 +109,11 @@
         "version": "0.15.0",
         "date": "2026-11-16T09:42:12Z",
         "summary": "Owner chốt toàn bộ phiên v0.15.0: kiến trúc ADR-0001 (D1-D10), dọn /work & ảnh nháp root, Godot 4.7.2 Compatibility + expand + fractional/Pixel Perfect + TouchHUD + Rocky Plateau TileMapLayer, nút tải APK trên localhost:8080, sửa T-rex fireball_fx & Drum Player bool(null)/teleport, mở rộng vùng đi lại fit full màn K70E theo mép thân, bỏ đường chỉ vàng/xanh, và giảm 20% tốc độ nhặt vật phẩm (30 ticks)."
+      },
+      {
+        "version": "0.16.0",
+        "date": "2026-11-16T15:29:15Z",
+        "summary": "Owner chốt chính thức Floating Camera (PIPE-021): quái bay 70x74 1-pass Nearest, nối pha idle<->walk, bắn projectile_fx độc lập +X, AI attack_light fallback, xóa review/ + /work + file tạm root và đóng gói Web/Android APK 1:1."
       }
     ],
     "genre": "2D Dragon Ball Real-Time Mass Action / RPG",
@@ -147,17 +152,20 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "RELEASE-V0.15.0-FINAL",
-    "status": "owner_approved",
-    "summary": "Owner approved v0.15.0 release (ADR-0001, Compatibility/expand, K70E APK + full-display body-edge bounds, T-rex fireball_fx, Drum Player sync, clean terrain without yellow/blue lines, 20% slower item pickup) and push to main",
+    "active_task_id": "FLOATING-CAMERA-FINALIZE",
+    "status": "completed",
+    "summary": "Owner chốt Floating Camera (PIPE-021, v0.16.0): chuyển chính thức vào assets/floating_camera/, scenes/FloatingCamera.tscn, scenes/FloatingCameraFighter2D.gd và assets/roster.json (11/11 nhân vật hoàn thiện), ghi skills.md & owner_approval.json, xóa sạch review/, work/, FloatingCamera.gif & image.png, xuất Godot Web & Android Debug APK 1:1 và chuẩn bị push lên main.",
     "next_steps_summary": [
-      "Phiên v0.15.0 đã được Owner nghiệm thu trên Redmi K70E, chốt và push lên main."
+      "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
     "review_artifacts": [
-      "docs/adr/0001-architecture-and-scale-roadmap.md",
-      "docs/android-ramus-handoff-todo.md"
+      "assets/floating_camera/owner_approval.json",
+      "docs/characters/floating-camera-70x74-qa.json",
+      "docs/releases/v0.16.0-release-finalization.json",
+      "scenes/FloatingCamera.tscn",
+      "scenes/FloatingCameraFighter2D.gd"
     ],
-    "preview_url": "http://localhost:8080/godot-web/index.html"
+    "preview_url": "http://localhost:8080/?tab=arena"
   },
   "open_issues": [],
   "resolved_issues": [
@@ -899,6 +907,48 @@
       "timestamp": "2026-11-16T09:42:12Z",
       "status": "owner_approved",
       "summary": "Owner approved v0.15.0 release (ADR-0001, Compatibility/expand, K70E APK + full-display body-edge bounds, T-rex fireball_fx, Drum Player sync, clean terrain without yellow/blue lines, 20% slower item pickup) and push to main"
+    },
+    {
+      "id": "FLOATING-CAMERA-INTAKE",
+      "timestamp": "2026-11-16T13:37:51Z",
+      "status": "awaiting_owner_scope",
+      "summary": "Đã kiểm tra FloatingCamera.gif: GIF tĩnh 261x123, 1 frame, chưa có atlas/bundle/roster. Owner chốt quái bay kích thước hiển thị như Bat (body bbox chuẩn 126x81 px, scale 1.1), tốc độ màn hình 150 px/s, flight_default_y=300 (Bat=250, thấp hơn 50 px). Chờ Owner chọn phạm vi bổ sung hoạt ảnh còn thiếu so với bộ chuẩn; bảo toàn sheet gốc Zero AI Redraw."
+    },
+    {
+      "id": "FLOATING-CAMERA-ASSET",
+      "timestamp": "2026-11-16T13:45:44Z",
+      "status": "in_progress_awaiting_size",
+      "summary": "Owner chốt phạm vi: bay qua lại bằng dòng 1, bắn skill dòng 2, trúng đòn và nổ dòng 3; không bổ sung clip ngoài sheet. Đã tách 22 slot giữ nguyên pixel vào work/characters/floating_camera/source-extraction/ (9 flight, 2 attack_body, 4 projectile, 1 hit, 6 explosion), nguồn SHA-256 6407b76ed53641bf33facfb04ede9fcde4371eb673603b7671c26c60eaa05421. Chờ Owner chọn quy tắc scale do sheet thân 20x24 khác tỷ lệ Bat body 126x81; speed=150px/s, flight_default_y=300. Chưa atlas/scene/roster hoặc motion QA."
+    },
+    {
+      "id": "FLOATING-CAMERA-90X94",
+      "timestamp": "2026-11-16T14:00:43Z",
+      "status": "demo_ready_owner_review",
+      "summary": "Floating Camera source sheet SHA-256 6407b76ed53641bf33facfb04ede9fcde4371eb673603b7671c26c60eaa05421; extracted 22 slots, body flight-00 alpha bbox 90x94 on 192x160 canvas, Nearest, no redraw. Draft 6 clips (idle,walk,attack_light,projectile_fx,hit,ko), 1-page Godot atlas 982x658, 21 runtime frames; source duplicate flight-08 unused as loop endpoint. Speed 150 px/s, flight_default_y=300 recorded in source-map; runtime patrol/attack integration not yet done. Clip builder exit0 WARN near_duplicate_hold value1 (flight positions5-7); visual review light/dark/checker done. Export exit0, Godot import smoke exit0, ./loop.sh test outside sandbox exit0 after sandbox socket-denied run exit1. Human Test/motion approval pending; roster unchanged."
+    },
+    {
+      "id": "FLOATING-CAMERA-HUMAN-TEST",
+      "timestamp": "2026-11-16T14:10:13Z",
+      "status": "human_test_live",
+      "summary": "Owner requested localhost Human Test. Dedicated preview http://localhost:8080/floating-camera-demo live; server routes HTML, Godot-export atlas PNG and parsed SpriteFrames timeline with SHA-256 verification. Demo renders 90x94 body at Y=300, 150px/s patrol, attack row2/projectile FX, hit then explosion row3; shot direction toggle is provisional because sheet lacks direction annotation. HTTP HTML/API/atlas all 200; downloaded atlas SHA matches metadata; JS syntax exit0; ./loop.sh test exit0 (Python78, Godot, shaders, Rust); owner visual/motion review pending. Roster unchanged and official Arena Godot runtime not integrated."
+    },
+    {
+      "id": "FLOATING-CAMERA-MONSTER-LIST",
+      "timestamp": "2026-11-16T14:18:38Z",
+      "status": "human_test_live",
+      "summary": "Floating Camera classified as quái bay. Added a distinct Human Test monster card to the main localhost roster UI and Boss/Quái filter; click opens /floating-camera-demo. Official assets/roster.json remains finalized-only per AGENTS.md pending Owner Human Test. HTTP main/demo/API=200, Node dynamic card test boss_mob=1 z_fighters=0 click route correct exit0; ./loop.sh test exit0. Source size90x94, speed150 px/s, flight Y300 unchanged."
+    },
+    {
+      "id": "FLOATING-CAMERA-70X74",
+      "timestamp": "2026-11-16T15:19:31Z",
+      "status": "human_test_live",
+      "summary": "Floating Camera reduced from 90x94 to 70x74 via 1-pass Nearest direct from 20x24 source FloatingCamera.gif (SX=3.5, SY=74/24, Sobel 133.691, alpha 100%, 0 key pockets/spill, review SHA c40954fa72f5bee0f5dd5f6a6d47ad42b8827f214e213b58c6ee7e330e4d607e). Added seamless idle<->walk phase preservation, has_power_up flying AI fallback (attack_light at >=50px), top_level projectile flight, work/.gdignore, and Godot Web + Android Debug APK export synced for Human Test at localhost:8080 (official roster/skills unchanged pending Owner approval)."
+    },
+    {
+      "id": "FLOATING-CAMERA-FINALIZE",
+      "timestamp": "2026-11-16T15:29:21Z",
+      "status": "completed",
+      "summary": "Owner chốt Floating Camera (PIPE-021, v0.16.0): chuyển chính thức vào assets/floating_camera/, scenes/FloatingCamera.tscn, scenes/FloatingCameraFighter2D.gd và assets/roster.json (11/11 nhân vật hoàn thiện), ghi skills.md & owner_approval.json, xóa sạch review/, work/, FloatingCamera.gif & image.png, xuất Godot Web & Android Debug APK 1:1 và chuẩn bị push lên main."
     }
   ],
   "quick_resume_commands": [
@@ -907,28 +957,28 @@
     "./loop.sh test"
   ],
   "session_resume": {
-    "next_action": "Owner kiểm tra trực tiếp http://localhost:8080/?tab=arena (bao gồm switch profile Redmi K70E / 720p, Pixel Perfect toggle, Godot Web thật & 10/10 nhân vật sau khi xóa /work) và xác nhận push lên main.",
-    "asset_status": "10/10 nhân vật + Bộ 7 Ngọc Rồng 1x (32x32) + Shenron Summon v5 giữ nguyên 100% SHA-256; đã dọn sạch 754MB work/ & .forge/ về assets/*/source/ và docs/contracts/*.",
+    "next_action": "Đã chốt Floating Camera v0.16.0 (11/11 nhân vật), dọn sạch review/ và /work; sẵn sàng nhiệm vụ mới.",
+    "asset_status": "11/11 nhân vật + Bộ 7 Ngọc Rồng 1x (32x32) + Shenron Summon v5 giữ nguyên SHA-256; đã dọn sạch review/, work/ và file nháp root.",
     "architecture_adr": "docs/adr/0001-architecture-and-scale-roadmap.md",
-    "approval_file": "assets/drum/owner_approval.json",
+    "approval_file": "assets/floating_camera/owner_approval.json",
     "ritual_approval_file": "assets/rituals/shenron_summon/owner_approval.json",
-    "cleanup_report": "docs/releases/v0.14.0-release-finalization.json",
+    "cleanup_report": "docs/releases/v0.16.0-release-finalization.json",
     "verification": "tests/test_compatibility_shaders.gd",
     "git_checkpoint": {
       "branch": "main",
       "remote": "origin",
-      "source_code_commit": "19da17b62aad8262229e9447f7a54113bb4e3ff5",
-      "release_version": "0.14.0",
+      "source_code_commit": "48616ed91e5dae394df4c6e6b1cf80e213e2246b",
+      "release_version": "0.15.0",
       "ci_status": "success",
       "ci_run_url": "https://github.com/pquangvinh1999-arch/DR7-Studio/actions/runs/43396006048",
       "verified_at": "2026-11-16T02:16:27Z",
-      "note": "Local working tree upgraded to v0.15.0 (ADR-0001 Phase 1 + purged work/ + Compatibility Web export)."
+      "note": "Finalized Floating Camera PIPE-021 (v0.16.0) on local working tree and pushing to main."
     },
-    "active_character_concept": "assets/drum/source/",
+    "active_character_concept": "assets/floating_camera/source/FloatingCamera.gif",
     "review_evidence": "docs/contracts/",
     "latest_delivery": "assets/roster.json",
     "preview_url": "http://localhost:8080/?tab=arena",
-    "local_version": "0.15.0",
+    "local_version": "0.16.0",
     "handoff_guide": "docs/adr/0001-architecture-and-scale-roadmap.md"
   },
   "approved_workflows": [
@@ -1122,6 +1172,18 @@
       "sequence_sha256": "1e5a985bc6a38f3368e47757176b4b183cf35aa89c43fa029e5a046ec765488c",
       "dissolve_mask_sha256": "fbede0b918a87743dac48c8e97abc3a6a32fbd4af30fcf2bdf33e052d790800f",
       "summary": "Shenron Summon v5-dismiss-flash-wish (v0.14.0): hiện cụm ngọc & Shenron ngay tại Flash #2, popup 3 điều ước tự thu hồi 2 chớp sáng đồng bộ 1:1 Godot <-> localhost:8080; dọn ảnh rác root về work/rituals/shenron_summon/v5-dismiss-flash-wish/source/."
+    },
+    {
+      "id": "PIPE-021",
+      "character_id": "floating_camera",
+      "display_name": "Floating Camera",
+      "approved_at": "2026-11-16T15:27:40.485077+00:00",
+      "approval_file": "assets/floating_camera/owner_approval.json",
+      "atlas_sha256": "c40954fa72f5bee0f5dd5f6a6d47ad42b8827f214e213b58c6ee7e330e4d607e",
+      "tres_sha256": "3429b23612e734451e1a0dce8cf8a94a92a404a637cd905034f09b93585e6802",
+      "prefab_sha256": "6f3528518baed67d3bd12cd7d64da196a46a0575f917cd6531843c4bfa3b3973",
+      "revision": "size70x74-idle-phase-v1 / v0.16.0",
+      "summary": "Floating Camera v0.16.0 (quái bay 70x74 1-pass Nearest từ 20x24 nguồn gốc, 13 màu RGB, alpha 100%, 0 pockets/spill, idle=walk nối pha mượt, 150 px/s tại flight_default_y=300, đạn projectile_fx top_level +X, AI attack_light fallback >=50px)."
     }
   ],
   "approved_item_workflows": [
@@ -1229,14 +1291,15 @@
     "url": "http://localhost:8080/?tab=arena",
     "status": "running",
     "verified_http_status": 200,
-    "active_characters": 10,
+    "active_characters": 11,
     "items_in_catalog": 1,
     "drum_in_roster": true,
     "drum_clips": 11,
     "default_scale": 1.0,
     "arena_url": "http://localhost:8080",
-    "release_version": "0.15.0",
-    "owner_approved": true
+    "release_version": "0.16.0",
+    "owner_approved": true,
+    "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-16T09:42:12Z"
+  "last_updated_utc": "2026-11-16T15:29:15Z"
 }

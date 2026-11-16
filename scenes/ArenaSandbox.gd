@@ -8,6 +8,7 @@ extends Node2D
 const STAGE_JSON_PATH := "res://assets/maps/rocky_plateau/arena-stage.json"
 const TERRAIN_JSON_PATH := "res://assets/maps/rocky_plateau/terrain.json"
 const ROSTER_JSON_PATH := "res://assets/roster.json"
+const REVIEW_ROSTER_JSON_PATH := "res://review/review-roster.json"
 const ShenronSummonScript := preload("res://scenes/ShenronSummon2D.gd")
 const DragonBallItemScene := preload("res://scenes/items/DragonBallItem2D.tscn")
 const DisplayPolicyScript := preload("res://scenes/runtime/DisplayPolicy.gd")
@@ -418,6 +419,12 @@ func load_stage_and_roster() -> void:
 	var roster := _read_json_dict(ROSTER_JSON_PATH)
 	var chars_variant: Variant = roster.get("characters", [])
 	roster_characters = chars_variant if chars_variant is Array else []
+	var review_roster := _read_json_dict(REVIEW_ROSTER_JSON_PATH)
+	var review_chars: Variant = review_roster.get("characters", [])
+	if review_chars is Array:
+		for review_entry in review_chars:
+			if review_entry is Dictionary:
+				roster_characters.append(review_entry)
 	_update_walkable_bounds()
 
 
@@ -861,7 +868,7 @@ func select_character(char_id: String) -> bool:
 	var parent_layer: Node = fighters_layer if fighters_layer != null else self
 	parent_layer.add_child(player_node)
 	player_node.name = "PlayerFighter"
-	var spawn_y := fly_default_y if _is_flying_entry(entry) else ground_y
+	var spawn_y := _get_entry_flight_y(entry) if _is_flying_entry(entry) else ground_y
 	_configure_fighter_instance(player_node, player_spawn_x, spawn_y, false, char_scale)
 	if touch_hud != null and is_instance_valid(touch_hud):
 		touch_hud.set_jump_available(_is_flying_entry(entry) or _has_clip_name(player_node, &"jump"), _is_flying_entry(entry))
@@ -909,7 +916,7 @@ func select_enemy_character(char_id: String, pin_enemy: bool = true) -> bool:
 	if player_node != null and dummy_node.get_index() > player_node.get_index():
 		parent_layer.move_child(dummy_node, player_node.get_index())
 	dummy_node.name = "SparringDummy"
-	var enemy_spawn_y := fly_default_y if _is_flying_entry(entry) else ground_y
+	var enemy_spawn_y := _get_entry_flight_y(entry) if _is_flying_entry(entry) else ground_y
 	_configure_fighter_instance(dummy_node, dummy_spawn_x, enemy_spawn_y, true, enemy_scale)
 	enemy_facing_left = dummy_node.scale.x < 0.0
 	var enemy_bounds := _get_fighter_walk_bounds_x(entry, enemy_scale)
@@ -980,6 +987,7 @@ func _resolve_enemy_capabilities(entry: Dictionary, fighter: Node2D) -> Dictiona
 	var spr := fighter.get_node_or_null("Sprite") as AnimatedSprite2D
 	var frames := spr.sprite_frames if spr != null else null
 	var has_heavy := frames != null and frames.has_animation(&"attack_heavy")
+	var has_power_up := frames != null and frames.has_animation(&"power_up")
 	var light_clip := "attack_light"
 	if frames != null and not frames.has_animation(&"attack_light") and frames.has_animation(&"attack_nomal"):
 		light_clip = "attack_nomal"
@@ -990,6 +998,8 @@ func _resolve_enemy_capabilities(entry: Dictionary, fighter: Node2D) -> Dictiona
 		"is_flying": _is_flying_entry(entry),
 		"sideways_locked": _is_sideways_locked(entry),
 		"has_heavy": has_heavy,
+		"has_power_up": has_power_up,
+		"preserve_idle_walk_phase": _should_preserve_idle_walk_phase(entry),
 		"light_clip": light_clip,
 		"locomotion_clip": loco_clip,
 	}
@@ -1023,10 +1033,32 @@ func _play_fighter_clip(fighter: Node2D, clip_name: String) -> bool:
 	return false
 
 
-func _ensure_fighter_locomotion(fighter: Node2D, clip_name: String) -> void:
+func _should_preserve_idle_walk_phase(entry: Dictionary) -> bool:
+	var loc: Dictionary = entry.get("render_contract", {}).get("locomotion", {})
+	return bool(loc.get("preserve_phase_on_idle_walk", false))
+
+
+func _play_locomotion_preserving_phase(spr: AnimatedSprite2D, target_clip: StringName, preserve_phase: bool, fighter: Node2D = null) -> void:
+	if spr == null:
+		return
+	var cur_anim := spr.animation
+	var keep_phase := preserve_phase and spr.sprite_frames != null and ((cur_anim == &"idle" and target_clip == &"walk") or (cur_anim == &"walk" and target_clip == &"idle"))
+	var prev_frame := spr.frame
+	var prev_prog := spr.frame_progress
+	if fighter != null:
+		_play_fighter_clip(fighter, String(target_clip))
+	else:
+		spr.play(target_clip)
+	if keep_phase and spr.sprite_frames.has_animation(target_clip) and spr.sprite_frames.get_frame_count(target_clip) > 0:
+		var clamped := clampi(prev_frame, 0, spr.sprite_frames.get_frame_count(target_clip) - 1)
+		spr.set_frame_and_progress(clamped, prev_prog)
+
+
+func _ensure_fighter_locomotion(fighter: Node2D, clip_name: String, preserve_phase: bool = false) -> void:
 	var spr := fighter.get_node_or_null("Sprite") as AnimatedSprite2D
-	if spr != null and (spr.animation != StringName(clip_name) or not spr.is_playing()):
-		_play_fighter_clip(fighter, clip_name)
+	var sname := StringName(clip_name)
+	if spr != null and (spr.animation != sname or not spr.is_playing()):
+		_play_locomotion_preserving_phase(spr, sname, preserve_phase, fighter)
 
 
 func _find_character_entry_ro(char_id: String) -> Dictionary:
@@ -1089,6 +1121,7 @@ func step_utility_ai(delta: float) -> Dictionary:
 		"facing_left": enemy_facing_left,
 		"is_flying": caps["is_flying"],
 		"has_heavy": caps["has_heavy"],
+		"has_power_up": caps["has_power_up"],
 		"light_clip": caps["light_clip"],
 		"self_rect": self_rect,
 		"target_rect": target_rect,
@@ -1151,13 +1184,13 @@ func step_utility_ai(delta: float) -> Dictionary:
 			)
 			if bool(caps["is_flying"]):
 				dummy_node.position.y = clampf(dummy_node.position.y, fly_min_y, ground_y)
-			_ensure_fighter_locomotion(dummy_node, str(caps["locomotion_clip"]))
+			_ensure_fighter_locomotion(dummy_node, str(caps["locomotion_clip"]), bool(caps["preserve_idle_walk_phase"]))
 		else:
-			_ensure_fighter_locomotion(dummy_node, "idle")
+			_ensure_fighter_locomotion(dummy_node, "idle", bool(caps["preserve_idle_walk_phase"]))
 	elif intent == "wait_cooldown":
-		_ensure_fighter_locomotion(dummy_node, "idle")
+		_ensure_fighter_locomotion(dummy_node, "idle", bool(caps["preserve_idle_walk_phase"]))
 	elif intent == "idle":
-		_ensure_fighter_locomotion(dummy_node, "idle")
+		_ensure_fighter_locomotion(dummy_node, "idle", bool(caps["preserve_idle_walk_phase"]))
 		if str(caps["character_id"]) == "drum" and ai_controller.has_method("reset_drum_state"):
 			ai_controller.reset_drum_state()
 
@@ -1361,6 +1394,11 @@ func _get_entry_default_scale(entry: Dictionary) -> float:
 	return float(gp.get("character_scale_default", 2.0))
 
 
+func _get_entry_flight_y(entry: Dictionary) -> float:
+	var loc: Dictionary = entry.get("render_contract", {}).get("locomotion", {})
+	return float(loc.get("flight_default_y", fly_default_y))
+
+
 func _get_turn_speed_multiplier(entry: Dictionary) -> float:
 	var rc: Dictionary = entry.get("render_contract", {})
 	var turning: Variant = rc.get("turning", {})
@@ -1552,7 +1590,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 				elif aspr.sprite_frames.has_animation(&"fly"):
 					target_clip = &"fly"
 			if aspr.animation != target_clip or not aspr.is_playing():
-				aspr.play(target_clip)
+				_play_locomotion_preserving_phase(aspr, target_clip, _should_preserve_idle_walk_phase(entry))
 
 
 func _physics_process(delta: float) -> void:

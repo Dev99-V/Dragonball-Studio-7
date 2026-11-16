@@ -131,8 +131,8 @@ func run_test() -> void:
 		fail("get_stage_metrics() missing D1/D3 display telemetry: " + str(stage_metrics_check))
 		return
 
-	if arena.roster_characters.size() != 10:
-		fail("Expected 10 characters in roster.json, got " + str(arena.roster_characters.size()))
+	if arena.roster_characters.size() != 11:
+		fail("Expected 11 finalized characters including Floating Camera, got " + str(arena.roster_characters.size()))
 		return
 
 	for entry in arena.roster_characters:
@@ -147,7 +147,7 @@ func run_test() -> void:
 		var loc: Dictionary = entry.get("render_contract", {}).get("locomotion", {})
 		var loc_kind := str(loc.get("kind", "ground"))
 		var expected_scale := float(loc.get("default_scale", 2.0))
-		var expected_y := 250.0 if loc_kind == "flight" else 840.0
+		var expected_y := float(loc.get("flight_default_y", 250.0)) if loc_kind == "flight" else 840.0
 		if arena.player_node.position != Vector2(560.0, expected_y) or arena.dummy_node.position != Vector2(1360.0, expected_y):
 			fail("Wrong spawn coordinates for %s: player=%s dummy=%s (expected y=%s)" % [cid, str(arena.player_node.position), str(arena.dummy_node.position), str(expected_y)])
 			return
@@ -700,6 +700,39 @@ func run_test() -> void:
 		return
 	arena.set_pixel_perfect_enabled(false, Vector2i(1920, 1080))
 
+	# Verify Floating Camera 70x74 seamless idle<->walk phase continuity + ranged AI attack_light + projectile
+	if not arena.select_character("floating_camera"):
+		fail("Floating Camera must select in ArenaSandbox")
+		return
+	await process_frame
+	var fc_dims: Vector2i = arena._get_body_dims(arena._find_character_entry_ro("floating_camera"))
+	if fc_dims != Vector2i(70, 74):
+		fail("Floating Camera body_only_bbox_px must be 70x74, got " + str(fc_dims))
+		return
+	var fc_spr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+	arena.step_player_movement(1.0 / 60.0, 1)
+	if fc_spr.animation != &"walk":
+		fail("Floating Camera must enter walk when moving, got " + str(fc_spr.animation))
+		return
+	fc_spr.set_frame_and_progress(4, 0.35)
+	arena.step_player_movement(1.0 / 60.0, 0)
+	if fc_spr.animation != &"idle" or fc_spr.frame != 4:
+		fail("Floating Camera stopping walk->idle must preserve phase frame=4 seamlessly, got anim=%s frame=%d" % [str(fc_spr.animation), fc_spr.frame])
+		return
+	arena.step_player_movement(1.0 / 60.0, 1)
+	if fc_spr.animation != &"walk" or fc_spr.frame != 4:
+		fail("Floating Camera resuming idle->walk must preserve phase frame=4 seamlessly, got anim=%s frame=%d" % [str(fc_spr.animation), fc_spr.frame])
+		return
+	arena.select_enemy_character("floating_camera", true)
+	arena.set_utility_ai_enabled(true)
+	arena.dummy_node.position = Vector2(1500.0, 300.0)
+	arena.player_node.position = Vector2(1200.0, 300.0)
+	var fc_ai_res: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+	if fc_ai_res.get("attack_clip", "") != "attack_light" or arena._ai_action_clip != "attack_light":
+		fail("Floating Camera flying AI at >=50px without power_up must fire attack_light, got " + str(fc_ai_res))
+		return
+	arena.set_utility_ai_enabled(false)
+
 	# Smoke test Player movement + power_up across every character in roster without script errors
 	for ch_entry in arena.roster_characters:
 		if not (ch_entry is Dictionary):
@@ -715,7 +748,8 @@ func run_test() -> void:
 				fail("Roster player power_up failed for " + cid_smoke)
 				return
 
+	var verified_roster_count: int = arena.roster_characters.size()
 	arena.queue_free()
 	await process_frame
-	print("[OK] Godot 4 ArenaSandbox 1920x1080 1:1 parity + Utility AI + 10/10 characters PASSED!")
+	print("[OK] Godot 4 ArenaSandbox 1920x1080 1:1 parity + Utility AI + %d characters PASSED!" % verified_roster_count)
 	quit(0)

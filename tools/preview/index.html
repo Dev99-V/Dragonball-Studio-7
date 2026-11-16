@@ -918,6 +918,11 @@
           fetch('/rust_combat_sim.wasm').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null),
         ]);
         state.api = bRes;
+        state.releaseRosterCount = bRes.roster.characters.length;
+        if (bRes.review?.roster?.characters?.length && bRes.review?.bundles?.length) {
+          bRes.roster.characters.push(...bRes.review.roster.characters);
+          bRes.bundles.push(...bRes.review.bundles);
+        }
         state.terrain = bRes.terrain || null;
         arena.terrainPlatforms = Array.isArray(state.terrain?.platforms) ? state.terrain.platforms : [];
         applyDeviceProfilesConfig(bRes.device_profiles, bRes.godot_web_ready);
@@ -1092,6 +1097,7 @@
       arena.actionClip=null; arena.turnTargetFlip=null; arena.clip='idle'; arena.step=0; arena.elapsed=0;
       arena.turnElapsedMs = 0; arena.turnDurationMs = 0; arena.turnBoostMs = 0;
       arena.charScale = getDefaultCharScale(selectedBundle);
+      arena.flyDefaultY = getBundleFlightY(selectedBundle);
       arena.spawnFacing = getDefaultSpawnFacing(selectedBundle);
       arena.flip = arena.spawnFacing === 'left';
       arena.x = arena.flip ? arena.playerSpawnLeftX : arena.playerSpawnX;
@@ -1165,7 +1171,8 @@
 
     function renderRosterList() {
       const allChars = state.api.roster.characters || [];
-      document.getElementById('rosterCountBadge').textContent = `${allChars.length} Hoàn thiện`;
+      const reviewCount = Math.max(0, allChars.length - (state.releaseRosterCount ?? allChars.length));
+      document.getElementById('rosterCountBadge').textContent = `${state.releaseRosterCount ?? allChars.length} Hoàn thiện${reviewCount ? ` · ${reviewCount} Quái test` : ''}`;
 
       const listEl = document.getElementById('rosterList');
       listEl.innerHTML = '';
@@ -1218,6 +1225,7 @@
             ${rolePill}
             <span class="mini-pill">${cw}×${chPx}</span>
             <span class="mini-pill">${clipBadge}</span>
+            ${ch.status === 'human_test_pending' ? '<span class="mini-pill">Human Test</span>' : ''}
           </div>
         `;
         card.appendChild(av);
@@ -1604,6 +1612,7 @@
         }
         return layers;
       }
+      if(!p.hammer_clip||!p.far_canvas_px)return layers;
       if(bodyName===p.body_clip) {
         const release=animationFrameTick(anim,p.release_frame),ret=animationFrameTick(anim,p.return_frame),caught=animationFrameTick(anim,p.catch_frame),farTick=animationFrameTick(anim,p.far_frame);
         if(tick>=release&&tick<caught) {
@@ -2175,6 +2184,10 @@
       return Number(b?.render_contract?.locomotion?.default_scale) || arena.defaultCharScale || 2;
     }
 
+    function getBundleFlightY(b = getCharBundle()) {
+      return Number(b?.render_contract?.locomotion?.flight_default_y) || arena.stageFlyDefaultY || 250;
+    }
+
     function getTurnSpeedMultiplier(b = getCharBundle()) {
       return Math.max(1.0, Number(b?.render_contract?.turning?.turn_speed_multiplier) || 1.0);
     }
@@ -2228,6 +2241,7 @@
       arena.groundY = Number(gp.ground_y) || 840;
       arena.flyMinY = Number(fl.min_y) || 60;
       arena.flyDefaultY = Number(fl.default_y) || 250;
+      arena.stageFlyDefaultY = arena.flyDefaultY;
       arena.flyVerticalSpeedPxPerS = Number(fl.vertical_speed_px_per_s) || 240;
       if (typeof gp.burrow_dust_scale_default === 'number') arena.burrowDustScale = gp.burrow_dust_scale_default;
       arena.y = isFlyingBundle() ? arena.flyDefaultY : arena.groundY;
@@ -2355,6 +2369,7 @@
       const cid = String(params.character_id || '');
       const isFlying = Boolean(params.is_flying);
       const hasHeavy = Boolean(params.has_heavy);
+      const hasPowerUp = params.has_power_up === undefined ? true : Boolean(params.has_power_up);
       const lightClip = String(params.light_clip || 'attack_light');
       const selfRect = params.self_rect;
       const targetRect = params.target_rect;
@@ -2472,7 +2487,7 @@
         return { intent: 'attack', move_dir: 0, attack_clip: chosen, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
       }
 
-      // Special Case 2: Flying mobs hover & patrol in air without chasing; >=50px ranged power_up, <50px melee light
+      // Special Case 2: Flying mobs hover & patrol in air without chasing; >=50px ranged power_up (or lightClip if none), <50px melee light
       if (isFlying) {
         if (edgeDist >= closeEdge) {
           aiState.lightChainCount = 0;
@@ -2483,10 +2498,11 @@
             aiState.lastReason = pat.reason;
             return pat;
           }
+          const rangedClip = hasPowerUp ? 'power_up' : lightClip;
           aiState.lastIntent = 'attack';
           aiState.lastReason = 'flying_ranged_far';
           aiState.cooldownRemaining = attackCd;
-          return { intent: 'attack', move_dir: 0, attack_clip: 'power_up', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
+          return { intent: 'attack', move_dir: 0, attack_clip: rangedClip, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
         }
         if (aiState.cooldownRemaining > 0) {
           aiState.lastIntent = 'wait_cooldown';
@@ -2587,7 +2603,7 @@
       arena.enemyAi.pinned = pin;
       arena.enemyScale = getDefaultCharScale(eb);
       arena.enemyAi.x = arena.dummyX;
-      arena.enemyAi.y = isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY;
+      arena.enemyAi.y = isFlyingBundle(eb) ? getBundleFlightY(eb) : arena.groundY;
       arena.enemyAi.spawnFacing = getDefaultSpawnFacing(eb);
       arena.enemyAi.flip = isSidewaysLocked(eb) ? (arena.enemyAi.spawnFacing === 'left') : true;
       arena.enemyAi.clip = 'idle';
@@ -2619,7 +2635,7 @@
       const eCh = getEnemyRosterEntry();
       const eb = getCharBundle(eCh);
       arena.enemyAi.x = arena.dummyX;
-      arena.enemyAi.y = isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY;
+      arena.enemyAi.y = isFlyingBundle(eb) ? getBundleFlightY(eb) : arena.groundY;
       if (eb && isSidewaysLocked(eb)) {
         arena.enemyAi.flip = arena.enemyAi.spawnFacing === 'left';
       }
@@ -2644,6 +2660,47 @@
       const gapTxt = arena.enemyAi.lastEdgeDist >= 0 ? `${Math.round(arena.enemyAi.lastEdgeDist)}px` : 'Ngoài vùng';
       const drumRuleHint = arena.enemyAi.charId === 'drum' ? ' (≤50px nhẹ 0.2s • 50..200px tốc biến • >200..<400px power_up • ≥400px im)' : '';
       lbl.textContent = `AI[${arena.enemyAi.charId}] ${arena.enemyAi.lastReason} • Rìa=${gapTxt} • CD=${arena.enemyAi.cooldownRemaining.toFixed(2)}s • Zone [${zMin}..${zMax}]${drumRuleHint}`;
+    }
+
+    function switchIdleWalkClipPreservingPhase(actor, bundle, targetClip) {
+      if (actor.clip === targetClip) return;
+      const preserve = Boolean(bundle?.render_contract?.locomotion?.preserve_phase_on_idle_walk) &&
+        ((actor.clip === 'idle' && targetClip === 'walk') || (actor.clip === 'walk' && targetClip === 'idle'));
+      const curAnim = bundle?.animations?.[actor.clip];
+      const nextAnim = bundle?.animations?.[targetClip];
+      const keepPhase = preserve && curAnim?.frames?.length && nextAnim?.frames?.length &&
+        curAnim.frames.length === nextAnim.frames.length;
+      actor.clip = targetClip;
+      if (!keepPhase) {
+        actor.step = 0;
+        actor.elapsed = 0;
+      }
+    }
+
+    function maybeSpawnContractProjectile(actor, bundle, scale, isEnemy) {
+      const p = bundle?.render_contract?.projectile;
+      if (!p || !Array.isArray(p.velocity_px_per_second) || actor.contractProjectileSpawned) return;
+      if (actor.actionClip !== p.body_clip || actor.step < Number(p.release_frame ?? 1)) return;
+      const projClip = p.projectile_clip || 'projectile_fx';
+      if (!bundle?.animations?.[projClip]) return;
+      actor.contractProjectileSpawned = true;
+      const dirX = actor.flip ? -1 : 1;
+      const off = Array.isArray(p.origin_local_px) ? p.origin_local_px : [21, -6];
+      const vx = Number(p.velocity_px_per_second[0] ?? 380) * scale;
+      arena.projectiles.push({
+        owner: isEnemy ? 'enemy' : 'player',
+        bundle,
+        clip: projClip,
+        x: actor.x + dirX * Number(off[0] || 0) * scale,
+        y: actor.y + Number(off[1] || 0) * scale,
+        vx: dirX * vx,
+        scale,
+        flip: actor.flip,
+        step: 0,
+        elapsed: 0,
+        lifeMs: 700,
+        hitText: isEnemy ? '-120 SHOT!' : '',
+      });
     }
 
     function stepEnemyAiFrame(dtMs) {
@@ -2673,6 +2730,7 @@
           is_flying: isFlyingBundle(eb),
           sideways_locked: isSidewaysLocked(eb),
           has_heavy: Boolean(eb.animations?.attack_heavy),
+          has_power_up: Boolean(eb.animations?.power_up),
           light_clip: eb.animations?.attack_light ? 'attack_light' : (eb.animations?.attack_nomal ? 'attack_nomal' : 'attack_light'),
           locomotion_clip: eb.animations?.fly ? 'fly' : 'walk',
         };
@@ -2682,6 +2740,7 @@
           facing_left: ai.flip,
           is_flying: caps.is_flying,
           has_heavy: caps.has_heavy,
+          has_power_up: caps.has_power_up,
           light_clip: caps.light_clip,
           self_rect: selfRect,
           target_rect: targetRect,
@@ -2718,6 +2777,7 @@
             ai.clip = res.attack_clip;
             ai.step = 0;
             ai.elapsed = 0;
+            ai.contractProjectileSpawned = false;
             if (eCh?.character_id === 'drum') {
               ai.drumTeleportRelocated = false;
               ai.drumOrbSpawned = false;
@@ -2740,17 +2800,9 @@
             ai.x = Math.max(ai.zoneMinX, Math.min(ai.zoneMaxX, ai.x + res.move_dir * spdPerMs * dtMs));
             if (caps.is_flying) ai.y = Math.max(arena.flyMinY, Math.min(arena.groundY, ai.y));
             const targetLoco = eb.animations?.[caps.locomotion_clip] ? caps.locomotion_clip : 'idle';
-            if (ai.clip !== targetLoco) {
-              ai.clip = targetLoco;
-              ai.step = 0;
-              ai.elapsed = 0;
-            }
+            switchIdleWalkClipPreservingPhase(ai, eb, targetLoco);
           } else if (res.intent === 'wait_cooldown' || res.intent === 'idle') {
-            if (ai.clip !== 'idle') {
-              ai.clip = 'idle';
-              ai.step = 0;
-              ai.elapsed = 0;
-            }
+            switchIdleWalkClipPreservingPhase(ai, eb, 'idle');
           }
         }
       }
@@ -2810,7 +2862,9 @@
           ai.elapsed -= eDur;
           if (ai.step + 1 < eAnim.frames.length) {
             ai.step += 1;
+            maybeSpawnContractProjectile(ai, eb, eScale, true);
           } else if (ai.actionClip) {
+            maybeSpawnContractProjectile(ai, eb, eScale, true);
             const finishedAiTurn = ai.turnTargetFlip !== null;
             if (finishedAiTurn) {
               ai.flip = ai.turnTargetFlip;
@@ -3369,6 +3423,7 @@
       arena.elapsed = 0;
       arena.drumTeleportRelocated = false;
       arena.drumOrbSpawned = false;
+      arena.contractProjectileSpawned = false;
       if(b.render_contract?.chilopoda) {
         const c=b.render_contract.chilopoda,sign=arena.flip?-1:1;
         arena.chiloPatrol=false;
@@ -3794,9 +3849,7 @@
             desired = (isRun && b.animations['run']) ? 'run' : (b.animations[motion] ? motion : desired);
           }
           if (arena.clip !== desired) {
-            arena.clip = desired;
-            arena.step = 0;
-            arena.elapsed = 0;
+            switchIdleWalkClipPreservingPhase(arena, b, desired);
           }
         }
 
@@ -3837,7 +3890,9 @@
           arena.elapsed -= dur;
           if (arena.step + 1 < curAnim.frames.length) {
             arena.step++;
+            maybeSpawnContractProjectile(arena, b, arena.charScale, false);
           } else if (arena.actionClip) {
+            maybeSpawnContractProjectile(arena, b, arena.charScale, false);
             const finishedTurn = arena.turnTargetFlip !== null;
             if (finishedTurn) {
               arena.flip=arena.turnTargetFlip; arena.turnTargetFlip=null;
@@ -4084,9 +4139,15 @@
           ctx.drawImage(pImg, pf.x, pf.y, pf.w, pf.h, -fxPiv[0], -fxPiv[1], pf.w, pf.h);
           ctx.restore();
         }
-        const hitPlayer = Math.abs(proj.x - arena.x) <= Math.max(24, (bodyW || 140) * scale * 0.45);
-        if (hitPlayer) {
-          arena.popups.push({ x: arena.x, y: arena.y - 105 * scale, text: '-280 ELECTRIC ORB!', life: 800 });
+        const isPlayerShot = proj.owner === 'player';
+        const targetX = isPlayerShot ? arena.dummyX : arena.x;
+        const targetBodyW = isPlayerShot ? eBodyW : bodyW;
+        const targetScale = isPlayerShot ? eScale : scale;
+        const hitTarget = Math.abs(proj.x - targetX) <= Math.max(24, (targetBodyW || 140) * targetScale * 0.45);
+        if (hitTarget) {
+          if (!isPlayerShot) {
+            arena.popups.push({ x: arena.x, y: arena.y - 105 * scale, text: proj.hitText || '-280 ELECTRIC ORB!', life: 800 });
+          }
           arena.projectiles.splice(pi, 1);
         } else if (proj.lifeMs <= 0 || proj.x < -stageOffsetX || proj.x > 1920 + stageOffsetX) {
           arena.projectiles.splice(pi, 1);

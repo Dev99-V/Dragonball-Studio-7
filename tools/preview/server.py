@@ -33,7 +33,53 @@ BENCHMARK_JSON = REPO_ROOT / "engines" / "benchmark_report.json"
 ROSTER_JSON = ASSETS_DIR / "roster.json"
 WEB_EXPORT_DIR = REPO_ROOT / "build" / "web"
 ANDROID_APK_PATH = REPO_ROOT / "build" / "android" / "dr7-studio-debug.apk"
+REVIEW_ROOT = REPO_ROOT / "review"
 _APK_SHA256_CACHE: dict[tuple[int, int], str] = {}
+
+
+def load_review_content() -> dict:
+    """Load provisional Human Test assets separately from the release roster."""
+    roster_path = REVIEW_ROOT / "review-roster.json"
+    if not roster_path.is_file():
+        return {"roster": {"schema": "dr7-studio.review_roster.v1", "characters": []}, "bundles": []}
+    bundle_dir = REVIEW_ROOT / "floating_camera/godot_bundle"
+    export_path = bundle_dir / "engine-export.json"
+    roster = json.loads(roster_path.read_text(encoding="utf-8"))
+    export = json.loads(export_path.read_text(encoding="utf-8"))
+    source = REVIEW_ROOT / "floating_camera/source/FloatingCamera.gif"
+    ch = roster["characters"][0]
+    if sha256_file(source) != ch["canonical_identity"]["sha256"]:
+        raise ValueError("Review source SHA-256 mismatch")
+    for item in export["files"]:
+        if sha256_file(bundle_dir / item["path"]) != item["sha256"]:
+            raise ValueError(f"Review bundle SHA-256 mismatch: {item['path']}")
+    godot_dir = bundle_dir / "godot"
+    tres_path = godot_dir / "floating_camera.tres"
+    atlas_path = godot_dir / "floating_camera-atlas-00.png"
+    if sha256_file(atlas_path) != ch["review_atlas_sha256"]:
+        raise ValueError("Review roster atlas SHA-256 mismatch")
+    parsed = parse_tres(tres_path)
+    atlas_url = "/review/floating_camera/godot_bundle/godot/floating_camera-atlas-00.png"
+    for anim in parsed["animations"].values():
+        for frame in anim["frames"]:
+            frame["atlas_url"] = atlas_url
+    bundle = {
+        "id": "floating_camera_review", "priority": 2,
+        "title": "Floating Camera · Quái Human Test",
+        "name": "floating_camera", "bundle_dir": "res://review/floating_camera/godot_bundle",
+        "scene_2d": "res://review/floating_camera/FloatingCamera.tscn",
+        "frames_2d": "res://review/floating_camera/godot_bundle/godot/floating_camera.tres",
+        "export_json": "res://review/floating_camera/godot_bundle/engine-export.json",
+        "sha256_tres": sha256_file(tres_path),
+        "sha256_atlases": {atlas_path.name: sha256_file(atlas_path)},
+        "frame_size": export["frame_size"], "anchor_px": export["anchor_px"],
+        "default_clip": export["default_clip"],
+        "render_contract": export["render_contract"],
+        "tscn": parse_tscn(godot_dir / "floating_camera.tscn"),
+        "unique_frames": [], "animations": parsed["animations"],
+        "review_status": "human_test_pending",
+    }
+    return {"roster": roster, "bundles": [bundle]}
 
 
 def get_android_apk_info(apk_path: Path | None = None) -> dict:
@@ -876,6 +922,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "items": load_items(),
                 "parity": parity,
                 "motion_quality": verify_motion_quality(),
+                "review": load_review_content(),
             }
             data = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
             self._send_bytes(200, "application/json; charset=utf-8", data, compress=True)
@@ -966,6 +1013,14 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 ".tscn": "text/plain; charset=utf-8",
             }.get(ext, "application/octet-stream")
             self._send_file(ctype, target, compress=ext in (".json", ".tres", ".tscn"))
+            return
+
+        if req_path.startswith("/review/"):
+            target = (REPO_ROOT / req_path.lstrip("/")).resolve()
+            if not str(target).startswith(str(REVIEW_ROOT.resolve())) or target.suffix.lower() != ".png" or not target.is_file():
+                self._send_bytes(404, "text/plain; charset=utf-8", b"Not found")
+                return
+            self._send_file("image/png", target)
             return
 
         self._send_bytes(404, "text/plain; charset=utf-8", b"Not found")
