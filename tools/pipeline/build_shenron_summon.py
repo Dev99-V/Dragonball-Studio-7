@@ -7,7 +7,7 @@ from PIL import Image,ImageFilter,ImageDraw
 from scipy import ndimage
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'assets/rituals/shenron_summon'
-WORK=ROOT/'work/rituals/shenron_summon/v2-flash-hover'
+WORK=ROOT/'work/rituals/shenron_summon/v5-dismiss-flash-wish'
 
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 
@@ -36,8 +36,13 @@ def extract(rgb,component):
 def build():
     OUT.mkdir(parents=True,exist_ok=True);(OUT/'items').mkdir(exist_ok=True)
     (WORK/'source').mkdir(parents=True,exist_ok=True);(WORK/'evidence').mkdir(exist_ok=True)
-    sources=[ROOT/'image copy.png',ROOT/'image copy 2.png']
-    for i,p in enumerate(sources):shutil.copy2(p,WORK/'source'/f'owner-{i+1}.png')
+    src1=ROOT/'image copy.png' if (ROOT/'image copy.png').is_file() else WORK/'source'/'owner-1.png'
+    src2=ROOT/'image copy 2.png' if (ROOT/'image copy 2.png').is_file() else WORK/'source'/'owner-2.png'
+    sources=[src1,src2]
+    for i,p in enumerate(sources):
+        dst=WORK/'source'/f'owner-{i+1}.png'
+        if p.resolve()!=dst.resolve():shutil.copy2(p,dst)
+    sources=[WORK/'source'/'owner-1.png',WORK/'source'/'owner-2.png']
     rgb=np.array(Image.open(sources[0]).convert('RGB'));v=rgb.astype(int)
     seed=(v.max(2)-v.min(2)>20)|(v.max(2)<100)
     labels,_=ndimage.label(seed);records={};images={}
@@ -94,11 +99,17 @@ def build():
     mask_img=Image.new('RGBA',(96,68));mask_img.putdata([(v,v,v,255) for v in mask_values])
     mask_path=OUT/'dissolve-threshold.png';mask_img.save(mask_path)
     reveal={'method':'pixel_dissolve','mask':str(mask_path.relative_to(ROOT)),'mask_sha256':digest(mask_path),'mask_size_px':[96,68],'cell_size_canvas_px':4,'threshold_levels':256,'edge_width':0.07,'edge_color_rgb':[255,236,156]}
-    config={'schema':'dr7.shenron_summon.v3','tick_hz':60,'atlas':'assets/rituals/shenron_summon/atlas.png','atlas_sha256':digest(OUT/'atlas.png'),'items':items,'regions':regions,'sampling':'nearest','source_images':[{'file':str(p.relative_to(ROOT)),'sha256':digest(p),'size':list(Image.open(p).size)} for p in sources],
-      'timeline':{'launch_stride_ticks':18,'flight_ticks':54,'last_arrival_tick':162,'gather_hold_ticks':48,'vanish_start_tick':210,'flash_start_ticks':[228,246],'flash_rise_ticks':2,'flash_hold_ticks':4,'flash_fall_ticks':4,'ground_start_tick':276,'dragon_start_tick':300,'ready_tick':360,'glow_period_ticks':48},
+    config={'schema':'dr7.shenron_summon.v5','tick_hz':60,'atlas':'assets/rituals/shenron_summon/atlas.png','atlas_sha256':digest(OUT/'atlas.png'),'items':items,'regions':regions,'sampling':'nearest','source_images':[{'file':str(p.relative_to(ROOT)),'sha256':digest(p),'size':list(Image.open(p).size)} for p in sources],
+      'timeline':{'launch_stride_ticks':18,'flight_ticks':54,'last_arrival_tick':162,'gather_hold_ticks':48,'vanish_start_tick':210,'flash_start_ticks':[228,246],'flash_rise_ticks':2,'flash_hold_ticks':4,'flash_fall_ticks':4,'ground_start_tick':246,'ground_fade_ticks':2,'dragon_start_tick':246,'dragon_reveal_curve':'ease_out_quad','ready_tick':258,'glow_period_ticks':48},
+      'dismiss_timeline':{'flash_start_ticks':[0,18],'flash_rise_ticks':2,'flash_hold_ticks':4,'flash_fall_ticks':4,'vanish_tick':20,'end_tick':28},
+      'wishes':[
+        {'id':'heal_full','label':'1. Hồi đầy Sinh Lực & Ki','notice':'Shenron đã nhận điều ước: Hồi đầy Sinh Lực & Ki!'},
+        {'id':'max_power','label':'2. Bộc phát Sức Mạnh Cực Đại','notice':'Shenron đã nhận điều ước: Bộc phát Sức Mạnh Cực Đại!'},
+        {'id':'wealth_gems','label':'3. Ban thưởng Ngọc Rồng & Vàng','notice':'Shenron đã nhận điều ước: Ban thưởng Ngọc Rồng & Vàng!'},
+      ],
       'layout':{'map_center_px':[960,540],'ground_y':840,'ball_display_width_px':64,'formation_reference_scale':layout_scale,'flight_arc_height_px':150,'ground_display_width_px':144,'dragon_scale':2.76,'dragon_reference_bottom_canvas_y':228,'dragon_gap_px':0,'dragon_reveal_rise_px':48,'aura_width_px':420,'aura_height_px':540},
-      'behavior':{'trigger':'button_only','freeze_caster_during_sequence':True,'persist_until_dismissed':True,'block_retrigger_while_active':True,'dragon_character_id':'shenron','dragon_clip':'idle','body_bundle':'assets/shenron/godot_bundle/engine-export.json'},
-      'qa':{'art_source':'existing_owner_images','method':'2D component ownership; enclosed highlight preservation; white/gray1px edge unmixing','source1_items_detected':7,'star_counts':[r['star_count'] for k,r in sorted(records.items()) if k.startswith('ball_')],'ground_orientation':'source orientation preserved; no AI redraw or geometric repair','glow_source':'derived alpha silhouette only; independent VFX','revision':'v3-pixel-dissolve','status':'owner_approved'},
+      'behavior':{'trigger':'button_only','freeze_caster_during_sequence':True,'persist_until_dismissed':True,'block_retrigger_while_active':True,'requires_seven_balls_in_gameplay':True,'test_mode_bypass_ball_requirement':True,'auto_dismiss_after_wish':True,'dragon_character_id':'shenron','dragon_clip':'idle','body_bundle':'assets/shenron/godot_bundle/engine-export.json'},
+      'qa':{'art_source':'existing_owner_images','method':'2D component ownership; enclosed highlight preservation; white/gray1px edge unmixing','source1_items_detected':7,'star_counts':[r['star_count'] for k,r in sorted(records.items()) if k.startswith('ball_')],'ground_orientation':'source orientation preserved; no AI redraw or geometric repair','glow_source':'derived alpha silhouette only; independent VFX','revision':'v5-dismiss-flash-wish','status':'owner_approved'},
       'reveal':reveal}
     (OUT/'sequence.json').write_text(json.dumps(config,ensure_ascii=False,indent=2)+'\n')
     (WORK/'evidence/extraction.json').write_text(json.dumps({'sources':config['source_images'],'items':records,'layout_center_source_px':layout_center,'regions':regions},ensure_ascii=False,indent=2)+'\n')

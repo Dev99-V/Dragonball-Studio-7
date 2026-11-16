@@ -1,0 +1,82 @@
+{
+  "errors": [],
+  "liveMetrics": {
+    "ok": true,
+    "wallMs": 4368,
+    "endTick": 263.9879999999997
+  },
+  "captured": [
+    {
+      "tick": 230,
+      "actualTick": 230,
+      "bytes": 44076,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-230.png"
+    },
+    {
+      "tick": 240,
+      "actualTick": 240,
+      "bytes": 3920981,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-240.png"
+    },
+    {
+      "tick": 246,
+      "actualTick": 246,
+      "bytes": 3920981,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-246.png"
+    },
+    {
+      "tick": 248,
+      "actualTick": 248,
+      "bytes": 44076,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-248.png"
+    },
+    {
+      "tick": 250,
+      "actualTick": 250,
+      "bytes": 44076,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-250.png"
+    },
+    {
+      "tick": 252,
+      "actualTick": 252,
+      "bytes": 44076,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-252.png"
+    },
+    {
+      "tick": 253,
+      "actualTick": 253,
+      "bytes": 2433043,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-253.png"
+    },
+    {
+      "tick": 254,
+      "actualTick": 254,
+      "bytes": 2982443,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-254.png"
+    },
+    {
+      "tick": 255,
+      "actualTick": 255,
+      "bytes": 3384468,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-255.png"
+    },
+    {
+      "tick": 256,
+      "actualTick": 256,
+      "bytes": 3569359,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-256.png"
+    },
+    {
+      "tick": 257,
+      "actualTick": 257,
+      "bytes": 3557558,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-257.png"
+    },
+    {
+      "tick": 258,
+      "actualTick": 258,
+      "bytes": 3549027,
+      "file": "/workspaces/DR7-Studio/work/rituals/shenron_summon/v4-flash2-dissolve/evidence/v4-tick-258.png"
+    }
+  ]
+}

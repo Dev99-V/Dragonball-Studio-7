@@ -8,9 +8,13 @@ extends Node2D
 const STAGE_JSON_PATH := "res://assets/maps/rocky_plateau/arena-stage.json"
 const ROSTER_JSON_PATH := "res://assets/roster.json"
 const ShenronSummonScript := preload("res://scenes/ShenronSummon2D.gd")
+const DragonBallItemScene := preload("res://scenes/items/DragonBallItem2D.tscn")
 
 var shenron_summon: ShenronSummon2D
 var summon_button: Button
+var wish_panel: PanelContainer
+var wish_notice_label: Label
+var _wish_notice_timer_s: float = 0.0
 
 const UtilityAIControllerScript := preload("res://scenes/UtilityAIController.gd")
 
@@ -47,6 +51,17 @@ var ai_controller = UtilityAIControllerScript.new()
 var ai_last_decision: Dictionary = {}
 var _ai_action_clip: String = ""
 var _ai_action_timer_s: float = 0.0
+var _ai_drum_teleport_relocated: bool = false
+var _enemy_orb_sprite: AnimatedSprite2D = null
+var _enemy_orb_active: bool = false
+var _enemy_orb_dir: float = 1.0
+var _enemy_orb_elapsed_s: float = 0.0
+var _enemy_orb_spawned_for_cast: bool = false
+var _hero_skill_bar: HBoxContainer = null
+var _role_mode_label: Label = null
+var _player_select_opt: OptionButton = null
+var _enemy_select_opt: OptionButton = null
+var _hud_syncing: bool = false
 var _player_turn_boost_s: float = 0.0
 var _ai_turn_boost_s: float = 0.0
 var _player_turn_elapsed_s: float = 0.0
@@ -58,6 +73,17 @@ var _ai_turn_prev_dir: int = -1
 var _ai_turn_target_left: bool = true
 var _char_index: int = 0
 
+var item_drop_enabled: bool = true
+var item_drop_ball: int = 0
+var item_drop_scale: float = 1.0
+var _item_drop_layer: Node2D = null
+var _dropped_item_nodes: Array[Node2D] = []
+var _next_monster_drop_ball: int = 1
+var collected_bag_balls: Array[int] = []
+var item_toggle_button: Button = null
+var item_drop_test_button: Button = null
+var item_pickup_button: Button = null
+
 @onready var background_sprite: Sprite2D = get_node_or_null("BackgroundLayer/BackgroundSprite")
 @onready var fighters_layer: Node2D = get_node_or_null("FightersLayer")
 @onready var hud_label: Label = get_node_or_null("HUDLayer/HudLabel")
@@ -67,6 +93,8 @@ func _ready() -> void:
 	load_stage_and_roster()
 	_apply_stage_layout()
 	_setup_summon_control()
+	_setup_item_controls()
+	_refresh_dropped_items()
 	if not roster_characters.is_empty():
 		var start_id := default_character_id
 		if _find_character_entry(start_id).is_empty():
@@ -75,27 +103,123 @@ func _ready() -> void:
 
 
 func _setup_summon_control() -> void:
+	var hud_layer := get_node("HUDLayer")
 	shenron_summon = ShenronSummonScript.new()
 	add_child(shenron_summon)
+	shenron_summon.summon_ready.connect(_on_shenron_summon_ready)
+	shenron_summon.wish_selected.connect(_on_shenron_wish_selected)
+	shenron_summon.dismissed.connect(_on_shenron_dismissed)
 	summon_button = Button.new()
 	summon_button.position = Vector2(1500, 78)
 	summon_button.size = Vector2(280, 56)
 	summon_button.text = "Gọi Shenron"
-	get_node("HUDLayer").add_child(summon_button)
+	hud_layer.add_child(summon_button)
 	summon_button.pressed.connect(_on_summon_button_pressed)
+	wish_panel = PanelContainer.new()
+	wish_panel.position = Vector2(1320, 150)
+	wish_panel.custom_minimum_size = Vector2(460, 0)
+	wish_panel.visible = false
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	var title_lbl := Label.new()
+	title_lbl.text = "Chọn Điều Ước Shenron"
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25))
+	vbox.add_child(title_lbl)
+	for wish in shenron_summon.config.get("wishes", []):
+		var w_btn := Button.new()
+		w_btn.text = str(wish.get("label", wish.get("id", "Wish")))
+		w_btn.custom_minimum_size = Vector2(420, 44)
+		var wid := str(wish.get("id", ""))
+		w_btn.pressed.connect(func() -> void: _on_wish_button_pressed(wid))
+		vbox.add_child(w_btn)
+	wish_panel.add_child(vbox)
+	hud_layer.add_child(wish_panel)
+	wish_notice_label = Label.new()
+	wish_notice_label.position = Vector2(460, 78)
+	wish_notice_label.size = Vector2(980, 40)
+	wish_notice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wish_notice_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.35))
+	wish_notice_label.visible = false
+	hud_layer.add_child(wish_notice_label)
+
+
+func _setup_item_controls() -> void:
+	var hud_layer := get_node_or_null("HUDLayer")
+	if hud_layer == null:
+		return
+	item_toggle_button = Button.new()
+	item_toggle_button.position = Vector2(1500, 142)
+	item_toggle_button.size = Vector2(136, 42)
+	item_toggle_button.text = "Ẩn Ngọc"
+	item_toggle_button.pressed.connect(func() -> void:
+		toggle_dropped_items_visible()
+	)
+	hud_layer.add_child(item_toggle_button)
+
+	item_drop_test_button = Button.new()
+	item_drop_test_button.position = Vector2(1642, 142)
+	item_drop_test_button.size = Vector2(138, 42)
+	item_drop_test_button.text = "Quái Rơi Ngọc"
+	item_drop_test_button.pressed.connect(func() -> void:
+		trigger_monster_death_drop(0)
+	)
+	hud_layer.add_child(item_drop_test_button)
+
+	item_pickup_button = Button.new()
+	item_pickup_button.position = Vector2(1500, 190)
+	item_pickup_button.size = Vector2(280, 42)
+	item_pickup_button.text = "Nhặt Ngọc Vào Người"
+	item_pickup_button.pressed.connect(func() -> void:
+		pickup_dropped_items()
+	)
+	hud_layer.add_child(item_pickup_button)
+
+func _on_shenron_summon_ready() -> void:
+	if wish_panel != null:
+		wish_panel.visible = true
+
+func _on_wish_button_pressed(wish_id: String) -> void:
+	if shenron_summon != null:
+		shenron_summon.select_wish(wish_id)
+
+func _on_shenron_wish_selected(wish: Dictionary) -> void:
+	if wish_panel != null:
+		wish_panel.visible = false
+	if wish_notice_label != null:
+		wish_notice_label.text = str(wish.get("notice", ""))
+		wish_notice_label.visible = not wish_notice_label.text.is_empty()
+		_wish_notice_timer_s = 2.8
+	if summon_button != null and shenron_summon != null and shenron_summon.dismissing:
+		summon_button.text = "Đang thu hồi..."
+		summon_button.disabled = true
+
+func _on_shenron_dismissed() -> void:
+	if wish_panel != null:
+		wish_panel.visible = false
+	if summon_button != null:
+		summon_button.text = "Gọi Shenron"
+		summon_button.disabled = false
 
 func _on_summon_button_pressed() -> void:
 	if shenron_summon.active:
-		shenron_summon.dismiss()
-		summon_button.text = "Gọi Shenron"
+		if not shenron_summon.dismissing:
+			if wish_panel != null:
+				wish_panel.visible = false
+			if shenron_summon.begin_dismiss():
+				summon_button.text = "Đang thu hồi..."
+				summon_button.disabled = true
 	elif player_node != null:
 		var entry := _find_character_entry(active_character_id)
 		var dims := _get_body_dims(entry)
 		var source_pos := player_node.position - Vector2(0, float(dims.y) * char_scale * 0.5)
+		if wish_notice_label != null:
+			wish_notice_label.visible = false
+		_wish_notice_timer_s = 0.0
 		if shenron_summon.start_from(source_pos):
 			_play_fighter_clip(player_node, "idle")
 			player_vy = 0.0
 			summon_button.text = "Thu hồi Shenron"
+			summon_button.disabled = false
 
 
 
@@ -200,6 +324,8 @@ func select_character(char_id: String) -> bool:
 		return false
 	var packed := loaded_res as PackedScene
 
+	if shenron_summon != null and shenron_summon.active:
+		shenron_summon.dismiss()
 	_clear_fighter(player_node)
 
 	active_character_id = char_id
@@ -226,6 +352,7 @@ func select_character(char_id: String) -> bool:
 		_clear_fighter(dummy_node)
 		dummy_node = null
 		return false
+	_sync_role_hud(entry, _find_character_entry_ro(enemy_character_id))
 	_update_hud()
 	return true
 
@@ -267,6 +394,7 @@ func select_enemy_character(char_id: String, pin_enemy: bool = true) -> bool:
 	enemy_facing_left = dummy_node.scale.x < 0.0
 	ai_controller.reset_zone(dummy_spawn_x, walkable_min_x, walkable_max_x)
 	ai_last_decision = {}
+	_sync_role_hud(_find_character_entry_ro(active_character_id), entry)
 	_update_hud()
 	queue_redraw()
 	return true
@@ -307,6 +435,13 @@ func set_character_scale(new_scale: float) -> void:
 
 func set_utility_ai_enabled(enabled: bool) -> void:
 	utility_ai_enabled = enabled
+	_ai_drum_teleport_relocated = false
+	_enemy_orb_spawned_for_cast = false
+	_enemy_orb_active = false
+	if is_instance_valid(_enemy_orb_sprite):
+		_enemy_orb_sprite.visible = false
+	if is_instance_valid(ai_controller) and ai_controller.has_method("reset_drum_state"):
+		ai_controller.reset_drum_state()
 	_ai_action_clip = ""
 	_ai_action_timer_s = 0.0
 	ai_last_decision = {}
@@ -379,7 +514,8 @@ func _find_character_entry_ro(char_id: String) -> Dictionary:
 func step_utility_ai(delta: float) -> Dictionary:
 	if player_node == null or dummy_node == null:
 		return {}
-	ai_controller.tick_cooldown(delta)
+	if not (enemy_character_id == "drum" and not _ai_action_clip.is_empty()):
+		ai_controller.tick_cooldown(delta)
 	_ai_turn_boost_s = maxf(0.0, _ai_turn_boost_s - maxf(0.0, delta))
 	if _ai_action_timer_s > 0.0:
 		_ai_action_timer_s = maxf(0.0, _ai_action_timer_s - maxf(0.0, delta))
@@ -404,6 +540,11 @@ func step_utility_ai(delta: float) -> Dictionary:
 	var ph := float(p_dims.y) if p_dims.y > 0 else 140.0
 	var ew := float(e_dims.x) if e_dims.x > 0 else 140.0
 	var eh := float(e_dims.y) if e_dims.y > 0 else 140.0
+	_step_enemy_orb_projectile(delta, pw, ph)
+	_sync_role_hud(p_entry, e_entry)
+	if str(caps["character_id"]) == "drum" and not _ai_action_clip.is_empty():
+		_step_drum_midclip(spr, pw, ew)
+		is_busy = turn_pending or not _ai_action_clip.is_empty()
 
 	if turn_pending and str(caps["character_id"]) != "chilopoda" and _ai_turn_duration_s > 0.0:
 		_ai_turn_elapsed_s += maxf(0.0, delta)
@@ -471,6 +612,10 @@ func step_utility_ai(delta: float) -> Dictionary:
 		if _play_fighter_clip(dummy_node, clip):
 			_ai_action_clip = clip
 			_ai_action_timer_s = _get_clip_duration_s(dummy_node, clip)
+			if clip == "teleport":
+				_ai_drum_teleport_relocated = false
+			elif clip == "power_up":
+				_enemy_orb_spawned_for_cast = false
 	elif intent == "patrol" or intent == "chase":
 		var move_dir := int(res.get("move_dir", 0))
 		if move_dir != 0:
@@ -488,11 +633,177 @@ func step_utility_ai(delta: float) -> Dictionary:
 			_ensure_fighter_locomotion(dummy_node, "idle")
 	elif intent == "wait_cooldown":
 		_ensure_fighter_locomotion(dummy_node, "idle")
+	elif intent == "idle":
+		_ensure_fighter_locomotion(dummy_node, "idle")
+		if str(caps["character_id"]) == "drum" and ai_controller.has_method("reset_drum_state"):
+			ai_controller.reset_drum_state()
 
 	enemy_facing_left = dummy_node.scale.x < 0.0
 	ai_last_decision = res
 	queue_redraw()
 	return res
+
+
+func _step_drum_midclip(spr: AnimatedSprite2D, pw: float, ew: float) -> void:
+	if _ai_action_clip == "teleport" and not _ai_drum_teleport_relocated:
+		var mid_reached := _ai_action_timer_s <= 0.17 or (spr != null and String(spr.animation) == "teleport" and spr.frame >= 2)
+		if mid_reached:
+			var target_dist: float = (pw * float(char_scale) + ew * float(enemy_scale)) * 0.5 + float(ai_controller.close_edge_px)
+			var side: float = -1.0 if dummy_node.position.x <= player_node.position.x else 1.0
+			var min_b: float = maxf(walkable_min_x, float(ai_controller.zone_min_x))
+			var max_b: float = minf(walkable_max_x, float(ai_controller.zone_max_x))
+			var cand_x: float = player_node.position.x + side * target_dist
+			if cand_x < min_b or cand_x > max_b:
+				var alt_x: float = player_node.position.x - side * target_dist
+				if alt_x >= min_b and alt_x <= max_b:
+					cand_x = alt_x
+			dummy_node.position.x = clampf(cand_x, min_b, max_b)
+			enemy_facing_left = player_node.position.x < dummy_node.position.x
+			dummy_node.scale = Vector2(-enemy_scale if enemy_facing_left else enemy_scale, enemy_scale)
+			_ai_drum_teleport_relocated = true
+	elif _ai_action_clip == "power_up" and not _enemy_orb_spawned_for_cast:
+		var cast_reached := _ai_action_timer_s <= 0.14 or (spr != null and String(spr.animation) == "power_up" and spr.frame >= 10)
+		if cast_reached:
+			_enemy_orb_spawned_for_cast = true
+			_spawn_drum_enemy_orb()
+
+
+func _spawn_drum_enemy_orb() -> void:
+	var spr := dummy_node.get_node_or_null("Sprite") as AnimatedSprite2D
+	if spr == null or spr.sprite_frames == null or not spr.sprite_frames.has_animation(&"electric_orb_fx"):
+		return
+	if not is_instance_valid(_enemy_orb_sprite):
+		_enemy_orb_sprite = AnimatedSprite2D.new()
+		_enemy_orb_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_enemy_orb_sprite.centered = false
+		_enemy_orb_sprite.offset = Vector2(-64.0, -48.0)
+		add_child(_enemy_orb_sprite)
+	_enemy_orb_sprite.sprite_frames = spr.sprite_frames
+	_enemy_orb_dir = -1.0 if enemy_facing_left else 1.0
+	_enemy_orb_elapsed_s = 0.0
+	_enemy_orb_active = true
+	_enemy_orb_sprite.flip_h = enemy_facing_left
+	_enemy_orb_sprite.scale = Vector2(enemy_scale, enemy_scale)
+	_enemy_orb_sprite.position = dummy_node.position + Vector2(42.0 * _enemy_orb_dir * enemy_scale, -28.0 * enemy_scale)
+	_enemy_orb_sprite.visible = true
+	_enemy_orb_sprite.play(&"electric_orb_fx")
+
+
+func _step_enemy_orb_projectile(delta: float, pw: float, _ph: float) -> void:
+	if not _enemy_orb_active or not is_instance_valid(_enemy_orb_sprite):
+		return
+	_enemy_orb_elapsed_s += maxf(0.0, delta)
+	_enemy_orb_sprite.position.x += _enemy_orb_dir * (12.0 * 60.0 * enemy_scale) * maxf(0.0, delta)
+	var hit_x := absf(_enemy_orb_sprite.position.x - player_node.position.x) <= maxf(24.0, pw * char_scale * 0.45)
+	if hit_x or _enemy_orb_elapsed_s >= 0.65:
+		_enemy_orb_active = false
+		_enemy_orb_sprite.visible = false
+		_enemy_orb_sprite.stop()
+
+
+func _sync_role_hud(p_entry: Dictionary, e_entry: Dictionary) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var p_id := str(p_entry.get("character_id", ""))
+	var role := str(p_entry.get("combat_role", "sandbox"))
+	var e_role := str(e_entry.get("combat_role", "sandbox"))
+	var is_npc := role == "npc" or p_id == "shenron"
+	if _hero_skill_bar == null and get_viewport() != null:
+		var hud := get_node_or_null("ArenaRoleHud") as CanvasLayer
+		if hud == null:
+			hud = CanvasLayer.new()
+			hud.name = "ArenaRoleHud"
+			add_child(hud)
+		var bar := HBoxContainer.new()
+		bar.name = "HeroSkillBar"
+		bar.position = Vector2(24.0, 990.0)
+		_hero_skill_bar = bar
+		for spec in [
+			{"label": "Đánh nhẹ (Light)", "clip": "attack_light"},
+			{"label": "Tốc biến (Teleport)", "clip": "teleport"},
+			{"label": "Đánh nặng (Heavy)", "clip": "attack_heavy"},
+			{"label": "Power Up", "clip": "power_up"},
+		]:
+			var btn := Button.new()
+			btn.text = str(spec["label"])
+			var clip_name := str(spec["clip"])
+			btn.set_meta(&"clip_name", clip_name)
+			btn.pressed.connect(func() -> void:
+				_play_fighter_clip(player_node, clip_name)
+			)
+			bar.add_child(btn)
+		hud.add_child(bar)
+
+		var switch_bar := HBoxContainer.new()
+		switch_bar.name = "ArenaSwitcherBar"
+		switch_bar.position = Vector2(760.0, 990.0)
+		var p_lbl := Label.new()
+		p_lbl.text = "Thao tác:"
+		switch_bar.add_child(p_lbl)
+		_player_select_opt = OptionButton.new()
+		_player_select_opt.custom_minimum_size = Vector2(200.0, 32.0)
+		switch_bar.add_child(_player_select_opt)
+		var e_lbl := Label.new()
+		e_lbl.text = "AI Tự thao tác:"
+		switch_bar.add_child(e_lbl)
+		_enemy_select_opt = OptionButton.new()
+		_enemy_select_opt.custom_minimum_size = Vector2(200.0, 32.0)
+		switch_bar.add_child(_enemy_select_opt)
+		for idx in range(roster_characters.size()):
+			var ch: Variant = roster_characters[idx]
+			if not (ch is Dictionary):
+				continue
+			var cid_item := str(ch.get("character_id", ""))
+			var label_item := str(ch.get("display_name", cid_item))
+			_player_select_opt.add_item(label_item, idx)
+			_player_select_opt.set_item_metadata(idx, cid_item)
+			_enemy_select_opt.add_item(label_item, idx)
+			_enemy_select_opt.set_item_metadata(idx, cid_item)
+		_player_select_opt.item_selected.connect(func(sel_idx: int) -> void:
+			if _hud_syncing:
+				return
+			var picked_id := str(_player_select_opt.get_item_metadata(sel_idx))
+			if not picked_id.is_empty():
+				select_character(picked_id)
+		)
+		_enemy_select_opt.item_selected.connect(func(sel_idx: int) -> void:
+			if _hud_syncing:
+				return
+			var picked_id := str(_enemy_select_opt.get_item_metadata(sel_idx))
+			if not picked_id.is_empty():
+				select_enemy_character(picked_id, true)
+		)
+		hud.add_child(switch_bar)
+
+		_role_mode_label = Label.new()
+		_role_mode_label.name = "RoleModeLabel"
+		_role_mode_label.position = Vector2(24.0, 956.0)
+		hud.add_child(_role_mode_label)
+	if is_instance_valid(_hero_skill_bar):
+		_hero_skill_bar.visible = not is_npc
+		var pspr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D if player_node != null else null
+		for child in _hero_skill_bar.get_children():
+			if child is Button:
+				var c_clip := str(child.get_meta(&"clip_name", ""))
+				var has_c := pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(StringName(c_clip))
+				(child as Button).visible = has_c
+	_hud_syncing = true
+	if is_instance_valid(_player_select_opt):
+		for i in range(_player_select_opt.item_count):
+			if str(_player_select_opt.get_item_metadata(i)) == active_character_id:
+				_player_select_opt.select(i)
+				break
+	if is_instance_valid(_enemy_select_opt):
+		for i in range(_enemy_select_opt.item_count):
+			if str(_enemy_select_opt.get_item_metadata(i)) == enemy_character_id:
+				_enemy_select_opt.select(i)
+				break
+	_hud_syncing = false
+	if is_instance_valid(_role_mode_label):
+		if e_role in ["monster", "boss"] or utility_ai_enabled:
+			_role_mode_label.text = "Test Sân Tập (%s) | AI[%s]: %s" % [str(p_entry.get("display_name", "")), str(e_entry.get("display_name", "")), ai_controller.last_reason]
+		else:
+			_role_mode_label.text = "Test Sân Tập (%s): Nút Skill Vật Lý" % str(p_entry.get("display_name", ""))
 
 
 func _get_entry_default_scale(entry: Dictionary) -> float:
@@ -593,6 +904,10 @@ func _physics_process(delta: float) -> void:
 	if player_node == null:
 		return
 
+	if _wish_notice_timer_s > 0.0:
+		_wish_notice_timer_s = maxf(0.0, _wish_notice_timer_s - delta)
+		if _wish_notice_timer_s == 0.0 and wish_notice_label != null:
+			wish_notice_label.visible = false
 	if shenron_summon != null and shenron_summon.is_casting():
 		player_vy = 0.0
 		return
@@ -757,6 +1072,147 @@ func _update_hud() -> void:
 	hud_label.text = "%dx%d (16:9) | %s | %.2fx Nearest (%dx%dpx, %.1f%% 1080p) | Speed: %d px/s | Pos: (%d, %d) | [1/2/3/-/+] Scale%s" % [
 		viewport_width, viewport_height, active_character_id, char_scale, scaled_w, scaled_h, pct_h, spd, px, py, ai_txt
 	]
+
+
+func set_item_drop_preview(enabled: bool, ball_number: int = 0, item_scale: float = 1.0) -> void:
+	item_drop_enabled = enabled
+	item_drop_ball = clampi(ball_number, 0, 7)
+	item_drop_scale = clampf(item_scale, 0.5, 4.0)
+	_sync_item_toggle_button()
+	_refresh_dropped_items()
+
+
+func toggle_dropped_items_visible() -> bool:
+	item_drop_enabled = not item_drop_enabled
+	if _item_drop_layer != null and is_instance_valid(_item_drop_layer):
+		_item_drop_layer.visible = item_drop_enabled
+	if item_drop_enabled and _dropped_item_nodes.is_empty():
+		_refresh_dropped_items()
+	_sync_item_toggle_button()
+	return item_drop_enabled
+
+
+func _sync_item_toggle_button() -> void:
+	if item_toggle_button != null:
+		item_toggle_button.text = "Ẩn Ngọc" if item_drop_enabled else "Hiện Ngọc"
+
+
+func _ensure_item_drop_layer() -> Node2D:
+	if _item_drop_layer == null or not is_instance_valid(_item_drop_layer):
+		_item_drop_layer = Node2D.new()
+		_item_drop_layer.name = "ItemDropsLayer"
+		_item_drop_layer.z_index = 9
+		_item_drop_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(_item_drop_layer)
+	_item_drop_layer.visible = item_drop_enabled
+	return _item_drop_layer
+
+
+func _clear_dropped_items() -> void:
+	for node in _dropped_item_nodes:
+		if is_instance_valid(node):
+			if node.get_parent() != null:
+				node.get_parent().remove_child(node)
+			node.queue_free()
+	_dropped_item_nodes.clear()
+
+
+func _refresh_dropped_items() -> void:
+	_clear_dropped_items()
+	if not item_drop_enabled:
+		if _item_drop_layer != null and is_instance_valid(_item_drop_layer):
+			_item_drop_layer.visible = false
+		return
+	var layer := _ensure_item_drop_layer()
+	var center_x := float(viewport_width) * 0.5
+	if item_drop_ball == 0:
+		var step_x := roundf(44.0 * maxf(1.0, item_drop_scale))
+		var start_x := center_x - 3.0 * step_x
+		for i in range(7):
+			var item := DragonBallItemScene.instantiate() as Node2D
+			item.set("display_mode", "map")
+			item.set("ball_number", i + 1)
+			item.position = Vector2(start_x + float(i) * step_x, ground_y)
+			item.scale = Vector2(item_drop_scale, item_drop_scale)
+			if item.has_signal("collected"):
+				item.connect("collected", _on_dropped_item_collected)
+			layer.add_child(item)
+			_dropped_item_nodes.append(item)
+	else:
+		var item := DragonBallItemScene.instantiate() as Node2D
+		item.set("display_mode", "map")
+		item.set("ball_number", item_drop_ball)
+		item.position = Vector2(center_x, ground_y)
+		item.scale = Vector2(item_drop_scale, item_drop_scale)
+		if item.has_signal("collected"):
+			item.connect("collected", _on_dropped_item_collected)
+		layer.add_child(item)
+		_dropped_item_nodes.append(item)
+
+
+func trigger_monster_death_drop(ball_num: int = 0) -> Node2D:
+	item_drop_enabled = true
+	_sync_item_toggle_button()
+	var layer := _ensure_item_drop_layer()
+	var n := clampi(ball_num, 1, 7) if ball_num > 0 else _next_monster_drop_ball
+	if ball_num <= 0:
+		_next_monster_drop_ball = (_next_monster_drop_ball % 7) + 1
+	if dummy_node != null:
+		_play_fighter_clip(dummy_node, "ko")
+	var spawn_pos := dummy_node.position if dummy_node != null else Vector2(dummy_spawn_x, ground_y)
+	var px := player_node.position.x if player_node != null else player_spawn_x
+	var roll_dir := -1.0 if px <= spawn_pos.x else 1.0
+	var item := DragonBallItemScene.instantiate() as Node2D
+	item.set("ball_number", n)
+	if item.has_signal("collected"):
+		item.connect("collected", _on_dropped_item_collected)
+	layer.add_child(item)
+	item.call("start_drop_from", spawn_pos, ground_y, roll_dir, item_drop_scale)
+	_dropped_item_nodes.append(item)
+	return item
+
+
+func pickup_dropped_items() -> int:
+	if player_node == null:
+		return 0
+	var p_entry := _find_character_entry(active_character_id)
+	var dims := _get_body_dims(p_entry)
+	var center_off_y := -maxf(28.0, float(dims.y) * char_scale * 0.5)
+	var started := 0
+	for node in _dropped_item_nodes:
+		if is_instance_valid(node) and node.has_method("start_collect"):
+			if bool(node.call("start_collect", player_node, center_off_y, player_node.position + Vector2(0.0, center_off_y))):
+				started += 1
+	return started
+
+
+func step_dropped_items(delta: float) -> void:
+	for node in _dropped_item_nodes:
+		if is_instance_valid(node) and node.has_method("step_lifecycle"):
+			node.call("step_lifecycle", delta)
+
+
+func _on_dropped_item_collected(ball_num: int) -> void:
+	if not collected_bag_balls.has(ball_num):
+		collected_bag_balls.append(ball_num)
+
+
+func get_item_drop_metrics() -> Dictionary:
+	var nodes_info: Array = []
+	for node in _dropped_item_nodes:
+		if is_instance_valid(node) and node.has_method("get_item_metrics"):
+			var info: Dictionary = node.call("get_item_metrics")
+			info["position"] = [node.position.x, node.position.y]
+			info["scale"] = [node.scale.x, node.scale.y]
+			nodes_info.append(info)
+	return {
+		"enabled": item_drop_enabled,
+		"ball_number": item_drop_ball,
+		"item_scale": item_drop_scale,
+		"count": nodes_info.size(),
+		"collected_bag_balls": collected_bag_balls.duplicate(),
+		"items": nodes_info,
+	}
 
 
 func get_stage_metrics() -> Dictionary:

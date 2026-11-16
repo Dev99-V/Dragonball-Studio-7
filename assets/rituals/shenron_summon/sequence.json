@@ -1,5 +1,5 @@
 {
-  "schema": "dr7.shenron_summon.v3",
+  "schema": "dr7.shenron_summon.v5",
   "tick_hz": 60,
   "atlas": "assets/rituals/shenron_summon/atlas.png",
   "atlas_sha256": "c82ec5e8460a2bf01ef515793e87cfdf2be96f448eeab1b914d9e9fec7215aba",
@@ -210,7 +210,7 @@
   "sampling": "nearest",
   "source_images": [
     {
-      "file": "image copy.png",
+      "file": "work/rituals/shenron_summon/v5-dismiss-flash-wish/source/owner-1.png",
       "sha256": "0368f9a6c20f634b391dc893d70cc70757e14204b4feade4817b6e861cfbe876",
       "size": [
         1152,
@@ -218,7 +218,7 @@
       ]
     },
     {
-      "file": "image copy 2.png",
+      "file": "work/rituals/shenron_summon/v5-dismiss-flash-wish/source/owner-2.png",
       "sha256": "4191a18babe3d2067f4527dedf4352247e4f94c71be1732e9095fd7bfa7226a9",
       "size": [
         1152,
@@ -239,11 +239,41 @@
     "flash_rise_ticks": 2,
     "flash_hold_ticks": 4,
     "flash_fall_ticks": 4,
-    "ground_start_tick": 276,
-    "dragon_start_tick": 300,
-    "ready_tick": 360,
+    "ground_start_tick": 246,
+    "ground_fade_ticks": 2,
+    "dragon_start_tick": 246,
+    "dragon_reveal_curve": "ease_out_quad",
+    "ready_tick": 258,
     "glow_period_ticks": 48
   },
+  "dismiss_timeline": {
+    "flash_start_ticks": [
+      0,
+      18
+    ],
+    "flash_rise_ticks": 2,
+    "flash_hold_ticks": 4,
+    "flash_fall_ticks": 4,
+    "vanish_tick": 20,
+    "end_tick": 28
+  },
+  "wishes": [
+    {
+      "id": "heal_full",
+      "label": "1. Hồi đầy Sinh Lực & Ki",
+      "notice": "Shenron đã nhận điều ước: Hồi đầy Sinh Lực & Ki!"
+    },
+    {
+      "id": "max_power",
+      "label": "2. Bộc phát Sức Mạnh Cực Đại",
+      "notice": "Shenron đã nhận điều ước: Bộc phát Sức Mạnh Cực Đại!"
+    },
+    {
+      "id": "wealth_gems",
+      "label": "3. Ban thưởng Ngọc Rồng & Vàng",
+      "notice": "Shenron đã nhận điều ước: Ban thưởng Ngọc Rồng & Vàng!"
+    }
+  ],
   "layout": {
     "map_center_px": [
       960,
@@ -266,6 +296,9 @@
     "freeze_caster_during_sequence": true,
     "persist_until_dismissed": true,
     "block_retrigger_while_active": true,
+    "requires_seven_balls_in_gameplay": true,
+    "test_mode_bypass_ball_requirement": true,
+    "auto_dismiss_after_wish": true,
     "dragon_character_id": "shenron",
     "dragon_clip": "idle",
     "body_bundle": "assets/shenron/godot_bundle/engine-export.json"
@@ -285,7 +318,7 @@
     ],
     "ground_orientation": "source orientation preserved; no AI redraw or geometric repair",
     "glow_source": "derived alpha silhouette only; independent VFX",
-    "revision": "v3-pixel-dissolve",
+    "revision": "v5-dismiss-flash-wish",
     "status": "owner_approved"
   },
   "reveal": {

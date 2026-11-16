@@ -511,6 +511,43 @@
             <div id="filmstrip" class="filmstrip"></div>
           </div>
         </div>
+
+        <!-- GAME ITEM INSPECTOR: 7 DRAGON BALLS (1x = 32x32 + DIAGONAL SHEEN) -->
+        <div class="card" id="dragonBallItemCard">
+          <h2>
+            <span>🔮 Item Game 1×: Bộ 7 Ngọc Rồng (32×32 + Quét Sáng Chéo Toàn Thân)</span>
+            <span class="badge badge-info" id="itemCatalogBadge">32×32 • Nearest</span>
+          </h2>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:11.5px;">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <label>Zoom:
+                <select id="selItemZoom" style="width:auto; display:inline-block; padding:3px 6px;">
+                  <option value="1">1× (32×32 Thật)</option>
+                  <option value="2">2× (64×64)</option>
+                  <option value="3" selected>3× (96×96 Soi nét)</option>
+                </select>
+              </label>
+              <label>Nền 3-bg:
+                <select id="selItemBg" style="width:auto; display:inline-block; padding:3px 6px;">
+                  <option value="dark" selected>Tối (#0b0e17)</option>
+                  <option value="light">Sáng (#e5e7eb)</option>
+                  <option value="checker">Ô cờ Alpha</option>
+                  <option value="rocky">Đất Map Mẫu</option>
+                </select>
+              </label>
+              <button class="btn btn-gold" id="btnItemPlayPause">⏸ Quét sáng</button>
+              <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkItemSparkle" checked /> ✨ Quét sáng chéo</label>
+            </div>
+            <span id="itemSparkleReadout" style="color:var(--muted); font-family:monospace;">sparkle_fx frame 0/7 (60Hz)</span>
+          </div>
+          <div class="canvas-stage-wrap" style="padding:8px;">
+            <canvas id="itemInspectCanvas" width="760" height="128" style="image-rendering:pixelated; display:block;"></canvas>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:8px; padding:6px 10px; background:#0b1220; border:1px solid var(--border); border-radius:6px; font-size:11.5px;">
+            <span><b>🎒 Balo (1× = 32×32 • Ẩn hiệu ứng giữ icon tĩnh):</b></span>
+            <canvas id="bagSlotTab1Canvas" width="308" height="44" style="image-rendering:pixelated; display:block;"></canvas>
+          </div>
+        </div>
       </div>
 
       <!-- RIGHT COLUMN: AGENT COORDINATE PROTOCOL + MAP METRICS + PARITY -->
@@ -629,20 +666,52 @@
       </div>
       <div id="arenaAiControls" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; margin-bottom:10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; font-weight:600; color:#f59e0b;">
-            <input type="checkbox" id="chkUtilityAI" /> 🤖 Utility AI Địch (≤500px)
-          </label>
-          <span style="color:var(--muted);">Quái AI:</span>
+          <span style="color:var(--muted);">NV Thao tác:</span>
+          <select id="selPlayerChar" style="padding:3px 7px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;"></select>
+          <span style="color:var(--muted);">AI Tự thao tác:</span>
           <select id="selEnemyChar" style="padding:3px 7px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;"></select>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; font-weight:600; color:#f59e0b;">
+            <input type="checkbox" id="chkUtilityAI" /> 🤖 Bật AI (≤500px)
+          </label>
           <button class="btn" id="btnPullIntoZone" title="Đưa nhân vật vào vùng AI [zoneMin..zoneMax] để test cận chiến/chưởng ngay">⚡ Vào vùng AI</button>
-          <button class="btn" id="btnResetEnemyAi" title="Đưa quái AI về tâm vùng ban đầu & reset chuỗi 2 nhẹ -> nặng">↺ Reset Quái AI</button>
+          <button class="btn" id="btnResetEnemyAi" title="Đưa quái AI về tâm vùng ban đầu & reset chuỗi AI">↺ Reset Quái AI</button>
         </div>
         <span id="arenaAiStatus" style="color:#fcd34d; font-family:monospace;">AI TẮT • Zone [1120..1600] • &lt;50px nhẹ / 50..200px đuổi / ≥200px power_up</span>
+      </div>
+      <div id="arenaItemControls" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; margin-bottom:10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-gold" id="btnToggleArenaItems">🔮 Ẩn Ngọc</button>
+          <button class="btn" id="btnMonsterDeathDrop" title="Quái bên phải chết -> ngọc nhảy lên 10px, rơi xuống đất, lăn 10px rồi quét sáng">💀 Quái Chết Rơi Ngọc</button>
+          <button class="btn" id="btnPickupArenaItems" title="Hoặc click trực tiếp viên ngọc trên sân để bay thu nhỏ vào người nhặt">🧲 Nhặt Ngọc</button>
+          <button class="btn" id="btnResetArenaItems" title="Hiện lại bộ 7 viên mẫu 1× trên sân & reset Balo">↺ Reset 7 Viên</button>
+          <select id="selArenaItemVariant" style="padding:3px 7px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;">
+            <option value="0" selected>Cả 7 viên (1★→7★)</option>
+            <option value="1">Ngọc 1 Sao</option>
+            <option value="2">Ngọc 2 Sao</option>
+            <option value="3">Ngọc 3 Sao</option>
+            <option value="4">Ngọc 4 Sao</option>
+            <option value="5">Ngọc 5 Sao</option>
+            <option value="6">Ngọc 6 Sao</option>
+            <option value="7">Ngọc 7 Sao</option>
+          </select>
+          <button class="btn btn-gold" data-item-scale="1">1× (32px)</button>
+          <button class="btn" data-item-scale="1.5">1.5× (48px)</button>
+          <button class="btn" data-item-scale="2">2× (64px)</button>
+          <span id="arenaItemScaleBadge" style="color:#67e8f9; font-family:monospace;">1× (32×32 px)</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span style="color:var(--muted);">🎒 Balo (1× ẩn FX):</span>
+          <canvas id="bagSlotCanvas" width="308" height="44" style="image-rendering:pixelated; display:block;"></canvas>
+        </div>
       </div>
       <div id="arenaViewportOuter" style="background:#05080f; border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; justify-content:center; align-items:center; overflow:auto;">
         <div id="arenaPhoneFrame" style="position:relative; width:100%; max-width:1180px; aspect-ratio:2096/1166; margin:0 auto;">
           <div id="arenaScreenSlot" style="position:absolute; left:4.198473%; top:4.545455%; width:91.603053%; height:92.624357%; overflow:hidden; border-radius:2.2%; background:#080c14;">
             <canvas id="arenaCanvas" width="1920" height="1080" style="width:100%; height:100%; image-rendering:pixelated; display:block;"></canvas>
+            <div id="shenronWishOverlay" style="display:none; position:absolute; right:3%; top:14%; width:clamp(220px, 25%, 360px); background:rgba(10,16,30,0.92); border:2px solid #facc15; border-radius:10px; padding:12px; box-shadow:0 8px 28px rgba(0,0,0,0.75); z-index:5;">
+              <div style="color:#fde047; font-weight:700; font-size:14px; margin-bottom:8px;">✨ Chọn Điều Ước Shenron</div>
+              <div id="shenronWishButtons" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
           </div>
           <img id="arenaPhoneBezelImg" src="/preview-assets/phone-frame-landscape-16x9.png" alt="Landscape 16:9 Phone Frame" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none;" />
         </div>
@@ -659,6 +728,7 @@
       api: null,
       wasmExports: null,
       bundlesById: {},
+      itemsById: {},
       images: {},
       imagePromises: {},
       rosterFilter: 'all',
@@ -686,6 +756,11 @@
       activeTag: 'CHINH_NET',
       pinnedSpecs: [],
       activeTab: 'tab-human',
+      itemZoom: 3,
+      itemBgMode: 'dark',
+      itemSparkleEnabled: true,
+      itemSparklePlaying: true,
+      itemSparkleElapsedMs: 0,
     };
 
     const offscreenCanvas = document.createElement('canvas');
@@ -756,6 +831,13 @@
 
         const preloadUrlSet = new Set();
         if (arena.mapWebPath) preloadUrlSet.add(arena.mapWebPath);
+        state.itemsById = {};
+        if (bRes.items?.by_id) {
+          for (const [itemId, itemSet] of Object.entries(bRes.items.by_id)) {
+            state.itemsById[itemId] = itemSet;
+            if (itemSet.atlas_url) preloadUrlSet.add(itemSet.atlas_url);
+          }
+        }
       if(bRes.rituals?.shenron_summon){preloadUrlSet.add("/"+bRes.rituals.shenron_summon.atlas);if(bRes.rituals.shenron_summon.reveal)preloadUrlSet.add("/"+bRes.rituals.shenron_summon.reveal.mask);}
         for (const b of bRes.bundles) {
           state.bundlesById[b.id] = b;
@@ -797,6 +879,7 @@
         }
 
         renderInspector();
+        renderDragonBallItemInspector();
         stepAndRenderArena(16.67);
 
         requestAnimationFrame(mainLoop);
@@ -839,8 +922,13 @@
       if (!ch) return;
       dismissShenronSummon();
       state.activeChar = ch;
+      const npcRole = isNpcRole(ch);
+      arena.playerCharId = ch.character_id;
+      const selP = document.getElementById('selPlayerChar');
+      if (selP) selP.value = npcRole ? '' : arena.playerCharId;
       updateSummonButton();
-      const selectedBundle = getCharBundle(ch);
+      const playerEntry = getPlayerRosterEntry();
+      const selectedBundle = getCharBundle(playerEntry);
       const isFlight = isFlyingBundle(selectedBundle);
       arena.actionClip=null; arena.turnTargetFlip=null; arena.clip='idle'; arena.step=0; arena.elapsed=0;
       arena.turnElapsedMs = 0; arena.turnDurationMs = 0; arena.turnBoostMs = 0;
@@ -854,12 +942,13 @@
       arena.chiloPatrol=false;arena.chiloPatrolDir=1;arena.chiloInputDir=0;arena.chiloAction=null;
       arena.patrolEnabled=false;arena.patrolDir=arena.flip?-1:1;arena.patrolRun=false;
       state.archMode = 'combined_1layer';
-      const independent = selectedBundle?.render_contract;
-      const hasAura = Boolean(independent?.aura?.loop_clip && selectedBundle?.animations[independent.aura.loop_clip]);
+      const activeBundle = getCharBundle(ch);
+      const independent = activeBundle?.render_contract;
+      const hasAura = Boolean(independent?.aura?.loop_clip && activeBundle?.animations[independent.aura.loop_clip]);
       if(independent) { state.activeClipName='idle'; state.auraEnabled=false; state.fxTicks=0; arena.rageMode=false; }
       document.getElementById('chkIndependentAura').disabled=!hasAura;
       document.getElementById('chkIndependentAura').checked=Boolean(hasAura && state.auraEnabled);
-      document.getElementById('attachmentRuntimeNote').textContent=isStationaryBundle(selectedBundle) ? 'Đứng yên • hoạt ảnh idle' : independent ? 'Thân và FX độc lập • chung một atlas • có thêm quad khi bật FX.' : '';
+      document.getElementById('attachmentRuntimeNote').textContent=isStationaryBundle(activeBundle) ? 'Đứng yên • hoạt ảnh idle' : independent ? 'Thân và FX độc lập • chung một atlas • có thêm quad khi bật FX.' : '';
       const btnJump = document.getElementById('btnJump');
       const btnFlyDown = document.getElementById('btnFlyDown');
       if (btnJump) {
@@ -870,9 +959,11 @@
       const flightWrap = document.getElementById('arenaFlightControls');
       if (flightWrap) flightWrap.style.display = isFlight ? 'flex' : 'none';
       const dustWrap = document.getElementById('arenaDustControls');
-      if (dustWrap) dustWrap.style.display = independent?.chilopoda ? 'flex' : 'none';
-      document.getElementById('arenaControlHint').textContent=independent ? (independent.locomotion?.kind==='flight' ? (independent.turning?.clip ? 'A/D: bay ngang & xoay đầu • W/S (↑/↓): bay lên/xuống • Shift: bay nhanh • Tuần tra • nút kỹ năng' : 'A/D: bay ngang • W/S (↑/↓): bay lên/xuống • Shift: bay nhanh • nút kỹ năng bên phải') : (isSidewaysLocked(selectedBundle) ? 'A/D: bò ngang tiến/lùi (không xoay, giữ mặt khi spawn) • Mặt mặc định: Phải (+X) • nút kỹ năng bên phải' : (hasAura ? 'A/D: di chuyển • E: bật/tắt Ki • nút kỹ năng bên phải' : (selectedBundle?.animations.run ? 'A/D: đi bộ • Shift: chạy • nút kỹ năng bên phải' : (canFlipPatrolWithoutTurn(selectedBundle) ? 'A/D: đi bộ & xoay hướng • Tuần tra • nút kỹ năng bên phải' : 'A/D: đi bộ • nút kỹ năng bên phải'))))) : 'A/D: đi bộ • Shift: chạy • W/Space: nhảy';
-      if(independent?.chilopoda)document.getElementById('arenaControlHint').textContent='A/D: bắt đầu bò • đến cuối đường tự quay đầu đi lại • dùng kỹ năng để dừng bò';
+      if (dustWrap) dustWrap.style.display = selectedBundle?.render_contract?.chilopoda ? 'flex' : 'none';
+      const pContract = selectedBundle?.render_contract;
+      const pHasAura = Boolean(pContract?.aura?.loop_clip && selectedBundle?.animations[pContract.aura.loop_clip]);
+      document.getElementById('arenaControlHint').textContent=pContract ? (pContract.locomotion?.kind==='flight' ? (pContract.turning?.clip ? 'A/D: bay ngang & xoay đầu • W/S (↑/↓): bay lên/xuống • Shift: bay nhanh • Tuần tra • nút kỹ năng' : 'A/D: bay ngang • W/S (↑/↓): bay lên/xuống • Shift: bay nhanh • nút kỹ năng bên phải') : (isSidewaysLocked(selectedBundle) ? 'A/D: bò ngang tiến/lùi (không xoay, giữ mặt khi spawn) • Mặt mặc định: Phải (+X) • nút kỹ năng bên phải' : (pHasAura ? 'A/D: di chuyển • E: bật/tắt Ki • nút kỹ năng bên phải' : (selectedBundle?.animations.run ? 'A/D: đi bộ • Shift: chạy • nút kỹ năng bên phải' : (canFlipPatrolWithoutTurn(selectedBundle) ? 'A/D: đi bộ & xoay hướng • Tuần tra • nút kỹ năng bên phải' : 'A/D: đi bộ • nút kỹ năng bên phải'))))) : 'A/D: đi bộ • Shift: chạy • W/Space: nhảy';
+      if(pContract?.chilopoda)document.getElementById('arenaControlHint').textContent='A/D: bắt đầu bò • đến cuối đường tự quay đầu đi lại • dùng kỹ năng để dừng bò';
       updatePatrolButtonUI();
       updateSpawnFacingUI();
       updateArenaScaleUI();
@@ -881,7 +972,7 @@
       updateArenaDustScaleUI();
 
       if (!arena.enemyAi.pinned || !arena.enemyAi.charId) {
-        selectEnemyCharacter(ch.character_id, false);
+        selectEnemyCharacter(arena.playerCharId || ch.character_id, false);
       }
       updateEnemyAiStatusUI();
 
@@ -900,7 +991,9 @@
       state.selectedPolygon = null;
       state.playing = true;
 
-      document.getElementById('arenaCharLabel').textContent = ch.display_name;
+      document.getElementById('arenaCharLabel').textContent = npcRole
+        ? `${ch.display_name} (NPC — Không chiến đấu)`
+        : ch.display_name;
       renderRosterList();
       renderCharMetricsAndWarnings();
       syncClipChoices();
@@ -946,6 +1039,14 @@
 
         const clipBadge = `${(ch.present_clips || []).length} clips`;
         const [cw, chPx] = getCanvasSize(ch);
+        const cRole = getCharacterCombatRole(ch);
+        const rolePill = cRole === 'monster'
+          ? `<span class="mini-pill" style="background:rgba(239,68,68,.2);color:#fca5a5;">Quái • AI</span>`
+          : (cRole === 'boss'
+            ? `<span class="mini-pill" style="background:rgba(245,158,11,.22);color:#fcd34d;">Boss • AI</span>`
+            : (cRole === 'hero'
+              ? `<span class="mini-pill" style="background:rgba(34,197,94,.2);color:#86efac;">Tướng chính</span>`
+              : `<span class="mini-pill">1-Lớp Chuẩn</span>`));
 
         const info = document.createElement('div');
         info.className = 'roster-info';
@@ -953,7 +1054,7 @@
           <div class="roster-title">${ch.display_name}</div>
           <div class="roster-sub"><code>${ch.character_id}</code> • ${ch.role_label || 'Fighter'}</div>
           <div class="roster-pills">
-            <span class="mini-pill">1-Lớp Chuẩn</span>
+            ${rolePill}
             <span class="mini-pill">${cw}×${chPx}</span>
             <span class="mini-pill">${clipBadge}</span>
           </div>
@@ -1701,6 +1802,7 @@
       attack_light: { dmg: 120, range: 220, label: '-120 LIGHT ATTACK!', shake: 0 },
       attack_nomal: { dmg: 120, range: 220, label: '-120 CLAW ATTACK!', shake: 0 },
       attack_heavy: { dmg: 220, range: 250, label: '-220 HEAVY SMASH!', shake: 0 },
+      teleport:     { dmg: 0,   range: 260, label: '⚡ TỐC BIẾN!', shake: 0 },
       power_up:     { dmg: 250, range: 920, label: '-250 POWER SURGE!', shake: 0 },
       ki_blast:     { dmg: 280, range: 1000, label: '-280 KI BLAST!', shake: 0 },
     };
@@ -1721,8 +1823,9 @@
       if (!container) return;
       container.innerHTML = '';
       arenaHotkeyClips = {};
-      const b = getCharBundle();
-      if (!state.activeChar || !b) {
+      const pEntry = getPlayerRosterEntry();
+      const b = getCharBundle(pEntry);
+      if (!pEntry || !b) {
         const msg = document.createElement('span');
         msg.style.color = 'var(--muted)';
         msg.style.fontSize = '11.5px';
@@ -1730,7 +1833,15 @@
         container.appendChild(msg);
         return;
       }
-      const passive = new Set(['idle', 'walk', 'fly', 'run', 'jump', 'guard', 'aura_loop', 'hit', 'ko', 'win', 'turn']);
+      if (isNpcRole(pEntry)) {
+        const msg = document.createElement('span');
+        msg.className = 'badge';
+        msg.style.cssText = 'background:rgba(148,163,184,.18);color:#cbd5e1;';
+        msg.textContent = `NPC (${pEntry.display_name}): Không chiến đấu`;
+        container.appendChild(msg);
+        return;
+      }
+      const passive = new Set(['idle', 'walk', 'fly', 'run', 'jump', 'guard', 'aura_loop', 'hit', 'ko', 'win', 'turn', 'getup']);
       const skillNames = Object.keys(b.animations).filter(n => !passive.has(n) && (!b.render_contract || b.render_contract.body_clips.includes(n)));
       skillNames.slice(0, ARENA_HOTKEYS.length).forEach((clipName, idx) => {
         const hk = ARENA_HOTKEYS[idx];
@@ -1788,6 +1899,8 @@
       dummyClip: 'idle',
       dummyStep: 0,
       popups: [],
+      projectiles: [],
+      playerCharId: '',
       keys: {},
       chiloPatrol:false,chiloPatrolDir:1,chiloInputDir:0,chiloAction:null,
       patrolEnabled:false,patrolDir:1,patrolRun:false,
@@ -1832,6 +1945,17 @@
         lastReason: 'ai_off',
         lastAttackClip: '',
         lastEdgeDist: -1,
+        drumPhase: 'idle_ready',
+        drumTeleportRelocated: false,
+        drumOrbSpawned: false,
+      },
+      itemDrop: {
+        enabled: true,
+        ballNumber: 0,
+        scale: 1.0,
+        nextMonsterBall: 1,
+        drops: [], // live animated drops: { num, phase: 'dropping'|'resting'|'collecting', subphase, ... }
+        collectedBalls: [],
       },
     };
 
@@ -1984,6 +2108,35 @@
       arena.enemyAi.lastReason = 'zone_init';
       arena.enemyAi.lastAttackClip = '';
       arena.enemyAi.lastEdgeDist = -1;
+      arena.enemyAi.drumPhase = 'idle_ready';
+      arena.enemyAi.drumEngaged = false;
+      arena.enemyAi.drumTeleportRelocated = false;
+      arena.enemyAi.drumOrbSpawned = false;
+      arena.projectiles = [];
+    }
+
+    function getCharacterCombatRole(ch) {
+      return String(ch?.combat_role || 'sandbox').toLowerCase();
+    }
+
+    function isNpcRole(ch) {
+      return getCharacterCombatRole(ch) === 'npc' || ch?.character_id === 'shenron';
+    }
+
+    function isAiOnlyMonsterRole(ch) {
+      const r = getCharacterCombatRole(ch);
+      return r === 'monster' || r === 'boss';
+    }
+
+    function getPlayerRosterEntry() {
+      const chars = state.api?.roster?.characters || [];
+      const chosen = chars.find(c => c.character_id === arena.playerCharId);
+      if (chosen) return chosen;
+      return state.activeChar;
+    }
+
+    function getPlayerBundle() {
+      return getCharBundle(getPlayerRosterEntry());
     }
 
     function evaluateUtilityAI(aiState, params, cfg = arena.utilityAiCfg) {
@@ -2024,6 +2177,68 @@
       };
 
       const zoneActive = targetX >= aiState.zoneMinX && targetX <= aiState.zoneMaxX;
+      if (cid === 'drum') {
+        const edgeDistDrum = computeEdgeDistance(selfRect, targetRect);
+        const faceLeftDrum = targetX < selfX;
+        const engaged = Boolean(aiState.drumEngaged);
+        if (edgeDistDrum >= 400 || (!zoneActive && !engaged)) {
+          aiState.drumEngaged = false;
+          aiState.drumPhase = 'idle_ready';
+          if (isBusy) {
+            aiState.lastIntent = 'busy';
+            aiState.lastReason = 'clip_busy';
+            return { intent: 'busy', move_dir: 0, attack_clip: '', desired_face_left: faceLeftDrum, edge_dist: zoneActive ? edgeDistDrum : -1, reason: 'busy' };
+          }
+          aiState.lastIntent = 'idle';
+          aiState.lastReason = (engaged || zoneActive) ? 'outside_range_400_idle' : 'outside_zone_idle';
+          return {
+            intent: 'idle',
+            move_dir: 0,
+            attack_clip: '',
+            desired_face_left: zoneActive ? faceLeftDrum : Boolean(params.facing_left),
+            edge_dist: zoneActive ? edgeDistDrum : -1,
+            reason: aiState.lastReason,
+          };
+        }
+        aiState.drumEngaged = true;
+        if (isBusy) {
+          aiState.lastIntent = 'busy';
+          aiState.lastReason = 'clip_busy';
+          return { intent: 'busy', move_dir: 0, attack_clip: '', desired_face_left: faceLeftDrum, edge_dist: edgeDistDrum, reason: 'busy' };
+        }
+        const phase = aiState.drumPhase || 'idle_ready';
+        if (aiState.cooldownRemaining > 0) {
+          aiState.lastIntent = 'wait_cooldown';
+          aiState.lastReason = edgeDistDrum <= closeEdge ? 'drum_light_cooldown' : 'drum_combo_cooldown';
+          return { intent: 'wait_cooldown', move_dir: 0, attack_clip: '', desired_face_left: faceLeftDrum, edge_dist: edgeDistDrum, reason: aiState.lastReason };
+        }
+        if (phase === 'post_teleport_light' && edgeDistDrum <= midMaxEdge) {
+          aiState.drumPhase = 'engaged';
+          aiState.cooldownRemaining = 0.2;
+          aiState.lastIntent = 'attack';
+          aiState.lastReason = 'drum_shoulder_light';
+          return { intent: 'attack', move_dir: 0, attack_clip: 'attack_light', desired_face_left: faceLeftDrum, edge_dist: edgeDistDrum, reason: aiState.lastReason };
+        }
+        if (edgeDistDrum <= closeEdge) {
+          aiState.drumPhase = 'engaged';
+          aiState.cooldownRemaining = 0.2;
+          aiState.lastIntent = 'attack';
+          aiState.lastReason = 'drum_light_continuous';
+          return { intent: 'attack', move_dir: 0, attack_clip: 'attack_light', desired_face_left: faceLeftDrum, edge_dist: edgeDistDrum, reason: aiState.lastReason };
+        }
+        if (edgeDistDrum > midMaxEdge) {
+          aiState.drumPhase = 'engaged';
+          aiState.cooldownRemaining = attackCd;
+          aiState.lastIntent = 'attack';
+          aiState.lastReason = 'drum_powerup_ranged';
+          return { intent: 'attack', move_dir: 0, attack_clip: 'power_up', desired_face_left: faceLeftDrum, edge_dist: edgeDistDrum, reason: aiState.lastReason };
+        }
+        aiState.drumPhase = 'post_teleport_light';
+        aiState.cooldownRemaining = 0;
+        aiState.lastIntent = 'attack';
+        aiState.lastReason = 'drum_teleport_ambush';
+        return { intent: 'attack', move_dir: 0, attack_clip: 'teleport', desired_face_left: faceLeftDrum, edge_dist: edgeDistDrum, reason: aiState.lastReason };
+      }
       if (!zoneActive) {
         if (aiState.lightChainCount > 0) aiState.lightChainCount = 0;
         if (isBusy) {
@@ -2137,10 +2352,23 @@
     }
 
     function populateEnemySelectOptions() {
+      const chars = state.api?.roster?.characters || [];
+      const selP = document.getElementById('selPlayerChar');
+      if (selP) {
+        selP.innerHTML = '';
+        for (const ch of chars) {
+          if (isNpcRole(ch)) continue;
+          const opt = document.createElement('option');
+          opt.value = ch.character_id;
+          opt.textContent = ch.display_name || ch.character_id;
+          selP.appendChild(opt);
+        }
+        if (arena.playerCharId) selP.value = arena.playerCharId;
+      }
       const sel = document.getElementById('selEnemyChar');
-      if (!sel || !state.api?.roster?.characters) return;
+      if (!sel) return;
       sel.innerHTML = '';
-      for (const ch of state.api.roster.characters) {
+      for (const ch of chars) {
         const opt = document.createElement('option');
         opt.value = ch.character_id;
         opt.textContent = ch.display_name || ch.character_id;
@@ -2211,7 +2439,8 @@
         return;
       }
       const gapTxt = arena.enemyAi.lastEdgeDist >= 0 ? `${Math.round(arena.enemyAi.lastEdgeDist)}px` : 'Ngoài vùng';
-      lbl.textContent = `AI[${arena.enemyAi.charId}] ${arena.enemyAi.lastReason} • Rìa=${gapTxt} • Chain=${arena.enemyAi.lightChainCount}/${arena.utilityAiCfg.light_hits_before_heavy} • CD=${arena.enemyAi.cooldownRemaining.toFixed(1)}s • Zone [${zMin}..${zMax}]`;
+      const drumRuleHint = arena.enemyAi.charId === 'drum' ? ' (≤50px nhẹ 0.2s • 50..200px tốc biến • >200..<400px power_up • ≥400px im)' : '';
+      lbl.textContent = `AI[${arena.enemyAi.charId}] ${arena.enemyAi.lastReason} • Rìa=${gapTxt} • CD=${arena.enemyAi.cooldownRemaining.toFixed(2)}s • Zone [${zMin}..${zMax}]${drumRuleHint}`;
     }
 
     function stepEnemyAiFrame(dtMs) {
@@ -2222,7 +2451,9 @@
       const eScale = arena.enemyScale || getDefaultCharScale(eb);
       const eChilo = eb.render_contract?.chilopoda;
       if (ai.enabled) {
-        ai.cooldownRemaining = Math.max(0, ai.cooldownRemaining - dtMs / 1000.0);
+        if (!(eCh?.character_id === 'drum' && ai.actionClip)) {
+          ai.cooldownRemaining = Math.max(0, ai.cooldownRemaining - dtMs / 1000.0);
+        }
         ai.turnBoostMs = Math.max(0, (ai.turnBoostMs || 0) - dtMs);
         if (ai.turnTargetFlip !== null && !eChilo && ai.turnDurationMs > 0) {
           ai.turnElapsedMs = (ai.turnElapsedMs || 0) + dtMs;
@@ -2284,6 +2515,10 @@
             ai.clip = res.attack_clip;
             ai.step = 0;
             ai.elapsed = 0;
+            if (eCh?.character_id === 'drum') {
+              ai.drumTeleportRelocated = false;
+              ai.drumOrbSpawned = false;
+            }
             if (eb.render_contract?.chilopoda) {
               const cc = eb.render_contract.chilopoda;
               const sign = ai.flip ? -1 : 1;
@@ -2307,7 +2542,7 @@
               ai.step = 0;
               ai.elapsed = 0;
             }
-          } else if (res.intent === 'wait_cooldown') {
+          } else if (res.intent === 'wait_cooldown' || res.intent === 'idle') {
             if (ai.clip !== 'idle') {
               ai.clip = 'idle';
               ai.step = 0;
@@ -2321,6 +2556,39 @@
       let eAnim = eb.animations?.[activeClip] || Object.values(eb.animations)[0];
       if (ai.enabled && eAnim && eAnim.frames.length) {
         ai.elapsed += dtMs;
+        if (eCh?.character_id === 'drum') {
+          if (ai.actionClip === 'teleport' && !ai.drumTeleportRelocated && ai.step >= 2) {
+            const pw = (getBodyDims(getPlayerRosterEntry())[0] || 140) * arena.charScale;
+            const ew = (getBodyDims(eCh)[0] || 56) * eScale;
+            const targetDist = (pw + ew) * 0.5 + Number(arena.utilityAiCfg?.close_edge_px ?? 50);
+            const side = ai.x <= arena.x ? -1 : 1;
+            const minB = Math.max(arena.minX, ai.zoneMinX);
+            const maxB = Math.min(arena.maxX, ai.zoneMaxX);
+            let candX = arena.x + side * targetDist;
+            if (candX < minB || candX > maxB) {
+              const altX = arena.x - side * targetDist;
+              if (altX >= minB && altX <= maxB) candX = altX;
+            }
+            ai.x = Math.max(minB, Math.min(maxB, candX));
+            ai.flip = arena.x < ai.x;
+            ai.drumTeleportRelocated = true;
+          } else if (ai.actionClip === 'power_up' && !ai.drumOrbSpawned && ai.step >= 10) {
+            ai.drumOrbSpawned = true;
+            const dirX = ai.flip ? -1 : 1;
+            arena.projectiles.push({
+              bundle: eb,
+              clip: 'electric_orb_fx',
+              x: ai.x + dirX * 42 * eScale,
+              y: ai.y - 28 * eScale,
+              vx: dirX * 12 * 60 * eScale,
+              scale: eScale,
+              flip: ai.flip,
+              step: 0,
+              elapsed: 0,
+              lifeMs: 650,
+            });
+          }
+        }
         if (eChilo?.burrow_turn && ai.clip === eChilo.burrow_turn.body_clip && ai.turnTargetFlip !== null) {
           const tick = animationFrameTick(eAnim, ai.step) + ai.elapsed * 0.06;
           if (tick >= eChilo.burrow_turn.hidden_start_tick) ai.flip = ai.turnTargetFlip;
@@ -2442,7 +2710,7 @@
       if (num) num.value = String(arena.charScale);
       const badge = document.getElementById('arenaStageBadge');
       if (badge) {
-        const [bodyW, bodyH] = getBodyDims(state.activeChar);
+        const [bodyW, bodyH] = getBodyDims(getPlayerRosterEntry());
         const sLabel = formatScaleLabel(arena.charScale);
         const sizeNote = bodyH ? ` • Thân ${sLabel}× ≈ ${Math.round(bodyW * arena.charScale)}×${Math.round(bodyH * arena.charScale)}px (${(bodyH * arena.charScale / arena.viewportHeight * 100).toFixed(1)}% 1080p)` : '';
         badge.textContent = `${arena.viewportWidth}×${arena.viewportHeight} • 16:9 • ${sLabel}× Nearest${sizeNote}`;
@@ -2450,7 +2718,7 @@
     }
 
     function updateArenaSpeedUI() {
-      const b = getCharBundle();
+      const b = getPlayerBundle();
       const eff = getEffectiveWalkSpeedPxPerS(b, arena.charScale);
       const base1x = eff / Math.max(0.1, arena.charScale);
       const rng = document.getElementById('rngArenaSpeed');
@@ -2588,54 +2856,116 @@
     }
 
     function getSummonConfig() { return state.api?.rituals?.shenron_summon || null; }
-    function isSummonCasting() { const c=getSummonConfig();return Boolean(c&&arena.summon&&arena.summon.tick<c.timeline.ready_tick); }
+    function isSummonCasting() { const c=getSummonConfig();return Boolean(c&&arena.summon&&(arena.summon.dismissing||arena.summon.tick<c.timeline.ready_tick)); }
     function updateSummonButton() {
       const btn=document.getElementById('btnSummonShenron');if(!btn)return;
-      btn.disabled=!state.activeChar||!getSummonConfig();
-      btn.textContent=arena.summon?'Thu hồi Shenron':'✨ Gọi Shenron';
+      const dismissing=Boolean(arena.summon?.dismissing);
+      btn.disabled=!state.activeChar||!getSummonConfig()||dismissing;
+      btn.textContent=dismissing?'⏳ Đang thu hồi...':arena.summon?'Thu hồi Shenron':'✨ Gọi Shenron';
+    }
+    function renderShenronWishOverlay() {
+      const box=document.getElementById('shenronWishOverlay');
+      const list=document.getElementById('shenronWishButtons');
+      if(!box||!list)return;
+      const c=getSummonConfig();
+      const ready=Boolean(c&&arena.summon&&!arena.summon.dismissing&&!arena.summon.selectedWish&&arena.summon.tick>=c.timeline.ready_tick);
+      if(!ready){box.style.display='none';list.innerHTML='';return;}
+      list.innerHTML='';
+      for(const wish of (c.wishes||[])){
+        const btn=document.createElement('button');
+        btn.className='btn btn-gold';
+        btn.style.textAlign='left';
+        btn.style.width='100%';
+        btn.textContent=wish.label||wish.id;
+        btn.onclick=()=>chooseShenronWish(wish.id);
+        list.appendChild(btn);
+      }
+      box.style.display='block';
     }
     function startShenronSummon() {
       const c=getSummonConfig();if(!c||!state.activeChar||arena.summon)return false;
       const dragon=state.api.roster.characters.find(ch=>ch.character_id===c.behavior.dragon_character_id);
       if(!dragon||!getCharBundle(dragon))return false;
       const [,h]=getBodyDims(state.activeChar);
-      arena.summon={tick:0,origin:[arena.x,arena.y-h*arena.charScale*0.5]};
+      arena.wishNotice=null;
+      arena.summon={tick:0,origin:[arena.x,arena.y-h*arena.charScale*0.5],dismissing:false,dismissTick:0,wishPanelShown:false,selectedWish:null};
       arena.patrolEnabled=false;arena.chiloPatrol=false;arena.vy=0;
       arena.actionClip=null;arena.clip='idle';arena.step=0;arena.elapsed=0;
-      updateSummonButton();return true;
+      renderShenronWishOverlay();updateSummonButton();return true;
     }
-    function dismissShenronSummon() { arena.summon=null;updateSummonButton(); }
+    function startShenronDismiss() {
+      if(!arena.summon||arena.summon.dismissing)return false;
+      arena.summon.dismissing=true;arena.summon.dismissTick=0;
+      renderShenronWishOverlay();updateSummonButton();return true;
+    }
+    function chooseShenronWish(wishId) {
+      const c=getSummonConfig();if(!c||!arena.summon||arena.summon.dismissing)return null;
+      const wish=(c.wishes||[]).find(w=>w.id===wishId)||null;
+      if(!wish)return null;
+      arena.summon.selectedWish=wish;
+      arena.wishNotice={text:wish.notice||wish.label,lifeMs:2800};
+      renderShenronWishOverlay();
+      if(c.behavior?.auto_dismiss_after_wish!==false)startShenronDismiss();
+      return wish;
+    }
+    function dismissShenronSummon() { arena.summon=null;arena.wishNotice=null;renderShenronWishOverlay();updateSummonButton(); }
     function summonFlightProgress(tick,index,stride,duration) {
       if(state.wasmExports?.wasm_summon_flight_progress)
         return state.wasmExports.wasm_summon_flight_progress(tick,index,stride,duration);
       const elapsed=tick-index*stride;return elapsed<0?-1:Math.max(0,Math.min(1,elapsed/Math.max(1,duration)));
     }
+    function computeDoubleFlashAlpha(tick,starts,rise,hold,fall) {
+      const clamp=x=>Math.max(0,Math.min(1,x));
+      let flashAlpha=0;
+      for(const start of starts){const e=tick-start;if(e>=0)flashAlpha=Math.max(flashAlpha,Math.min(clamp(e/rise),clamp((rise+hold+fall-e)/fall)));}
+      return flashAlpha;
+    }
+    function computeGroundRectAndDragon(c) {
+      const l=c.layout,gr=c.regions.ground,gs=l.ground_display_width_px/gr[2],gh=gr[3]*gs;
+      const groundRect=[l.map_center_px[0]-l.ground_display_width_px/2,l.ground_y-gh,l.ground_display_width_px,gh];
+      const dragon=state.api.roster.characters.find(ch=>ch.character_id===c.behavior.dragon_character_id),bundle=getCharBundle(dragon);
+      const scale=l.dragon_scale,anchor=bundle?.anchor_px||[192,240];
+      const dragonPosition=[l.map_center_px[0],groundRect[1]+(anchor[1]-l.dragon_reference_bottom_canvas_y)*scale-l.dragon_gap_px];
+      return {groundRect,dragon,bundle,dragonPosition};
+    }
+    function sampleDragonIdleFrame(c,bundle,elapsedTicks) {
+      const clip=bundle?.animations[c.behavior.dragon_clip];const durations=clip?.frames.map(f=>f.duration_ticks)||[];
+      const total=durations.reduce((a,b)=>a+b,0);let rest=Math.max(0,elapsedTicks)%(total||1),dragonFrame=0;
+      while(dragonFrame<durations.length-1&&rest>=durations[dragonFrame])rest-=durations[dragonFrame++];
+      return dragonFrame;
+    }
     function sampleShenronSummon(tick,origin) {
       const c=getSummonConfig();if(!c)return null;
       const t=c.timeline,l=c.layout,clamp=x=>Math.max(0,Math.min(1,x));
       const vanish=1-clamp((tick-t.vanish_start_tick)/(t.flash_start_ticks[0]-t.vanish_start_tick));
-      let flashAlpha=0;
-      for(const start of t.flash_start_ticks){const e=tick-start;if(e>=0)flashAlpha=Math.max(flashAlpha,Math.min(clamp(e/t.flash_rise_ticks),clamp((t.flash_rise_ticks+t.flash_hold_ticks+t.flash_fall_ticks-e)/t.flash_fall_ticks)));}
+      const flashAlpha=computeDoubleFlashAlpha(tick,t.flash_start_ticks,t.flash_rise_ticks,t.flash_hold_ticks,t.flash_fall_ticks);
       const balls=c.items.map((item,index)=>{
         const p=summonFlightProgress(tick,index,t.launch_stride_ticks,t.flight_ticks),u=Math.max(0,p),e=u*u*(3-2*u);
         const target=[l.map_center_px[0]+item.formation_offset_px[0],l.map_center_px[1]+item.formation_offset_px[1]];
         return {number:item.number,region:item.region,visible:p>=0&&tick<t.flash_start_ticks[0],alpha:vanish,
           position:[origin[0]+(target[0]-origin[0])*e,origin[1]+(target[1]-origin[1])*e-l.flight_arc_height_px*4*u*(1-u)]};
       });
-      const gr=c.regions.ground,gs=l.ground_display_width_px/gr[2],gh=gr[3]*gs;
-      const groundRect=[l.map_center_px[0]-l.ground_display_width_px/2,l.ground_y-gh,l.ground_display_width_px,gh];
-      const groundAlpha=clamp((tick-t.ground_start_tick)/24);
+      const {groundRect,dragon,bundle,dragonPosition}=computeGroundRectAndDragon(c);
+      const gf=Number(t.ground_fade_ticks??24);
+      const groundAlpha=gf<=0?(tick>=t.ground_start_tick?1:0):clamp((tick-t.ground_start_tick)/gf);
       const glowAlpha=groundAlpha*(0.78+0.22*(0.5+0.5*Math.sin(2*Math.PI*(tick-t.ground_start_tick)/t.glow_period_ticks)));
-      const dragon=state.api.roster.characters.find(ch=>ch.character_id===c.behavior.dragon_character_id),bundle=getCharBundle(dragon);
-      const scale=l.dragon_scale,anchor=bundle?.anchor_px||[192,240];
-      const dragonPosition=[l.map_center_px[0],groundRect[1]+(anchor[1]-l.dragon_reference_bottom_canvas_y)*scale-l.dragon_gap_px];
-      const dragonAlpha=clamp((tick-t.dragon_start_tick)/(t.ready_tick-t.dragon_start_tick));
-
-      const clip=bundle?.animations[c.behavior.dragon_clip];const durations=clip?.frames.map(f=>f.duration_ticks)||[];
-      const total=durations.reduce((a,b)=>a+b,0);let rest=Math.max(0,tick-t.dragon_start_tick)%(total||1),dragonFrame=0;
-      while(dragonFrame<durations.length-1&&rest>=durations[dragonFrame])rest-=durations[dragonFrame++];
+      const dragonU=clamp((tick-t.dragon_start_tick)/(t.ready_tick-t.dragon_start_tick));
+      const dragonAlpha=t.dragon_reveal_curve==='ease_out_quad'?1-(1-dragonU)*(1-dragonU):dragonU;
+      const dragonFrame=sampleDragonIdleFrame(c,bundle,tick-t.dragon_start_tick);
       const phase=tick<t.last_arrival_tick?'flight':tick<t.vanish_start_tick?'gather':tick<t.flash_start_ticks[0]?'vanish':tick<t.ground_start_tick?'flash':tick<t.dragon_start_tick?'ground_glow':tick<t.ready_tick?'dragon_reveal':'ready';
       return {revealTop:0,flashAlpha,phase,balls,groundRect,groundAlpha,glowAlpha,dragonPosition,dragonAlpha,dragonFrame,dragon,bundle};
+    }
+    function sampleShenronDismiss(dismissTick,origin,summonTick=0) {
+      const c=getSummonConfig();if(!c||!c.dismiss_timeline)return null;
+      const t=c.timeline,dt=c.dismiss_timeline;
+      const flashAlpha=computeDoubleFlashAlpha(dismissTick,dt.flash_start_ticks,dt.flash_rise_ticks,dt.flash_hold_ticks,dt.flash_fall_ticks);
+      const elementsVisible=dismissTick<dt.vanish_tick;
+      const {groundRect,dragon,bundle,dragonPosition}=computeGroundRectAndDragon(c);
+      const refTick=summonTick+dismissTick;
+      const groundAlpha=elementsVisible?1:0,dragonAlpha=elementsVisible?1:0;
+      const glowAlpha=elementsVisible?(0.78+0.22*(0.5+0.5*Math.sin(2*Math.PI*(refTick-t.ground_start_tick)/t.glow_period_ticks))):0;
+      const dragonFrame=sampleDragonIdleFrame(c,bundle,refTick-t.dragon_start_tick);
+      return {flashAlpha,phase:elementsVisible?'dismiss_flash':'dismissed',balls:[],groundRect,groundAlpha,glowAlpha,dragonPosition,dragonAlpha,dragonFrame,dragon,bundle,elementsVisible,finished:dismissTick>=dt.end_tick};
     }
     let summonDissolveMaskCache=null;
     function applyShenronPixelDissolve(ctx,w,h,progress) {
@@ -2658,20 +2988,23 @@
     }
     function drawShenronSummon(ctx) {
       if(!arena.summon)return;
-      const c=getSummonConfig(),s=sampleShenronSummon(arena.summon.tick,arena.summon.origin);
+      const c=getSummonConfig();
+      const s=arena.summon.dismissing?sampleShenronDismiss(arena.summon.dismissTick,arena.summon.origin,arena.summon.tick):sampleShenronSummon(arena.summon.tick,arena.summon.origin);
       const atlas=state.images['/'+c.atlas];if(!s||!atlas)return;
       const region=(r,rect,alpha)=>{if(alpha<=0)return;ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha*=alpha;ctx.drawImage(atlas,...r,...rect);ctx.restore();};
       for(const ball of s.balls){if(!ball.visible)continue;const w=c.layout.ball_display_width_px,h=w*ball.region[3]/ball.region[2];region(ball.region,[ball.position[0]-w/2,ball.position[1]-h/2,w,h],ball.alpha);}
-      const glowScale=c.layout.ground_display_width_px/256;
-      const glowRect=[s.groundRect[0]-32*glowScale,s.groundRect[1]-32*glowScale,c.regions.glow[2]*glowScale,c.regions.glow[3]*glowScale];
-      const grow=(r,n)=>[r[0]-n,r[1]-n,r[2]+2*n,r[3]+2*n];
-      const aw=c.layout.aura_width_px,ah=c.layout.aura_height_px;
-      region(c.regions.glow,[c.layout.map_center_px[0]-aw/2,c.layout.ground_y-ah,aw,ah],s.glowAlpha*0.75);
-      region(c.regions.glow,grow(glowRect,56),s.glowAlpha);region(c.regions.ground,s.groundRect,s.groundAlpha);region(c.regions.core,grow(glowRect,12),s.glowAlpha*0.86);
+      if(s.groundAlpha>0||s.glowAlpha>0){
+        const glowScale=c.layout.ground_display_width_px/256;
+        const glowRect=[s.groundRect[0]-32*glowScale,s.groundRect[1]-32*glowScale,c.regions.glow[2]*glowScale,c.regions.glow[3]*glowScale];
+        const grow=(r,n)=>[r[0]-n,r[1]-n,r[2]+2*n,r[3]+2*n];
+        const aw=c.layout.aura_width_px,ah=c.layout.aura_height_px;
+        region(c.regions.glow,[c.layout.map_center_px[0]-aw/2,c.layout.ground_y-ah,aw,ah],s.glowAlpha*0.75);
+        region(c.regions.glow,grow(glowRect,56),s.glowAlpha);region(c.regions.ground,s.groundRect,s.groundAlpha);region(c.regions.core,grow(glowRect,12),s.glowAlpha*0.86);
+      }
       if(s.dragonAlpha>0&&s.bundle){
         const [w,h]=s.bundle.frame_size,scale=c.layout.dragon_scale,[ax,ay]=s.bundle.anchor_px;
         ensureOffscreenSize(w,h);offCtx.clearRect(0,0,w,h);
-        drawCompositeStep(offCtx,c.behavior.dragon_clip,s.dragonFrame,1,1,{bundle:s.bundle,character:s.dragon,auraEnabled:false,fxTicks:arena.summon.tick,elapsedMs:0});
+        drawCompositeStep(offCtx,c.behavior.dragon_clip,s.dragonFrame,1,1,{bundle:s.bundle,character:s.dragon,auraEnabled:false,fxTicks:arena.summon.tick+(arena.summon.dismissing?arena.summon.dismissTick:0),elapsedMs:0});
         applyShenronPixelDissolve(offCtx,w,h,s.dragonAlpha);
         ctx.save();ctx.imageSmoothingEnabled=false;
         ctx.drawImage(offscreenCanvas,s.dragonPosition[0]-ax*scale,s.dragonPosition[1]-ay*scale,w*scale,h*scale);ctx.restore();
@@ -2681,7 +3014,7 @@
     function triggerArenaAction(clipName) {
       if(isSummonCasting())return;
       if (arena.turnTargetFlip !== null) return;
-      const b = getCharBundle();
+      const b = getPlayerBundle();
       if (!b || !b.animations[clipName]) return;
       if(b.render_contract?.chilopoda&&arena.actionClip)return;
       if (arena.patrolEnabled) { arena.patrolEnabled = false; arena.patrolRun = false; updatePatrolButtonUI(); }
@@ -2689,6 +3022,8 @@
       arena.clip = clipName;
       arena.step = 0;
       arena.elapsed = 0;
+      arena.drumTeleportRelocated = false;
+      arena.drumOrbSpawned = false;
       if(b.render_contract?.chilopoda) {
         const c=b.render_contract.chilopoda,sign=arena.flip?-1:1;
         arena.chiloPatrol=false;
@@ -2726,8 +3061,9 @@
 
     function triggerArenaJump() {
       if(isSummonCasting())return;
-      if (isStationaryBundle()) return;
-      const b = getCharBundle();
+      const pb = getPlayerBundle();
+      if (isStationaryBundle(pb)) return;
+      const b = pb;
       if (isFlyingBundle(b)) {
         arena.y = Math.max(arena.flyMinY, arena.y - 60);
         return;
@@ -2768,7 +3104,21 @@
       const canvas = document.getElementById('arenaCanvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
-      if(arena.summon)arena.summon.tick+=ritualDtMs*0.06;
+      if(arena.wishNotice){arena.wishNotice.lifeMs-=dtMs;if(arena.wishNotice.lifeMs<=0)arena.wishNotice=null;}
+      if(arena.summon){
+        const sc=getSummonConfig();
+        if(arena.summon.dismissing){
+          arena.summon.dismissTick+=ritualDtMs*0.06;
+          if(sc?.dismiss_timeline&&arena.summon.dismissTick>=sc.dismiss_timeline.end_tick){
+            arena.summon=null;renderShenronWishOverlay();updateSummonButton();
+          }
+        }else{
+          arena.summon.tick+=ritualDtMs*0.06;
+          if(sc&&!arena.summon.wishPanelShown&&arena.summon.tick>=sc.timeline.ready_tick){
+            arena.summon.wishPanelShown=true;renderShenronWishOverlay();
+          }
+        }
+      }
       ctx.imageSmoothingEnabled = false;
 
       const drawStageBackdrop = () => {
@@ -2826,7 +3176,7 @@
         }
       };
 
-      const b = getCharBundle();
+      const b = getPlayerBundle();
       arena.fxTicks += dtMs*0.06;
       if (!state.activeChar || !b) {
         drawStageBackdrop();
@@ -2961,7 +3311,30 @@
           const tick=animationFrameTick(curAnim,arena.step)+arena.elapsed*.06;
           if(tick>=chilo.burrow_turn.hidden_start_tick)arena.flip=arena.turnTargetFlip;
         }
-        if(chilo)updateChilopodaArenaAction(b);
+        if (chilo) updateChilopodaArenaAction(b);
+        const pEntryStep = getPlayerRosterEntry();
+        if (pEntryStep?.character_id === 'drum') {
+          if (arena.actionClip === 'teleport' && !arena.drumTeleportRelocated && arena.step >= 2) {
+            const moveDir = arena.flip ? -1 : 1;
+            arena.x = Math.max(arena.minX, Math.min(arena.maxX, arena.x + moveDir * 120 * arena.charScale));
+            arena.drumTeleportRelocated = true;
+          } else if (arena.actionClip === 'power_up' && !arena.drumOrbSpawned && arena.step >= 10) {
+            arena.drumOrbSpawned = true;
+            const dirX = arena.flip ? -1 : 1;
+            arena.projectiles.push({
+              bundle: b,
+              clip: 'electric_orb_fx',
+              x: arena.x + dirX * 42 * arena.charScale,
+              y: arena.y - 28 * arena.charScale,
+              vx: dirX * 12 * 60 * arena.charScale,
+              scale: arena.charScale,
+              flip: arena.flip,
+              step: 0,
+              elapsed: 0,
+              lifeMs: 650,
+            });
+          }
+        }
         while (curAnim && curAnim.frames.length) {
           const curF = curAnim.frames[Math.min(arena.step, curAnim.frames.length - 1)];
           const dur = Math.max(16.0, (curF && curF.duration_ms) || 83.33);
@@ -3006,8 +3379,12 @@
         p.y -= dtMs * 0.04;
         return p.life > 0;
       });
+      stepItemSparkle(dtMs);
+      stepArenaItemDrops(dtMs);
 
       drawStageBackdrop();
+      drawDroppedItemsOnArena(ctx);
+      renderDragonBallBagSlots();
 
       if (arena.showGridOverlay && isFlyingBundle(b)) {
         ctx.save();
@@ -3030,13 +3407,14 @@
 
       ctx.save();
 
-      const [cw, chPx] = getCanvasSize();
+      const pEntry = getPlayerRosterEntry();
+      const [cw, chPx] = getCanvasSize(pEntry);
       ensureOffscreenSize(cw, chPx);
       const scale = arena.charScale;
       const scaleLabel = formatScaleLabel(scale);
-      const m = state.activeChar.map_sync_metrics;
+      const m = pEntry.map_sync_metrics;
       const ax = m.foot_anchor_px[0], ay = m.foot_anchor_px[1];
-      const [bodyW, bodyH] = getBodyDims(state.activeChar);
+      const [bodyW, bodyH] = getBodyDims(pEntry);
 
       // 1. Draw Sparring Dummy / Utility AI Enemy on the right (No artificial ellipse shadow)
       const eCh = enemyInfo?.eCh || getEnemyRosterEntry() || state.activeChar;
@@ -3124,7 +3502,7 @@
       // 2. Draw Player Controlled Character (1:1 Nearest pixel parity with Godot 4, no ellipse shadow)
       offCtx.clearRect(0, 0, cw, chPx);
       const chiOptions=b.render_contract?.chilopoda?{turnFacingHandled:true,dustScale:arena.burrowDustScale,...(arena.chiloAction&&arena.actionClip?{targetGroundCanvasPx:arena.chiloAction.target,sceneOriginShift:[(arena.x-arena.chiloAction.startX)/scale/arena.chiloAction.sign,0]}:{})}:{};
-      drawCompositeStep(offCtx, arena.clip, arena.step, 1.0, 1.0, {auraEnabled:arena.rageMode,fxTicks:arena.fxTicks,elapsedMs:arena.elapsed,...chiOptions});
+      drawCompositeStep(offCtx, arena.clip, arena.step, 1.0, 1.0, {bundle:b,character:pEntry,auraEnabled:arena.rageMode,fxTicks:arena.fxTicks,elapsedMs:arena.elapsed,...chiOptions});
       ctx.save();
       ctx.imageSmoothingEnabled = false;
       ctx.translate(arena.x, arena.y);
@@ -3152,6 +3530,42 @@
 
       drawShenronSummon(ctx);
 
+      // Step & render independent linear FX projectiles (e.g. Drum electric_orb_fx)
+      for (let pi = arena.projectiles.length - 1; pi >= 0; pi--) {
+        const proj = arena.projectiles[pi];
+        const pAnim = proj.bundle?.animations?.[proj.clip];
+        if (!pAnim || !pAnim.frames?.length) {
+          arena.projectiles.splice(pi, 1);
+          continue;
+        }
+        proj.lifeMs -= dtMs;
+        proj.x += (proj.vx * dtMs) / 1000.0;
+        proj.elapsed += dtMs;
+        const pDur = Math.max(16.0, Number(pAnim.frames[proj.step % pAnim.frames.length]?.duration_ms) || 66.67);
+        if (proj.elapsed >= pDur) {
+          proj.elapsed -= pDur;
+          proj.step = (proj.step + 1) % pAnim.frames.length;
+        }
+        const pf = pAnim.frames[proj.step % pAnim.frames.length];
+        const pImg = pf?.atlas_url ? state.images[pf.atlas_url] : null;
+        const fxPiv = proj.bundle?.render_contract?.fx_pivot_px || [64, 48];
+        if (pImg && pf) {
+          ctx.save();
+          ctx.translate(proj.x, proj.y);
+          ctx.scale((proj.flip ? -1 : 1) * proj.scale, proj.scale);
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(pImg, pf.x, pf.y, pf.w, pf.h, -fxPiv[0], -fxPiv[1], pf.w, pf.h);
+          ctx.restore();
+        }
+        const hitPlayer = Math.abs(proj.x - arena.x) <= Math.max(24, (bodyW || 140) * scale * 0.45);
+        if (hitPlayer) {
+          arena.popups.push({ x: arena.x, y: arena.y - 105 * scale, text: '-280 ELECTRIC ORB!', life: 800 });
+          arena.projectiles.splice(pi, 1);
+        } else if (proj.lifeMs <= 0 || proj.x < 0 || proj.x > arena.viewportWidth) {
+          arena.projectiles.splice(pi, 1);
+        }
+      }
+
       // 3. Floating Damage / Burst Popups
       for (const p of arena.popups) {
         ctx.fillStyle = '#facc15';
@@ -3172,7 +3586,396 @@
         `1920×1080 (16:9) | ${state.activeChar.character_id} | ${scaleLabel}× Nearest${screenSizeNote} | Speed: ${effSpeedNow} px/s | Clip: ${arena.clip} (#${arena.step}) | Pos: (${Math.round(arena.x)}, ${Math.round(arena.y)})${hudLock}`,
         28, 41
       );
-      if(arena.summon){const flash=sampleShenronSummon(arena.summon.tick,arena.summon.origin).flashAlpha;if(flash>0){ctx.save();ctx.globalAlpha=flash;ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();}}
+      if(arena.wishNotice&&arena.wishNotice.lifeMs>0){
+        ctx.save();ctx.fillStyle='rgba(11,14,23,0.9)';ctx.strokeStyle='#facc15';ctx.lineWidth=2;
+        ctx.fillRect(460,64,1000,42);ctx.strokeRect(460,64,1000,42);
+        ctx.fillStyle='#fde047';ctx.font='bold 20px monospace';ctx.textAlign='center';
+        ctx.fillText(`✨ ${arena.wishNotice.text}`,960,92);ctx.restore();
+      }
+      if(arena.summon){const flash=(arena.summon.dismissing?sampleShenronDismiss(arena.summon.dismissTick,arena.summon.origin,arena.summon.tick):sampleShenronSummon(arena.summon.tick,arena.summon.origin)).flashAlpha;if(flash>0){ctx.save();ctx.globalAlpha=flash;ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();}}
+    }
+
+    // =========================================================================
+    // GAME ITEMS (1x = 32x32 DRAGON BALLS + SHARED TOP-LEFT SPARKLE_FX @ 60HZ)
+    // =========================================================================
+    function sampleItemSparkleFrame(itemSet, elapsedMs) {
+      const spAnim = itemSet?.animations?.sparkle_fx;
+      if (!spAnim || !Array.isArray(spAnim.frames) || !spAnim.frames.length) return { frame: null, index: 0, total: 0 };
+      let totalMs = 0;
+      for (const fr of spAnim.frames) totalMs += Math.max(16.0, Number(fr.duration_ms) || 16.67);
+      const t = totalMs > 0 ? ((elapsedMs % totalMs) + totalMs) % totalMs : 0;
+      let acc = 0;
+      for (let i = 0; i < spAnim.frames.length; i++) {
+        const d = Math.max(16.0, Number(spAnim.frames[i].duration_ms) || 16.67);
+        acc += d;
+        if (t < acc || i === spAnim.frames.length - 1) {
+          return { frame: spAnim.frames[i], index: i, total: spAnim.frames.length };
+        }
+      }
+      return { frame: spAnim.frames[0], index: 0, total: spAnim.frames.length };
+    }
+
+    function stepItemSparkle(dtMs) {
+      const itemSet = state.itemsById?.dragon_balls;
+      if (!itemSet || !state.itemSparklePlaying) return;
+      const spAnim = itemSet?.animations?.sparkle_fx;
+      if (!spAnim || !Array.isArray(spAnim.frames) || !spAnim.frames.length) return;
+      let totalMs = 0;
+      for (const fr of spAnim.frames) totalMs += Math.max(16.0, Number(fr.duration_ms) || 16.67);
+      if (totalMs > 0) state.itemSparkleElapsedMs = (state.itemSparkleElapsedMs + Math.max(0, dtMs)) % totalMs;
+    }
+
+    function drawBagSlotsToCanvas(canvasEl, itemSet) {
+      if (!canvasEl || !itemSet) return;
+      const bctx = canvasEl.getContext('2d');
+      if (!bctx) return;
+      const atlasImg = itemSet.atlas_url ? state.images[itemSet.atlas_url] : null;
+      const slotW = 38, gap = 6, padX = 4, padY = 3;
+      const needW = padX * 2 + 7 * slotW + 6 * gap;
+      if (canvasEl.width !== needW || canvasEl.height !== 44) {
+        canvasEl.width = needW;
+        canvasEl.height = 44;
+      }
+      bctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+      bctx.imageSmoothingEnabled = false;
+      const collected = new Set(arena.itemDrop.collectedBalls || []);
+      for (let i = 0; i < 7; i++) {
+        const sx = padX + i * (slotW + gap);
+        const sy = padY;
+        const hasCollected = collected.has(i + 1);
+        bctx.fillStyle = hasCollected ? '#172554' : '#080d18';
+        bctx.fillRect(sx, sy, slotW, slotW);
+        bctx.strokeStyle = hasCollected ? '#facc15' : '#334155';
+        bctx.lineWidth = hasCollected ? 1.5 : 1;
+        bctx.strokeRect(sx + 0.5, sy + 0.5, slotW - 1, slotW - 1);
+        const anim = itemSet.animations?.[`ball_0${i + 1}`];
+        const fr = anim?.frames?.[0];
+        if (atlasImg && fr) {
+          // Bag hides shine/sparkle FX completely (static clean 1x = 32x32 icon only)
+          const dx = sx + 3;
+          const dy = sy + 3;
+          bctx.drawImage(atlasImg, fr.x, fr.y, fr.w, fr.h, dx, dy, fr.w, fr.h);
+        }
+      }
+    }
+
+    function renderDragonBallBagSlots() {
+      const itemSet = state.itemsById?.dragon_balls;
+      if (!itemSet) return;
+      drawBagSlotsToCanvas(document.getElementById('bagSlotCanvas'), itemSet);
+      drawBagSlotsToCanvas(document.getElementById('bagSlotTab1Canvas'), itemSet);
+    }
+
+    function renderDragonBallItemInspector() {
+      const itemSet = state.itemsById?.dragon_balls;
+      const ic = document.getElementById('itemInspectCanvas');
+      if (!itemSet || !ic) return;
+      const ictx = ic.getContext('2d');
+      if (!ictx) return;
+      const z = Math.max(1, Math.min(4, Number(state.itemZoom) || 3));
+      const fw = itemSet.frame_size?.[0] || 32;
+      const fh = itemSet.frame_size?.[1] || 32;
+      const cell = fw * z;
+      const pad = 10;
+      const cols = 7;
+      const needW = pad + cols * (cell + pad);
+      const needH = cell + pad * 2 + 18;
+      if (ic.width !== needW || ic.height !== needH) {
+        ic.width = needW;
+        ic.height = needH;
+      }
+      ictx.clearRect(0, 0, ic.width, ic.height);
+      ictx.fillStyle = '#090e1a';
+      ictx.fillRect(0, 0, ic.width, ic.height);
+      const spInfo = sampleItemSparkleFrame(itemSet, state.itemSparkleElapsedMs);
+      const atlasImg = itemSet.atlas_url ? state.images[itemSet.atlas_url] : null;
+      const rockyImg = arena.mapWebPath ? state.images[arena.mapWebPath] : null;
+
+      for (let i = 0; i < 7; i++) {
+        const bx = pad + i * (cell + pad);
+        const by = pad;
+        if (state.itemBgMode === 'light') {
+          ictx.fillStyle = '#e5e7eb';
+          ictx.fillRect(bx, by, cell, cell);
+        } else if (state.itemBgMode === 'checker') {
+          const sq = Math.max(4, 4 * z);
+          for (let cy = 0; cy < cell; cy += sq) {
+            for (let cx = 0; cx < cell; cx += sq) {
+              ictx.fillStyle = (((cx / sq) + (cy / sq)) % 2 === 0) ? '#cbd5e1' : '#94a3b8';
+              ictx.fillRect(bx + cx, by + cy, Math.min(sq, cell - cx), Math.min(sq, cell - cy));
+            }
+          }
+        } else if (state.itemBgMode === 'rocky' && rockyImg) {
+          ictx.drawImage(rockyImg, 420, 450, 96, 96, bx, by, cell, cell);
+        } else {
+          ictx.fillStyle = '#0b0e17';
+          ictx.fillRect(bx, by, cell, cell);
+        }
+        const fr = itemSet.animations?.[`ball_0${i + 1}`]?.frames?.[0];
+        if (atlasImg && fr) {
+          ictx.imageSmoothingEnabled = false;
+          ictx.drawImage(atlasImg, fr.x, fr.y, fr.w, fr.h, bx, by, cell, cell);
+          if (state.itemSparkleEnabled && spInfo.frame) {
+            ictx.drawImage(atlasImg, spInfo.frame.x, spInfo.frame.y, spInfo.frame.w, spInfo.frame.h, bx, by, cell, cell);
+          }
+        }
+        ictx.strokeStyle = 'rgba(148,163,184,0.35)';
+        ictx.strokeRect(bx + 0.5, by + 0.5, cell - 1, cell - 1);
+        ictx.fillStyle = '#cbd5e1';
+        ictx.font = 'bold 11px monospace';
+        ictx.fillText(`${i + 1}★`, bx + 2, by + cell + 14);
+      }
+      const ro = document.getElementById('itemSparkleReadout');
+      if (ro) ro.textContent = `sparkle_fx frame ${spInfo.index}/${Math.max(0, spInfo.total - 1)} (60Hz) • ${fw}×${fh}`;
+      drawBagSlotsToCanvas(document.getElementById('bagSlotTab1Canvas'), itemSet);
+    }
+
+    function syncStaticArenaSampleDrops() {
+      const itemSet = state.itemsById?.dragon_balls;
+      const sc = Number(arena.itemDrop.scale) || 1.0;
+      const bn = Math.max(0, Math.min(7, Number(arena.itemDrop.ballNumber) || 0));
+      const centerX = arena.viewportWidth * 0.5;
+      const next = [];
+      if (bn === 0) {
+        const stepX = Math.round(44 * Math.max(1.0, sc));
+        const startX = centerX - 3.0 * stepX;
+        for (let i = 0; i < 7; i++) {
+          next.push({
+            num: i + 1, x: startX + i * stepX, y: arena.groundY,
+            scale: sc, baseScale: sc, rotation: 0, phase: 'resting', subphase: 'rest',
+            sheenElapsedMs: state.itemSparkleElapsedMs, isSample: true,
+          });
+        }
+      } else {
+        next.push({
+          num: bn, x: centerX, y: arena.groundY,
+          scale: sc, baseScale: sc, rotation: 0, phase: 'resting', subphase: 'rest',
+          sheenElapsedMs: state.itemSparkleElapsedMs, isSample: true,
+        });
+      }
+      // Preserve active animated monster drops alongside refreshed sample layout
+      const activeLive = (arena.itemDrop.drops || []).filter(d => !d.isSample);
+      arena.itemDrop.drops = [...next, ...activeLive];
+    }
+
+    function ensureArenaItemDropsInitialized() {
+      if (!arena.itemDrop.drops.length && arena.itemDrop.enabled && state.itemsById?.dragon_balls) {
+        syncStaticArenaSampleDrops();
+      }
+    }
+
+    function updateToggleArenaItemsUI() {
+      const btn = document.getElementById('btnToggleArenaItems');
+      if (!btn) return;
+      btn.textContent = arena.itemDrop.enabled ? '🔮 Ẩn Ngọc' : '🔮 Hiện Ngọc';
+      btn.classList.toggle('btn-gold', arena.itemDrop.enabled);
+    }
+
+    function triggerArenaMonsterDrop(explicitBallNum = 0) {
+      const itemSet = state.itemsById?.dragon_balls;
+      if (!itemSet) return null;
+      arena.itemDrop.enabled = true;
+      updateToggleArenaItemsUI();
+      const dp = itemSet.drop_physics || {};
+      const jumpH = Number(dp.jump_height_px ?? 10.0);
+      const riseMs = (Number(dp.rise_ticks ?? 10) / 60.0) * 1000.0;
+      const fallMinMs = (Number(dp.fall_min_ticks ?? 12) / 60.0) * 1000.0;
+      const grav = Number(dp.fall_gravity_px_per_s2 ?? 1800.0);
+      const arcDx = Number(dp.arc_dx_px ?? 8.0);
+      const rollDist = Number(dp.roll_distance_px ?? 10.0);
+      const rollMs = (Number(dp.roll_ticks ?? 18) / 60.0) * 1000.0;
+      const rollAngle = Number(dp.roll_angle_rad ?? 0.625);
+
+      const n = explicitBallNum > 0 ? Math.max(1, Math.min(7, explicitBallNum)) : arena.itemDrop.nextMonsterBall;
+      if (explicitBallNum <= 0) arena.itemDrop.nextMonsterBall = (arena.itemDrop.nextMonsterBall % 7) + 1;
+
+      const eCh = getEnemyRosterEntry();
+      const eb = getCharBundle(eCh);
+      const ex = arena.enemyAi.enabled ? arena.enemyAi.x : arena.dummyX;
+      const ey = arena.enemyAi.enabled ? arena.enemyAi.y : (isFlyingBundle(eb) ? arena.flyDefaultY : arena.groundY);
+      if (arena.enemyAi.enabled && eb?.animations?.ko) {
+        arena.enemyAi.actionClip = 'ko'; arena.enemyAi.clip = 'ko'; arena.enemyAi.step = 0; arena.enemyAi.elapsed = 0;
+      } else {
+        arena.dummyClip = 'ko'; arena.dummyStep = 0;
+      }
+
+      const sc = Number(arena.itemDrop.scale) || 1.0;
+      const dir = arena.x <= ex ? -1 : 1;
+      const peakY = ey - jumpH * sc;
+      const hFall = Math.max(0, arena.groundY - peakY);
+      const fallMs = Math.max(fallMinMs, Math.sqrt((2.0 * hFall) / Math.max(1.0, grav * Math.max(1.0, sc))) * 1000.0);
+      const landX = ex + dir * arcDx * sc;
+      const targetX = landX + dir * rollDist * sc;
+
+      const dropObj = {
+        num: n,
+        phase: 'dropping',
+        subphase: 'rise',
+        isSample: false,
+        x: ex,
+        y: ey,
+        spawnX: ex,
+        spawnY: ey,
+        peakY,
+        landX,
+        targetX,
+        dir,
+        riseMs,
+        fallMs,
+        rollMs,
+        arcDx,
+        rollAngle,
+        elapsedMs: 0,
+        sheenElapsedMs: 0,
+        rotation: 0,
+        baseScale: sc,
+        scale: sc,
+      };
+      arena.itemDrop.drops.push(dropObj);
+      return dropObj;
+    }
+
+    function collectSingleArenaDrop(dropObj) {
+      const itemSet = state.itemsById?.dragon_balls;
+      if (!dropObj || dropObj.phase === 'collecting' || dropObj.phase === 'collected') return false;
+      const mapAnchor = itemSet?.map_anchor_px || [16, 32];
+      const bagAnchor = itemSet?.bag_anchor_px || [16, 16];
+      const shiftY = (mapAnchor[1] - bagAnchor[1]) * dropObj.baseScale;
+      dropObj.collectStartX = dropObj.x;
+      dropObj.collectStartY = dropObj.y - shiftY;
+      dropObj.x = dropObj.collectStartX;
+      dropObj.y = dropObj.collectStartY;
+      dropObj.rotation = 0;
+      dropObj.phase = 'collecting';
+      dropObj.subphase = 'collecting';
+      dropObj.collectElapsedMs = 0;
+      return true;
+    }
+
+    function pickupArenaItems(onlyIndex = -1) {
+      let started = 0;
+      const list = arena.itemDrop.drops || [];
+      if (onlyIndex >= 0 && onlyIndex < list.length) {
+        if (collectSingleArenaDrop(list[onlyIndex])) started++;
+        return started;
+      }
+      for (const d of list) {
+        if (collectSingleArenaDrop(d)) started++;
+      }
+      return started;
+    }
+
+    function stepArenaItemDrops(dtMs) {
+      ensureArenaItemDropsInitialized();
+      const itemSet = state.itemsById?.dragon_balls;
+      if (!itemSet) return;
+      const pp = itemSet.pickup_physics || {};
+      const collectDurMs = (Number(pp.duration_ticks ?? 24) / 60.0) * 1000.0;
+      const endScaleRatio = Number(pp.end_scale ?? 0.05);
+      const liftPx = Number(pp.arc_lift_px ?? 18.0);
+      const spAnim = itemSet.animations?.sparkle_fx;
+      let totalSheenMs = 0;
+      if (spAnim?.frames) for (const fr of spAnim.frames) totalSheenMs += Math.max(16.0, Number(fr.duration_ms) || 16.67);
+
+      const pEntry = getPlayerRosterEntry();
+      const [, pBodyH] = getBodyDims(pEntry);
+      const targetX = arena.x;
+      const targetY = arena.y - Math.max(28.0, (pBodyH || 80) * arena.charScale * 0.5);
+
+      for (let i = arena.itemDrop.drops.length - 1; i >= 0; i--) {
+        const d = arena.itemDrop.drops[i];
+        if (d.phase === 'dropping') {
+          d.elapsedMs += dtMs;
+          const tLand = d.riseMs + d.fallMs;
+          const tEnd = tLand + d.rollMs;
+          if (d.elapsedMs < d.riseMs) {
+            d.subphase = 'rise';
+            const u = Math.max(0, Math.min(1, d.elapsedMs / Math.max(1, d.riseMs)));
+            const ease = 1 - (1 - u) * (1 - u);
+            d.x = d.spawnX + d.dir * (d.arcDx * 0.5 * d.baseScale) * u;
+            d.y = d.spawnY + (d.peakY - d.spawnY) * ease;
+            d.rotation = 0;
+          } else if (d.elapsedMs < tLand) {
+            d.subphase = 'fall';
+            const u = Math.max(0, Math.min(1, (d.elapsedMs - d.riseMs) / Math.max(1, d.fallMs)));
+            d.x = d.spawnX + d.dir * (d.arcDx * 0.5 * d.baseScale) * (1 + u);
+            d.y = d.peakY + (arena.groundY - d.peakY) * (u * u);
+            d.rotation = 0;
+          } else if (d.elapsedMs < tEnd) {
+            d.subphase = 'roll';
+            const u = Math.max(0, Math.min(1, (d.elapsedMs - tLand) / Math.max(1, d.rollMs)));
+            const ease = 1 - (1 - u) * (1 - u);
+            d.x = d.landX + (d.targetX - d.landX) * ease;
+            d.y = arena.groundY;
+            d.rotation = d.dir * d.rollAngle * ease;
+          } else {
+            d.x = d.targetX;
+            d.y = arena.groundY;
+            d.rotation = 0;
+            d.phase = 'resting';
+            d.subphase = 'rest';
+            d.sheenElapsedMs = 0;
+          }
+        } else if (d.phase === 'resting') {
+          if (totalSheenMs > 0 && state.itemSparklePlaying) {
+            d.sheenElapsedMs = ((d.sheenElapsedMs || 0) + dtMs) % totalSheenMs;
+          }
+        } else if (d.phase === 'collecting') {
+          d.collectElapsedMs += dtMs;
+          const t = Math.max(0, Math.min(1, d.collectElapsedMs / Math.max(1, collectDurMs)));
+          const posU = Math.max(0, Math.min(1, t * t * (1.35 - 0.35 * t)));
+          const lift = liftPx * Math.sin(Math.PI * t) * d.baseScale;
+          d.x = d.collectStartX + (targetX - d.collectStartX) * posU;
+          d.y = d.collectStartY + (targetY - d.collectStartY) * posU - lift;
+          d.scale = Math.max(0, d.baseScale * (1 - t) + (d.baseScale * endScaleRatio) * t);
+          if (t >= 1) {
+            d.phase = 'collected';
+            if (!arena.itemDrop.collectedBalls.includes(d.num)) {
+              arena.itemDrop.collectedBalls.push(d.num);
+            }
+            arena.popups.push({ x: arena.x, y: arena.y - 96 * arena.charScale, text: `+Ngọc ${d.num}★`, life: 850 });
+            arena.itemDrop.drops.splice(i, 1);
+          }
+        }
+      }
+    }
+
+    function drawDroppedItemsOnArena(ctx) {
+      const itemSet = state.itemsById?.dragon_balls;
+      if (!arena.itemDrop.enabled || !itemSet) return;
+      const atlasImg = itemSet.atlas_url ? state.images[itemSet.atlas_url] : null;
+      if (!atlasImg) return;
+      ensureArenaItemDropsInitialized();
+      const fw = itemSet.frame_size?.[0] || 32;
+      const fh = itemSet.frame_size?.[1] || 32;
+      const mapAnchor = itemSet.map_anchor_px || [16, 32];
+      const bagAnchor = itemSet.bag_anchor_px || [16, 16];
+
+      for (const entry of arena.itemDrop.drops) {
+        const fr = itemSet.animations?.[`ball_0${entry.num}`]?.frames?.[0];
+        if (!fr) continue;
+        const sc = entry.scale ?? entry.baseScale ?? 1.0;
+        ctx.save();
+        ctx.translate(entry.x, entry.y);
+        ctx.scale(sc, sc);
+        ctx.imageSmoothingEnabled = false;
+        if (entry.phase === 'collecting') {
+          ctx.drawImage(atlasImg, fr.x, fr.y, fr.w, fr.h, -bagAnchor[0], -bagAnchor[1], fw, fh);
+        } else if (entry.phase === 'dropping' && entry.subphase === 'roll') {
+          ctx.translate(0, -16);
+          ctx.rotate(entry.rotation || 0);
+          ctx.drawImage(atlasImg, fr.x, fr.y, fr.w, fr.h, -16, -16, fw, fh);
+        } else {
+          ctx.drawImage(atlasImg, fr.x, fr.y, fr.w, fr.h, -mapAnchor[0], -mapAnchor[1], fw, fh);
+          if (entry.phase === 'resting' && state.itemSparkleEnabled) {
+            const spInfo = sampleItemSparkleFrame(itemSet, entry.sheenElapsedMs ?? state.itemSparkleElapsedMs);
+            if (spInfo.frame) {
+              ctx.drawImage(atlasImg, spInfo.frame.x, spInfo.frame.y, spInfo.frame.w, spInfo.frame.h, -mapAnchor[0], -mapAnchor[1], fw, fh);
+            }
+          }
+        }
+        ctx.restore();
+      }
     }
 
     // =========================================================================
@@ -3188,7 +3991,9 @@
       try {
         if (state.activeTab === 'tab-human') {
           stepInspectorAnimation(dtMs);
+          stepItemSparkle(dtMs);
           renderInspector();
+          renderDragonBallItemInspector();
         } else if (state.activeTab === 'tab-arena') {
           stepAndRenderArena(dtMs, wallDtMs);
         }
@@ -3198,7 +4003,7 @@
     }
 
     function setupEventListeners() {
-      document.getElementById('btnSummonShenron').onclick=()=>{if(arena.summon)dismissShenronSummon();else startShenronSummon();};
+      document.getElementById('btnSummonShenron').onclick=()=>{if(arena.summon){if(!arena.summon.dismissing)startShenronDismiss();}else startShenronSummon();};
       document.getElementById('chkIndependentAura').onchange=e=>{state.auraEnabled=e.target.checked;arena.rageMode=e.target.checked;renderInspector();};
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.onclick = () => {
@@ -3455,6 +4260,8 @@
       if (chkGrid) chkGrid.onchange = e => { arena.showGridOverlay = e.target.checked; };
       const chkAi = document.getElementById('chkUtilityAI');
       if (chkAi) chkAi.onchange = e => setUtilityAiEnabled(e.target.checked);
+      const selPlayer = document.getElementById('selPlayerChar');
+      if (selPlayer) selPlayer.onchange = e => selectCharacter(e.target.value);
       const selEnemy = document.getElementById('selEnemyChar');
       if (selEnemy) selEnemy.onchange = e => selectEnemyCharacter(e.target.value, true);
       const btnPullZone = document.getElementById('btnPullIntoZone');
@@ -3466,6 +4273,73 @@
       if (btnResetAi) btnResetAi.onclick = () => {
         selectEnemyCharacter(arena.enemyAi.charId || state.activeChar?.character_id, arena.enemyAi.pinned);
       };
+
+      const selItemZoom = document.getElementById('selItemZoom');
+      if (selItemZoom) selItemZoom.onchange = e => { state.itemZoom = Number(e.target.value) || 3; renderDragonBallItemInspector(); };
+      const selItemBg = document.getElementById('selItemBg');
+      if (selItemBg) selItemBg.onchange = e => { state.itemBgMode = e.target.value || 'dark'; renderDragonBallItemInspector(); };
+      const chkItemSparkle = document.getElementById('chkItemSparkle');
+      if (chkItemSparkle) chkItemSparkle.onchange = e => { state.itemSparkleEnabled = e.target.checked; renderDragonBallItemInspector(); renderDragonBallBagSlots(); };
+      const btnItemPP = document.getElementById('btnItemPlayPause');
+      if (btnItemPP) btnItemPP.onclick = () => {
+        state.itemSparklePlaying = !state.itemSparklePlaying;
+        btnItemPP.textContent = state.itemSparklePlaying ? '⏸ Quét sáng' : '▶ Phát quét';
+      };
+      const btnToggleItems = document.getElementById('btnToggleArenaItems');
+      if (btnToggleItems) btnToggleItems.onclick = () => {
+        arena.itemDrop.enabled = !arena.itemDrop.enabled;
+        updateToggleArenaItemsUI();
+      };
+      const btnMonsterDrop = document.getElementById('btnMonsterDeathDrop');
+      if (btnMonsterDrop) btnMonsterDrop.onclick = () => triggerArenaMonsterDrop(0);
+      const btnPickupItems = document.getElementById('btnPickupArenaItems');
+      if (btnPickupItems) btnPickupItems.onclick = () => pickupArenaItems(-1);
+      const btnResetItems = document.getElementById('btnResetArenaItems');
+      if (btnResetItems) btnResetItems.onclick = () => {
+        arena.itemDrop.enabled = true;
+        arena.itemDrop.collectedBalls = [];
+        arena.itemDrop.drops = [];
+        syncStaticArenaSampleDrops();
+        updateToggleArenaItemsUI();
+        renderDragonBallBagSlots();
+      };
+      const arenaCvEl = document.getElementById('arenaCanvas');
+      if (arenaCvEl) {
+        arenaCvEl.onclick = ev => {
+          if (!arena.itemDrop.enabled || !arenaCvEl.getBoundingClientRect) return;
+          const rect = arenaCvEl.getBoundingClientRect();
+          if (!rect || rect.width <= 0 || rect.height <= 0) return;
+          const ax = ((ev.clientX - rect.left) / rect.width) * arena.viewportWidth;
+          const ay = ((ev.clientY - rect.top) / rect.height) * arena.viewportHeight;
+          let bestIdx = -1, bestDist = 42 * Math.max(1, arena.itemDrop.scale);
+          for (let i = 0; i < arena.itemDrop.drops.length; i++) {
+            const d = arena.itemDrop.drops[i];
+            if (d.phase !== 'resting' && d.phase !== 'dropping') continue;
+            const cy = d.y - 16 * (d.scale || 1);
+            const dist = Math.hypot(ax - d.x, ay - cy);
+            if (dist <= bestDist) { bestDist = dist; bestIdx = i; }
+          }
+          if (bestIdx >= 0) pickupArenaItems(bestIdx);
+        };
+      }
+      const selItemVar = document.getElementById('selArenaItemVariant');
+      if (selItemVar) selItemVar.onchange = e => {
+        arena.itemDrop.ballNumber = Number(e.target.value) || 0;
+        syncStaticArenaSampleDrops();
+      };
+      document.querySelectorAll('#arenaItemControls button[data-item-scale]').forEach(btn => {
+        btn.onclick = () => {
+          arena.itemDrop.scale = Number(btn.dataset.itemScale) || 1.0;
+          syncStaticArenaSampleDrops();
+          document.querySelectorAll('#arenaItemControls button[data-item-scale]').forEach(b => b.classList.remove('btn-gold'));
+          btn.classList.add('btn-gold');
+          const badge = document.getElementById('arenaItemScaleBadge');
+          if (badge) {
+            const px = Math.round(32 * arena.itemDrop.scale);
+            badge.textContent = `${arena.itemDrop.scale}× (${px}×${px} px)`;
+          }
+        };
+      });
 
       window.addEventListener('keydown', ev => {
         arena.keys[ev.code] = true;
@@ -3499,6 +4373,19 @@
       selectEnemyCharacter,
       setUtilityAiEnabled,
       stepEnemyAiFrame,
+      sampleShenronSummon,
+      sampleShenronDismiss,
+      startShenronSummon,
+      startShenronDismiss,
+      chooseShenronWish,
+      renderShenronWishOverlay,
+      dismissShenronSummon,
+      sampleItemSparkleFrame,
+      renderDragonBallItemInspector,
+      triggerArenaMonsterDrop,
+      pickupArenaItems,
+      stepArenaItemDrops,
+      syncStaticArenaSampleDrops,
     };
 
     initApp();

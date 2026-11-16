@@ -2093,7 +2093,8 @@
       "character_id": "shenron",
       "display_name": "Shenron",
       "faction": "special_beasts",
-      "role_label": "Front-facing hovering dragon — idle only",
+      "combat_role": "npc",
+      "role_label": "NPC (Hỗ trợ Triệu hồi) — Rồng Thần chính diện",
       "tags": [
         "dragon",
         "stationary",
@@ -2262,7 +2263,198 @@
         "path": "work/characters/shenron/master-v1/master.png",
         "sha256": "7d32a92302b9af7a4286d8c11f07222d2874c555e3fa51c5f1738e0af87e0526"
       }
+    },
+    {
+      "character_id": "drum",
+      "display_name": "Drum (Ma Nhân GBA)",
+      "faction": "piccolo_daimao",
+      "combat_role": "monster",
+      "role_label": "Quái (AI) — Tốc biến ≤200px / Đánh nhẹ 0.2s ≤50px / Power Up 200..400px",
+      "tags": [
+        "drum",
+        "piccolo",
+        "monster",
+        "ai",
+        "teleport",
+        "walk",
+        "electric_orb",
+        "gba_source_sheet",
+        "nearest_pixel_art",
+        "combined_1layer"
+      ],
+      "status": "finalized_combined_1layer",
+      "map_sync_metrics": {
+        "canvas_size_px": [
+          128,
+          96
+        ],
+        "foot_anchor_px": [
+          56,
+          84
+        ],
+        "body_only_bbox_px": {
+          "x": 31,
+          "y": 34,
+          "w": 56,
+          "h": 50
+        },
+        "full_fx_bbox_px": {
+          "x": 20,
+          "y": 18,
+          "w": 89,
+          "h": 66
+        },
+        "reference_ppu_64": 64,
+        "world_size_at_64ppu_m": {
+          "body_w_m": 0.875,
+          "body_h_m": 0.781,
+          "aura_w_m": 1.391,
+          "aura_h_m": 1.031
+        },
+        "tile_32px_span": {
+          "body_tiles_w": 1.75,
+          "body_tiles_h": 1.5625,
+          "full_fx_tiles_w": 2.78125,
+          "full_fx_tiles_h": 2.0625
+        }
+      },
+      "pixel_sharpness_metrics": {
+        "texel_scale_ratio": "Native 1px GBA source sheet (PA-1, 2.5x Nearest runtime scale)",
+        "edge_acutance_sobel": 392.542,
+        "alpha_hardness_pct": 100.0,
+        "visible_alpha_hardness_pct": 100.0,
+        "opaque_key_px": 0,
+        "enclosed_key_pockets": 0,
+        "outer_ring_spill_fraction": 0.0,
+        "reference_note": "PA-1 exact GBA source pixels & 18-color palette preserved 100% verbatim; exact #9205A7 chroma key removal with zero blur, sharpening, or AI redraw."
+      },
+      "present_clips": [
+        "idle",
+        "walk",
+        "jump",
+        "teleport",
+        "attack_light",
+        "power_up",
+        "hit",
+        "ko",
+        "getup",
+        "electric_orb_fx",
+        "electric_ring_fx"
+      ],
+      "effect_clips": [
+        "electric_orb_fx",
+        "electric_ring_fx"
+      ],
+      "missing_provisional_clips": [
+        "run",
+        "guard",
+        "aura_loop",
+        "win",
+        "turn"
+      ],
+      "not_applicable_clips": {
+        "attack_heavy": "Owner merged Row 3 frames into power_up preparation phase (no separate attack_heavy).",
+        "run": "Owner chose H1 exact GBA sheet + teleport ambush (no separate run).",
+        "guard": "guard/win excluded project-wide per Owner rule.",
+        "aura_loop": "No continuous body aura in source sheet; independent electric orb & ring FX used on cast.",
+        "win": "guard/win excluded project-wide per Owner rule.",
+        "turn": "Owner chose H1 exact GBA sheet with instant horizontal flip."
+      },
+      "render_contract": {
+        "body_clips": [
+          "idle",
+          "walk",
+          "jump",
+          "teleport",
+          "attack_light",
+          "power_up",
+          "hit",
+          "ko",
+          "getup"
+        ],
+        "effect_clips": [
+          "electric_orb_fx",
+          "electric_ring_fx"
+        ],
+        "locomotion": {
+          "kind": "ambush_teleport",
+          "clip": "walk",
+          "patrol": {
+            "enabled": false,
+            "clip": null,
+            "speed_px_per_second": 0.0
+          },
+          "default_scale": 2.5,
+          "speed_px_per_second": 56.0,
+          "screen_speed_px_per_second": 140
+        },
+        "facing": {
+          "camera_view": "side_view_2d",
+          "directions": [
+            "right",
+            "left"
+          ],
+          "default_facing": "right",
+          "owner_instruction": "GBA side-scroller profile facing right; instant flip toward target on ambush teleport & combo."
+        },
+        "turning": {
+          "clip": null,
+          "method": "instant_flip"
+        },
+        "aura": {
+          "loop_clip": null,
+          "charge_clip": "electric_ring_fx",
+          "independent_clock": true
+        },
+        "fx_pivot_px": [
+          64,
+          48
+        ],
+        "projectile": {
+          "kind": "linear_energy",
+          "body_clip": "power_up",
+          "projectile_clip": "electric_orb_fx",
+          "charge_clip": "electric_ring_fx",
+          "release_frame": 10,
+          "lifetime_ticks": 39,
+          "origin_canvas_px": [
+            98,
+            56
+          ],
+          "velocity_px_per_tick": [
+            12.0,
+            0.0
+          ],
+          "palette": "cyan"
+        }
+      },
+      "modes": {
+        "combined_1layer": {
+          "label": "Combined 1-Layer Drum + Independent Electric Orb/Ring FX (PA-1 / H1)",
+          "godot_prefab": "res://scenes/Drum.tscn",
+          "bundle_id": "drum"
+        }
+      },
+      "atlas_stage": "finalized_owner_approved",
+      "motion_quality": {
+        "status": "owner_approved",
+        "method": "existing_complete_source_frames",
+        "turn_method": "instant_flip",
+        "atlas_sha256": "02b57b829ca4c5dd963249e82bfbf3ee8c900127ec9295dfd036685ece5bebea",
+        "owner_approved": true,
+        "checks": {
+          "body_connections": true,
+          "whole_pose_sequence": true,
+          "perspective_turns": true,
+          "phase_timing": true,
+          "three_backgrounds": true
+        },
+        "unresolved_structural_failures": [],
+        "review_evidence": "assets/drum/clips/review/filmstrip-01.png",
+        "notes": "Walk v6 rebuilt from canonical idle_00 via Codex (local CLI) locking 1:1 GBA size parity (55-57x50-51px, area 1692-1801px matching idle_00 56x50 / 1733px), natural alternating light foot lift (~2-3px) + short forward step (0..3 left, 4..7 right), speed calibrated to 140 px/s (56.0 * 2.5x), finalized scale 2.5x Nearest (140x125px / 11.6% 1080p), exact GBA palette, {0,255} alpha, 0 pockets, and 3-bg filmstrip verification.",
+        "naturalness_verdict": "owner_approved"
+      }
     }
   ],
-  "updated_at": "2026-11-15T05:52:31.727116+00:00"
+  "updated_at": "2026-11-15T16:08:00.000000+00:00"
 }

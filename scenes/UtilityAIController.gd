@@ -48,6 +48,7 @@ func reset_zone(center_x: float, walkable_min_x: float, walkable_max_x: float) -
 	cooldown_remaining = 0.0
 	light_chain_count = 0
 	patrol_dir = -1
+	reset_drum_state()
 	last_intent = "patrol"
 	last_reason = "zone_init"
 
@@ -111,6 +112,23 @@ func evaluate(params: Dictionary) -> Dictionary:
 	var target_x: float = float(params.get("target_x", 0.0))
 	var is_busy: bool = bool(params.get("is_busy", false))
 	var zone_active: bool = _is_target_in_zone(target_x)
+	var edge_dist := compute_edge_distance(self_rect, target_rect)
+	var face_left := target_x < self_x
+
+	# Drum custom monster AI handles engagement hysteresis (<400px), teleport (50..200px),
+	# 0.2s continuous attack_light (<=50px), and ranged power_up (200..400px) with no patrol walk.
+	if cid == "drum":
+		return _evaluate_drum(
+			self_x,
+			target_x,
+			zone_min_x,
+			zone_max_x,
+			face_left,
+			edge_dist,
+			is_busy,
+			bool(params.get("facing_left", false)),
+			zone_active
+		)
 
 	if not zone_active:
 		if light_chain_count > 0:
@@ -118,9 +136,6 @@ func evaluate(params: Dictionary) -> Dictionary:
 		if is_busy:
 			return {"intent": "busy", "move_dir": 0, "attack_clip": "", "desired_face_left": target_x < self_x, "edge_dist": -1.0, "reason": "busy"}
 		return _patrol_step(self_x)
-
-	var edge_dist := compute_edge_distance(self_rect, target_rect)
-	var face_left := target_x < self_x
 
 	if is_busy:
 		last_intent = "busy"
@@ -209,3 +224,133 @@ func evaluate(params: Dictionary) -> Dictionary:
 	last_intent = "chase"
 	last_reason = "mid_range_chase"
 	return {"intent": "chase", "move_dir": chase_dir, "attack_clip": "", "desired_face_left": face_left, "edge_dist": edge_dist, "reason": last_reason}
+
+
+func reset_drum_state() -> void:
+	set_meta(&"drum_phase", "idle_ready")
+	set_meta(&"drum_engaged", false)
+
+
+func _evaluate_drum(
+	_self_x: float,
+	_target_x: float,
+	_zone_min_x: float,
+	_zone_max_x: float,
+	face_left: bool,
+	edge_dist: float,
+	is_busy: bool = false,
+	current_face_left: bool = false,
+	in_zone: bool = true
+) -> Dictionary:
+	var engaged := bool(get_meta(&"drum_engaged", false))
+	var phase := str(get_meta(&"drum_phase", "idle_ready"))
+
+	if edge_dist >= 400.0 or (not in_zone and not engaged):
+		set_meta(&"drum_engaged", false)
+		set_meta(&"drum_phase", "idle_ready")
+		if is_busy:
+			last_intent = "busy"
+			last_reason = "executing_action"
+			return {
+				"intent": "busy",
+				"move_dir": 0,
+				"attack_clip": "",
+				"desired_face_left": face_left,
+				"edge_dist": edge_dist if in_zone else -1.0,
+				"reason": last_reason,
+			}
+		last_intent = "idle"
+		last_reason = "outside_range_400_idle" if (engaged or in_zone) else "outside_zone_idle"
+		return {
+			"intent": "idle",
+			"move_dir": 0,
+			"attack_clip": "",
+			"desired_face_left": face_left if in_zone else current_face_left,
+			"edge_dist": edge_dist if in_zone else -1.0,
+			"reason": last_reason,
+		}
+
+	set_meta(&"drum_engaged", true)
+
+	if is_busy:
+		last_intent = "busy"
+		last_reason = "executing_action"
+		return {
+			"intent": "busy",
+			"move_dir": 0,
+			"attack_clip": "",
+			"desired_face_left": face_left,
+			"edge_dist": edge_dist,
+			"reason": last_reason,
+		}
+
+	if cooldown_remaining > 0.0:
+		last_intent = "wait_cooldown"
+		last_reason = "drum_light_cooldown" if edge_dist <= close_edge_px else "drum_combo_cooldown"
+		return {
+			"intent": "wait_cooldown",
+			"move_dir": 0,
+			"attack_clip": "",
+			"desired_face_left": face_left,
+			"edge_dist": edge_dist,
+			"reason": last_reason,
+		}
+
+	# Immediate follow-up strike right after teleport (~50px ambush) unless target fled past 200px
+	if phase == "post_teleport_light" and edge_dist <= mid_max_edge_px:
+		set_meta(&"drum_phase", "engaged")
+		cooldown_remaining = 0.2
+		last_intent = "attack"
+		last_reason = "drum_shoulder_light"
+		return {
+			"intent": "attack",
+			"move_dir": 0,
+			"attack_clip": "attack_light",
+			"desired_face_left": face_left,
+			"edge_dist": edge_dist,
+			"reason": last_reason,
+		}
+
+	# Close melee <= 50px: continuous attack_light every 0.2s
+	if edge_dist <= close_edge_px:
+		set_meta(&"drum_phase", "engaged")
+		cooldown_remaining = 0.2
+		last_intent = "attack"
+		last_reason = "drum_light_continuous"
+		return {
+			"intent": "attack",
+			"move_dir": 0,
+			"attack_clip": "attack_light",
+			"desired_face_left": face_left,
+			"edge_dist": edge_dist,
+			"reason": last_reason,
+		}
+
+	# Beyond melee allowance (200 < edge_dist < 400): Row 3 prep + Row 4-5 power_up electric orb
+	if edge_dist > mid_max_edge_px:
+		set_meta(&"drum_phase", "engaged")
+		cooldown_remaining = attack_cooldown_s
+		last_intent = "attack"
+		last_reason = "drum_powerup_ranged"
+		return {
+			"intent": "attack",
+			"move_dir": 0,
+			"attack_clip": "power_up",
+			"desired_face_left": face_left,
+			"edge_dist": edge_dist,
+			"reason": last_reason,
+		}
+
+	# Mid approach inside 50 < edge_dist <= 200px: speed-vanish teleport to ~50px then attack_light
+	set_meta(&"drum_phase", "post_teleport_light")
+	cooldown_remaining = 0.0
+	last_intent = "attack"
+	last_reason = "drum_teleport_ambush"
+	return {
+		"intent": "attack",
+		"move_dir": 0,
+		"attack_clip": "teleport",
+		"desired_face_left": face_left,
+		"edge_dist": edge_dist,
+		"reason": last_reason,
+	}

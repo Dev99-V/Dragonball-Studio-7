@@ -58,3 +58,4 @@ jobs:
           timeout 60s ./tools/godot/godot --headless --path . --script res://tests/test_chilopoda_actions.gd
           timeout 60s ./tools/godot/godot --headless --path . --script res://tests/test_arena_sandbox.gd
           timeout 60s ./tools/godot/godot --headless --path . --script res://tests/test_shenron_summon.gd
+          timeout 60s ./tools/godot/godot --headless --path . --script res://tests/test_dragon_ball_items.gd

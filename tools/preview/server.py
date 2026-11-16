@@ -24,6 +24,8 @@ from urllib.parse import unquote, urlparse
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = REPO_ROOT / "assets"
+ITEMS_DIR = ASSETS_DIR / "items"
+CATALOG_JSON = ITEMS_DIR / "catalog.json"
 PREVIEW_DIR = Path(__file__).resolve().parent
 BENCHMARK_JSON = REPO_ROOT / "engines" / "benchmark_report.json"
 ROSTER_JSON = ASSETS_DIR / "roster.json"
@@ -42,6 +44,99 @@ def load_rituals() -> dict:
         if sha256_file(REPO_ROOT / reveal["mask"]) != reveal["mask_sha256"]:
             raise ValueError("Summon dissolve mask hash mismatch")
     return {"shenron_summon": sequence}
+
+
+def load_items() -> dict:
+    """Load game-item catalog + .tres animation specs with strict SHA-256 Engine parity."""
+    if not CATALOG_JSON.is_file():
+        return {"schema": "dr7-studio.item_catalog.v1", "items": [], "by_id": {}}
+    catalog = json.loads(CATALOG_JSON.read_text(encoding="utf-8"))
+    by_id: dict[str, dict] = {}
+    enriched_entries: list[dict] = []
+    for entry in catalog.get("items", []):
+        item_id = entry.get("item_set_id", "")
+        export_rel = str(entry["export_json"]).replace("res://", "")
+        export_file = REPO_ROOT / export_rel
+        if not export_file.is_file():
+            raise ValueError(f"Missing item export JSON: {entry['export_json']}")
+        if sha256_file(export_file) != entry.get("export_sha256"):
+            raise ValueError(f"Item export SHA-256 mismatch for {item_id}")
+        export_meta = json.loads(export_file.read_text(encoding="utf-8"))
+
+        atlas_rel = str(entry["atlas_path"]).replace("res://", "")
+        atlas_file = REPO_ROOT / atlas_rel
+        if not atlas_file.is_file():
+            raise ValueError(f"Missing item atlas PNG: {entry['atlas_path']}")
+        atlas_sha = sha256_file(atlas_file)
+        if atlas_sha != entry.get("atlas_sha256") or atlas_sha != export_meta.get("atlas", {}).get("sha256"):
+            raise ValueError(f"Item atlas SHA-256 mismatch for {item_id}")
+
+        tres_rel = str(entry["godot_tres"]).replace("res://", "")
+        tres_file = REPO_ROOT / tres_rel
+        if not tres_file.is_file():
+            raise ValueError(f"Missing item SpriteFrames .tres: {entry['godot_tres']}")
+        tres_sha = sha256_file(tres_file)
+        if tres_sha != export_meta.get("godot", {}).get("frames_tres_sha256"):
+            raise ValueError(f"Item .tres SHA-256 mismatch for {item_id}")
+
+        prefab_rel = str(entry.get("godot_prefab", "")).replace("res://", "")
+        if prefab_rel and not (REPO_ROOT / prefab_rel).is_file():
+            raise ValueError(f"Missing item Godot prefab: {prefab_rel}")
+
+        tres_data = parse_tres(tres_file)
+        tres_dir = tres_file.parent
+        for anim_obj in tres_data["animations"].values():
+            for f_item in anim_obj["frames"]:
+                disk = (tres_dir / f_item["atlas_file"]).resolve()
+                f_item["atlas_url"] = "/" + disk.relative_to(REPO_ROOT).as_posix()
+
+        # Constitutional Item Completeness Gate (AGENTS.md Diep/Dieu 7.5):
+        # Every build under assets/items/ must expose: static bag icon (FX hidden),
+        # diagonal full-body sheen FX, drop jump+roll physics, and shrink-to-collector pickup.
+        if export_meta.get("atlas", {}).get("pages") != 1:
+            raise ValueError(f"Item {item_id} must pack onto 1 PNG atlas page")
+        if not export_meta.get("bag_anchor_px") or not export_meta.get("map_anchor_px"):
+            raise ValueError(f"Item {item_id} missing bag_anchor_px or map_anchor_px")
+        sp_meta = export_meta.get("sparkle_fx", {})
+        if sp_meta.get("style") != "diagonal_body_sheen":
+            raise ValueError(f"Item {item_id} must use diagonal_body_sheen FX (got {sp_meta.get('style')!r})")
+        if sp_meta.get("show_in_bag") is not False or sp_meta.get("show_on_map_after_roll") is not True:
+            raise ValueError(f"Item {item_id} must hide FX in bag and start sheen after drop roll")
+        sp_anim = tres_data["animations"].get(sp_meta.get("clip", "sparkle_fx"))
+        if not sp_anim or not sp_anim.get("frames") or sp_anim.get("speed_hz") != 60.0:
+            raise ValueError(f"Item {item_id} missing 60Hz diagonal sheen animation in .tres")
+        dp = export_meta.get("drop_physics", {})
+        if (
+            float(dp.get("jump_height_px", 0)) <= 0
+            or float(dp.get("roll_distance_px", 0)) <= 0
+            or int(dp.get("rise_ticks", 0)) <= 0
+            or int(dp.get("roll_ticks", 0)) <= 0
+            or dp.get("start_sheen_after_roll") is not True
+        ):
+            raise ValueError(f"Item {item_id} missing mandatory drop jump/roll physics")
+        pp = export_meta.get("pickup_physics", {})
+        if int(pp.get("duration_ticks", 0)) <= 0 or float(pp.get("end_scale", 1.0)) >= float(pp.get("start_scale", 1.0)):
+            raise ValueError(f"Item {item_id} missing mandatory shrink-to-collector pickup physics")
+        item_root = export_file.parent
+        for req_dir in ("source", "clips"):
+            if not (item_root / req_dir / ".gdignore").is_file():
+                raise ValueError(f"Item {item_id} missing {req_dir}/.gdignore")
+
+        merged = {
+            **entry,
+            **export_meta,
+            "sha256_tres": tres_sha,
+            "sha256_atlas": atlas_sha,
+            "atlas_url": "/" + atlas_file.relative_to(REPO_ROOT).as_posix(),
+            "animations": tres_data["animations"],
+        }
+        by_id[item_id] = merged
+        enriched_entries.append(entry)
+    return {
+        "schema": catalog.get("schema", "dr7-studio.item_catalog.v1"),
+        "items": enriched_entries,
+        "by_id": by_id,
+    }
 
 
 def verify_motion_quality() -> dict:
@@ -373,6 +468,10 @@ def verify_engine_localhost_parity() -> dict:
         load_rituals()
     except (ValueError, OSError, KeyError) as exc:
         errors.append("Summon contract/atlas: " + str(exc))
+    try:
+        load_items()
+    except (ValueError, OSError, KeyError, json.JSONDecodeError) as exc:
+        errors.append("Item catalog/atlas: " + str(exc))
     errors.extend(verify_arena_stage_parity())
     return {
         "ok": len(errors) == 0,
@@ -457,6 +556,7 @@ def build_godot_zip_bytes() -> bytes:
         REPO_ROOT / "scenes",
         REPO_ROOT / "tests",
         ASSETS_DIR / "maps",
+        ASSETS_DIR / "items",
         ASSETS_DIR / "rituals",
         ROSTER_JSON,
     ]
@@ -523,6 +623,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "setups": build_setups(bundles, roster),
                 "arena_stage": load_arena_stage(),
                 "rituals": load_rituals(),
+                "items": load_items(),
                 "parity": parity,
                 "motion_quality": verify_motion_quality(),
             }

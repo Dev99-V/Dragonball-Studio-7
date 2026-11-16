@@ -39,6 +39,9 @@ class GovernanceAndPreviewTests(unittest.TestCase):
             "lerning.md",
             "loop.sh",
             "Human Test",
+            "diagonal_body_sheen",
+            "drop_physics",
+            "pickup_physics",
         ):
             self.assertIn(keyword, text)
 
@@ -78,8 +81,29 @@ class GovernanceAndPreviewTests(unittest.TestCase):
         m_sk = re.search(r"<!-- SKILLS_ENTRIES_START -->(.*?)<!-- SKILLS_ENTRIES_END -->", skills_txt, re.S)
         self.assertIsNotNone(m_sk)
         sk_entries = re.findall(r"^###\s+\[([^]]+)\]", m_sk.group(1), re.M)
-        workflows = json.loads((REPO_ROOT / "state.json").read_text()).get("approved_workflows", [])
-        self.assertEqual(set(sk_entries), {w["id"] for w in workflows}, "Every workflow needs recorded Owner acceptance")
+        st_data = json.loads((REPO_ROOT / "state.json").read_text())
+        workflows = st_data.get("approved_workflows", [])
+        item_workflows = st_data.get("approved_item_workflows", [])
+        self.assertEqual(
+            set(sk_entries),
+            {w["id"] for w in workflows} | {w["id"] for w in item_workflows},
+            "Every character & item workflow needs recorded Owner acceptance",
+        )
+        for iw in item_workflows:
+            i_receipt = json.loads((REPO_ROOT / iw["approval_file"]).read_text())
+            self.assertEqual(i_receipt["status"], "owner_approved")
+            self.assertEqual(i_receipt["item_set_id"], iw["item_set_id"])
+            self.assertTrue(i_receipt["owner_message"].strip())
+            i_atlas = REPO_ROOT / i_receipt["atlas_path"]
+            self.assertEqual(hashlib.sha256(i_atlas.read_bytes()).hexdigest(), i_receipt["atlas_sha256"])
+        # Verify ritual sequence SHA-256 matches approved ritual receipt when status is owner_approved
+        ritual_seq_path = REPO_ROOT / "assets" / "rituals" / "shenron_summon" / "sequence.json"
+        if ritual_seq_path.is_file():
+            ritual_seq = json.loads(ritual_seq_path.read_text())
+            if ritual_seq.get("qa", {}).get("status") == "owner_approved":
+                ritual_receipt = json.loads((REPO_ROOT / "assets" / "rituals" / "shenron_summon" / "owner_approval.json").read_text())
+                self.assertEqual(ritual_receipt["status"], "owner_approved")
+                self.assertEqual(hashlib.sha256(ritual_seq_path.read_bytes()).hexdigest(), ritual_receipt["sequence_sha256"])
         by_id = {w["id"]: w for w in workflows}
         for workflow in workflows:
             receipt = json.loads((REPO_ROOT / workflow["approval_file"]).read_text())

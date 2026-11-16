@@ -57,7 +57,7 @@ const apiJsonStr = execFileSync(
   'python3',
   [
     '-c',
-    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'rituals': server.load_rituals(), 'parity': server.verify_engine_localhost_parity()}))`,
+    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'rituals': server.load_rituals(), 'items': server.load_items(), 'parity': server.verify_engine_localhost_parity()}))`,
   ],
   { cwd: REPO_ROOT, encoding: 'utf8' }
 );
@@ -204,7 +204,7 @@ const sandbox = {
   },
 };
 
-const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { sampleShenronSummon, applyShenronPixelDissolve, startShenronSummon, dismissShenronSummon, initApp, state, arena, selectCharacter, setArenaCharacterScale, updateArenaFrameLayout, stepInspectorAnimation, renderInspector, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, respawnArenaCharacter, isSidewaysLocked, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, computeBodyRect, computeEdgeDistance, resetEnemyAiZone, evaluateUtilityAI, selectEnemyCharacter, setUtilityAiEnabled, stepEnemyAiFrame, offCtx };';
+const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { sampleShenronSummon, sampleShenronDismiss, applyShenronPixelDissolve, startShenronSummon, startShenronDismiss, chooseShenronWish, renderShenronWishOverlay, dismissShenronSummon, initApp, state, arena, selectCharacter, setArenaCharacterScale, updateArenaFrameLayout, stepInspectorAnimation, renderInspector, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, respawnArenaCharacter, isSidewaysLocked, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, computeBodyRect, computeEdgeDistance, resetEnemyAiZone, evaluateUtilityAI, selectEnemyCharacter, setUtilityAiEnabled, stepEnemyAiFrame, getPlayerRosterEntry, isAiOnlyMonsterRole, renderArenaControls, getBodyDims, offCtx, sampleItemSparkleFrame, renderDragonBallItemInspector, triggerArenaMonsterDrop, pickupArenaItems, stepArenaItemDrops, syncStaticArenaSampleDrops };';
 vm.createContext(sandbox);
 vm.runInContext(instrumentedJs, sandbox);
 
@@ -212,6 +212,121 @@ await new Promise(r => setTimeout(r, 60));
 const T = sandbox.__TEST__;
 
 assert.equal(getEl('runtimeErrorBanner').textContent, '', 'initApp must produce ZERO runtime errors');
+
+// Drum Monster AI + Manual Testability + Player/AI Arena Dropdowns E2E Check
+{
+  const drumEntry = apiPayload.roster.characters.find(c => c.character_id === 'drum');
+  assert.ok(drumEntry, 'Drum must be registered in roster.json');
+  const drumBundle = T.state.bundlesById[drumEntry.modes.combined_1layer.bundle_id];
+  assert.ok(drumBundle.animations.walk && drumBundle.animations.walk.frames.length === 8, 'Drum must expose 8-frame walk cycle');
+  assert.ok(!drumBundle.animations.attack_heavy, 'Drum must NOT expose separate attack_heavy');
+  assert.equal(drumBundle.animations.power_up.frames.length, 11, 'Drum power_up must combine Row 3 prep + Row 4-5 (11 frames)');
+
+  // Dropdowns must list playable fighters in selPlayerChar (excluding NPC shenron) & chars in selEnemyChar
+  const selPlayer = getEl('selPlayerChar');
+  const selEnemy = getEl('selEnemyChar');
+  assert.ok(selPlayer && selPlayer.children.some(o => o.value === 'drum'), 'selPlayerChar must list drum for manual testing');
+  assert.ok(!selPlayer.children.some(o => o.value === 'shenron'), 'selPlayerChar must exclude NPC shenron');
+  assert.ok(selEnemy && selEnemy.children.some(o => o.value === 'drum'), 'selEnemyChar must list drum');
+
+  // Monsters MUST be manually testable on player side; only NPCs (shenron) hide combat skill buttons
+  T.selectCharacter('drum');
+  assert.equal(T.arena.playerCharId, 'drum', 'Selecting monster drum must allow manual control testing');
+  assert.equal(T.arena.charScale, 2.5, 'Drum finalized default scale must be 2.5x');
+  assert.equal(drumEntry.render_contract.locomotion.default_scale, 2.5, 'Drum default_scale must be 2.5');
+  assert.equal(drumEntry.render_contract.locomotion.screen_speed_px_per_second, 140, 'Drum calibrated screen speed must be 140 px/s');
+  assert.equal(drumEntry.render_contract.locomotion.speed_px_per_second, 56.0, 'Drum base speed at 2.5x scale must be 56.0');
+  {
+    const xBefore = T.arena.x;
+    T.arena.keys = { KeyD: true };
+    for (let i = 0; i < 30; i++) T.stepAndRenderArena(1000 / 60);
+    T.arena.keys = {};
+    const moved = T.arena.x - xBefore;
+    assert.ok(Math.abs(moved - 70.0) < 1.5, `Drum 0.5s walk displacement must match 140 px/s (~70px), got ${moved}`);
+    T.arena.x = xBefore;
+  }
+  const drumManualBtns = getEl('arenaSkillButtons').children.map(c => c.dataset?.clip).filter(Boolean);
+  assert.ok(drumManualBtns.includes('attack_light') && drumManualBtns.includes('power_up'), 'Monster drum must expose physical skill buttons for testing');
+
+  T.selectCharacter('shenron');
+  T.renderArenaControls();
+  assert.equal(getEl('arenaSkillButtons').children.some(c => c.dataset?.clip), false, 'NPC shenron must not expose manual combat buttons');
+
+  // Switch player to t_rex and enemy AI to drum via quick-switch helpers
+  T.selectCharacter('t_rex');
+  T.selectEnemyCharacter('drum', true);
+  T.setUtilityAiEnabled(true);
+  assert.equal(T.arena.enemyAi.charId, 'drum');
+  assert.equal(T.arena.playerCharId, 't_rex');
+
+  // Outside zone -> Drum holds stationary idle (never patrols)
+  T.arena.x = 560;
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.enemyAi.lastIntent, 'idle');
+  assert.equal(T.arena.enemyAi.clip, 'idle');
+  assert.equal(T.arena.enemyAi.x, 1360);
+
+  // Enter zone at 50 < edge_dist <= 200 -> teleport (~50px) -> attack_light -> 0.2s continuous attack_light <=50px
+  T.arena.enemyAi.x = 1580;
+  T.arena.x = 1240; // center gap=340, sum_half=(186*1.75 + 56*2.5)/2=232.75 -> edge_dist=107.25 in (50, 200]
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.enemyAi.actionClip, 'teleport', 'Drum must start teleport in 50..200px band');
+  for (let i = 0; i < 16; i++) T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.enemyAi.drumTeleportRelocated, true);
+  const [pBw, pBh] = T.getBodyDims(T.getPlayerRosterEntry());
+  const [eBw, eBh] = T.getBodyDims(drumEntry);
+  const edgeGap = T.computeEdgeDistance(
+    T.computeBodyRect(T.arena.enemyAi.x, T.arena.groundY, eBw, eBh, T.arena.enemyScale),
+    T.computeBodyRect(T.arena.x, T.arena.groundY, pBw, pBh, T.arena.charScale)
+  );
+  assert.ok(Math.abs(edgeGap - 50) <= 6, `Drum teleport must stop ~50px edge gap, got ${edgeGap}`);
+  assert.equal(T.arena.enemyAi.flip, T.arena.x < T.arena.enemyAi.x, 'Drum must face target after teleport');
+
+  let sawLight = false;
+  for (let i = 0; i < 12; i++) {
+    T.stepAndRenderArena(1000 / 60);
+    if (T.arena.enemyAi.actionClip === 'attack_light') { sawLight = true; break; }
+  }
+  assert.ok(sawLight, 'Drum must immediately perform Row 2 attack_light after teleport');
+
+  // Wait for first attack_light to finish (~24 ticks) + verify 0.2s cooldown before continuous second strike
+  for (let i = 0; i < 28; i++) T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.enemyAi.lastIntent, 'wait_cooldown', 'Drum must honor 0.2s cooldown between continuous attack_light');
+  let sawSecondLight = false;
+  for (let i = 0; i < 16; i++) {
+    T.stepAndRenderArena(1000 / 60);
+    if (T.arena.enemyAi.actionClip === 'attack_light') { sawSecondLight = true; break; }
+  }
+  assert.ok(sawSecondLight, 'Drum <=50px must continuously repeat attack_light every 0.2s');
+
+  // Target retreats outside melee into 200 < edge_dist < 400 -> power_up (11 frames -> orb at frame 10)
+  T.arena.enemyAi.actionClip = null;
+  T.arena.enemyAi.cooldownRemaining = 0;
+  T.arena.enemyAi.x = 1360;
+  T.arena.x = 900; // center gap=460, sum_half=(186*1.75 + 56*2.5)/2=232.75 -> edge_dist=227.25 in (200, 400)
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.enemyAi.actionClip, 'power_up', 'Drum in 200<dist<400 must trigger power_up');
+
+  let sawOrb = false;
+  for (let i = 0; i < 55; i++) {
+    T.stepAndRenderArena(1000 / 60);
+    if (T.arena.projectiles.some(p => p.clip === 'electric_orb_fx')) { sawOrb = true; break; }
+  }
+  assert.ok(sawOrb, 'Drum power_up frame 10 must spawn electric_orb_fx linear projectile');
+
+  // Retreat >= 400px -> stationary idle
+  T.arena.enemyAi.actionClip = null;
+  T.arena.enemyAi.cooldownRemaining = 0;
+  T.arena.x = 700; // edge_dist = 441.25 >= 400
+  T.stepAndRenderArena(1000 / 60);
+  assert.equal(T.arena.enemyAi.lastIntent, 'idle', 'Drum >=400px must revert to stationary idle');
+
+  // Reset cleanly back to initial state
+  T.arena.enemyAi.enabled = false;
+  T.arena.enemyAi.pinned = false;
+  T.arena.projectiles = [];
+  T.selectCharacter(apiPayload.roster.characters[0].character_id);
+}
 
 // Phase A: Empty Roster (0 characters) verification on real /api/bundles
 if (apiPayload.roster.characters.length === 0) {
@@ -557,11 +672,24 @@ if (crabChar) {
   const gathered=T.sampleShenronSummon(162,origin);
   for(let i=0;i<7;i++)assert.deepEqual(Array.from(gathered.balls[i].position),config.items[i].formation_offset_px.map((v,k)=>v+config.layout.map_center_px[k]));
   assert.equal(T.sampleShenronSummon(227,origin).groundAlpha,0);
-  assert.equal(T.sampleShenronSummon(300,origin).dragonAlpha,0);
-  for(const tick of [230,250]){assert.equal(T.sampleShenronSummon(tick,origin).flashAlpha,1);assert.equal(T.sampleShenronSummon(tick,origin).groundAlpha,0);}
-  for(const tick of [240,258,275]){assert.equal(T.sampleShenronSummon(tick,origin).flashAlpha,0);assert.equal(T.sampleShenronSummon(tick,origin).groundAlpha,0);}
-  for(let tick=300;tick<600;tick++)assert.ok(T.sampleShenronSummon(tick,origin).glowAlpha>=0.78);
-  const ready=T.sampleShenronSummon(360,origin);
+  assert.equal(T.sampleShenronSummon(246,origin).groundAlpha,0);
+  assert.equal(T.sampleShenronSummon(246,origin).dragonAlpha,0);
+  assert.equal(T.sampleShenronSummon(230,origin).flashAlpha,1);
+  assert.equal(T.sampleShenronSummon(230,origin).groundAlpha,0);
+  assert.equal(T.sampleShenronSummon(240,origin).flashAlpha,0);
+  assert.equal(T.sampleShenronSummon(240,origin).groundAlpha,0);
+  assert.equal(T.sampleShenronSummon(250,origin).flashAlpha,1);
+  assert.equal(T.sampleShenronSummon(250,origin).groundAlpha,1);
+  assert.ok(T.sampleShenronSummon(250,origin).dragonAlpha>0.5);
+  assert.equal(T.sampleShenronSummon(254,origin).flashAlpha,0.5);
+  assert.equal(T.sampleShenronSummon(254,origin).groundAlpha,1);
+  assert.ok(T.sampleShenronSummon(254,origin).dragonAlpha>0.85);
+  assert.equal(T.sampleShenronSummon(256,origin).flashAlpha,0);
+  assert.equal(T.sampleShenronSummon(256,origin).groundAlpha,1);
+  assert.ok(T.sampleShenronSummon(256,origin).dragonAlpha>=0.97);
+  assert.ok(Math.abs(T.sampleShenronSummon(252,origin).dragonAlpha-0.75)<1e-9);
+  for(let tick=250;tick<600;tick++)assert.ok(T.sampleShenronSummon(tick,origin).glowAlpha>=0.78);
+  const ready=T.sampleShenronSummon(258,origin);
   assert.equal(ready.groundRect[2],144);assert.ok(Math.abs(ready.groundRect[1]+ready.groundRect[3]-840)<1e-8);
   assert.equal(ready.dragonPosition[0],960);assert.equal(ready.dragonAlpha,1);
   assert.equal(config.reveal.method,'pixel_dissolve');
@@ -598,12 +726,34 @@ if (crabChar) {
   const casterX=T.arena.x,casterY=T.arena.y;T.arena.keys={KeyD:true,KeyW:true};
   T.stepAndRenderArena(1000/60);assert.equal(T.arena.x,casterX);assert.equal(T.arena.y,casterY);
   T.arena.summon.tick=10000;T.arena.keys={};T.stepAndRenderArena(1000/60);
-  assert.ok(T.arena.summon,'Persist until explicit dismiss');
+  assert.ok(T.arena.summon,'Persist until wish or explicit dismiss');
+  assert.equal(getEl('shenronWishOverlay').style.display,'block','Wish overlay opens once ready_tick is reached');
+  assert.equal(getEl('shenronWishButtons').children.length,3,'Three sample wishes loaded from sequence.json');
+  const hpBeforeWish=T.arena.dummyHp;
+  getEl('shenronWishButtons').children[0].click();
+  assert.equal(T.arena.dummyHp,hpBeforeWish,'Wish selection notice-only must not modify combat stats');
+  assert.equal(getEl('shenronWishOverlay').style.display,'none','Wish overlay closes immediately after selecting a wish');
+  assert.ok(T.arena.summon?.dismissing,'Selecting wish auto-starts 2-flash dismiss');
+  assert.ok(T.arena.wishNotice&&T.arena.wishNotice.lifeMs>0,'Wish notice banner displays confirmation');
+  assert.equal(T.sampleShenronDismiss(2,origin,258).flashAlpha,1);
+  assert.equal(T.sampleShenronDismiss(14,origin,258).elementsVisible,true);
+  assert.equal(T.sampleShenronDismiss(20,origin,258).flashAlpha,1);
+  assert.equal(T.sampleShenronDismiss(20,origin,258).elementsVisible,false);
+  assert.equal(T.sampleShenronDismiss(28,origin,258).flashAlpha,0);
+  assert.equal(T.sampleShenronDismiss(28,origin,258).finished,true);
+  for(let s=0;s<30&&T.arena.summon;s++)T.stepAndRenderArena(1000/60);
+  assert.equal(T.arena.summon,null,'2-flash dismiss clears summon cleanly after tick 28');
+  assert.equal(T.startShenronSummon(),true,'Auto-dismiss permits clean replay');
+  T.arena.summon.tick=258;
+  assert.equal(T.startShenronDismiss(),true,'Manual Thu hoi button also triggers 2-flash dismiss');
+  assert.ok(T.arena.summon.dismissing);
   T.dismissShenronSummon();assert.equal(T.arena.summon,null);
-  assert.equal(T.startShenronSummon(),true,'Dismiss permits replay');T.dismissShenronSummon();
-  const ticks=[0,18,27,54,108,162,210,219,228,230,240,246,250,258,275,276,288,300,330,360,408,10000];
+  const dismissTicks=[0,2,6,10,14,18,19,20,22,24,26,28];
+  const dismissTrace=dismissTicks.map(t=>{const d=T.sampleShenronDismiss(t,[560,650],258);return {tick:t,flash_alpha:d.flashAlpha,phase:d.phase,ground_alpha:d.groundAlpha,glow_alpha:d.glowAlpha,dragon_position:Array.from(d.dragonPosition),dragon_alpha:d.dragonAlpha,dragon_frame:d.dragonFrame,elements_visible:d.elementsVisible,finished:d.finished};});
+  const ticks=[0,18,27,54,108,162,210,219,228,230,240,246,247,248,250,252,254,256,257,258,266,284,330,10000];
   const trace=ticks.map(tick=>{const s=T.sampleShenronSummon(tick,[560,650]);return {reveal_top:s.revealTop,flash_alpha:s.flashAlpha,tick,phase:s.phase,balls:s.balls.map(b=>({number:b.number,visible:b.visible,alpha:b.alpha,position:Array.from(b.position)})),ground_rect:Array.from(s.groundRect),ground_alpha:s.groundAlpha,glow_alpha:s.glowAlpha,dragon_position:Array.from(s.dragonPosition),dragon_alpha:s.dragonAlpha,dragon_frame:s.dragonFrame};});
   console.log('SHENRON_SUMMON_TRACE='+JSON.stringify(trace));
+  console.log('SHENRON_DISMISS_TRACE='+JSON.stringify(dismissTrace));
 }
 
 // Phase B: Inject synthetic 1-Layer Combined characters to verify dynamic multi-character pipeline
@@ -1017,6 +1167,67 @@ if (apiPayload.roster.characters.length > 0) {
   T.stepAndRenderArena(16.67);
   assert.match(getEl('arenaAiStatus').textContent, /AI\[tasmanian_king_crab\]/);
   T.setUtilityAiEnabled(false);
+  tabHumanBtn.click();
+}
+
+// Verify Dragon Ball 1x (32x32) item pack + diagonal sheen + hide toggle + 10px monster drop/roll + shrink pickup
+{
+  const dbItem = T.state.itemsById?.dragon_balls;
+  assert.ok(dbItem, 'apiPayload.items.by_id.dragon_balls must be loaded');
+  assert.deepEqual(dbItem.frame_size, [32, 32]);
+  assert.equal(dbItem.animations.sparkle_fx.frames.length, 8);
+  assert.equal(dbItem.sparkle_fx.style, 'diagonal_body_sheen');
+  assert.equal(dbItem.sparkle_fx.show_in_bag, false);
+  assert.equal(T.arena.itemDrop.enabled, true);
+  assert.equal(T.arena.itemDrop.scale, 1.0);
+
+  // Toggle hide/show button on arena toolbar
+  getEl('btnToggleArenaItems').click();
+  assert.equal(T.arena.itemDrop.enabled, false);
+  getEl('btnToggleArenaItems').click();
+  assert.equal(T.arena.itemDrop.enabled, true);
+
+  // Monster death drop: jumps 10px, falls to groundY, rolls ~10px, then transitions to resting sheen
+  T.arena.itemDrop.drops = [];
+  T.arena.itemDrop.collectedBalls = [];
+  const dObj = T.triggerArenaMonsterDrop(3);
+  let minY = dObj.y;
+  let landX = dObj.x;
+  let sawFall = false, sawRoll = false;
+  for (let tick = 0; tick < 55; tick++) {
+    T.stepArenaItemDrops(1000 / 60);
+    minY = Math.min(minY, dObj.y);
+    if (dObj.phase === 'dropping' && dObj.subphase === 'fall') {
+      sawFall = true;
+      landX = dObj.x;
+    } else if (dObj.phase === 'dropping' && dObj.subphase === 'roll') {
+      sawRoll = true;
+    } else if (dObj.phase === 'resting') {
+      break;
+    }
+  }
+  assert.ok(Math.abs((T.arena.groundY - minY) - 10.0) < 0.4, `Expected 10px jump, got ${T.arena.groundY - minY}`);
+  assert.ok(sawFall && sawRoll, 'Drop must pass fall and roll subphases');
+  assert.equal(dObj.phase, 'resting');
+  assert.ok(Math.abs(dObj.x - landX) >= 8.0 && Math.abs(dObj.x - landX) <= 13.5, 'Roll must move ~10px');
+
+  // Pickup shrinks monotonically until reaching player and recording in bag
+  const started = T.pickupArenaItems(0);
+  assert.equal(started, 1);
+  let prevScale = dObj.scale;
+  for (let tick = 0; tick < 30; tick++) {
+    T.stepArenaItemDrops(1000 / 60);
+    if (dObj.phase === 'collecting') {
+      assert.ok(dObj.scale <= prevScale + 1e-6);
+      prevScale = dObj.scale;
+    }
+  }
+  assert.equal(dObj.phase, 'collected');
+  assert.ok(T.arena.itemDrop.collectedBalls.includes(3));
+
+  T.renderDragonBallItemInspector();
+  tabArenaBtn.click();
+  T.stepAndRenderArena(16.67);
   tabHumanBtn.click();
 }
 

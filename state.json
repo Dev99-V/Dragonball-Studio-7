@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-15T13:15:06Z",
+  "updated_at": "2026-11-16T02:16:27Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.13.1",
+    "version": "0.14.0",
     "version_history": [
       {
         "version": "0.1.0",
@@ -99,6 +99,11 @@
         "version": "0.13.1",
         "date": "2026-11-15T13:11:10+00:00",
         "summary": "Owner nghiệm thu & chốt v3-pixel-dissolve cho hiệu ứng xuất hiện Shenron (96x68 cell 4x4, viền [255,236,156]) đồng bộ 1:1 Godot OpenGL3 shader, Rust/WASM và Browser Canvas2D; PIPE-018 supersedes phần reveal PIPE-017."
+      },
+      {
+        "version": "0.14.0",
+        "date": "2026-11-16T02:10:11+00:00",
+        "summary": "Owner chốt toàn bộ phiên v0.14.0: Drum (PIPE-019), Shenron Summon v5-dismiss-flash-wish (PIPE-020), Hệ thống Item Game assets/items/ & Bộ 7 Ngọc Rồng 1x 32x32 (ITEM-001: quét sáng chéo toàn thân 60Hz, ẩn FX trong balo, nút ẩn/hiện, rơi +10px/lăn 10px & nhặt thu nhỏ bay vào người), và Điều 7.5 Hiến pháp AGENTS.md."
       }
     ],
     "genre": "2D Dragon Ball Real-Time Mass Action / RPG",
@@ -139,29 +144,28 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "SHENRON-PIXEL-DISSOLVE",
+    "active_task_id": "RELEASE-V0-14-0",
     "status": "completed",
-    "summary": "Owner đã nghiệm thu & chốt v0.13.1 (PIPE-018): pixel_dissolve 96x68 (cell 4x4, viền [255,236,156]) đồng bộ 1:1 Godot OpenGL3 shader, Rust/WASM và Browser Canvas2D.",
+    "summary": "Finalized v0.14.0 release: Drum (PIPE-019), Shenron Summon v5 (PIPE-020), Dragon Ball 1x items & drop/pickup loop (ITEM-001), AGENTS.md Section 7.5 item completeness gate, and localhost/WASM parity.",
+    "ritual_id": "shenron_summon",
     "character_id": "shenron",
-    "todo_file": "docs/shenron-idle-todo.md",
-    "master_image": "work/characters/shenron/master-v1/master.png",
-    "extractor_script": "work/characters/shenron/idle-v1/extract_shenron_frame.py",
-    "generated_frames_ready": [
-      "work/characters/shenron/idle-v5-hover/idle_00.png",
-      "work/characters/shenron/idle-v5-hover/idle_01.png",
-      "work/characters/shenron/idle-v5-hover/idle_02.png",
-      "work/characters/shenron/idle-v5-hover/idle_03.png",
-      "work/characters/shenron/idle-v5-hover/idle_04.png",
-      "work/characters/shenron/idle-v5-hover/idle_05.png",
-      "work/characters/shenron/idle-v5-hover/idle_06.png",
-      "work/characters/shenron/idle-v5-hover/idle_07.png"
-    ],
+    "sequence_manifest": "assets/rituals/shenron_summon/sequence.json",
+    "sequence_sha256": "03699e476591a958dbbac54bc1fc9f7fabf1457cb5c08f8ac3e416e8181164ab",
+    "ritual_atlas_sha256": "c82ec5e8460a2bf01ef515793e87cfdf2be96f448eeab1b914d9e9fec7215aba",
+    "dissolve_mask_sha256": "fbede0b918a87743dac48c8e97abc3a6a32fbd4af30fcf2bdf33e052d790800f",
     "next_steps_summary": [
-      "Đã nghiệm thu & chốt v0.13.1 (PIPE-018) kèm toàn bộ kiểm thử Godot/Rust/WASM/Browser, chuẩn bị push lên origin/main."
+      "Owner mở http://localhost:8080, chuyển sang Tab 2 (Sân Tập Gameplay Thực Chiến) -> bấm ✨ Gọi Shenron -> chọn 1 trong 3 điều ước để xem thông báo xác nhận, đóng popup và tự thu hồi 2 chớp biến mất sạch (hoặc bấm nút Thu hồi Shenron) rồi xác nhận nghiệm thu v5."
     ],
-    "review_report": "docs/characters/shenron-idle-v5-hover-qa.json",
-    "preview_url": "http://localhost:8080/?tab=arena",
-    "summon_review_report": "docs/characters/shenron-summon-v3-qa.json"
+    "review_artifacts": [
+      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-wish-menu-open.png",
+      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-2.png",
+      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-14.png",
+      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-20.png",
+      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-25.png",
+      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-28.png",
+      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-after-dismiss-live.png"
+    ],
+    "preview_url": "http://localhost:8080"
   },
   "open_issues": [],
   "resolved_issues": [
@@ -802,6 +806,48 @@
       "timestamp": "2026-11-15T13:15:06Z",
       "status": "completed",
       "summary": "Owner đã nghiệm thu & chốt v0.13.1 (PIPE-018): pixel_dissolve 96x68 (cell 4x4, viền [255,236,156]) đồng bộ 1:1 Godot OpenGL3 shader, Rust/WASM và Browser Canvas2D."
+    },
+    {
+      "id": "DRUM-PA1-H1",
+      "timestamp": "2026-11-15T16:08:00Z",
+      "status": "completed",
+      "summary": "Đã sửa xong Walk v6 & tốc độ chuẩn 140 px/s cho Drum (combined_1layer, 11 clips, 128x96 Nearest 2x, walk-v6 dựng từ idle_00 gốc qua Codex (local CLI) giữ nguyên kích thước 55-57x50-51px & diện tích 1692-1801px khớp idle_00 56x50/1733px, 2 bàn chân nhấc nhẹ 2-3px rồi bước tới 1 chút luân phiên trái 0..3 / phải 4..7, tốc độ chuẩn 140 px/s tại scale 2.0, bảng màu GBA gốc, SHA-256 02b57b829ca4c5dd963249e82bfbf3ee8c900127ec9295dfd036685ece5bebea), đồng bộ Godot & localhost:8080."
+    },
+    {
+      "id": "SHENRON-SUMMON-V4-FLASH2-DISSOLVE",
+      "timestamp": "2026-11-15T17:20:39Z",
+      "status": "completed",
+      "summary": "Cập nhật PA-A theo yêu cầu Owner cho Shenron Summon v4 (ready_tick=258): ground_start_tick=246 (fade 2 ticks), dragon_start_tick=246 (ease_out_quad 12 ticks -> đạt 97.2% ngay lúc Flash #2 vừa tắt ở tick 256 và 100% tại tick 258); kiểm chứng trực quan 12 frame browser và đồng bộ Godot/JS/tests."
+    },
+    {
+      "id": "SHENRON-SUMMON-V5-DISMISS-WISH",
+      "timestamp": "2026-11-15T17:46:00Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Bổ sung dr7.shenron_summon.v5 (v5-dismiss-flash-wish): Menu Điều Ước 3 lựa chọn khi ready_tick=258 (thông báo xác nhận + đóng popup không tác động chỉ số) tự kích hoạt thu hồi 2 chớp sáng (Flash #1 0..10, khoảng tối 10..18, Flash #2 18..28 ẩn sạch rồng+cụm ngọc+aura tại vanish_tick=20); nút Thu hồi Shenron thủ công dùng chung 2-flash dismiss; cổng 7 ngọc bật test_mode_bypass_ball_requirement=true cho test và requires_seven_balls_in_gameplay=true cho gameplay thật. Đã kiểm thử Godot Headless, Node E2E và chụp/đọc trực quan 7 ảnh Chrome headless."
+    },
+    {
+      "id": "DRUM-SCALE-2-5X",
+      "timestamp": "2026-11-15T17:51:00Z",
+      "status": "completed",
+      "summary": "Tăng chuẩn kích thước chốt của Drum lên default_scale = 2.5 (140x125px / 11.6% 1080p, Nearest, giữ nguyên 100% GBA atlas SHA-256 02b57b829ca4c5dd963249e82bfbf3ee8c900127ec9295dfd036685ece5bebea) và giữ nguyên tốc độ màn hình chuẩn 140 px/s (speed_px_per_second = 56.0 * 2.5 = 140), đồng bộ assets/roster.json, engine-export.json (SHA 16ee76601842e37fbf53d3a4acb8a87c415725ae1e290304dac688b2e81a885d), owner_approval.json, skills.md và kiểm thử Godot + Node + Python."
+    },
+    {
+      "id": "ITEM-DRAGON-BALLS-1X-V1",
+      "timestamp": "2026-11-16T01:30:44Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Bóc tách độc lập 7 viên ngọc rồng 1..7 sao từ image copy.png về 1x (32x32, alpha cứng 0/255, premultiplied BOX, 0 pockets) + shared top-left sparkle_fx (60Hz) vào hệ thống assets/items/dragon_balls/ (tách biệt hoàn toàn khỏi assets/rituals/shenron_summon/); tích hợp prefab Godot DragonBallItem2D.tscn + test thả ngoài map 1x/1.5x/2x/3x và balo 1x trên ArenaSandbox & localhost:8080 (chờ Owner Human Test)."
+    },
+    {
+      "id": "ITEM-DRAGON-BALLS-1X-V2",
+      "timestamp": "2026-11-16T01:50:42Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Đã bổ sung Điều 7.5 vào AGENTS.md (23,086B <= 24,000B) và cổng kiểm tự động trong server.py/loop.sh check bắt buộc mọi item có: icon tĩnh trong balo ẩn FX, quét sáng chéo toàn thân 60Hz, hoạt ảnh rơi (+10px nhảy -> rơi đất -> lăn 10px -> bắt đầu quét sáng), hoạt ảnh thu nhỏ bay vào người nhặt & nút ẩn/hiện trên Sân Tập. Bộ Ngọc Rồng 1x (32x32) chờ Owner Human Test trên localhost:8080."
+    },
+    {
+      "id": "RELEASE-V0-14-0",
+      "timestamp": "2026-11-16T02:16:27Z",
+      "status": "completed",
+      "summary": "Finalized v0.14.0 release: Drum (PIPE-019), Shenron Summon v5 (PIPE-020), Dragon Ball 1x items & drop/pickup loop (ITEM-001), AGENTS.md Section 7.5 item completeness gate, and localhost/WASM parity."
     }
   ],
   "quick_resume_commands": [
@@ -810,8 +856,8 @@
     "./loop.sh test"
   ],
   "session_resume": {
-    "next_action": "9/9 nhân vật đã đạt owner_approved trên main (v0.13.1 / PIPE-018, bao gồm Shenron idle-v5-hover & summon v3-pixel-dissolve); sẵn sàng nhận concept/atlas mới từ Owner.",
-    "asset_status": "9/9 nhân vật đạt finalized_owner_approved / motion_quality=owner_approved (8 nhân vật v0.12.0 + shenron PIPE-017/PIPE-018) & parity 1:1 Godot <-> Rust/WASM <-> localhost.",
+    "next_action": "Owner Human Test Shenron Summon v5 tại http://localhost:8080 (Tab 2 -> bấm ✨ Gọi Shenron -> chọn điều ước -> kiểm tra tự thu hồi 2 chớp biến mất sạch và nút Thu hồi Shenron thủ công).",
+    "asset_status": "10/10 nhân vật (gồm Drum vừa duyệt PIPE-019) hoàn tất; nghi thức shenron_summon đang ở v5 (v5-dismiss-flash-wish, sequence SHA-256 03699e476591a958dbbac54bc1fc9f7fabf1457cb5c08f8ac3e416e8181164ab) chờ Owner Human Test.",
     "approval_file": "assets/shenron/owner_approval.json",
     "ritual_approval_file": "assets/rituals/shenron_summon/owner_approval.json",
     "cleanup_report": "docs/releases/v0.13.1-shenron-pixel-dissolve-finalization.json",
@@ -1007,10 +1053,45 @@
       "approval_file": "assets/shenron/owner_approval.json",
       "ritual_approval_file": "assets/rituals/shenron_summon/owner_approval.json",
       "supersedes": "PIPE-017",
+      "superseded_by": "PIPE-020",
       "atlas_sha256": "e94502bbed02ed036f66aa8a5a3dcbf42f111898b3c83deb90b0a4c0669688b2",
       "ritual_atlas_sha256": "c82ec5e8460a2bf01ef515793e87cfdf2be96f448eeab1b914d9e9fec7215aba",
       "dissolve_mask_sha256": "fbede0b918a87743dac48c8e97abc3a6a32fbd4af30fcf2bdf33e052d790800f",
       "summary": "Shenron v0.13.1 (v3-pixel-dissolve): đổi riêng reveal sang pixel dissolve 96x68 (cell 4x4, viền [255,236,156]) đồng bộ 1:1 Godot OpenGL3 shader, Rust/WASM và Browser Canvas2D; giữ nguyên thân idle-v5-hover, bay 7 ngọc, 2 flash trắng, cụm 144x136 và aura."
+    },
+    {
+      "id": "PIPE-019",
+      "character_id": "drum",
+      "approved_at": "2026-11-15T16:51:40+00:00",
+      "approval_file": "assets/drum/owner_approval.json",
+      "atlas_sha256": "02b57b829ca4c5dd963249e82bfbf3ee8c900127ec9295dfd036685ece5bebea",
+      "summary": "Drum v0.13.1 (PA-1 / H1 / walk-v6-scale-2.5x): giữ nguyên 100% pixel/bảng 18 màu GBA gốc @ 2.5x Nearest chốt theo Owner (140x125px / 11.6% 1080p), tốc độ 140 px/s (56.0 * 2.5x), walk v6 dựng từ idle_00 giữ tỷ lệ 1:1 (55-57x50-51px) bước ngắn nhấc chân luân phiên 8 frame, AI quái tốc biến <=200px, attack_light 0.2s <=50px, power_up + cầu điện 200..400px."
+    },
+    {
+      "id": "PIPE-020",
+      "character_id": "shenron",
+      "approved_at": "2026-11-16T02:10:11+00:00",
+      "approval_file": "assets/shenron/owner_approval.json",
+      "ritual_approval_file": "assets/rituals/shenron_summon/owner_approval.json",
+      "supersedes": "PIPE-018",
+      "atlas_sha256": "e94502bbed02ed036f66aa8a5a3dcbf42f111898b3c83deb90b0a4c0669688b2",
+      "ritual_atlas_sha256": "c82ec5e8460a2bf01ef515793e87cfdf2be96f448eeab1b914d9e9fec7215aba",
+      "sequence_sha256": "23b9668e14b720edaf4b17eeb34213c616b4e9a3bf0baa5ba53543f43293526b",
+      "dissolve_mask_sha256": "fbede0b918a87743dac48c8e97abc3a6a32fbd4af30fcf2bdf33e052d790800f",
+      "summary": "Shenron Summon v5-dismiss-flash-wish (v0.14.0): hiện cụm ngọc & Shenron ngay tại Flash #2, popup 3 điều ước tự thu hồi 2 chớp sáng đồng bộ 1:1 Godot <-> localhost:8080; dọn ảnh rác root về work/rituals/shenron_summon/v5-dismiss-flash-wish/source/."
+    }
+  ],
+  "approved_item_workflows": [
+    {
+      "id": "ITEM-001",
+      "item_set_id": "dragon_balls",
+      "display_name": "Bộ 7 Viên Ngọc Rồng (1× = 32×32)",
+      "approved_at": "2026-11-16T02:10:11+00:00",
+      "approval_file": "assets/items/dragon_balls/owner_approval.json",
+      "atlas_sha256": "5ee1a97b09624b6c15c7a895ff436cb7aab9ccd10964d5485dcace3a59e40bb2",
+      "tres_sha256": "2f3c4dab5e21a3918b4fb4a458f5ff096c9a9c7c5ddd2bad07320bec89c6b5a5",
+      "export_sha256": "bc84d80d3ffedd54cf00ec3cd6423fc2f5da1caa3dd0ac4adb398ab2fadac8a8",
+      "summary": "Hệ thống item game assets/items/ & Bộ 7 Ngọc Rồng 1x (32x32, alpha cứng 100%, 0 pockets): quét sáng chéo toàn thân 60Hz, balo ẩn FX giữ icon tĩnh, nút Ẩn/Hiện trên Sân Tập, quái chết rơi nhảy +10px -> rơi đất -> lăn 10px -> quét sáng, nhặt bay thu nhỏ vào người nhặt; bổ sung Điều 7.5 Hiến pháp AGENTS.md."
     }
   ],
   "owner_defaults": {
@@ -1093,25 +1174,26 @@
     "scope": "Documentation-only handoff for Bat -> T-rex -> Pteranodon -> Sarcosuchus turn retrofit;0/4 unchanged. Chilopoda already Owner-approved; no runtime/art edits."
   },
   "pickup_release": {
-    "version": "0.13.1",
+    "version": "0.14.0",
     "status": "completed",
-    "release_manifest": "docs/releases/v0.13.1-shenron-pixel-dissolve-finalization.json",
-    "characters_approved": 9,
-    "approved_at": "2026-11-15T13:11:10+00:00",
-    "verification_log": "docs/releases/v0.13.1-shenron-tests.log"
+    "release_manifest": "docs/releases/v0.14.0-release-finalization.json",
+    "characters_approved": 10,
+    "items_approved": 1,
+    "approved_at": "2026-11-16T02:10:11+00:00",
+    "verification_log": "docs/releases/v0.14.0-tests.log"
   },
   "local_preview": {
-    "url": "http://localhost:8080/?character=shenron&clip=idle",
+    "url": "http://localhost:8080/?tab=arena",
     "status": "running",
     "verified_http_status": 200,
-    "shenron_in_roster": true,
-    "idle_frames": 8,
-    "cycle_ms": 1600,
-    "default_scale": 2.76,
-    "summon_url": "http://localhost:8080/?character=t_rex&clip=idle",
-    "body_revision": "idle-v5-hover",
-    "ritual_revision": "v3-pixel-dissolve",
-    "release_version": "0.13.1",
+    "active_characters": 10,
+    "items_in_catalog": 1,
+    "drum_in_roster": true,
+    "drum_clips": 11,
+    "default_scale": 1.0,
+    "arena_url": "http://localhost:8080",
+    "release_version": "0.14.0",
     "owner_approved": true
-  }
+  },
+  "last_updated_utc": "2026-11-15T17:51:00Z"
 }

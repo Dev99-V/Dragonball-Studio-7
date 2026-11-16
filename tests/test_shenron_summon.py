@@ -30,15 +30,31 @@ class ShenronSummonAssets(unittest.TestCase):
     def test_shared_six_second_contract_and_ground_source(self):
         c=server.load_rituals()['shenron_summon'];t=c['timeline'];l=c['layout']
         self.assertEqual(c['tick_hz'],60)
-        self.assertEqual(t['ready_tick'],360)
+        self.assertEqual(t['ready_tick'],258)
         self.assertEqual(6*t['launch_stride_ticks']+t['flight_ticks'],t['last_arrival_tick'])
         self.assertLess(t['last_arrival_tick'],t['vanish_start_tick'])
         self.assertLess(t['vanish_start_tick'],t['ground_start_tick'])
-        self.assertLess(t['ground_start_tick'],t['dragon_start_tick'])
+        flash2_start=t['flash_start_ticks'][1]
+        flash2_peak=flash2_start+t['flash_rise_ticks']
+        flash2_end=flash2_peak+t['flash_hold_ticks']+t['flash_fall_ticks']
+        self.assertEqual(t['ground_start_tick'],flash2_start)
+        self.assertEqual(t['dragon_start_tick'],flash2_start)
+        self.assertLessEqual(t['ground_start_tick']+t['ground_fade_ticks'],flash2_peak)
+        self.assertLessEqual(t['ready_tick'],flash2_end+2)
+        self.assertEqual(t['dragon_reveal_curve'],'ease_out_quad')
         self.assertEqual(l['map_center_px'],[960,540]);self.assertEqual(l['ground_y'],840)
         self.assertEqual(l['ground_display_width_px'],144);self.assertEqual(l['dragon_scale'],2.76)
         self.assertEqual(c['behavior']['trigger'],'button_only')
         self.assertTrue(c['behavior']['persist_until_dismissed'])
+        self.assertTrue(c['behavior']['requires_seven_balls_in_gameplay'])
+        self.assertTrue(c['behavior']['test_mode_bypass_ball_requirement'])
+        self.assertTrue(c['behavior']['auto_dismiss_after_wish'])
+        dt=c['dismiss_timeline']
+        self.assertEqual(dt['flash_start_ticks'],[0,18])
+        self.assertEqual(dt['vanish_tick'],dt['flash_start_ticks'][1]+dt['flash_rise_ticks'])
+        self.assertEqual(dt['end_tick'],dt['flash_start_ticks'][1]+dt['flash_rise_ticks']+dt['flash_hold_ticks']+dt['flash_fall_ticks'])
+        self.assertEqual(len(c['wishes']),3)
+        self.assertTrue(all(w.get('id') and w.get('label') and w.get('notice') for w in c['wishes']))
         for source in c['source_images']:
             self.assertEqual(hashlib.sha256((ROOT/source['file']).read_bytes()).hexdigest(),source['sha256'])
         with __import__('zipfile').ZipFile(__import__('io').BytesIO(server.build_godot_zip_bytes())) as archive:
@@ -72,6 +88,8 @@ class ShenronSummonAssets(unittest.TestCase):
         counts=[int(((values+0.5)/256<=p).sum()) for p in [0,.25,.5,.75,1]]
         self.assertEqual(counts[0],0);self.assertEqual(counts[-1],96*68)
         self.assertTrue(all(a<b for a,b in zip(counts,counts[1:])))
-        old=json.loads((ROOT/'work/rituals/shenron_summon/v3-pixel-dissolve/snapshot-before/sequence.json').read_text())
-        for key in ['timeline','layout','items','regions','atlas_sha256']:
+        old=json.loads((ROOT/'work/rituals/shenron_summon/v4-flash2-dissolve/snapshot-before/sequence.json').read_text())
+        for key in ['layout','items','regions','atlas_sha256']:
             self.assertEqual(c[key],old[key])
+        for tkey in ['launch_stride_ticks','flight_ticks','last_arrival_tick','gather_hold_ticks','vanish_start_tick','flash_start_ticks','flash_rise_ticks','flash_hold_ticks','flash_fall_ticks','glow_period_ticks']:
+            self.assertEqual(c['timeline'][tkey],old['timeline'][tkey])

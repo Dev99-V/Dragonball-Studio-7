@@ -76,8 +76,8 @@ func run_test() -> void:
 		fail("BackgroundSprite does not fill 1920x1080 exactly: " + str(rendered_bg_size))
 		return
 
-	if arena.roster_characters.size() != 9:
-		fail("Expected 9 characters in roster.json, got " + str(arena.roster_characters.size()))
+	if arena.roster_characters.size() != 10:
+		fail("Expected 10 characters in roster.json, got " + str(arena.roster_characters.size()))
 		return
 
 	for entry in arena.roster_characters:
@@ -328,6 +328,7 @@ func run_test() -> void:
 		"tasmanian_king_crab": 115.0,
 		"sarcosuchus": 135.0,
 		"dilophosaurus": 155.0,
+		"drum": 140.0,
 	}
 	for cid in expected_screen_speeds.keys():
 		arena.select_character(cid)
@@ -355,7 +356,87 @@ func run_test() -> void:
 		fail("Bat turn->walk stalled instead of resuming mid-stride: clip=%s frame=%d" % [str(arena.player_node.sprite.animation), arena.player_node.sprite.frame])
 		return
 
+	# 7) Drum AI: idle outside zone / >=400px; teleport (~50px) 50..200px; continuous attack_light every 0.2s <=50px;
+	# power_up (11-frame Row 3 prep + Row 4-5 orb at frame 10) in 200..400px; walk clip present; no attack_heavy.
+	arena.select_character("drum")
+	await process_frame
+	if absf(arena.char_scale - 2.5) > 0.001 or absf(arena.enemy_scale - 2.5) > 0.001:
+		fail("Drum finalized default_scale must be 2.5, got char=%s enemy=%s" % [str(arena.char_scale), str(arena.enemy_scale)])
+		return
+	arena.set_utility_ai_enabled(true)
+	if not arena.dummy_node.call(&"has_clip", "walk") or arena.dummy_node.call(&"has_clip", "attack_heavy"):
+		fail("Drum must include bipedal walk clip and must NOT have separate attack_heavy")
+		return
+	arena.dummy_node.position = Vector2(1360.0, 840.0)
+	arena.player_node.position = Vector2(560.0, 840.0)
+	var drum_out: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+	if drum_out.get("intent", "") != "idle" or int(drum_out.get("move_dir", 9)) != 0:
+		fail("Drum outside zone must remain stationary idle (never patrol), got " + str(drum_out))
+		return
+	# Enter zone [1120..1600] in 50..200px band -> triggers teleport (~50px) -> attack_light
+	arena.player_node.position = Vector2(1150.0, 840.0)
+	var drum_tp: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+	if drum_tp.get("intent", "") != "attack" or drum_tp.get("attack_clip", "") != "teleport":
+		fail("Drum on 50..200px entry must trigger teleport, got " + str(drum_tp))
+		return
+	for _i in range(15):
+		arena.step_utility_ai(1.0 / 60.0)
+	var tp_edge_dist: float = absf(arena.dummy_node.position.x - arena.player_node.position.x) - ((56.0 * 2.5 + 56.0 * 2.5) * 0.5)
+	if absf(tp_edge_dist - 50.0) > 6.0:
+		fail("Drum teleport must land ~50px edge gap from target, got gap=" + str(tp_edge_dist))
+		return
+	var saw_light := false
+	for _i in range(10):
+		var d_step: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+		if d_step.get("attack_clip", "") == "attack_light":
+			saw_light = true
+			break
+	if not saw_light:
+		fail("Drum after teleport must immediately unleash attack_light (Row 2)")
+		return
+	# Complete first attack_light (~24 ticks = 0.4s), verify 0.2s cooldown before second continuous attack_light <= 50px
+	for _i in range(26):
+		arena.step_utility_ai(1.0 / 60.0)
+	var light_cd_wait: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+	if light_cd_wait.get("attack_clip", "") == "attack_light":
+		fail("Drum must wait 0.2s cooldown between continuous attack_light strikes")
+		return
+	var saw_second_light := false
+	for _i in range(16):
+		var d2: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+		if d2.get("attack_clip", "") == "attack_light":
+			saw_second_light = true
+			break
+	if not saw_second_light:
+		fail("Drum <=50px must strike attack_light continuously every 0.2s")
+		return
+	# Target retreats beyond melee into 200 < edge_dist < 400 -> power_up (11-frame Row 3+4+5 -> orb at frame 10)
+	arena._ai_action_clip = ""; arena._ai_action_timer_s = 0.0; arena.ai_controller.cooldown_remaining = 0.0
+	arena._enemy_orb_active = false; arena._enemy_orb_spawned_for_cast = false
+	arena.dummy_node.position = Vector2(1360.0, 840.0)
+	arena.player_node.position = Vector2(960.0, 840.0) # center gap=400, half-widths=112 -> edge_dist=288 in (200, 400)
+	var pu_d: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+	if pu_d.get("intent", "") != "attack" or pu_d.get("attack_clip", "") != "power_up":
+		fail("Drum at 200<edge_dist<400 must cast power_up, got " + str(pu_d))
+		return
+	var saw_drum_orb := false
+	for _i in range(55):
+		arena.step_utility_ai(1.0 / 60.0)
+		if arena._enemy_orb_active:
+			saw_drum_orb = true
+			break
+	if not saw_drum_orb:
+		fail("Drum power_up release frame 10 must spawn independent electric_orb_fx projectile")
+		return
+	# Retreat >= 400px -> returns to stationary idle
+	arena._ai_action_clip = ""; arena._ai_action_timer_s = 0.0; arena.ai_controller.cooldown_remaining = 0.0
+	arena.player_node.position = Vector2(800.0, 840.0) # edge_dist = 448 >= 400
+	var drum_far_idle: Dictionary = arena.step_utility_ai(1.0 / 60.0)
+	if drum_far_idle.get("intent", "") != "idle" or int(drum_far_idle.get("move_dir", 9)) != 0:
+		fail("Drum >=400px must return to stationary idle, got " + str(drum_far_idle))
+		return
+
 	arena.queue_free()
 	await process_frame
-	print("[OK] Godot 4 ArenaSandbox 1920x1080 1:1 parity + Utility AI + 9/9 characters PASSED!")
+	print("[OK] Godot 4 ArenaSandbox 1920x1080 1:1 parity + Utility AI + 10/10 characters PASSED!")
 	quit(0)

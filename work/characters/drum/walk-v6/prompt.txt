@@ -1,0 +1,22 @@
+Output image size: 1792x896 PNG with native transparent background (4 columns x 2 rows, each cell 448x448).
+Turn the 4x2 blueprint in Reference 2 into a finished, cohesive 16-bit GBA pixel-art 8-frame heavy walk sprite sheet (4 columns x 2 rows) on a pure transparent background for the fat green monster Drum from Reference 1.
+
+CRITICAL IDENTITY & EXACT SIZE PARITY (100% SAME SIZE AS `idle_00`):
+- NEVER shrink or slim down Drum! Keep the EXACT width (56 GBA pixel blocks) and height (50 GBA pixel blocks), wide round green belly, wide broad dotted shoulders wrapping his neckless chin, wide arms on left and right sides, grinning fangs face, low knotted orange belt, dark navy short wide pants, and black-and-white-striped flat boots matching Reference 1 (`idle_00..03`).
+- Use ONLY Reference 1's authentic crisp 16-bit GBA colors with hard opaque edges (ZERO blur, ZERO anti-aliasing, ZERO grey haze).
+- Pure 100% transparent PNG background: REMOVE all text labels and red ground lines from Reference 2.
+
+NATURAL ALTERNATING SHORT-STEP MOTION ("nhấc nhẹ bàn chân -> bước tới 1 chút -> hạ, rồi đổi chân"):
+Notice how in Reference 2 the two shoes always stay clearly separated under his wide pants (NEVER stacked awkwardly on top of each other). Render seamless GBA pixel-art pants cuffs, orange belt sash overlap, curved boots, and subtle 1-2px upper body/arm follow-through matching each cell:
+- Row 0 (Cells 0, 1, 2, 3 — LEFT-of-screen foot lifts lightly & steps slightly forward; RIGHT-of-screen foot slides slightly back planted):
+  - Cell 0: Left foot planted flat slightly back, Right foot planted flat ahead; classic wide `idle_00` arms.
+  - Cell 1: Left foot gently lifts ~2 GBA px off ground (heel slightly raised), body dips 1px heavy onto planted Right foot, Left arm eases back 1px.
+  - Cell 2: Left foot steps forward a short distance (~2-3 GBA px off ground, closer to middle belt sash), planted Right foot slides gently back bearing weight, body bobs up 1px.
+  - Cell 3: Left foot touches down flat slightly forward ahead while Right foot finishes sliding slightly back on the ground; arms return smoothly toward neutral.
+- Row 1 (Cells 4, 5, 6, 7 — RIGHT-of-screen foot lifts lightly & steps slightly forward; LEFT-of-screen foot slides slightly back planted):
+  - Cell 4: Swapped weight contact — Left foot planted forward bearing weight, Right foot planted slightly tucked under right hip pushing off; distinct pose from Cell 0.
+  - Cell 5: Right foot gently lifts ~2 GBA px off ground (toe/heel light lift), body dips 1px onto planted Left foot, Right arm eases back 1px / Left arm forward 1px.
+  - Cell 6: Right foot steps forward a short distance (~2-3 GBA px off ground, advancing forward), Left foot planted solidly bearing weight, body bobs up 1px.
+  - Cell 7: Right foot steps forward slightly ahead and lands flat on the ground while Left foot trails pushing back, seamlessly looping back into Cell 0.
+
+Legs must remain short, wide, and heavy under his low belt in every cell — NO stretched thin legs, NO high knee kicks, NO narrow arms or slimmed belly. Facing right across all 8 cells.

@@ -59,3 +59,10 @@ target/
 # Superseded Chilopoda surface-turn snapshots; final frames/source evidence retained
 /work/characters/chilopoda/atlas-v1/stage-surface-turn-baseline/
 /work/characters/chilopoda/atlas-v1/live-surface-turn-baseline/
+
+# Local Forge CLI telemetry ledger & superseded Drum walk drafts (walk-v6 retained)
+/.forge/
+/work/characters/drum/walk-v2/
+/work/characters/drum/walk-v3/
+/work/characters/drum/walk-v4/
+/work/characters/drum/walk-v5/
