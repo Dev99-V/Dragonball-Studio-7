@@ -10,14 +10,14 @@ from PIL import Image
 from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parents[1]
-SNAP_DIR = ROOT / "work/characters/t_rex/turn-v1/snapshot-before"
+SNAP_DIR = ROOT / "docs/contracts/t_rex"
 LIVE_TREX = ROOT / "assets/t_rex"
 
 
 class TRexTurnContractTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.baseline = json.loads((SNAP_DIR / "baseline-manifest.json").read_text(encoding="utf-8"))
-        self.old_export = json.loads((SNAP_DIR / "engine-export.json").read_text(encoding="utf-8"))
+        self.baseline = json.loads((SNAP_DIR / "turn-v1-baseline-manifest.json").read_text(encoding="utf-8"))
+        self.old_export = json.loads((SNAP_DIR / "turn-v1-engine-export.json").read_text(encoding="utf-8"))
         self.new_export = json.loads((LIVE_TREX / "godot_bundle/engine-export.json").read_text(encoding="utf-8"))
         self.new_clips = json.loads((LIVE_TREX / "clips/animation-clips.json").read_text(encoding="utf-8"))
         self.roster = json.loads((ROOT / "assets/roster.json").read_text(encoding="utf-8"))
@@ -140,10 +140,10 @@ class TRexTurnContractTest(unittest.TestCase):
                 self.assertIn("DEFAULT_WALK_SPEED := 68.571429", (ROOT / rel).read_text(encoding="utf-8"))
                 continue
             self.assertEqual(hashlib.sha256((ROOT / rel).read_bytes()).hexdigest(), exp_sha, rel)
-        prev_receipt = json.loads((SNAP_DIR / "owner_approval.json").read_text(encoding="utf-8"))
+        prev_receipt = json.loads((ROOT / "docs/releases/t_rex-v0.6.0-approval.json").read_text(encoding="utf-8"))
         self.assertEqual(prev_receipt["workflow_id"], "PIPE-001")
         self.assertEqual(
-            hashlib.sha256((SNAP_DIR / "t_rex-atlas-00.png").read_bytes()).hexdigest(),
+            receipt["previous_atlas_sha256"],
             prev_receipt["atlas_sha256"],
         )
         frozen = ROOT / receipt["frozen_source"]

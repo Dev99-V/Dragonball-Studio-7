@@ -46,7 +46,8 @@ func run_test() -> void:
 				if actual: visible += 1
 				if actual != expected: mismatches += 1
 		results.append({"progress":progress,"visible_pixels":visible,"mask_mismatches":mismatches})
-		rendered.save_png("res://work/rituals/shenron_summon/v3-pixel-dissolve/evidence/native-" + str(progress) + ".png")
+		DirAccess.make_dir_recursive_absolute(OS.get_user_data_dir() + "/dissolve_evidence")
+		rendered.save_png("user://dissolve_evidence/native-" + str(progress) + ".png")
 		if mismatches > 0:
 			printerr("[FAIL] Real dissolve shader mask drift: " + JSON.stringify(results))
 			quit(1)

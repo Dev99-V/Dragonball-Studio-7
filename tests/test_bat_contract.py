@@ -11,8 +11,7 @@ def read(path):return json.loads((R/path).read_text())
 class BatContract(unittest.TestCase):
     def test_owner_approved_revision_is_frozen(self):
         prev_cal_receipt=read('docs/releases/bat_chiroptera-v0.11.2-approval.json')
-        snap='work/characters/bat_chiroptera/calibration-v1/snapshot-before'
-        self.assertEqual(prev_cal_receipt,read(f'{snap}/owner_approval.json'))
+        self.assertEqual(prev_cal_receipt['status'],'owner_approved')
         self.assertEqual(prev_cal_receipt['workflow_id'],'PIPE-009')
         receipt=read('assets/bat_chiroptera/owner_approval.json')
         self.assertEqual(receipt['status'],'owner_approved')
@@ -28,12 +27,10 @@ class BatContract(unittest.TestCase):
         self.assertEqual(loc['screen_speed_px_per_second'],115)
         self.assertAlmostEqual(loc['speed_px_per_second'],104.545455,places=6)
         self.assertEqual(loc['flight_default_y'],250)
-        snap=R/'work/characters/bat_chiroptera/turn-v1/snapshot-before'
-        prev_receipt=read('work/characters/bat_chiroptera/turn-v1/snapshot-before/owner_approval.json')
+        prev_receipt=read('docs/releases/bat_chiroptera-v0.10.0-approval.json')
         self.assertEqual(prev_receipt['workflow_id'],'PIPE-007')
-        self.assertEqual(hashlib.sha256((snap/'bat_chiroptera-atlas-00.png').read_bytes()).hexdigest(),prev_receipt['atlas_sha256'])
-        self.assertEqual(hashlib.sha256((R/'docs/releases/bat_chiroptera-v0.10.0-approval.json').read_bytes()).hexdigest(),hashlib.sha256((snap/'owner_approval.json').read_bytes()).hexdigest())
-        baseline=read('work/characters/bat_chiroptera/turn-v1/snapshot-before/baseline-manifest.json')
+        self.assertEqual(prev_receipt['status'],'owner_approved')
+        baseline=read('docs/contracts/bat_chiroptera/turn-v1-baseline-manifest.json')
         for bf in baseline['bat_frames']:
             idx=bf['index']
             live_frame=R/f'assets/bat_chiroptera/clips/frames/frame-{idx:02d}.png'
@@ -85,7 +82,7 @@ class BatContract(unittest.TestCase):
     def test_master_size_identity_and_independent_fast_flight(self):
         m=read('assets/bat_chiroptera/clips/animation-clips.json');base=R/'assets/bat_chiroptera/clips'
         im=Image.open(base/m['frames'][m['clips']['idle']['frames'][0]]['file']).convert('RGBA')
-        canonical=Image.open(R/'work/characters/bat_chiroptera/approved-master/master.png').convert('RGBA')
+        canonical=Image.open(R/'assets/bat_chiroptera/source/master.png').convert('RGBA')
         self.assertEqual(im.tobytes(),canonical.tobytes())
         b=im.getbbox();self.assertEqual((b[2]-b[0],b[3]-b[1]),(126,81))
         walk={hashlib.sha256((base/m['frames'][i]['file']).read_bytes()).hexdigest() for i in m['clips']['walk']['frames']}

@@ -11,6 +11,7 @@ var skill_animator: Node2D = null
 var _nodes_initialized: bool = false
 
 var facing_left: bool = false
+var _turn_pending: bool = false
 var _anchor_px: Vector2 = Vector2(56.0, 84.0)
 var _fx_pivot_px: Vector2 = Vector2(64.0, 48.0)
 var _orb_origin_local: Vector2 = Vector2(42.0, -28.0)

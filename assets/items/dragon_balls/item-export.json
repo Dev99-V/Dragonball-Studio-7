@@ -5,7 +5,7 @@
   "category": "quest_consumable_item",
   "source_isolation": "Extracted read-only from canonical owner-1 source; assets/rituals/shenron_summon/* untouched.",
   "source_image": {
-    "file": "work/rituals/shenron_summon/v5-dismiss-flash-wish/source/owner-1.png",
+    "file": "assets/rituals/shenron_summon/source/owner-1.png",
     "sha256": "0368f9a6c20f634b391dc893d70cc70757e14204b4feade4817b6e861cfbe876",
     "size": [
       1152,
@@ -118,7 +118,7 @@
     "start_sheen_after_roll": true
   },
   "pickup_physics": {
-    "duration_ticks": 24,
+    "duration_ticks": 30,
     "start_scale": 1.0,
     "end_scale": 0.05,
     "arc_lift_px": 18.0

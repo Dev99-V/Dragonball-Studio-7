@@ -9,6 +9,8 @@
 
 from __future__ import annotations
 
+import datetime
+import gzip
 import hashlib
 import io
 import json
@@ -29,6 +31,43 @@ CATALOG_JSON = ITEMS_DIR / "catalog.json"
 PREVIEW_DIR = Path(__file__).resolve().parent
 BENCHMARK_JSON = REPO_ROOT / "engines" / "benchmark_report.json"
 ROSTER_JSON = ASSETS_DIR / "roster.json"
+WEB_EXPORT_DIR = REPO_ROOT / "build" / "web"
+ANDROID_APK_PATH = REPO_ROOT / "build" / "android" / "dr7-studio-debug.apk"
+_APK_SHA256_CACHE: dict[tuple[int, int], str] = {}
+
+
+def get_android_apk_info(apk_path: Path | None = None) -> dict:
+    target = apk_path if apk_path is not None else ANDROID_APK_PATH
+    if not target.is_file():
+        return {
+            "available": False,
+            "filename": target.name,
+            "download_url": "/api/download-android-debug.apk",
+        }
+    st = target.stat()
+    cache_key = (int(st.st_size), int(st.st_mtime_ns))
+    sha = _APK_SHA256_CACHE.get(cache_key)
+    if sha is None:
+        h = hashlib.sha256()
+        with target.open("rb") as fh:
+            while True:
+                chunk = fh.read(1024 * 1024)
+                if not chunk:
+                    break
+                h.update(chunk)
+        sha = h.hexdigest()
+        _APK_SHA256_CACHE.clear()
+        _APK_SHA256_CACHE[cache_key] = sha
+    built_at = datetime.datetime.fromtimestamp(st.st_mtime, tz=datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return {
+        "available": True,
+        "filename": target.name,
+        "download_url": "/api/download-android-debug.apk",
+        "size_bytes": int(st.st_size),
+        "size_mb": round(st.st_size / (1024.0 * 1024.0), 1),
+        "sha256": sha,
+        "built_at_utc": built_at,
+    }
 
 
 def load_rituals() -> dict:
@@ -495,7 +534,6 @@ def load_arena_stage() -> dict:
 
 def verify_arena_stage_parity() -> list[str]:
     """Verify 1:1 viewport, map asset, phone bezel, and Godot 4 scene parity."""
-    import hashlib
     errs: list[str] = []
     stage = load_arena_stage()
     if not stage:
@@ -534,18 +572,91 @@ def verify_arena_stage_parity() -> list[str]:
             f"window/size/viewport_width={vp.get('width', 1920)}",
             f"window/size/viewport_height={vp.get('height', 1080)}",
             f'window/stretch/mode="{vp.get("stretch_mode", "canvas_items")}"',
-            f'window/stretch/aspect="{vp.get("stretch_aspect", "keep")}"',
+            f'window/stretch/aspect="{vp.get("stretch_aspect", "expand")}"',
+            f'window/stretch/scale_mode="{vp.get("stretch_scale_mode", "fractional")}"',
             f"window/handheld/orientation={vp.get('handheld_orientation_code', 0)}",
+            f'renderer/rendering_method="{vp.get("renderer", "gl_compatibility")}"',
             'run/main_scene="res://scenes/ArenaSandbox.tscn"',
         ]
         for needle in expected_lines:
             if needle not in pg:
                 errs.append(f"project.godot missing 1:1 stage setting: {needle}")
 
-    for sc_rel in ("scenes/ArenaSandbox.tscn", "scenes/ArenaSandbox.gd"):
+    profiles_rel = vp.get("device_profiles_path", "")
+    profiles_file = REPO_ROOT / profiles_rel if profiles_rel else None
+    if not profiles_file or not profiles_file.is_file():
+        errs.append(f"Missing device profiles spec: {profiles_rel}")
+
+    terrain = load_map_terrain()
+    if not terrain:
+        errs.append("Missing or invalid assets/maps/rocky_plateau/terrain.json")
+    else:
+        bd = terrain.get("backdrop") or {}
+        if bd.get("bg_path"):
+            bg_orig = REPO_ROOT / str(bd.get("bg_path", ""))
+            if not bg_orig.is_file():
+                errs.append(f"Missing terrain backdrop image: {bd.get('bg_path')}")
+            elif sha256_file(bg_orig) != bd.get("sha256"):
+                errs.append("Terrain backdrop SHA-256 mismatch")
+        for wkey in ("wing_left", "wing_right"):
+            winfo = bd.get(wkey) or {}
+            if winfo:
+                wfile = REPO_ROOT / str(winfo.get("path", ""))
+                if not wfile.is_file():
+                    errs.append(f"Missing terrain {wkey}: {winfo.get('path')}")
+                elif sha256_file(wfile) != winfo.get("sha256"):
+                    errs.append(f"Terrain {wkey} SHA-256 mismatch")
+        for pid, pinfo in (terrain.get("parallax") or {}).items():
+            pfile = REPO_ROOT / str(pinfo.get("path", ""))
+            if not pfile.is_file():
+                errs.append(f"Missing terrain parallax layer {pid}: {pinfo.get('path')}")
+            elif sha256_file(pfile) != pinfo.get("sha256"):
+                errs.append(f"Terrain parallax SHA-256 mismatch for {pid}")
+        for section_key in ("tileset", "platforms_sheet", "dust_fx"):
+            sinfo = terrain.get(section_key) or {}
+            if not sinfo:
+                if section_key != "platforms_sheet":
+                    errs.append(f"Missing terrain {section_key} entry")
+                continue
+            sfile = REPO_ROOT / str(sinfo.get("path", ""))
+            if not sfile.is_file():
+                errs.append(f"Missing terrain {section_key}: {sinfo.get('path')}")
+            elif sha256_file(sfile) != sinfo.get("sha256"):
+                errs.append(f"Terrain {section_key} SHA-256 mismatch")
+
+    for sc_rel in (
+        "scenes/ArenaSandbox.tscn",
+        "scenes/ArenaSandbox.gd",
+        "scenes/SkillAnimator2D.gd",
+        "scenes/runtime/DisplayPolicy.gd",
+        "scenes/runtime/TouchHudOverlay.gd",
+        "scenes/net/NetworkTransport.gd",
+        "scenes/net/WebSocketTransport.gd",
+        "scenes/net/ZoneClientSync.gd",
+    ):
         if not (REPO_ROOT / sc_rel).is_file():
-            errs.append(f"Missing Godot arena scene file: {sc_rel}")
+            errs.append(f"Missing Godot arena scene/runtime file: {sc_rel}")
     return errs
+
+
+def load_device_profiles() -> dict:
+    p = ASSETS_DIR / "maps" / "rocky_plateau" / "device-profiles.json"
+    if not p.is_file():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def load_map_terrain() -> dict:
+    p = ASSETS_DIR / "maps" / "rocky_plateau" / "terrain.json"
+    if not p.is_file():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
 
 
 def build_godot_zip_bytes() -> bytes:
@@ -572,25 +683,155 @@ def build_godot_zip_bytes() -> bytes:
             else:
                 for sub in sorted(item.rglob("*")):
                     if sub.is_file() and not sub.name.endswith((".pyc", ".uid")):
-                        zf.write(sub, sub.relative_to(REPO_ROOT).as_posix())
+                        rel_str = sub.relative_to(REPO_ROOT).as_posix()
+                        if any(skip in rel_str for skip in ("/godot-sprite3d/", "/aseprite/", "/source/")):
+                            continue
+                        zf.write(sub, rel_str)
     return buf.getvalue()
 
 
 class PreviewHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
+    def setup(self) -> None:
+        super().setup()
+        try:
+            self.connection.settimeout(45.0)
+            self.connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError:
+            pass
+
+    def handle_one_request(self) -> None:
+        try:
+            if hasattr(self.rfile, "peek"):
+                head = self.rfile.peek(2)
+                if not head or head.startswith(b"\x16"):
+                    self.close_connection = True
+                    return
+            self.raw_requestline = self.rfile.readline(65537)
+            if not self.raw_requestline:
+                self.close_connection = True
+                return
+            # Silently close TLS ClientHello probes (\x16...) without waiting for headers/errors
+            if self.raw_requestline.startswith(b"\x16"):
+                self.close_connection = True
+                return
+            if len(self.raw_requestline) > 65536:
+                self.requestline = ""
+                self.request_version = ""
+                self.command = ""
+                self.send_error(414)
+                return
+            if not self.parse_request():
+                return
+            mname = "do_" + self.command
+            if not hasattr(self, mname):
+                self.send_error(501, f"Unsupported method ({self.command})")
+                return
+            method = getattr(self, mname)
+            method()
+            self.wfile.flush()
+        except (TimeoutError, socket.timeout, ConnectionResetError, BrokenPipeError):
+            self.close_connection = True
+
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("[preview] " + (fmt % args) + "\n")
 
-    def _send_bytes(self, status: int, content_type: str, data: bytes, extra_headers: dict | None = None) -> None:
-        self.send_response(status)
+    def _file_etag(self, file_path: Path) -> str:
+        st = file_path.stat()
+        return f'"{st.st_size}-{st.st_mtime_ns}"'
+
+    def _send_file(
+        self,
+        content_type: str,
+        file_path: Path,
+        extra_headers: dict | None = None,
+        *,
+        cache_control: str = "no-cache",
+        compress: bool = False,
+    ) -> None:
+        etag = self._file_etag(file_path)
+        if self.headers.get("If-None-Match") == etag:
+            self.send_response(304)
+            self.send_header("ETag", etag)
+            self.send_header("Cache-Control", cache_control)
+            self.send_header("Connection", "close" if self.close_connection else "keep-alive")
+            self.end_headers()
+            return
+        headers = {"ETag": etag}
+        if extra_headers:
+            headers.update(extra_headers)
+        size_bytes = file_path.stat().st_size
+        if compress or size_bytes < 4 * 1024 * 1024:
+            self._send_bytes(
+                200,
+                content_type,
+                file_path.read_bytes(),
+                extra_headers=headers,
+                cache_control=cache_control,
+                compress=compress,
+            )
+            return
+        self.send_response(200)
+        self.send_header("Cache-Control", cache_control)
+        if self.close_connection:
+            self.send_header("Connection", "close")
+        else:
+            self.send_header("Connection", "keep-alive")
+            self.send_header("Keep-Alive", "timeout=30")
         self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        self.send_header("Content-Length", str(size_bytes))
+        for k, v in headers.items():
+            self.send_header(k, v)
+        self.end_headers()
+        if getattr(self, "command", "GET") != "HEAD" and size_bytes > 0:
+            try:
+                with file_path.open("rb") as fh:
+                    while True:
+                        chunk = fh.read(262144)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+            except (BrokenPipeError, ConnectionResetError, TimeoutError):
+                self.close_connection = True
+
+    def _send_bytes(
+        self,
+        status: int,
+        content_type: str,
+        data: bytes,
+        extra_headers: dict | None = None,
+        *,
+        cache_control: str = "no-store, no-cache, must-revalidate",
+        compress: bool = False,
+    ) -> None:
+        payload = data
+        is_gzip = False
+        if status not in (204, 304) and compress and len(data) >= 1024 and "gzip" in self.headers.get("Accept-Encoding", "").lower():
+            payload = gzip.compress(data, compresslevel=5)
+            is_gzip = True
+        self.send_response(status)
+        self.send_header("Cache-Control", cache_control)
+        if self.close_connection:
+            self.send_header("Connection", "close")
+        else:
+            self.send_header("Connection", "keep-alive")
+            self.send_header("Keep-Alive", "timeout=30")
+        if status not in (204, 304):
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(payload)))
+        if is_gzip:
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Vary", "Accept-Encoding")
         if extra_headers:
             for k, v in extra_headers.items():
                 self.send_header(k, v)
         self.end_headers()
-        if getattr(self, "command", "GET") != "HEAD":
-            self.wfile.write(data)
+        if status not in (204, 304) and getattr(self, "command", "GET") != "HEAD" and payload:
+            try:
+                self.wfile.write(payload)
+            except (BrokenPipeError, ConnectionResetError, TimeoutError):
+                self.close_connection = True
 
     def do_HEAD(self) -> None:
         self.do_GET()
@@ -599,15 +840,19 @@ class PreviewHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         req_path = unquote(parsed.path)
 
+        if req_path == "/favicon.ico":
+            self._send_bytes(204, "image/x-icon", b"", cache_control="public, max-age=86400")
+            return
+
         if req_path in ("/", "/index.html"):
             html_file = PREVIEW_DIR / "index.html"
-            self._send_bytes(200, "text/html; charset=utf-8", html_file.read_bytes())
+            self._send_bytes(200, "text/html; charset=utf-8", html_file.read_bytes(), compress=True)
             return
 
         if req_path == "/rust_combat_sim.wasm":
             wasm_file = PREVIEW_DIR / "rust_combat_sim.wasm"
             if wasm_file.is_file():
-                self._send_bytes(200, "application/wasm", wasm_file.read_bytes())
+                self._send_file("application/wasm", wasm_file, compress=True)
             else:
                 self._send_bytes(404, "text/plain; charset=utf-8", b"WASM not built")
             return
@@ -616,24 +861,49 @@ class PreviewHandler(BaseHTTPRequestHandler):
             bundles = discover_bundles()
             roster = load_finalized_roster(bundles)
             parity = verify_engine_localhost_parity()
+            godot_web_index = REPO_ROOT / "build" / "web" / "index.html"
             payload = {
                 "project_name": "DR7-Studio — Engine Parity & Human Test Workbench",
                 "bundles": bundles,
                 "roster": roster,
                 "setups": build_setups(bundles, roster),
                 "arena_stage": load_arena_stage(),
+                "terrain": load_map_terrain(),
+                "device_profiles": load_device_profiles(),
+                "godot_web_ready": godot_web_index.is_file(),
+                "android_apk": get_android_apk_info(),
                 "rituals": load_rituals(),
                 "items": load_items(),
                 "parity": parity,
                 "motion_quality": verify_motion_quality(),
             }
             data = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
-            self._send_bytes(200, "application/json; charset=utf-8", data)
+            self._send_bytes(200, "application/json; charset=utf-8", data, compress=True)
+            return
+
+        if req_path.startswith("/godot-web/"):
+            web_root = (REPO_ROOT / "build" / "web").resolve()
+            rel_name = req_path[len("/godot-web/"):].lstrip("/") or "index.html"
+            target = (web_root / rel_name).resolve()
+            if not str(target).startswith(str(web_root)) or not target.is_file():
+                self._send_bytes(404, "text/plain; charset=utf-8", b"Godot Web export not built. Run ./loop.sh web-export")
+                return
+            ext = target.suffix.lower()
+            ctype = {
+                ".html": "text/html; charset=utf-8",
+                ".js": "application/javascript; charset=utf-8",
+                ".wasm": "application/wasm",
+                ".pck": "application/octet-stream",
+                ".png": "image/png",
+                ".svg": "image/svg+xml",
+                ".json": "application/json; charset=utf-8",
+            }.get(ext, "application/octet-stream")
+            self._send_file(ctype, target, compress=ext in (".html", ".js", ".wasm", ".svg", ".json"))
             return
 
         if req_path == "/api/benchmarks":
             if BENCHMARK_JSON.is_file():
-                self._send_bytes(200, "application/json; charset=utf-8", BENCHMARK_JSON.read_bytes())
+                self._send_bytes(200, "application/json; charset=utf-8", BENCHMARK_JSON.read_bytes(), compress=True)
             else:
                 self._send_bytes(404, "application/json; charset=utf-8", b'{"error":"not_found"}')
             return
@@ -645,6 +915,22 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "application/zip",
                 zbytes,
                 {"Content-Disposition": 'attachment; filename="DR7-Studio-Godot4-Pack.zip"'},
+            )
+            return
+
+        if req_path == "/api/download-android-debug.apk":
+            if not ANDROID_APK_PATH.is_file():
+                self._send_bytes(404, "text/plain; charset=utf-8", b"Android APK not built. Run ./loop.sh apk-debug")
+                return
+            self._send_file(
+                "application/vnd.android.package-archive",
+                ANDROID_APK_PATH,
+                extra_headers={
+                    "Content-Disposition": f'attachment; filename="{ANDROID_APK_PATH.name}"',
+                    "X-Content-Type-Options": "nosniff",
+                },
+                cache_control="no-cache",
+                compress=False,
             )
             return
 
@@ -662,7 +948,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 ".jpeg": "image/jpeg",
                 ".json": "application/json; charset=utf-8",
             }.get(ext, "application/octet-stream")
-            self._send_bytes(200, ctype, target.read_bytes())
+            self._send_file(ctype, target, compress=ext == ".json")
             return
 
         if req_path.startswith("/assets/"):
@@ -679,7 +965,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 ".tres": "text/plain; charset=utf-8",
                 ".tscn": "text/plain; charset=utf-8",
             }.get(ext, "application/octet-stream")
-            self._send_bytes(200, ctype, target.read_bytes())
+            self._send_file(ctype, target, compress=ext in (".json", ".tres", ".tscn"))
             return
 
         self._send_bytes(404, "text/plain; charset=utf-8", b"Not found")
@@ -689,12 +975,14 @@ class IPv4Server(ThreadingHTTPServer):
     address_family = socket.AF_INET
     allow_reuse_address = True
     daemon_threads = True
+    request_queue_size = 128
 
 
 class IPv6OnlyServer(ThreadingHTTPServer):
     address_family = socket.AF_INET6
     allow_reuse_address = True
     daemon_threads = True
+    request_queue_size = 128
 
     def server_bind(self) -> None:
         try:

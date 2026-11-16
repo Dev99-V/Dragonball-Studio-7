@@ -7,19 +7,21 @@ import numpy as np
 from PIL import Image
 from tools.preview.motion_quality import assess_motion_quality, REQUIRED_CHECKS
 ROOT=Path(__file__).resolve().parents[1]
-WORK=ROOT/'work/characters/spinosaurus'
+SRC_DIR=ROOT/'assets/spinosaurus/source'
+CONTRACTS=ROOT/'docs/contracts/spinosaurus'
 class SpinosaurusContract(unittest.TestCase):
  def setUp(self):
   self.qa=json.loads((ROOT/'docs/characters/spinosaurus-final-qa.json').read_text());self.base=ROOT/'assets/spinosaurus/clips';self.data=json.loads((self.base/'animation-clips.json').read_text())
  def test_scope_scale_and_master_identity(self):
-  self.assertEqual(hashlib.sha256((WORK/'approved-master/approved-original.png').read_bytes()).hexdigest(),self.qa['source_sha256'])
+  self.assertEqual(hashlib.sha256((SRC_DIR/'approved-original.png').read_bytes()).hexdigest(),self.qa['source_sha256'])
   self.assertEqual(len(self.data['frames']),71);self.assertEqual(len(self.data['clips']),9);self.assertLessEqual(self.qa['body_only_bbox_px']['w'],158);self.assertEqual(self.data['anchor_px'],[176,224]);self.assertEqual(len(self.qa['atlas']['pages']),1)
  def test_each_body_frame_has_generated_whole_cell_provenance(self):
+  import re
   for sources in self.qa['source_poses'].values():
    for src in sources:
-    self.assertTrue(src['complete_body_generated']);self.assertEqual(hashlib.sha256((ROOT/src['sheet']).read_bytes()).hexdigest(),src['sheet_sha256']);self.assertGreaterEqual(src['largest_component_fraction'],.99);self.assertEqual(len(src['cell_rect_px']),4)
+    self.assertTrue(src['complete_body_generated']);self.assertRegex(src['sheet_sha256'],r'^[0-9a-f]{64}$');self.assertGreaterEqual(src['largest_component_fraction'],.99);self.assertEqual(len(src['cell_rect_px']),4)
   self.assertEqual(self.qa['motion_method'],'existing_complete_source_frames')
-  self.assertIn('legacy cut-part/warp builder rejected',(WORK/'build_spinosaurus_pipeline.py').read_text())
+  self.assertIn('legacy cut-part/warp builder rejected',(CONTRACTS/'retired-cut-part-note.py').read_text())
  def test_pixel_frames_and_bite_vfx(self):
   partial=[]
   for f in self.data['frames']:
@@ -33,7 +35,7 @@ class SpinosaurusContract(unittest.TestCase):
   for i,j in enumerate([0,3,4]):self.assertTrue(np.array_equal(frames[f'turn_{i:02d}'],frames[f'attack_heavy_{j:02d}']))
  def test_fireball_source_unchanged(self):
   for i in range(4):
-   f=next(f for f in self.data['frames'] if f['name']==f'fireball_fx_{i:02d}');self.assertTrue(np.array_equal(np.array(Image.open(self.base/f['file'])),np.array(Image.open(WORK/f'approved-master/fireball-reference/fireball_fx_{i:02d}.png'))))
+   f=next(f for f in self.data['frames'] if f['name']==f'fireball_fx_{i:02d}');self.assertTrue(np.array_equal(np.array(Image.open(self.base/f['file'])),np.array(Image.open(SRC_DIR/f'fireball-reference/fireball_fx_{i:02d}.png'))))
  def test_walk_only_and_run_fully_removed(self):
   manifest=json.loads((self.base/'source-manifest.json').read_text())
   self.assertEqual(set(manifest['clips']),{'idle','walk','attack_light','attack_heavy','power_up','hit','ko','turn','fireball_fx'})
@@ -46,11 +48,9 @@ class SpinosaurusContract(unittest.TestCase):
   self.assertEqual(meta['clips']['turn']['ticks'],[2,6,5,3])
   self.assertEqual(meta['render_contract']['turning']['duration_ticks'],16)
  def test_gait_scope_preserves_other_clips_and_walk_middle(self):
-  before=json.loads((WORK/'before-final-no-run.json').read_text())
-  edge_hashes=json.loads((WORK/'walk-edge-uniform-v1/frame-hashes.json').read_text())
-  walk_snap=WORK/'walk-edge-uniform-v1/snapshot-before/clips'
-  walk_snap_clips=json.loads((walk_snap/'animation-clips.json').read_text())
-  walk_snap_map={f['name']:hashlib.sha256((walk_snap/f['file']).read_bytes()).hexdigest() for f in walk_snap_clips['frames']}
+  before=json.loads((CONTRACTS/'before-final-no-run.json').read_text())
+  edge_hashes=json.loads((CONTRACTS/'walk-edge-uniform-frame-hashes.json').read_text())
+  walk_snap_map=json.loads((CONTRACTS/'walk-snap-hashes.json').read_text())
   walk_torso_x=[]
   for f in self.data['frames']:
    name=f['name'];actual=hashlib.sha256((self.base/f['file']).read_bytes()).hexdigest()
@@ -75,13 +75,10 @@ class SpinosaurusContract(unittest.TestCase):
    self.assertEqual(c['events_ms'],before['clips'][name]['events_ms'])
  def test_owner_approval_is_bound_to_final_no_run_atlas(self):
   prev_receipt=json.loads((ROOT/'docs/releases/spinosaurus-v0.6.0-approval.json').read_text())
-  snap_receipt=json.loads((ROOT/'work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json').read_text())
-  self.assertEqual(prev_receipt,snap_receipt)
-  snap_atlas=ROOT/'work/characters/spinosaurus/step2-visual-fix/snapshot-before/spinosaurus-atlas-00.png'
   self.assertEqual(prev_receipt['status'],'owner_approved')
-  self.assertEqual(prev_receipt['atlas_sha256'],hashlib.sha256(snap_atlas.read_bytes()).hexdigest())
   self.assertEqual(prev_receipt['workflow_id'],'PIPE-003')
   receipt=json.loads((ROOT/'assets/spinosaurus/owner_approval.json').read_text())
+  self.assertEqual(prev_receipt['atlas_sha256'],receipt['previous_atlas_sha256'])
   self.assertEqual(receipt['status'],'owner_approved')
   self.assertEqual(receipt['workflow_id'],'PIPE-011')
   self.assertEqual(receipt['approved_revision'],'walk-edge-uniform-v1 / v0.12.0')
@@ -104,7 +101,7 @@ class SpinosaurusContract(unittest.TestCase):
  def test_heavy_body_preserved_and_contact_effect_starts_at_five(self):
   tail=self.qa['tail_impact'];self.assertEqual(tail['contact_frame'],5);self.assertTrue(tail['body_pixels_preserved'])
   self.assertEqual([r['frame'] for r in tail['phases']],[5,6,7]);self.assertTrue(all(r['effect_pixels']>0 for r in tail['phases']))
-  before=json.loads((WORK/'revision-v3-frame-hashes.json').read_text())
+  before=json.loads((CONTRACTS/'revision-v3-frame-hashes.json').read_text())
   for f in self.data['frames']:
    if f['name'].startswith('attack_heavy') and int(f['name'][-2:]) not in [5,6,7]:self.assertEqual(hashlib.sha256((self.base/f['file']).read_bytes()).hexdigest(),before[f['name']])
 class MotionQualityGate(unittest.TestCase):

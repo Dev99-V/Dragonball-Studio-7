@@ -98,5 +98,22 @@ func run_test() -> void:
 		fail("Manual reversal did not finish facing right in run")
 		return
 
+	# Let the engine advance the actual SpriteFrames instead of emitting completion by hand.
+	node.stop_patrol()
+	if not node.set_facing_left(true):
+		fail("Live right-to-left turn failed to start")
+		return
+	await create_timer(0.4).timeout
+	if node.is_turning() or not node.is_facing_left():
+		fail("Live right-to-left turn stalled: frame=%d clip=%s" % [sprite.frame, str(sprite.animation)])
+		return
+	if not node.set_facing_left(false):
+		fail("Live left-to-right turn failed to start")
+		return
+	await create_timer(0.4).timeout
+	if node.is_turning() or node.is_facing_left():
+		fail("Live left-to-right turn stalled: frame=%d clip=%s" % [sprite.frame, str(sprite.animation)])
+		return
+
 	print("[OK] Bat turn: 5 perspective frames [2,3,4,3,3], lock during spin, R->L & L->R two-endpoint walk/run transitions verified")
 	quit(0)

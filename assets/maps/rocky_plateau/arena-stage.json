@@ -8,7 +8,12 @@
     "aspect_ratio": "16:9",
     "orientation": "landscape",
     "stretch_mode": "canvas_items",
-    "stretch_aspect": "keep",
+    "stretch_aspect": "expand",
+    "stretch_scale_mode": "fractional",
+    "pixel_perfect_toggle_supported": true,
+    "pixel_perfect_min_height_px": 1080,
+    "renderer": "gl_compatibility",
+    "device_profiles_path": "assets/maps/rocky_plateau/device-profiles.json",
     "handheld_orientation_code": 0,
     "ppu_reference": 64,
     "tile_px": 32

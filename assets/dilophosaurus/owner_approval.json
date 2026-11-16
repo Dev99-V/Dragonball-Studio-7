@@ -12,7 +12,7 @@
   "previous_workflow_id": "PIPE-006",
   "previous_revision": "motion-v2 / v0.9.1",
   "previous_approval_archive": [
-    "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+    "docs/releases/dilophosaurus-v0.9.1-approval.json",
     "docs/releases/dilophosaurus-v0.9.1-approval.json"
   ],
   "previous_atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157",
@@ -69,7 +69,7 @@
     "win"
   ],
   "canonical_identity": {
-    "path": "work/characters/dilophosaurus/master-review/frill-v2/master-gameplay-v2.png",
+    "path": "assets/dilophosaurus/source/master.png",
     "sha256": "93ad864ffa41df0c168e4666af3212632825ae5d8aca314ed06d49c71fccc4a8"
   },
   "render_contract": {
@@ -169,7 +169,7 @@
     }
   },
   "qa_report": "docs/characters/dilophosaurus-motion-v2-qa.json",
-  "frozen_source": "work/characters/dilophosaurus/approved-final-frames/animation-clips.json",
+  "frozen_source": "assets/dilophosaurus/clips/animation-clips.json",
   "approved_runtime_files_sha256": {
     "assets/dilophosaurus/clips/.gdignore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "assets/dilophosaurus/clips/animation-clips.json": "d408a20096eb3bd9bf150d3a51705d72b3b4d20c6f6e8eae3a911e4a81702715",

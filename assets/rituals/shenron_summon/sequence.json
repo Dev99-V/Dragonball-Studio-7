@@ -210,7 +210,7 @@
   "sampling": "nearest",
   "source_images": [
     {
-      "file": "work/rituals/shenron_summon/v5-dismiss-flash-wish/source/owner-1.png",
+      "file": "assets/rituals/shenron_summon/source/owner-1.png",
       "sha256": "0368f9a6c20f634b391dc893d70cc70757e14204b4feade4817b6e861cfbe876",
       "size": [
         1152,
@@ -218,7 +218,7 @@
       ]
     },
     {
-      "file": "work/rituals/shenron_summon/v5-dismiss-flash-wish/source/owner-2.png",
+      "file": "assets/rituals/shenron_summon/source/owner-2.png",
       "sha256": "4191a18babe3d2067f4527dedf4352247e4f94c71be1732e9095fd7bfa7226a9",
       "size": [
         1152,

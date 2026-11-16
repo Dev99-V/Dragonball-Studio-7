@@ -12,7 +12,7 @@ class ShenronSummonAssets(unittest.TestCase):
         self.assertEqual([i['number'] for i in c['items']], list(range(1,8)))
         self.assertEqual(c['qa']['star_counts'],list(range(1,8)))
         atlas=Image.open(ROOT/c['atlas']).convert('RGBA')
-        evidence=json.loads((ROOT/'work/rituals/shenron_summon/v2-flash-hover/evidence/extraction.json').read_text())
+        evidence=json.loads((ROOT/'docs/contracts/shenron_summon/extraction.json').read_text())
         source=Image.open(ROOT/c['source_images'][0]['file']).convert('RGB')
         for item in c['items']:
             im=Image.open(ROOT/item['file']).convert('RGBA')
@@ -69,12 +69,13 @@ class ShenronSummonAssets(unittest.TestCase):
         im=Image.open(ROOT/'assets/rituals/shenron_summon/ground-cluster.png').convert('RGBA')
         self.assertEqual(im.size,(144,136))
         self.assertEqual(sum(im.getchannel('A').histogram()[1:255]),0)
-        previous=json.loads((ROOT/'work/rituals/shenron_summon/v2-flash-hover/snapshot-before/sequence.json').read_text())
+        previous=json.loads((ROOT/'docs/contracts/shenron_summon/v2-sequence.json').read_text())
+        v2_hashes=json.loads((ROOT/'docs/contracts/shenron_summon/v2-item-hashes.json').read_text())
         for key in ['launch_stride_ticks','flight_ticks','last_arrival_tick','vanish_start_tick']:
             self.assertEqual(c['timeline'][key],previous['timeline'][key])
         for a,b in zip(c['items'],previous['items']):
             self.assertEqual(a['formation_offset_px'],b['formation_offset_px'])
-            self.assertEqual((ROOT/a['file']).read_bytes(),(ROOT/'work/rituals/shenron_summon/v2-flash-hover/snapshot-before/items'/Path(a['file']).name).read_bytes())
+            self.assertEqual(hashlib.sha256((ROOT/a['file']).read_bytes()).hexdigest(),v2_hashes[Path(a['file']).name])
 
     def test_pixel_dissolve_mask_and_unchanged_approved_combo(self):
         c=server.load_rituals()['shenron_summon'];r=c['reveal']
@@ -88,7 +89,7 @@ class ShenronSummonAssets(unittest.TestCase):
         counts=[int(((values+0.5)/256<=p).sum()) for p in [0,.25,.5,.75,1]]
         self.assertEqual(counts[0],0);self.assertEqual(counts[-1],96*68)
         self.assertTrue(all(a<b for a,b in zip(counts,counts[1:])))
-        old=json.loads((ROOT/'work/rituals/shenron_summon/v4-flash2-dissolve/snapshot-before/sequence.json').read_text())
+        old=json.loads((ROOT/'docs/contracts/shenron_summon/v4-sequence.json').read_text())
         for key in ['layout','items','regions','atlas_sha256']:
             self.assertEqual(c[key],old[key])
         for tkey in ['launch_stride_ticks','flight_ticks','last_arrival_tick','gather_hold_ticks','vanish_start_tick','flash_start_ticks','flash_rise_ticks','flash_hold_ticks','flash_fall_ticks','glow_period_ticks']:

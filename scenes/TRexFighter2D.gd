@@ -16,14 +16,52 @@ var _patrol_clip: StringName = &"walk"
 var _patrol_dir := 1
 var _post_turn_clip: StringName = &""
 
+func _ensure_projectile_fx_node() -> void:
+	if get_node_or_null("ProjectileFX") != null:
+		return
+	var body_sprite := get_node_or_null("Sprite") as AnimatedSprite2D
+	if body_sprite == null or body_sprite.sprite_frames == null:
+		return
+	var meta := _get_cached_export_meta()
+	var rc: Dictionary = meta.get("render_contract", {})
+	var proj: Dictionary = rc.get("projectile", {})
+	var proj_clip := StringName(String(proj.get("projectile_clip", "fireball_fx")))
+	if not body_sprite.sprite_frames.has_animation(proj_clip):
+		return
+	var anchor_arr: Variant = meta.get("anchor_px", [176.0, 224.0])
+	var pivot_arr: Variant = rc.get("fx_pivot_px", [176.0, 128.0])
+	var origin_arr: Variant = proj.get("origin_canvas_px", [304.0, 138.0])
+	var anchor := Vector2(float(anchor_arr[0]), float(anchor_arr[1])) if anchor_arr is Array and anchor_arr.size() >= 2 else Vector2(176.0, 224.0)
+	var pivot := Vector2(float(pivot_arr[0]), float(pivot_arr[1])) if pivot_arr is Array and pivot_arr.size() >= 2 else Vector2(176.0, 128.0)
+	var origin := Vector2(float(origin_arr[0]), float(origin_arr[1])) if origin_arr is Array and origin_arr.size() >= 2 else Vector2(304.0, 138.0)
+	var pfx := AnimatedSprite2D.new()
+	pfx.name = "ProjectileFX"
+	pfx.visible = false
+	pfx.position = origin - anchor
+	pfx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	pfx.sprite_frames = body_sprite.sprite_frames
+	pfx.animation = proj_clip
+	pfx.centered = false
+	pfx.offset = -pivot
+	add_child(pfx)
+
+func _ensure_nodes() -> void:
+	_ensure_projectile_fx_node()
+	super._ensure_nodes()
+
 func _physics_process(delta: float) -> void:
 	if _patrol_active:
 		step_patrol(delta)
 
 func play_clip(clip_name: StringName) -> bool:
+	_ensure_nodes()
 	if clip_name != _turn_clip and clip_name != _patrol_clip and clip_name != &"idle" and clip_name != &"walk" and clip_name != &"run":
 		_patrol_active = false
 		_post_turn_clip = &""
+	if projectile_sprite != null and clip_name in [&"power_up", &"hit", &"ko", _turn_clip]:
+		projectile_sprite.visible = false
+		projectile_sprite.stop()
+		projectile_sprite.frame = 0
 	return super.play_clip(clip_name)
 
 func is_turning() -> bool:

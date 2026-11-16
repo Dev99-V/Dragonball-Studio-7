@@ -135,9 +135,12 @@ func run_test() -> void:
 		return
 	var prev_scale := dropped.scale.x
 	var shrunk_monotonically := true
-	for _t2 in range(30):
+	var still_collecting_at_24 := false
+	for _t2 in range(36):
 		arena.call("step_dropped_items", step_dt)
 		var pm: Dictionary = dropped.call("get_item_metrics")
+		if _t2 == 23 and pm["lifecycle_state"] == "collecting":
+			still_collecting_at_24 = true
 		if pm["lifecycle_state"] == "collecting":
 			if bool(pm["sparkle_visible"]):
 				fail("Sheen FX should disable during collect flight")
@@ -147,6 +150,9 @@ func run_test() -> void:
 			prev_scale = dropped.scale.x
 		elif pm["lifecycle_state"] == "collected":
 			break
+	if not still_collecting_at_24:
+		fail("20% slower pickup (30 ticks) must still be collecting at tick 24")
+		return
 	if not shrunk_monotonically or dropped.scale.x >= 0.15:
 		fail("Collecting ball must monotonically shrink toward collector, final scale=%.3f" % dropped.scale.x)
 		return

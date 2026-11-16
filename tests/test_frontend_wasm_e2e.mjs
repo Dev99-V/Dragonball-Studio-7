@@ -57,7 +57,7 @@ const apiJsonStr = execFileSync(
   'python3',
   [
     '-c',
-    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'rituals': server.load_rituals(), 'items': server.load_items(), 'parity': server.verify_engine_localhost_parity()}))`,
+    `import json, sys; sys.path.insert(0, 'tools/preview'); import server; b=server.discover_bundles(); print(json.dumps({'bundles': b, 'roster': server.load_finalized_roster(b), 'setups': server.build_setups(b), 'arena_stage': server.load_arena_stage(), 'terrain': server.load_map_terrain(), 'device_profiles': server.load_device_profiles(), 'godot_web_ready': (server.REPO_ROOT / 'build' / 'web' / 'index.html').is_file(), 'android_apk': server.get_android_apk_info(), 'rituals': server.load_rituals(), 'items': server.load_items(), 'parity': server.verify_engine_localhost_parity()}))`,
   ],
   { cwd: REPO_ROOT, encoding: 'utf8' }
 );
@@ -125,6 +125,7 @@ class MockElement {
     this.height = 540;
     this._ctx2d = makeMockCtx2d(this);
     this._listeners = {};
+    this._attrs = {};
     this.classList = {
       _set: new Set(),
       add: (...c) => c.forEach(x => this.classList._set.add(x)),
@@ -145,6 +146,8 @@ class MockElement {
     return null;
   }
   getBoundingClientRect() { return { left: 0, top: 0, width: this.width, height: this.height }; }
+  setAttribute(k, v) { this._attrs[String(k)] = String(v); }
+  getAttribute(k) { return this._attrs[String(k)] ?? null; }
   addEventListener(ev, fn) { (this._listeners[ev] ||= []).push(fn); }
   click() { if (this.onclick) this.onclick({ preventDefault() {}, target: this }); }
 }
@@ -175,8 +178,10 @@ const sandbox = {
   Set,
   Promise,
   Error,
+  URLSearchParams,
   performance: { now: () => 1000 },
   setTimeout: () => 1,
+  clearTimeout: () => {},
   requestAnimationFrame: () => 1,
   navigator: { clipboard: { writeText: async () => {} } },
   Image: class {
@@ -204,7 +209,7 @@ const sandbox = {
   },
 };
 
-const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { sampleShenronSummon, sampleShenronDismiss, applyShenronPixelDissolve, startShenronSummon, startShenronDismiss, chooseShenronWish, renderShenronWishOverlay, dismissShenronSummon, initApp, state, arena, selectCharacter, setArenaCharacterScale, updateArenaFrameLayout, stepInspectorAnimation, renderInspector, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, respawnArenaCharacter, isSidewaysLocked, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, computeBodyRect, computeEdgeDistance, resetEnemyAiZone, evaluateUtilityAI, selectEnemyCharacter, setUtilityAiEnabled, stepEnemyAiFrame, getPlayerRosterEntry, isAiOnlyMonsterRole, renderArenaControls, getBodyDims, offCtx, sampleItemSparkleFrame, renderDragonBallItemInspector, triggerArenaMonsterDrop, pickupArenaItems, stepArenaItemDrops, syncStaticArenaSampleDrops };';
+const instrumentedJs = jsCode + '\n;globalThis.__TEST__ = { sampleShenronSummon, sampleShenronDismiss, applyShenronPixelDissolve, startShenronSummon, startShenronDismiss, chooseShenronWish, renderShenronWishOverlay, dismissShenronSummon, initApp, loadImage, scheduleUiAssetRedraw, buildFilmstrip, renderRosterList, state, arena, selectCharacter, setArenaCharacterScale, updateArenaFrameLayout, stepInspectorAnimation, renderInspector, stepAndRenderArena, triggerArenaAction, toggleArenaPatrol, respawnArenaCharacter, isSidewaysLocked, getCanvasSize, getLayerFramesForStep, selectionPixelRuns, updateAgentSpecText, computeBodyRect, computeEdgeDistance, resetEnemyAiZone, evaluateUtilityAI, selectEnemyCharacter, setUtilityAiEnabled, stepEnemyAiFrame, getPlayerRosterEntry, isAiOnlyMonsterRole, renderArenaControls, getBodyDims, offCtx, sampleItemSparkleFrame, renderDragonBallItemInspector, triggerArenaMonsterDrop, pickupArenaItems, stepArenaItemDrops, syncStaticArenaSampleDrops, computeDeviceLayoutMetrics, applyAndroidApkInfo, getSelectedDeviceProfile, getNearestSupportYBelow, spawnGroundDust };';
 vm.createContext(sandbox);
 vm.runInContext(instrumentedJs, sandbox);
 
@@ -546,12 +551,12 @@ if(chiloCharacter){
   for(let tick=0;tick<44;tick++)T.stepAndRenderArena(1000/60);
   assert.equal(T.arena.dummyHp,1750,'Single 250-damage fireball hit on projectile arrival, not cast start');
   T.selectCharacter(chiloCharacter.character_id);
-  Object.assign(T.arena,{x:1779,flip:false,keys:{KeyD:true},hitstop:0});
+  Object.assign(T.arena,{x:T.arena.maxX-1,flip:false,keys:{KeyD:true},hitstop:0});
   T.stepAndRenderArena(1000/60);assert.equal(T.arena.clip,'turn');assert.equal(T.arena.flip,false);
   const rightSeen=new Set([T.arena.step]);
   for(let t=0;t<38;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')rightSeen.add(T.arena.step)}
   assert.equal(rightSeen.size,b.animations.turn.frames.length);assert.equal(T.arena.flip,true);assert.equal(T.arena.chiloPatrolDir,-1);
-  Object.assign(T.arena,{x:141,keys:{}});T.stepAndRenderArena(1000/60);assert.equal(T.arena.clip,'turn');assert.equal(T.arena.flip,true);
+  Object.assign(T.arena,{x:T.arena.minX+1,keys:{}});T.stepAndRenderArena(1000/60);assert.equal(T.arena.clip,'turn');assert.equal(T.arena.flip,true);
   const leftSeen=new Set([T.arena.step]);
   for(let t=0;t<38;t++){T.stepAndRenderArena(1000/60);if(T.arena.clip==='turn')leftSeen.add(T.arena.step)}
   assert.equal(leftSeen.size,b.animations.turn.frames.length);assert.equal(T.arena.flip,false);assert.equal(T.arena.chiloPatrolDir,1);
@@ -565,7 +570,7 @@ for (const turnCharId of ['bat_chiroptera', 't_rex']) {
   T.selectCharacter(ch.character_id);
   const b = T.state.bundlesById[ch.modes.combined_1layer.bundle_id];
   const turnTicks = (ch.render_contract?.turning?.duration_ticks ?? 21) + 4;
-  Object.assign(T.arena,{x:1779,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,patrolEnabled:false,patrolRun:false});
+  Object.assign(T.arena,{x:T.arena.maxX-1,flip:false,keys:{},hitstop:0,actionClip:null,turnTargetFlip:null,patrolEnabled:false,patrolRun:false});
   T.toggleArenaPatrol(false);
   assert.equal(T.arena.patrolEnabled,true, `${turnCharId}: patrol toggle`);
   T.stepAndRenderArena(1000/60);
@@ -579,7 +584,7 @@ for (const turnCharId of ['bat_chiroptera', 't_rex']) {
   assert.equal(seenR2L.size,b.animations.turn.frames.length, `${turnCharId} visits all R->L turn poses`);
   assert.equal(T.arena.flip,true);
   assert.equal(T.arena.clip,'walk', `${turnCharId} resumes walk immediately after R->L turn`);
-  Object.assign(T.arena,{x:141,patrolDir:-1});
+  Object.assign(T.arena,{x:T.arena.minX+1,patrolDir:-1});
   T.stepAndRenderArena(1000/60);
   assert.equal(T.arena.clip,'turn', `${turnCharId} left endpoint triggers L->R turn`);
   assert.equal(T.arena.flip,true, `${turnCharId} holds -X facing during L->R turn`);
@@ -589,7 +594,7 @@ for (const turnCharId of ['bat_chiroptera', 't_rex']) {
   assert.equal(T.arena.flip,false);
   assert.equal(T.arena.clip,'walk');
   // Test run->turn->run endpoint patrol cleanly
-  Object.assign(T.arena,{x:1779,flip:false,patrolEnabled:false,patrolRun:false,actionClip:null,turnTargetFlip:null});
+  Object.assign(T.arena,{x:T.arena.maxX-1,flip:false,patrolEnabled:false,patrolRun:false,actionClip:null,turnTargetFlip:null});
   T.toggleArenaPatrol(true);
   assert.equal(T.arena.patrolRun,true);
   T.stepAndRenderArena(1000/60);
@@ -636,7 +641,7 @@ if (crabChar) {
   T.arena.keys = {};
 
   // Bidirectional flip patrol reverses direction AND facing at bounds without turn clip
-  Object.assign(T.arena, { x: 1779, patrolEnabled: false, flip: false });
+  Object.assign(T.arena, { x: T.arena.maxX - 1, patrolEnabled: false, flip: false });
   T.toggleArenaPatrol(false);
   assert.equal(T.arena.patrolEnabled, true);
   assert.equal(T.arena.patrolDir, 1);
@@ -645,7 +650,7 @@ if (crabChar) {
   assert.equal(T.arena.flip, true, 'Right bound patrol reversal flips King Crab left');
   assert.equal(T.arena.clip, 'walk');
 
-  Object.assign(T.arena, { x: 141 });
+  Object.assign(T.arena, { x: T.arena.minX + 1 });
   T.stepAndRenderArena(1000 / 60);
   assert.equal(T.arena.patrolDir, 1, 'Left bound reverses patrol direction');
   assert.equal(T.arena.flip, false, 'Left bound patrol reversal flips King Crab right');
@@ -1211,17 +1216,20 @@ if (apiPayload.roster.characters.length > 0) {
   assert.equal(dObj.phase, 'resting');
   assert.ok(Math.abs(dObj.x - landX) >= 8.0 && Math.abs(dObj.x - landX) <= 13.5, 'Roll must move ~10px');
 
-  // Pickup shrinks monotonically until reaching player and recording in bag
+  // Pickup shrinks monotonically (20% slower = 30 ticks @ 60Hz) until reaching player and recording in bag
   const started = T.pickupArenaItems(0);
   assert.equal(started, 1);
   let prevScale = dObj.scale;
-  for (let tick = 0; tick < 30; tick++) {
+  let stillCollectingAt24 = false;
+  for (let tick = 0; tick < 36; tick++) {
     T.stepArenaItemDrops(1000 / 60);
+    if (tick === 23 && dObj.phase === 'collecting') stillCollectingAt24 = true;
     if (dObj.phase === 'collecting') {
       assert.ok(dObj.scale <= prevScale + 1e-6);
       prevScale = dObj.scale;
     }
   }
+  assert.ok(stillCollectingAt24, '20% slower pickup (30 ticks) must still be collecting at tick 24');
   assert.equal(dObj.phase, 'collected');
   assert.ok(T.arena.itemDrop.collectedBalls.includes(3));
 
@@ -1229,6 +1237,124 @@ if (apiPayload.roster.characters.length > 0) {
   tabArenaBtn.click();
   T.stepAndRenderArena(16.67);
   tabHumanBtn.click();
+}
+
+// Verify D1/D2/D4 mobile expand profiles, <1080p Fractional guard, and Godot Web toggle
+{
+  tabArenaBtn.click();
+  assert.ok(Array.isArray(T.arena.deviceProfiles) && T.arena.deviceProfiles.length >= 4, 'Device profiles must load in preview');
+
+  getEl('selDeviceProfile').onchange({ target: { value: 'redmi_k70e' } });
+  T.stepAndRenderArena(16.67);
+  assert.equal(getEl('arenaCanvas').width, 2401, 'Redmi K70E (2712x1220) fractional expand must expand width to 2401px');
+  assert.equal(getEl('arenaCanvas').height, 1080);
+  assert.equal(getEl('arenaPhoneFrame').style.aspectRatio, '2712 / 1220');
+  assert.equal(T.arena.showGridOverlay, false, 'Boundary/grid overlay must default off');
+  assert.ok(T.arena.minX < 0 && T.arena.maxX > 1920, `K70E walkable bounds must expand across visible width: [${T.arena.minX}, ${T.arena.maxX}]`);
+
+  getEl('chkPixelPerfect').onchange({ target: { checked: true } });
+  const k70eInt = T.computeDeviceLayoutMetrics(T.getSelectedDeviceProfile(), true);
+  assert.equal(k70eInt.integerApplied, true, 'Pixel Perfect integer must activate on 1220p (>=1080)');
+  assert.equal(getEl('arenaCanvas').width, 2712);
+
+  getEl('selDeviceProfile').onchange({ target: { value: 'android_720p_20_9' } });
+  const p720 = T.computeDeviceLayoutMetrics(T.getSelectedDeviceProfile(), true);
+  assert.equal(p720.below1080p, true);
+  assert.equal(p720.integerApplied, false, '<1080p device must lock Fractional to avoid Godot integer upscale clipping');
+  assert.equal(getEl('arenaCanvas').width, 2400);
+  assert.ok(getEl('arenaStageBadge').textContent.includes('Fractional'), '720p badge must show Fractional guard');
+
+  // Toggle real Godot Web runtime iframe when build/web/index.html exists
+  if (apiPayload.godot_web_ready) {
+    getEl('chkGodotWebRuntime').onchange({ target: { checked: true } });
+    assert.equal(getEl('godotWebFrame').style.display, 'block');
+    assert.ok(getEl('godotWebFrame').src.endsWith('/godot-web/index.html'));
+    getEl('chkGodotWebRuntime').onchange({ target: { checked: false } });
+    assert.equal(getEl('godotWebFrame').style.display, 'none');
+  }
+
+  // Verify pinned-top arena stage & unpin toggle
+  assert.equal(T.arena.pinArenaStage, true, 'Arena stage must pin at top by default');
+  assert.ok(html.indexOf('id="arenaPinnedStage"') < html.indexOf('id="arenaSettingsCard"'), 'Pinned arena stage must appear above settings panels');
+  getEl('chkPinArenaStage').onchange({ target: { checked: false } });
+  assert.equal(T.arena.pinArenaStage, false);
+  assert.equal(getEl('arenaPinnedStage').classList._set.has('unpinned'), true);
+  getEl('chkPinArenaStage').onchange({ target: { checked: true } });
+  assert.equal(T.arena.pinArenaStage, true);
+  assert.equal(getEl('arenaPinnedStage').classList._set.has('unpinned'), false);
+
+  // Verify Rocky Plateau Original JPG + 1 Horizontal Floor Ledge (0 floating platforms), Contact Shadow (0 ellipses) & Dust FX
+  assert.ok(T.state.terrain && T.arena.terrainPlatforms.length === 0, 'Rocky plateau terrain must have 0 floating platforms (1 horizontal floor ledge only)');
+  assert.equal(T.state.terrain.backdrop?.mode, 'original_jpg', 'Rocky plateau must preserve original JPG backdrop');
+  assert.equal(T.getNearestSupportYBelow(512, 840), 840);
+  T.selectCharacter('t_rex');
+  T.arena.x = 512;
+  T.arena.y = 840;
+  T.arena.vy = T.arena.jumpVelocityPxPerMs;
+  T.spawnGroundDust(512, 840, 0.9);
+  assert.ok(T.arena.dustFx.length >= 1, 'Takeoff must spawn ground dust FX');
+  let peakY = 840;
+  let landedGround = false;
+  for (let tick = 0; tick < 80; tick++) {
+    T.stepAndRenderArena(16.67);
+    peakY = Math.min(peakY, T.arena.y);
+    if (tick > 5 && Math.abs(T.arena.y - 840) < 0.5 && T.arena.vy === 0) {
+      landedGround = true;
+      break;
+    }
+  }
+  assert.ok(peakY < 760 && landedGround, `Player must jump above ground and land back on horizontal ground_y=840, peak=${peakY} y=${T.arena.y}`);
+  assert.equal(getEl('arenaCanvas')._ctx2d._ellipseCalls, 0, 'Pixel contact shadows must never call ctx.ellipse()');
+
+  // Restore default 16:9 profile and fractional mode
+  getEl('chkPixelPerfect').onchange({ target: { checked: false } });
+  getEl('selDeviceProfile').onchange({ target: { value: 'fhd_16_9' } });
+  assert.equal(getEl('arenaCanvas').width, 1920);
+  assert.equal(getEl('arenaCanvas').height, 1080);
+  tabHumanBtn.click();
+}
+
+// Verify ?tab=arena query parameter auto-switches to Tab 2 Arena immediately during initApp()
+{
+  sandbox.location = { search: '?tab=arena' };
+  await T.initApp();
+  assert.equal(T.state.activeTab, 'tab-arena', 'URL ?tab=arena must auto-activate Tab 2 on boot');
+  tabHumanBtn.click();
+}
+
+// Verify progressive asset loading redraws roster avatars, filmstrip, and inspector without staying blank
+{
+  const chiloAtlas = '/assets/chilopoda/godot_bundle/godot/chilopoda-atlas-00.png';
+  delete T.state.images[chiloAtlas];
+  delete T.state.imagePromises[chiloAtlas];
+  T.renderRosterList();
+  T.buildFilmstrip({ frames: [{ duration_ms: 83.33 }], loop: true });
+  await T.loadImage(chiloAtlas);
+  T.scheduleUiAssetRedraw(true);
+  assert.ok(T.state.images[chiloAtlas], 'loadImage must recover unloaded asset and trigger UI refresh');
+  assert.equal(getEl('filmstrip').children.length > 0, true, 'Filmstrip must repopulate on asset resolve');
+}
+
+// Verify Android APK download controls in header & Tab 2 Arena
+{
+  assert.ok(html.includes('id="btnDownloadAndroidApkHeader"'), 'Header must expose Android APK download button');
+  assert.ok(html.includes('id="btnDownloadAndroidApkArena"'), 'Arena toolbar must expose Android APK download button');
+  T.applyAndroidApkInfo({
+    available: true,
+    filename: 'dr7-studio-debug.apk',
+    download_url: '/api/download-android-debug.apk',
+    size_mb: 64.8,
+    sha256: 'abcdef1234567890',
+    built_at_utc: '2026-11-16T07:52:09Z',
+  });
+  assert.equal(getEl('btnDownloadAndroidApkHeader').href, '/api/download-android-debug.apk');
+  assert.ok(getEl('btnDownloadAndroidApkHeader').textContent.includes('64.8 MB'));
+  assert.equal(getEl('btnDownloadAndroidApkArena').getAttribute('aria-disabled'), 'false');
+  assert.ok(getEl('btnDownloadAndroidApkArena').textContent.includes('64.8 MB'));
+
+  T.applyAndroidApkInfo({ available: false });
+  assert.equal(getEl('btnDownloadAndroidApkHeader').getAttribute('aria-disabled'), 'true');
+  assert.equal(getEl('btnDownloadAndroidApkArena').getAttribute('aria-disabled'), 'true');
 }
 
 console.log('[OK] Frontend E2E + Rust WASM + 2-Tab Dynamic Canvas (Empty Roster + Multi-Character) PASSED 100%!');

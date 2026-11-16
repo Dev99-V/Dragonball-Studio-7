@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-16T02:16:27Z",
+  "updated_at": "2026-11-16T09:42:12Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.14.0",
+    "version": "0.15.0",
     "version_history": [
       {
         "version": "0.1.0",
@@ -104,24 +104,27 @@
         "version": "0.14.0",
         "date": "2026-11-16T02:10:11+00:00",
         "summary": "Owner chốt toàn bộ phiên v0.14.0: Drum (PIPE-019), Shenron Summon v5-dismiss-flash-wish (PIPE-020), Hệ thống Item Game assets/items/ & Bộ 7 Ngọc Rồng 1x 32x32 (ITEM-001: quét sáng chéo toàn thân 60Hz, ẩn FX trong balo, nút ẩn/hiện, rơi +10px/lăn 10px & nhặt thu nhỏ bay vào người), và Điều 7.5 Hiến pháp AGENTS.md."
+      },
+      {
+        "version": "0.15.0",
+        "date": "2026-11-16T09:42:12Z",
+        "summary": "Owner chốt toàn bộ phiên v0.15.0: kiến trúc ADR-0001 (D1-D10), dọn /work & ảnh nháp root, Godot 4.7.2 Compatibility + expand + fractional/Pixel Perfect + TouchHUD + Rocky Plateau TileMapLayer, nút tải APK trên localhost:8080, sửa T-rex fireball_fx & Drum Player bool(null)/teleport, mở rộng vùng đi lại fit full màn K70E theo mép thân, bỏ đường chỉ vàng/xanh, và giảm 20% tốc độ nhặt vật phẩm (30 ticks)."
       }
     ],
     "genre": "2D Dragon Ball Real-Time Mass Action / RPG",
-    "performance_target": "60 FPS mượt tuyệt đối (<= 16.67 ms/frame) khi > 2,000 user giao tranh thời gian thực",
+    "performance_target": "60 FPS mượt tuyệt đối (<= 16.67 ms/frame) ở Pha 1 (<=50 thực thể/khu, 7 map lớn x 5 map nhỏ x 20 khu); scale Pha 2 sang Rust Core Server khi vượt 35,000 thực thể hoặc p99 > 25ms @ 20Hz",
     "target_platforms": [
       "Android Mobile (.apk / .aab)",
-      "iOS Mobile (.ipa)"
+      "iOS Mobile (.ipa)",
+      "Web Compatibility Sandbox (localhost:8080)"
     ],
-    "backend": "Supabase (Auth, PostgreSQL, Inventory, Storage) + Spatial-Grid AoI Binary Delta Sync",
+    "backend": "Pha 1 (0d): Supabase (JWT Auth + ghi Postgres theo lo) + Cloudflare Free Proxy/WAF (chan IP VN/JP) + Godot Headless WebSocket Server (wss:// 443); Pha 2: Rust Core Server (engines/rust_combat_sim) tren VPS (ADR-0001)",
     "engine_evaluation": {
-      "status": "evaluating_candidates_not_finalized",
-      "candidates": [
-        "Godot 4 + GDScript: baseline ứng viên, chưa chốt engine cuối cùng",
-        "Godot 4 + Rust Core qua GDExtension: ứng viên cho combat, chưa có tích hợp hoàn chỉnh được kiểm chứng",
-        "Godot 4 + C++ qua GDExtension hoặc C#: phương án so sánh, chưa triển khai"
-      ],
-      "rule": "Đồng bộ tuyệt đối 1:1 SHA-256 giữa Godot 4, Rust Core và localhost:8080 trên cùng PNG Atlas + .tres + engine-export.json.",
-      "owner_decision": "Owner xác nhận 2026-11-09: Rust và Godot chỉ là định hướng, chưa quyết định cuối cùng. Đánh giá lại bằng test thực tế sau khi hoàn thiện asset, scene và UI. Ghi chép locked/CHÍNH THỨC trước đây không đại diện quyết định hiện hành."
+      "status": "approved_phased_roadmap_adr_0001",
+      "phase_1": "Godot 4.7.2 GDScript (GL Compatibility, Combined 1-Layer) Client + Godot Headless WebSocket Server + Supabase Auth/DB + Cloudflare WAF/Proxy (0d, <=50 thuc the/khu)",
+      "phase_2": "Nang cap Server Combat len Rust Core (engines/rust_combat_sim) tren VPS khi vuot nguong scale (>35,000 thuc the / p99 > 25ms @ 20Hz), giu nguyen Client Godot & NetworkTransport",
+      "rule": "Đồng bộ tuyệt đối 1:1 SHA-256 giữa Godot 4, Rust WASM/Core và localhost:8080 trên cùng PNG Atlas + .tres + engine-export.json + arena-stage.json.",
+      "owner_decision": "Owner chot D1-D10 ngay 2026-11-16 trong docs/adr/0001-architecture-and-scale-roadmap.md va AGENTS.md."
     },
     "supported_agents": [
       "Antigravity CLI (agy)",
@@ -144,28 +147,17 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "RELEASE-V0-14-0",
-    "status": "completed",
-    "summary": "Finalized v0.14.0 release: Drum (PIPE-019), Shenron Summon v5 (PIPE-020), Dragon Ball 1x items & drop/pickup loop (ITEM-001), AGENTS.md Section 7.5 item completeness gate, and localhost/WASM parity.",
-    "ritual_id": "shenron_summon",
-    "character_id": "shenron",
-    "sequence_manifest": "assets/rituals/shenron_summon/sequence.json",
-    "sequence_sha256": "03699e476591a958dbbac54bc1fc9f7fabf1457cb5c08f8ac3e416e8181164ab",
-    "ritual_atlas_sha256": "c82ec5e8460a2bf01ef515793e87cfdf2be96f448eeab1b914d9e9fec7215aba",
-    "dissolve_mask_sha256": "fbede0b918a87743dac48c8e97abc3a6a32fbd4af30fcf2bdf33e052d790800f",
+    "active_task_id": "RELEASE-V0.15.0-FINAL",
+    "status": "owner_approved",
+    "summary": "Owner approved v0.15.0 release (ADR-0001, Compatibility/expand, K70E APK + full-display body-edge bounds, T-rex fireball_fx, Drum Player sync, clean terrain without yellow/blue lines, 20% slower item pickup) and push to main",
     "next_steps_summary": [
-      "Owner mở http://localhost:8080, chuyển sang Tab 2 (Sân Tập Gameplay Thực Chiến) -> bấm ✨ Gọi Shenron -> chọn 1 trong 3 điều ước để xem thông báo xác nhận, đóng popup và tự thu hồi 2 chớp biến mất sạch (hoặc bấm nút Thu hồi Shenron) rồi xác nhận nghiệm thu v5."
+      "Phiên v0.15.0 đã được Owner nghiệm thu trên Redmi K70E, chốt và push lên main."
     ],
     "review_artifacts": [
-      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-wish-menu-open.png",
-      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-2.png",
-      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-14.png",
-      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-20.png",
-      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-25.png",
-      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-dismiss-tick-28.png",
-      "work/rituals/shenron_summon/v5-dismiss-flash-wish/evidence/v5-after-dismiss-live.png"
+      "docs/adr/0001-architecture-and-scale-roadmap.md",
+      "docs/android-ramus-handoff-todo.md"
     ],
-    "preview_url": "http://localhost:8080"
+    "preview_url": "http://localhost:8080/godot-web/index.html"
   },
   "open_issues": [],
   "resolved_issues": [
@@ -189,6 +181,11 @@
       "resolved_at": "2026-11-14T06:57:17Z",
       "character_id": "t_rex",
       "resolution": "Owner chose --godot-fps auto re-export for T-rex turn-v1: aligns godot.relative_durations 1:1 with authored 60Hz ticks (attack_heavy frame 5 fixed 0.96 -> 1.00 tick so 12/12 poses play cleanly at 60Hz), preserving all 73 original frames, clip order, duration_ms, events, and keys."
+    },
+    {
+      "id": "ISS-ANDROID-SDK-20261116",
+      "resolved_at": "2026-11-16T09:42:12Z",
+      "resolution": "Owner verified & finalized v0.15.0 on Redmi K70E APK: packaged tests/SkillAnimator2D.gd, added T-rex ProjectileFX fireball_fx in TRexFighter2D.gd, fixed Drum Player _turn_pending bool(null) & teleport parity, expanded walkable bounds to visible viewport width clamped by character half-body width, removed yellow/blue map limit lines, slowed Dragon Ball pickup speed by 20% (24->30 ticks), and synchronized APK <-> Godot Web."
     }
   ],
   "task_history": [
@@ -848,6 +845,60 @@
       "timestamp": "2026-11-16T02:16:27Z",
       "status": "completed",
       "summary": "Finalized v0.14.0 release: Drum (PIPE-019), Shenron Summon v5 (PIPE-020), Dragon Ball 1x items & drop/pickup loop (ITEM-001), AGENTS.md Section 7.5 item completeness gate, and localhost/WASM parity."
+    },
+    {
+      "id": "ARCH-ROADMAP-V0-15-0",
+      "timestamp": "2026-11-16T04:19:27Z",
+      "status": "completed",
+      "summary": "Nang cap ADR-0001 v0.15.0: don 754MB work/, Godot Compatibility + expand + fractional/Pixel Perfect (<1080p guard), WebSocketTransport, Web export & test toan bo"
+    },
+    {
+      "id": "MAP-ROCKY-PLATEAU-TILES",
+      "timestamp": "2026-11-16T05:00:29Z",
+      "status": "completed",
+      "summary": "Bo sung Dieu 7.6 AGENTS.md; dung 1:1 map Rocky Plateau Pixel Art (3 lop Parallax + TileSet 32x32 + 3 One-Way Platforms + Dynamic Pixel Contact Shadow + Ground Dust FX) va ghim man hinh San Tap len dau trang"
+    },
+    {
+      "id": "PREVIEW-SERVER-UNBLOCK",
+      "timestamp": "2026-11-16T05:37:35Z",
+      "status": "completed",
+      "summary": "Sua loi treo http://localhost:8080/?tab=arena: tang backlog=128, timeout 15s + TCP_NODELAY, peek TLS \\x16 dong ngay <1ms, /favicon.ico 204, gzip API/HTML/WASM, ETag/304, va tai uu tien bat dong bo theo tab + tu mo ?tab=arena"
+    },
+    {
+      "id": "MAP-ORIGINAL-TILE-ASSET-FIX",
+      "timestamp": "2026-11-16T06:11:06Z",
+      "status": "completed",
+      "summary": "Sua loi mat ket noi asset UI (image copy.png) bang HTTP/1.1 keep-alive, timeout 45s + retry 3 lan + tu ve lai roster/filmstrip ngay khi anh ve; xoa 3 buc noi tren rocky_plateau, giu nguyen ban JPG goc + canh noi 20:9 seamless va boc tach ground_tileset.png 1 buc ngang chuan mau goc; cap nhat Dieu 7.6 AGENTS.md & [LRN-075]"
+    },
+    {
+      "id": "GODOT-WEB-FACING-SKILL-PIXEL",
+      "timestamp": "2026-11-16T06:53:12Z",
+      "status": "pending_owner_human_test",
+      "summary": "Godot Web: giữ skill khi di chuyển, queue skill lúc turn hai chiều, vô hiệu jump cho quái thiếu clip, bóng alpha 60/85 đồng bộ Godot/Canvas, canvas pixelated, HUD FPS; test exit 0 và web-export exit 0; chờ Owner Human Test FPS/motion"
+    },
+    {
+      "id": "GODOT-DEVICE-COVER-ACTION",
+      "timestamp": "2026-11-16T08:30:41Z",
+      "status": "pending_owner_k70e_human_test",
+      "summary": "Bổ sung nút & endpoint /api/download-android-debug.apk trên localhost:8080 (kèm ETag, chunked streaming & metadata trong /api/bundles) để Owner tải nhanh dr7-studio-debug.apk cài test thực tế trên Redmi K70E."
+    },
+    {
+      "id": "GODOT-K70E-TREX-DRUM-SYNC",
+      "timestamp": "2026-11-16T09:09:17Z",
+      "status": "pending_owner_k70e_human_test",
+      "summary": "Fixed T-rex missing ProjectileFX fireball_fx in TRexFighter2D.gd, fixed Drum bool(null) _turn_pending crash and Player teleport parity in ArenaSandbox.gd + DrumFighter2D.gd, synchronized APK & Godot Web builds"
+    },
+    {
+      "id": "GODOT-K70E-FULLSCREEN-WALK-PICKUP20",
+      "timestamp": "2026-11-16T09:34:09Z",
+      "status": "pending_owner_k70e_human_test",
+      "summary": "Expanded walkable bounds dynamically to full visible display width clamped by character half-body width, removed yellow/blue map limit lines, slowed item pickup speed by 20% (24->30 ticks), synced APK & Godot Web"
+    },
+    {
+      "id": "RELEASE-V0.15.0-FINAL",
+      "timestamp": "2026-11-16T09:42:12Z",
+      "status": "owner_approved",
+      "summary": "Owner approved v0.15.0 release (ADR-0001, Compatibility/expand, K70E APK + full-display body-edge bounds, T-rex fireball_fx, Drum Player sync, clean terrain without yellow/blue lines, 20% slower item pickup) and push to main"
     }
   ],
   "quick_resume_commands": [
@@ -856,37 +907,29 @@
     "./loop.sh test"
   ],
   "session_resume": {
-    "next_action": "Owner Human Test Shenron Summon v5 tại http://localhost:8080 (Tab 2 -> bấm ✨ Gọi Shenron -> chọn điều ước -> kiểm tra tự thu hồi 2 chớp biến mất sạch và nút Thu hồi Shenron thủ công).",
-    "asset_status": "10/10 nhân vật (gồm Drum vừa duyệt PIPE-019) hoàn tất; nghi thức shenron_summon đang ở v5 (v5-dismiss-flash-wish, sequence SHA-256 03699e476591a958dbbac54bc1fc9f7fabf1457cb5c08f8ac3e416e8181164ab) chờ Owner Human Test.",
-    "approval_file": "assets/shenron/owner_approval.json",
+    "next_action": "Owner kiểm tra trực tiếp http://localhost:8080/?tab=arena (bao gồm switch profile Redmi K70E / 720p, Pixel Perfect toggle, Godot Web thật & 10/10 nhân vật sau khi xóa /work) và xác nhận push lên main.",
+    "asset_status": "10/10 nhân vật + Bộ 7 Ngọc Rồng 1x (32x32) + Shenron Summon v5 giữ nguyên 100% SHA-256; đã dọn sạch 754MB work/ & .forge/ về assets/*/source/ và docs/contracts/*.",
+    "architecture_adr": "docs/adr/0001-architecture-and-scale-roadmap.md",
+    "approval_file": "assets/drum/owner_approval.json",
     "ritual_approval_file": "assets/rituals/shenron_summon/owner_approval.json",
-    "cleanup_report": "docs/releases/v0.13.1-shenron-pixel-dissolve-finalization.json",
-    "verification": "work/characters/pteranodon/turn-v1/quota-blocker.json",
+    "cleanup_report": "docs/releases/v0.14.0-release-finalization.json",
+    "verification": "tests/test_compatibility_shaders.gd",
     "git_checkpoint": {
       "branch": "main",
       "remote": "origin",
       "source_code_commit": "19da17b62aad8262229e9447f7a54113bb4e3ff5",
-      "release_version": "0.11.1",
+      "release_version": "0.14.0",
       "ci_status": "success",
       "ci_run_url": "https://github.com/pquangvinh1999-arch/DR7-Studio/actions/runs/43396006048",
-      "verified_at": "2026-11-13T08:49:58.701962+00:00",
-      "note": "Source release commit published and CI verified. Local working tree now includes Owner-approved Bat turn-v1 (v0.11.2)."
+      "verified_at": "2026-11-16T02:16:27Z",
+      "note": "Local working tree upgraded to v0.15.0 (ADR-0001 Phase 1 + purged work/ + Compatibility Web export)."
     },
-    "active_character_concept": "work/characters/bat_chiroptera/turn-v1/source/",
-    "review_evidence": "work/characters/t_rex/turn-v1/review/keyframe-review.json",
+    "active_character_concept": "assets/drum/source/",
+    "review_evidence": "docs/contracts/",
     "latest_delivery": "assets/roster.json",
     "preview_url": "http://localhost:8080/?tab=arena",
-    "local_version": "0.13.1",
-    "handoff_guide": "docs/shenron-idle-todo.md",
-    "previous_git_checkpoint": {
-      "branch": "main",
-      "remote": "origin",
-      "source_code_commit": "bafbf1bcdf03f68dfb68e529914335b15168c9fd",
-      "ci_status": "success",
-      "ci_run_url": "https://github.com/pquangvinh1999-arch/DR7-Studio/actions/runs/43369485195",
-      "verified_at": "2026-11-13T05:05:35.819071+00:00",
-      "note": "Source release commit verified on origin/main and CI success. A following documentation commit records this handoff; no asset/timing changes."
-    }
+    "local_version": "0.15.0",
+    "handoff_guide": "docs/adr/0001-architecture-and-scale-roadmap.md"
   },
   "approved_workflows": [
     {
@@ -896,9 +939,9 @@
       "approved_at": "2026-11-12T07:38:36.605057+00:00",
       "approval_file": "docs/releases/t_rex-v0.6.0-approval.json",
       "atlas_sha256": "d78b3b750c51793de4eafe3532c2350fff52bce9d54ecd40b879fc6e44c1d1b7",
-      "approved_atlas_path": "work/characters/t_rex/turn-v1/snapshot-before/t_rex-atlas-00.png",
       "revision": "walk-style-v4 / v0.6.0",
-      "superseded_by": "PIPE-010"
+      "superseded_by": "PIPE-010",
+      "archived_atlas_purged": true
     },
     {
       "id": "PIPE-002",
@@ -915,8 +958,8 @@
       "approved_at": "2026-11-12T07:38:36.605057+00:00",
       "approval_file": "docs/releases/spinosaurus-v0.6.0-approval.json",
       "atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
-      "approved_atlas_path": "work/characters/spinosaurus/step2-visual-fix/snapshot-before/spinosaurus-atlas-00.png",
-      "superseded_by": "PIPE-011"
+      "superseded_by": "PIPE-011",
+      "archived_atlas_purged": true
     },
     {
       "id": "PIPE-004",
@@ -925,8 +968,8 @@
       "approved_at": "2026-11-12T09:51:08.495780+00:00",
       "approval_file": "docs/releases/tasmanian_king_crab-v0.7.0-approval.json",
       "atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
-      "approved_atlas_path": "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/tasmanian_king_crab-atlas-00.png",
-      "superseded_by": "PIPE-012"
+      "superseded_by": "PIPE-012",
+      "archived_atlas_purged": true
     },
     {
       "id": "PIPE-005",
@@ -935,8 +978,8 @@
       "approved_at": "2026-11-13T02:57:36.459561+00:00",
       "approval_file": "docs/releases/sarcosuchus-v0.8.1-approval.json",
       "atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951",
-      "approved_atlas_path": "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/sarcosuchus-atlas-00.png",
-      "superseded_by": "PIPE-013"
+      "superseded_by": "PIPE-013",
+      "archived_atlas_purged": true
     },
     {
       "id": "PIPE-006",
@@ -945,8 +988,8 @@
       "approved_at": "2026-11-13T04:57:15.924909+00:00",
       "approval_file": "docs/releases/dilophosaurus-v0.9.1-approval.json",
       "atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157",
-      "approved_atlas_path": "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/dilophosaurus-atlas-00.png",
-      "superseded_by": "PIPE-014"
+      "superseded_by": "PIPE-014",
+      "archived_atlas_purged": true
     },
     {
       "id": "PIPE-007",
@@ -955,9 +998,9 @@
       "approved_at": "2026-11-13T06:34:45.229155+00:00",
       "approval_file": "docs/releases/bat_chiroptera-v0.10.0-approval.json",
       "atlas_sha256": "6312e1806453c4879fa683dfbd8f7fec4d180a6b803e0a7d513943c84f01e67a",
-      "approved_atlas_path": "work/characters/bat_chiroptera/turn-v1/snapshot-before/bat_chiroptera-atlas-00.png",
       "revision": "atlas-v1 / v0.10.0",
-      "superseded_by": "PIPE-009"
+      "superseded_by": "PIPE-009",
+      "archived_atlas_purged": true
     },
     {
       "id": "PIPE-008",
@@ -966,8 +1009,8 @@
       "approved_at": "2026-11-13T08:22:39.853349+00:00",
       "approval_file": "docs/releases/chilopoda-v0.11.1-approval.json",
       "atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d",
-      "approved_atlas_path": "work/characters/chilopoda/fireball-v1/snapshot-before/godot_bundle/godot/chilopoda-atlas-00.png",
-      "superseded_by": "PIPE-015"
+      "superseded_by": "PIPE-015",
+      "archived_atlas_purged": true
     },
     {
       "id": "PIPE-009",
@@ -976,9 +1019,9 @@
       "approved_at": "2026-11-13T10:50:00+00:00",
       "approval_file": "docs/releases/bat_chiroptera-v0.11.2-approval.json",
       "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
-      "approved_atlas_path": "work/characters/bat_chiroptera/calibration-v1/snapshot-before/godot_bundle/godot/bat_chiroptera-atlas-00.png",
       "revision": "turn-v1 / v0.11.2",
-      "superseded_by": "PIPE-016"
+      "superseded_by": "PIPE-016",
+      "archived_atlas_purged": true
     },
     {
       "id": "PIPE-010",
@@ -1076,7 +1119,7 @@
       "supersedes": "PIPE-018",
       "atlas_sha256": "e94502bbed02ed036f66aa8a5a3dcbf42f111898b3c83deb90b0a4c0669688b2",
       "ritual_atlas_sha256": "c82ec5e8460a2bf01ef515793e87cfdf2be96f448eeab1b914d9e9fec7215aba",
-      "sequence_sha256": "23b9668e14b720edaf4b17eeb34213c616b4e9a3bf0baa5ba53543f43293526b",
+      "sequence_sha256": "1e5a985bc6a38f3368e47757176b4b183cf35aa89c43fa029e5a046ec765488c",
       "dissolve_mask_sha256": "fbede0b918a87743dac48c8e97abc3a6a32fbd4af30fcf2bdf33e052d790800f",
       "summary": "Shenron Summon v5-dismiss-flash-wish (v0.14.0): hiện cụm ngọc & Shenron ngay tại Flash #2, popup 3 điều ước tự thu hồi 2 chớp sáng đồng bộ 1:1 Godot <-> localhost:8080; dọn ảnh rác root về work/rituals/shenron_summon/v5-dismiss-flash-wish/source/."
     }
@@ -1090,7 +1133,7 @@
       "approval_file": "assets/items/dragon_balls/owner_approval.json",
       "atlas_sha256": "5ee1a97b09624b6c15c7a895ff436cb7aab9ccd10964d5485dcace3a59e40bb2",
       "tres_sha256": "2f3c4dab5e21a3918b4fb4a458f5ff096c9a9c7c5ddd2bad07320bec89c6b5a5",
-      "export_sha256": "bc84d80d3ffedd54cf00ec3cd6423fc2f5da1caa3dd0ac4adb398ab2fadac8a8",
+      "export_sha256": "d15fadbabcebef6a82c5a0bda3bd78e7d3a0d07332b78438e7f0e1206bab6697",
       "summary": "Hệ thống item game assets/items/ & Bộ 7 Ngọc Rồng 1x (32x32, alpha cứng 100%, 0 pockets): quét sáng chéo toàn thân 60Hz, balo ẩn FX giữ icon tĩnh, nút Ẩn/Hiện trên Sân Tập, quái chết rơi nhảy +10px -> rơi đất -> lăn 10px -> quét sáng, nhặt bay thu nhỏ vào người nhặt; bổ sung Điều 7.5 Hiến pháp AGENTS.md."
     }
   ],
@@ -1192,8 +1235,8 @@
     "drum_clips": 11,
     "default_scale": 1.0,
     "arena_url": "http://localhost:8080",
-    "release_version": "0.14.0",
+    "release_version": "0.15.0",
     "owner_approved": true
   },
-  "last_updated_utc": "2026-11-15T17:51:00Z"
+  "last_updated_utc": "2026-11-16T09:42:12Z"
 }

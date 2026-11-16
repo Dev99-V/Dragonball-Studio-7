@@ -12,7 +12,7 @@
   "previous_workflow_id": "PIPE-005",
   "previous_revision": "power-up-v2 / v0.8.1",
   "previous_approval_archive": [
-    "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/owner_approval.json",
+    "docs/releases/sarcosuchus-v0.8.1-approval.json",
     "docs/releases/sarcosuchus-v0.8.1-approval.json"
   ],
   "previous_atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951",
@@ -69,7 +69,7 @@
     "win"
   ],
   "canonical_identity": {
-    "path": "work/characters/sarcosuchus/master-review/master-gameplay-v1.png",
+    "path": "assets/sarcosuchus/source/master.png",
     "sha256": "8adeda8cbb99493640c296748c76cb05df7110cee909e43b84b844a5e8675ddc"
   },
   "render_contract": {
@@ -163,7 +163,7 @@
     }
   },
   "qa_report": "docs/characters/sarcosuchus-power-up-v2-qa.json",
-  "frozen_source": "work/characters/sarcosuchus/approved-final-frames/animation-clips.json",
+  "frozen_source": "assets/sarcosuchus/clips/animation-clips.json",
   "approved_runtime_files_sha256": {
     "assets/sarcosuchus/clips/.gdignore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "assets/sarcosuchus/clips/animation-clips.json": "3f4af7a9cf35b909e259843f95fe8eda1ad266ecf026ab6ccf8ab504345c1ab2",
@@ -358,6 +358,6 @@
     "assets/sarcosuchus/godot_bundle/godot-sprite3d/sarcosuchus.tres": "6bf9f5f0b8990c3934c549a32ec0a11dd415b16bdc3190cdf5ca32a6913c98e0",
     "assets/sarcosuchus/godot_bundle/godot-sprite3d/sarcosuchus.tscn": "16364a332a9c4037f23f598434a44cd75202ae3ba0198752e8e82c90ee641a16",
     "scenes/Sarcosuchus.tscn": "84b86ce65bcaacce9b6f87588e681b5ec5effa0768cb0afaf3400d95732ba444",
-    "scenes/CharacterFighter2D.gd": "664cb94ae7ebe9998e66fe82dd8990106434f3d5e3b8cc6e8ba2a8f810c3d4b7"
+    "scenes/CharacterFighter2D.gd": "f8278e333f37462bfcf3769233ae2a479dc51967cd6f98ca2a7fe9eac9c039c4"
   }
 }

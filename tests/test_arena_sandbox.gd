@@ -25,8 +25,14 @@ func run_test() -> void:
 	if str(ProjectSettings.get_setting("display/window/stretch/mode", "")) != "canvas_items":
 		fail("project.godot stretch/mode must be canvas_items")
 		return
-	if str(ProjectSettings.get_setting("display/window/stretch/aspect", "")) != "keep":
-		fail("project.godot stretch/aspect must be keep")
+	if str(ProjectSettings.get_setting("display/window/stretch/aspect", "")) != "expand":
+		fail("project.godot stretch/aspect must be expand (Owner D1 full-width phones)")
+		return
+	if str(ProjectSettings.get_setting("display/window/stretch/scale_mode", "")) != "fractional":
+		fail("project.godot stretch/scale_mode must default to fractional (Owner D2)")
+		return
+	if str(ProjectSettings.get_setting("rendering/renderer/rendering_method", "")) != "gl_compatibility":
+		fail("project.godot rendering_method must be gl_compatibility (Owner D3)")
 		return
 	if int(ProjectSettings.get_setting("display/window/handheld/orientation", -1)) != 0:
 		fail("project.godot handheld/orientation must be 0 (Landscape)")
@@ -60,7 +66,11 @@ func run_test() -> void:
 	if arena.viewport_width != 1920 or arena.viewport_height != 1080:
 		fail("ArenaSandbox viewport mismatch: %sx%s" % [str(arena.viewport_width), str(arena.viewport_height)])
 		return
-	if arena.ground_y != 840.0 or arena.walkable_min_x != 140.0 or arena.walkable_max_x != 1780.0:
+	if arena.show_grid_overlay:
+		fail("ArenaSandbox show_grid_overlay must default to false (no yellow/blue boundary lines)")
+		return
+	var expected_trex_half_w := 187.0 * 1.75 * 0.5
+	if arena.ground_y != 840.0 or absf(arena.walkable_min_x - expected_trex_half_w) > 1.0 or absf(arena.walkable_max_x - (1920.0 - expected_trex_half_w)) > 1.0:
 		fail("ArenaSandbox gameplay bounds mismatch: ground=%s bounds=[%s,%s]" % [str(arena.ground_y), str(arena.walkable_min_x), str(arena.walkable_max_x)])
 		return
 	if absf(arena.char_scale - 1.75) > 0.001:
@@ -74,6 +84,51 @@ func run_test() -> void:
 	var rendered_bg_size := bg_sprite.texture.get_size() * bg_sprite.scale
 	if absf(rendered_bg_size.x - 1920.0) > 0.5 or absf(rendered_bg_size.y - 1080.0) > 0.5:
 		fail("BackgroundSprite does not fill 1920x1080 exactly: " + str(rendered_bg_size))
+		return
+
+	# Verify DisplayPolicy D1/D2/D4 across Redmi K70E (2712x1220), 720p (<1080p guard), and 16:9 FHD
+	var k70e_frac: Dictionary = arena.apply_device_profile("redmi_k70e")
+	if absf(float(k70e_frac.get("visible_logic_size", [0.0, 0.0])[0]) - 2400.7869) > 1.5:
+		fail("Redmi K70E horizontal expand width mismatch: " + str(k70e_frac))
+		return
+	var k70e_visible_w := float(k70e_frac["visible_logic_size"][0])
+	var bg_w := bg_sprite.texture.get_size().x * bg_sprite.scale.x
+	var view_left := 960.0 - k70e_visible_w * 0.5
+	var view_right := 960.0 + k70e_visible_w * 0.5
+	if absf(arena.walkable_min_x - (view_left + expected_trex_half_w)) > 1.0 or absf(arena.walkable_max_x - (view_right - expected_trex_half_w)) > 1.0:
+		fail("K70E T-rex walkable bounds must fit full visible display width: bounds=[%s,%s] vis=[%s,%s]" % [str(arena.walkable_min_x), str(arena.walkable_max_x), str(view_left), str(view_right)])
+		return
+	if bg_sprite.position.x > view_left + 1.0 or bg_sprite.position.x + bg_w < 960.0 + k70e_visible_w * 0.5 - 1.0:
+		fail("K70E original background fails to cover the full width")
+		return
+	if arena._bg_left_ext != null and arena._bg_left_ext.visible or arena._bg_right_ext != null and arena._bg_right_ext.visible:
+		fail("K70E must show the original image without wing inserts")
+		return
+	if absf(bg_sprite.scale.x * bg_sprite.texture.get_size().x / 1920.0 - bg_sprite.scale.y * bg_sprite.texture.get_size().y / 1080.0) > 0.001:
+		fail("Background cover distorted the original image aspect")
+		return
+	var ipad_layout: Dictionary = arena.apply_device_profile("ipad_10th")
+	var ipad_h := float(ipad_layout["visible_logic_size"][1])
+	var view_top := 540.0 - ipad_h * 0.5
+	if bg_sprite.position.y > view_top + 1.0:
+		fail("iPad has an uncovered strip above the original background")
+		return
+	if arena._ground_tilemap.get_cell_source_id(Vector2i(0, 11)) != 0:
+		fail("iPad ground tiles do not reach the bottom of the expanded view")
+		return
+	var k70e_int: Dictionary = arena.set_pixel_perfect_enabled(true, Vector2i(2712, 1220), Rect2i(96, 0, 2568, 1184))
+	if not bool(k70e_int.get("pixel_perfect_applied", false)) or absf(float(k70e_int.get("effective_scale", 0.0)) - 1.0) > 0.001:
+		fail("Redmi K70E Pixel Perfect toggle must clamp scale to 1.0: " + str(k70e_int))
+		return
+	var hd720_guard: Dictionary = arena.set_pixel_perfect_enabled(true, Vector2i(1600, 720), Rect2i(52, 0, 1516, 696))
+	if bool(hd720_guard.get("pixel_perfect_applied", true)) or not bool(hd720_guard.get("below_1080p_guard", false)):
+		fail("720p (<1080px height) must guard against integer clipping and retain fractional: " + str(hd720_guard))
+		return
+	arena.set_pixel_perfect_enabled(false, Vector2i(1920, 1080))
+
+	var stage_metrics_check: Dictionary = arena.get_stage_metrics()
+	if str(stage_metrics_check.get("stretch_aspect", "")) != "expand" or str(stage_metrics_check.get("renderer", "")) != "gl_compatibility":
+		fail("get_stage_metrics() missing D1/D3 display telemetry: " + str(stage_metrics_check))
 		return
 
 	if arena.roster_characters.size() != 10:
@@ -118,6 +173,53 @@ func run_test() -> void:
 			if spr.offset != expected_off:
 				fail("Offset mismatch for %s: %s != %s" % [cid, str(spr.offset), str(expected_off)])
 				return
+
+	# Idle-only stationary character uses the live 60Hz engine clock without AI movement.
+	if not arena.select_character("bat_chiroptera"):
+		fail("Bat must spawn for reverse-direction action test")
+		return
+	var bat_sprite := arena.player_node.get_node("Sprite") as AnimatedSprite2D
+	if not arena._request_player_action("attack_light") or not arena._is_player_action_playing():
+		fail("Player skill must remain active while the movement loop runs")
+		return
+	bat_sprite.play(&"idle")
+	if not arena.player_node.set_facing_left(true):
+		fail("Bat right-to-left turn failed")
+		return
+	if not arena._request_player_action("power_up") or str(arena.player_node.get_meta(&"_arena_queued_action", "")) != "power_up":
+		fail("Skill pressed during reverse turn must queue")
+		return
+	arena.player_node._on_skill_finished(&"turn")
+	if not arena.player_node.scale.x < 0.0:
+		fail("Bat reverse turn did not commit left facing")
+		return
+	var queued := str(arena.player_node.get_meta(&"_arena_queued_action", ""))
+	arena.player_node.remove_meta(&"_arena_queued_action")
+	if not arena._request_player_action(queued) or str(bat_sprite.animation) != "power_up":
+		fail("Queued skill failed after reverse turn")
+		return
+	if not arena.player_node.set_facing_left(false):
+		fail("Bat left-to-right turn failed")
+		return
+	arena.player_node._on_skill_finished(&"turn")
+	if arena.player_node.scale.x < 0.0:
+		fail("Bat turn did not commit right facing")
+		return
+	if not arena.select_character("chilopoda"):
+		fail("Chilopoda must spawn for no-jump test")
+		return
+	var before_jump_y: float = arena.player_node.position.y
+	arena._on_touch_action("jump")
+	if arena.player_vy != 0.0 or arena.player_node.position.y != before_jump_y:
+		fail("Monster without jump clip must not jump")
+		return
+	if not arena.select_character("tasmanian_king_crab") or not arena._request_player_action("attack_light"):
+		fail("Crab light button must resolve its authored attack_nomal clip")
+		return
+	var crab_sprite := arena.player_node.get_node("Sprite") as AnimatedSprite2D
+	if crab_sprite.animation != &"attack_nomal":
+		fail("Crab light button played wrong clip")
+		return
 
 	# Idle-only stationary character uses the live 60Hz engine clock without AI movement.
 	arena.select_character("shenron")
@@ -435,6 +537,183 @@ func run_test() -> void:
 	if drum_far_idle.get("intent", "") != "idle" or int(drum_far_idle.get("move_dir", 9)) != 0:
 		fail("Drum >=400px must return to stationary idle, got " + str(drum_far_idle))
 		return
+
+	# Verify Rocky Plateau Original JPG Backdrop + 1 Horizontal 32x32 TileMapLayer + Contact Shadow + Ground Dust FX (0 floating platforms)
+	var metrics_ter: Dictionary = arena.get_stage_metrics()
+	if not bool(metrics_ter.get("terrain_loaded", false)) or int(metrics_ter.get("platforms_count", -1)) != 0:
+		fail("Terrain config & 0 floating platforms must load in ArenaSandbox: " + str(metrics_ter))
+		return
+	if arena.get_node_or_null("TerrainLayer/GroundTileMap") == null:
+		fail("Missing TerrainLayer/GroundTileMap TileMapLayer node")
+		return
+	var bg_layer_node := arena.get_node_or_null("BackgroundLayer") as CanvasItem
+	if bg_layer_node == null or not bg_layer_node.visible:
+		fail("Original JPG BackgroundLayer must remain visible behind 1 horizontal ground tile ledge")
+		return
+	arena.select_character("t_rex")
+	arena.player_node.position = Vector2(512.0, 840.0)
+	arena.player_vy = 0.0
+	var jump_res: Dictionary = arena.step_player_vertical_physics(1.0 / 60.0, true, false)
+	if not bool(jump_res.get("jumped", false)) or arena._active_dust_fx.size() < 1:
+		fail("Jump from ground must spawn pixel ground dust FX")
+		return
+	var peak_y := 840.0
+	var landed_ground := false
+	for _t in range(90):
+		var st: Dictionary = arena.step_player_vertical_physics(1.0 / 60.0, false, false)
+		peak_y = minf(peak_y, float(st.get("y", 840.0)))
+		if _t > 5 and bool(st.get("on_ground", false)) and absf(float(st.get("y", 0.0)) - 840.0) < 0.5:
+			landed_ground = true
+			break
+	if peak_y >= 760.0 or not landed_ground:
+		fail("Player must arc above ground and land back on horizontal floor ground_y=840, peak=" + str(peak_y) + " y=" + str(arena.player_node.position.y))
+		return
+	var sh_on_ground: Dictionary = arena.compute_contact_shadow_params(512.0, 840.0, 56.0, true)
+	var sh_in_air: Dictionary = arena.compute_contact_shadow_params(512.0, 700.0, 56.0, true)
+	if float(sh_in_air["half_w"]) >= float(sh_on_ground["half_w"]):
+		fail("Contact shadow must shrink with height above horizontal ground floor")
+		return
+
+	# Verify T-rex power_up spawns ProjectileFX (fireball_fx) synchronized with engine-export.json (origin [304,138] - anchor [176,224])
+	arena.select_character("t_rex")
+	await process_frame
+	var trex_node: Node2D = arena.player_node
+	var trex_pfx := trex_node.get_node_or_null("ProjectileFX") as AnimatedSprite2D
+	if trex_pfx == null:
+		fail("T-rex prefab must expose ProjectileFX for power_up fireball_fx")
+		return
+	if trex_pfx.visible or trex_pfx.position != Vector2(128.0, -86.0) or trex_pfx.offset != Vector2(-176.0, -128.0):
+		fail("T-rex ProjectileFX geometry mismatch: vis=%s pos=%s offset=%s" % [str(trex_pfx.visible), str(trex_pfx.position), str(trex_pfx.offset)])
+		return
+	if not arena._request_player_action("power_up"):
+		fail("T-rex player power_up request must succeed")
+		return
+	var trex_saw_fireball := false
+	var trex_fireball_hid := false
+	for _t in range(60):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+		if trex_pfx.visible and trex_pfx.animation == &"fireball_fx":
+			trex_saw_fireball = true
+		elif trex_saw_fireball and not trex_pfx.visible:
+			trex_fireball_hid = true
+			break
+	if not trex_saw_fireball or not trex_fireball_hid:
+		fail("T-rex power_up must emit fireball_fx on hit event and hide after finishing: saw=%s hid=%s" % [str(trex_saw_fireball), str(trex_fireball_hid)])
+		return
+
+	# Verify Drum Player can walk, turn cleanly without bool(null) crash, attack_light, power_up orb, and teleport
+	arena.select_character("drum")
+	await process_frame
+	var drum_player: Node2D = arena.player_node
+	if arena._is_fighter_turning(drum_player):
+		fail("Drum player must report _is_fighter_turning == false")
+		return
+	var drum_x0 := drum_player.position.x
+	for _t in range(10):
+		arena.step_player_movement(1.0 / 60.0, 1)
+	if drum_player.position.x <= drum_x0 + 10.0:
+		fail("Drum player must walk right cleanly: x0=%s x1=%s" % [str(drum_x0), str(drum_player.position.x)])
+		return
+	var drum_peak_x := drum_player.position.x
+	for _t in range(10):
+		arena.step_player_movement(1.0 / 60.0, -1)
+	if drum_player.position.x >= drum_peak_x - 10.0 or not arena.player_facing_left:
+		fail("Drum player must walk left and flip cleanly: peak=%s x2=%s left=%s" % [str(drum_peak_x), str(drum_player.position.x), str(arena.player_facing_left)])
+		return
+	for _t in range(2):
+		arena.step_player_movement(1.0 / 60.0, 0)
+	if not arena._request_player_action("attack_light"):
+		fail("Drum player attack_light must succeed")
+		return
+	var drum_spr := drum_player.get_node("Sprite") as AnimatedSprite2D
+	if drum_spr.animation != &"attack_light":
+		fail("Drum player Sprite must play attack_light, got " + str(drum_spr.animation))
+		return
+	for _t in range(45):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+		if not arena._is_player_action_playing():
+			break
+	if not arena._request_player_action("power_up"):
+		fail("Drum player power_up must succeed")
+		return
+	var drum_cfx := drum_player.get_node_or_null("ChargeFX") as AnimatedSprite2D
+	var drum_pfx := drum_player.get_node_or_null("ProjectileFX") as AnimatedSprite2D
+	if drum_cfx == null or not drum_cfx.visible:
+		fail("Drum player power_up must activate ChargeFX")
+		return
+	var drum_saw_orb := false
+	var drum_orb_moved := false
+	var orb_start_x := 0.0
+	for _t in range(70):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+		if drum_pfx != null and drum_pfx.visible:
+			if not drum_saw_orb:
+				drum_saw_orb = true
+				orb_start_x = drum_pfx.position.x
+			elif absf(drum_pfx.position.x - orb_start_x) > 20.0:
+				drum_orb_moved = true
+				break
+	if not drum_saw_orb or not drum_orb_moved:
+		fail("Drum player power_up must release moving electric_orb_fx: saw=%s moved=%s" % [str(drum_saw_orb), str(drum_orb_moved)])
+		return
+	for _t in range(30):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+		if not arena._is_player_action_playing():
+			break
+	# Test Drum player teleport dash
+	arena.step_player_movement(1.0 / 60.0, 1)
+	drum_player.position.x = 500.0
+	if not arena._request_player_action("teleport"):
+		fail("Drum player teleport must succeed")
+		return
+	var tp_start_x := drum_player.position.x
+	for _t in range(35):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+	if drum_player.position.x <= tp_start_x + 150.0:
+		fail("Drum player teleport must relocate +120*char_scale forward: start=%s end=%s" % [str(tp_start_x), str(drum_player.position.x)])
+		return
+	# Verify Drum on K70E can walk all the way near visible edges [-240..+2160] without stopping at 140..1780
+	var k70e_drum_layout: Dictionary = arena.apply_device_profile("redmi_k70e")
+	var k70e_drum_vis_w := float(k70e_drum_layout.get("visible_logic_size", [2400.7869, 1080.0])[0])
+	var drum_half_w := 56.0 * 2.5 * 0.5
+	var exp_drum_min := (960.0 - k70e_drum_vis_w * 0.5) + drum_half_w
+	var exp_drum_max := (960.0 + k70e_drum_vis_w * 0.5) - drum_half_w
+	if absf(arena.walkable_min_x - exp_drum_min) > 1.0 or absf(arena.walkable_max_x - exp_drum_max) > 1.0:
+		fail("K70E Drum walkable bounds mismatch: got=[%s,%s] exp=[%s,%s]" % [str(arena.walkable_min_x), str(arena.walkable_max_x), str(exp_drum_min), str(exp_drum_max)])
+		return
+	drum_player.position.x = 50.0
+	for _t in range(180):
+		arena.step_player_movement(1.0 / 60.0, -1)
+	if drum_player.position.x >= -150.0 or absf(drum_player.position.x - arena.walkable_min_x) > 1.0:
+		fail("K70E Drum must walk past old 140px wall right up to body-edge visible left bound: x=%s min=%s" % [str(drum_player.position.x), str(arena.walkable_min_x)])
+		return
+	drum_player.position.x = 1850.0
+	for _t in range(180):
+		arena.step_player_movement(1.0 / 60.0, 1)
+	if drum_player.position.x <= 2050.0 or absf(drum_player.position.x - arena.walkable_max_x) > 1.0:
+		fail("K70E Drum must walk past old 1780px wall right up to body-edge visible right bound: x=%s max=%s" % [str(drum_player.position.x), str(arena.walkable_max_x)])
+		return
+	arena.set_pixel_perfect_enabled(false, Vector2i(1920, 1080))
+
+	# Smoke test Player movement + power_up across every character in roster without script errors
+	for ch_entry in arena.roster_characters:
+		if not (ch_entry is Dictionary):
+			continue
+		var cid_smoke := str(ch_entry.get("character_id", ""))
+		if cid_smoke.is_empty():
+			continue
+		arena.select_character(cid_smoke)
+		await process_frame
+		arena.step_player_movement(1.0 / 60.0, 1)
+		if arena._has_clip_name(arena.player_node, &"power_up"):
+			if not arena._request_player_action("power_up"):
+				fail("Roster player power_up failed for " + cid_smoke)
+				return
 
 	arena.queue_free()
 	await process_frame

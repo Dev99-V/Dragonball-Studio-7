@@ -21,7 +21,7 @@ func _init() -> void:
 	var chars: Array = roster["characters"]
 	if chars.is_empty():
 		var fighter_script: GDScript = load("res://scenes/CharacterFighter2D.gd")
-		var anim_script: GDScript = load("res://tests/SkillAnimator2D.gd")
+		var anim_script: GDScript = load("res://scenes/SkillAnimator2D.gd")
 		if fighter_script == null or anim_script == null:
 			printerr("[FAIL] Không nạp được CharacterFighter2D.gd hoặc SkillAnimator2D.gd")
 			quit(1)

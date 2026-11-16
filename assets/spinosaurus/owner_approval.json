@@ -12,7 +12,7 @@
   "previous_workflow_id": "PIPE-003",
   "previous_revision": "final-no-run",
   "previous_approval_archive": [
-    "work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+    "docs/releases/spinosaurus-v0.6.0-approval.json",
     "docs/releases/spinosaurus-v0.6.0-approval.json"
   ],
   "previous_atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4",
@@ -67,7 +67,7 @@
     "run"
   ],
   "canonical_identity": {
-    "path": "work/characters/spinosaurus/approved-master/approved-original.png",
+    "path": "assets/spinosaurus/source/approved-original.png",
     "sha256": "91d18310a0cd68578f4ffda300db97d4780b7f544ba1af69ed511d1816d51c80"
   },
   "render_contract": {
@@ -143,7 +143,7 @@
     }
   },
   "qa_report": "docs/characters/spinosaurus-final-qa.json",
-  "frozen_source": "work/characters/spinosaurus/approved-final-frames/animation-clips.json",
+  "frozen_source": "assets/spinosaurus/clips/animation-clips.json",
   "approved_runtime_files_sha256": {
     "assets/spinosaurus/clips/.gdignore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "assets/spinosaurus/clips/animation-clips.json": "ba4944c3b3307cb5f53319643578eee9fb82759aaa6061279f654f297e6bf4ca",
@@ -340,6 +340,6 @@
     "assets/spinosaurus/source/.gdignore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "assets/spinosaurus/source/master-approval.json": "cc879b053ad89d5715ee3a86f2f20412bf0a1ea7054fa856a972f622e713fba7",
     "scenes/Spinosaurus.tscn": "57cb0655f398b7c5f29c506e4d34674dedc59cd982f337ebb74c5d4be8dc4428",
-    "scenes/CharacterFighter2D.gd": "664cb94ae7ebe9998e66fe82dd8990106434f3d5e3b8cc6e8ba2a8f810c3d4b7"
+    "scenes/CharacterFighter2D.gd": "f8278e333f37462bfcf3769233ae2a479dc51967cd6f98ca2a7fe9eac9c039c4"
   }
 }

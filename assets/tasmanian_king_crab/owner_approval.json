@@ -12,7 +12,7 @@
   "previous_workflow_id": "PIPE-004",
   "previous_revision": "atlas-v1 / v0.7.0",
   "previous_approval_archive": [
-    "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json",
+    "docs/releases/tasmanian_king_crab-v0.7.0-approval.json",
     "docs/releases/tasmanian_king_crab-v0.7.0-approval.json"
   ],
   "previous_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1",
@@ -68,7 +68,7 @@
     "win"
   ],
   "canonical_identity": {
-    "path": "work/characters/tasmanian_king_crab/size-master/master.png",
+    "path": "assets/tasmanian_king_crab/source/master.png",
     "sha256": "020b0494ed66e90dac831e93b2ca758b436cda698a4c012eb7dfa87c6c704b0d"
   },
   "render_contract": {
@@ -160,7 +160,7 @@
     }
   },
   "qa_report": "docs/characters/tasmanian-king-crab-atlas-v1-qa.json",
-  "frozen_source": "work/characters/tasmanian_king_crab/approved-final-frames/animation-clips.json",
+  "frozen_source": "assets/tasmanian_king_crab/clips/animation-clips.json",
   "approved_runtime_files_sha256": {
     "assets/tasmanian_king_crab/clips/.gdignore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "assets/tasmanian_king_crab/clips/animation-clips.json": "c78f81714f23451f01cda4c85402ee13e79b26e457a4ad1c21a846b42f9bc4c4",

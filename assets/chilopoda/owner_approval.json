@@ -12,7 +12,7 @@
   "previous_workflow_id": "PIPE-008",
   "previous_revision": "identity-v2 / v0.11.1",
   "previous_approval_archive": [
-    "work/characters/chilopoda/fireball-v1/snapshot-before/owner_approval.json",
+    "docs/releases/chilopoda-v0.11.1-approval.json",
     "docs/releases/chilopoda-v0.11.1-approval.json"
   ],
   "previous_atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d",
@@ -68,7 +68,7 @@
     "win"
   ],
   "canonical_identity": {
-    "path": "work/characters/chilopoda/identity-v2/canonical/master.png",
+    "path": "assets/chilopoda/source/master.png",
     "sha256": "e0ac076682825160ee3723d363269b2d3ead0da463743af8ae3da184c82a04a3"
   },
   "render_contract": {
@@ -317,7 +317,7 @@
     }
   },
   "qa_report": "docs/characters/chilopoda-identity-v2-qa.json",
-  "frozen_source": "work/characters/chilopoda/approved-final-frames/animation-clips.json",
+  "frozen_source": "assets/chilopoda/clips/animation-clips.json",
   "approved_runtime_files_sha256": {
     "assets/chilopoda/clips/.gdignore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "assets/chilopoda/clips/animation-clips.json": "c49c77d6eb5adfd59019c24cf37383c8e2c61e468c0b309ab9bfa7dcd8565729",

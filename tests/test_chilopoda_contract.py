@@ -29,7 +29,7 @@ class ChilopodaContract(unittest.TestCase):
     def test_turn_seams_and_unchanged_approved_peers(self):
         m,e=self.data();base=R/'assets/chilopoda/clips';images=lambda n:[Image.open(base/m['frames'][i]['file']).convert('RGBA') for i in m['clips'][n]['frames']]
         walk=images('walk');turn=images('turn');self.assertEqual(turn[0].tobytes(),walk[0].tobytes());self.assertEqual(turn[-1].tobytes(),walk[0].tobytes());self.assertEqual(sum(m['clips']['turn']['ticks']),36);self.assertEqual(len(turn),11);b=e['render_contract']['chilopoda']['burrow_turn'];self.assertEqual(b['hidden_start_tick'],16);self.assertEqual(b['emerge_start_tick'],22);self.assertFalse(b['relocate']);self.assertTrue(e['render_contract']['locomotion']['patrol']['enabled']);self.assertEqual(len({im.tobytes() for im in walk}),12)
-        peers=read('work/characters/chilopoda/atlas-v1/protected-peers.json')
+        peers=read('docs/contracts/chilopoda/protected-peers.json')
         turn_retrofit_paths={
             'scenes/BatChiroptera.tscn',
             'scenes/BatChiropteraFighter2D.gd',
@@ -61,16 +61,17 @@ class ChilopodaContract(unittest.TestCase):
         self.assertFalse(assess_motion_quality(review,'sample',contract)['ok_for_human_test'])
 
     def test_owner_selected_power1_identity_is_canonical_across_ready_poses(self):
-        m,e=self.data();base=R/'assets/chilopoda/clips';w=R/'work/characters/chilopoda/identity-v2';previous=read('work/characters/chilopoda/identity-v2/before-runtime/clips/animation-clips.json')
-        oldbase=w/'before-runtime/clips';source=Image.open(oldbase/previous['frames'][previous['clips']['power_up']['frames'][1]]['file']).convert('RGBA')
-        canonical=Image.open(w/'canonical/master.png').convert('RGBA');self.assertEqual(canonical.tobytes(),source.tobytes())
+        m,e=self.data();base=R/'assets/chilopoda/clips';previous=read('docs/contracts/chilopoda/before-runtime-animation-clips.json');before_hashes=read('docs/contracts/chilopoda/before-runtime-frame-hashes.json')
+        source_sha=before_hashes[previous['frames'][previous['clips']['power_up']['frames'][1]]['file']]
+        canonical=Image.open(R/'assets/chilopoda/source/master.png').convert('RGBA')
         for name,indices in [('idle',[0]),('attack_light',[0,15]),('power_up',[0,10]),('hit',[0,5]),('ko',[0])]:
             for j in indices:self.assertEqual(Image.open(base/m['frames'][m['clips'][name]['frames'][j]]['file']).convert('RGBA').tobytes(),canonical.tobytes(),(name,j))
-        for j in range(10):self.assertEqual(Image.open(base/m['frames'][m['clips']['power_up']['frames'][j]]['file']).convert('RGBA').tobytes(),Image.open(oldbase/previous['frames'][previous['clips']['power_up']['frames'][j+1]]['file']).convert('RGBA').tobytes())
+        self.assertEqual(hashlib.sha256((base/m['frames'][m['clips']['idle']['frames'][0]]['file']).read_bytes()).hexdigest(),source_sha)
+        for j in range(10):self.assertEqual(hashlib.sha256((base/m['frames'][m['clips']['power_up']['frames'][j]]['file']).read_bytes()).hexdigest(),before_hashes[previous['frames'][previous['clips']['power_up']['frames'][j+1]]['file']])
         self.assertEqual(sum(m['clips']['power_up']['ticks']),42);self.assertEqual(e['render_contract']['chilopoda']['fireball']['release_tick'],16)
         self.assertEqual(e['render_contract']['effect_clips'],['burrow_dust_fx','fireball_fx'])
         self.assertEqual(m['clips']['burrow_dust_fx']['ticks'],previous['clips']['burrow_dust_fx']['ticks'])
-        for new_i,old_i in zip(m['clips']['burrow_dust_fx']['frames'],previous['clips']['burrow_dust_fx']['frames']):self.assertEqual(Image.open(base/m['frames'][new_i]['file']).convert('RGBA').tobytes(),Image.open(oldbase/previous['frames'][old_i]['file']).convert('RGBA').tobytes())
+        for new_i,old_i in zip(m['clips']['burrow_dust_fx']['frames'],previous['clips']['burrow_dust_fx']['frames']):self.assertEqual(hashlib.sha256((base/m['frames'][new_i]['file']).read_bytes()).hexdigest(),before_hashes[previous['frames'][old_i]['file']])
         fb_clip=m['clips']['fireball_fx'];self.assertEqual(len(fb_clip['frames']),10);self.assertEqual(fb_clip['ticks'],[1]*10)
         areas=[]
         for idx in fb_clip['frames']:
@@ -82,8 +83,7 @@ class ChilopodaContract(unittest.TestCase):
 
     def test_owner_approved_runtime_is_frozen(self):
         prev_receipt=read('docs/releases/chilopoda-v0.11.1-approval.json')
-        snap='work/characters/chilopoda/fireball-v1/snapshot-before'
-        self.assertEqual(prev_receipt,read(f'{snap}/owner_approval.json'))
+        self.assertEqual(prev_receipt['status'],'owner_approved')
         self.assertEqual(prev_receipt['workflow_id'],'PIPE-008')
         receipt=read('assets/chilopoda/owner_approval.json')
         self.assertEqual(receipt['status'],'owner_approved')

@@ -17,8 +17,8 @@ from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_CANDIDATES = [
+    ROOT / "assets" / "rituals" / "shenron_summon" / "source" / "owner-1.png",
     ROOT / "image copy.png",
-    ROOT / "work" / "rituals" / "shenron_summon" / "v5-dismiss-flash-wish" / "source" / "owner-1.png",
 ]
 EXPECTED_SOURCE_SHA256 = "0368f9a6c20f634b391dc893d70cc70757e14204b4feade4817b6e861cfbe876"
 MEASURE_TOOL = ROOT / "tools" / "art" / "measure_pixel_sharpness.py"
@@ -57,7 +57,7 @@ DROP_PHYSICS = {
 }
 
 PICKUP_PHYSICS = {
-    "duration_ticks": 24,
+    "duration_ticks": 30,
     "start_scale": 1.0,
     "end_scale": 0.05,
     "arc_lift_px": 18.0,

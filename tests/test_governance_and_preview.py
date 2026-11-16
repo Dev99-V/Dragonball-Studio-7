@@ -111,9 +111,13 @@ class GovernanceAndPreviewTests(unittest.TestCase):
             self.assertEqual(receipt["character_id"], workflow["character_id"])
             self.assertTrue(receipt["owner_message"].strip())
             atlas = REPO_ROOT / "assets" / receipt["character_id"] / "godot_bundle/godot" / (receipt["character_id"] + "-atlas-00.png")
-            approved_atlas = REPO_ROOT / workflow["approved_atlas_path"] if workflow.get("approved_atlas_path") else atlas
-            self.assertEqual(hashlib.sha256(approved_atlas.read_bytes()).hexdigest(), receipt["atlas_sha256"])
-            if approved_atlas != atlas:
+            if workflow.get("archived_atlas_purged") and workflow.get("superseded_by"):
+                self.assertEqual(workflow.get("atlas_sha256"), receipt["atlas_sha256"])
+                approved_atlas = None
+            else:
+                approved_atlas = REPO_ROOT / workflow["approved_atlas_path"] if workflow.get("approved_atlas_path") else atlas
+                self.assertEqual(hashlib.sha256(approved_atlas.read_bytes()).hexdigest(), receipt["atlas_sha256"])
+            if approved_atlas is None or approved_atlas != atlas:
                 ch = next(c for c in json.loads((REPO_ROOT / "assets/roster.json").read_text())["characters"]
                           if c["character_id"] == receipt["character_id"])
                 review = ch["motion_quality"]
@@ -130,7 +134,7 @@ class GovernanceAndPreviewTests(unittest.TestCase):
                     self.assertEqual(sup["character_id"], receipt["character_id"])
                     self.assertEqual(sup_receipt["status"], "owner_approved")
                     self.assertEqual(sup_receipt["atlas_sha256"], hashlib.sha256(atlas.read_bytes()).hexdigest())
-                    if sup.get("approved_atlas_path"):
+                    if sup.get("approved_atlas_path") or sup.get("archived_atlas_purged"):
                         self.assertEqual(review["status"], "reviewed_pending_owner")
                         self.assertFalse(review["owner_approved"])
                         self.assertEqual(review["previous_revision_atlas_sha256"], sup_receipt["atlas_sha256"])
@@ -213,7 +217,12 @@ class GovernanceAndPreviewTests(unittest.TestCase):
             self.assertIn("project.godot", names)
             self.assertIn("assets/roster.json", names)
             self.assertIn("scenes/CharacterFighter2D.gd", names)
-            self.assertIn("tests/SkillAnimator2D.gd", names)
+            self.assertIn("scenes/SkillAnimator2D.gd", names)
+            self.assertIn("scenes/runtime/DisplayPolicy.gd", names)
+            self.assertIn("scenes/net/WebSocketTransport.gd", names)
+            self.assertIn("assets/maps/rocky_plateau/device-profiles.json", names)
+            self.assertFalse(any("/godot-sprite3d/" in n or "/aseprite/" in n or "/source/" in n for n in names),
+                             "Godot export ZIP should exclude sprite3d/aseprite/source bloat")
             self.assertNotIn("scenes/Trunks_Rage.tscn", names)
 
     def test_frontend_js_wasm_exports_2tabs_and_n_character_roster(self) -> None:

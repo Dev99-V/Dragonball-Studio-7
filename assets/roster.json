@@ -46,15 +46,15 @@
         "atlas_sha256": "0561212a81a8203b33a96981e61c2a38502613026820becbadbed447b0dadeba",
         "previous_workflow_id": "PIPE-008",
         "previous_approval_archive": [
-          "work/characters/chilopoda/fireball-v1/snapshot-before/owner_approval.json",
+          "docs/releases/chilopoda-v0.11.1-approval.json",
           "docs/releases/chilopoda-v0.11.1-approval.json"
         ],
         "previous_atlas_sha256": "6fae71276ce9e24eff3ae5d5bcd22b7d4573e5e3190730095c438bbe4d83d42d"
       },
       "canonical_identity": {
-        "path": "work/characters/chilopoda/identity-v2/canonical/master.png",
+        "path": "assets/chilopoda/source/master.png",
         "sha256": "e0ac076682825160ee3723d363269b2d3ead0da463743af8ae3da184c82a04a3",
-        "owner_approval": "work/characters/chilopoda/identity-v2/canonical/approval.json"
+        "owner_approval": "docs/contracts/chilopoda/canonical-approval.json"
       },
       "facing_contract": {
         "camera_view": "side_view_2d_three_quarter",
@@ -407,7 +407,7 @@
         "owner_approved": true,
         "naturalness_verdict": "owner_approved",
         "unresolved_structural_failures": [],
-        "review_evidence": "work/characters/chilopoda/identity-v2/review/identity-review.json",
+        "review_evidence": "docs/contracts/chilopoda/identity-review.json",
         "notes": "Calibrated 1.35x scale / 140 px/s speed / 2.65x burrow dust; replaced power_up dual red lasers with single mouth-condensing growing fireball (10 cleaned stages from Owner art).",
         "approved_at": "2026-11-15T05:52:31.727116+00:00",
         "owner_message": "ok anh chốt toàn bộ nhân vật giúp anh chôt theo qui trình push lên main để qua nhân vật khác",
@@ -610,7 +610,7 @@
         "owner_approved": true,
         "previous_revision_atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
         "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
-        "review_evidence": "work/characters/bat_chiroptera/turn-v1/review/keyframe-review.json",
+        "review_evidence": "docs/contracts/bat_chiroptera/turn-v1-keyframe-review.json",
         "method": "imagegen_complete_body_keyframes",
         "turn_method": "complete_perspective_poses",
         "naturalness_verdict": "owner_approved",
@@ -641,7 +641,7 @@
       },
       "qa_report": "docs/characters/bat-chiroptera-turn-v1-qa.json",
       "canonical_identity": {
-        "path": "work/characters/bat_chiroptera/approved-master/master.png",
+        "path": "assets/bat_chiroptera/source/master.png",
         "sha256": "b8656aaba4eb84dc255f24096d889bcb848fb6cb7af53403476ad10372d7555d"
       },
       "owner_animation_approval": {
@@ -655,7 +655,7 @@
         "atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
         "previous_workflow_id": "PIPE-009",
         "previous_approval_archive": [
-          "work/characters/bat_chiroptera/calibration-v1/snapshot-before/owner_approval.json",
+          "docs/releases/bat_chiroptera-v0.11.2-approval.json",
           "docs/releases/bat_chiroptera-v0.11.2-approval.json"
         ],
         "previous_atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084"
@@ -830,7 +830,7 @@
           "bundle_id": "spinosaurus"
         }
       },
-      "owner_master_approval": "work/characters/spinosaurus/approved-master/approval.json",
+      "owner_master_approval": "docs/contracts/spinosaurus/master-approval.json",
       "owner_animation_approval": {
         "status": "owner_approved",
         "workflow_id": "PIPE-011",
@@ -842,7 +842,7 @@
         "atlas_sha256": "51afab60cf7c2c26defba7c76181482be8cd399a54704efebd4592f86943cc9e",
         "previous_workflow_id": "PIPE-003",
         "previous_approval_archive": [
-          "work/characters/spinosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+          "docs/releases/spinosaurus-v0.6.0-approval.json",
           "docs/releases/spinosaurus-v0.6.0-approval.json"
         ],
         "previous_atlas_sha256": "89d9696e447d346693b516472cdc4dceeca826dff5b2bd463332d911f883c4a4"
@@ -883,7 +883,7 @@
           "dark",
           "checker"
         ],
-        "review_evidence": "work/characters/spinosaurus/walk-edge-uniform-v1/keyframe-review.json",
+        "review_evidence": "docs/contracts/spinosaurus/walk-edge-keyframe-review.json",
         "revision": "walk-edge-uniform-v1",
         "owner_accepted_motion": true,
         "workflow_id": "PIPE-011",
@@ -1089,7 +1089,7 @@
         "previous_revision_atlas_sha256": "d78b3b750c51793de4eafe3532c2350fff52bce9d54ecd40b879fc6e44c1d1b7",
         "prior_demo_atlas_sha256": "7cdc28601c3f8ac7867409d4bd6c036e78c5091ffd3d45751a7db1f12798d7e7",
         "canonical_identity_sha256": "d4dc74e198774a0af2097962967492e3d2f909831b40b7c811ea7b5aa3208e69",
-        "review_evidence": "work/characters/t_rex/turn-v1/review/keyframe-review.json",
+        "review_evidence": "docs/contracts/t_rex/turn-v1-keyframe-review.json",
         "turn_sharpness_sobel": [
           218.251,
           203.449,
@@ -1117,7 +1117,7 @@
       },
       "qa_report": "docs/characters/t-rex-turn-v1-qa.json",
       "canonical_identity": {
-        "reference": "work/characters/t_rex/walk-style-v4/walk-00-reference.png",
+        "reference": "assets/t_rex/source/walk-00-reference.png",
         "sha256": "d4dc74e198774a0af2097962967492e3d2f909831b40b7c811ea7b5aa3208e69",
         "owner_reference": "T-rex walk frame0",
         "source_roles": "Walk0 alone determines identity, pixel detail and baked shading; other sheets are original pose-layout references."
@@ -1291,7 +1291,7 @@
           "three_backgrounds": true,
           "character_identity": true
         },
-        "review_evidence": "work/characters/pteranodon/size-sync-v10/review/keyframe-review.json",
+        "review_evidence": "docs/contracts/pteranodon/size-sync-v10-keyframe-review.json",
         "unresolved_structural_failures": [],
         "owner_approved": true,
         "owner_feedback": "Owner approved157x107 size sample and explicitly requested applying it to the whole bundle. Actions and timing inherit the previously approved source; no new motion authored.",
@@ -1302,11 +1302,11 @@
       },
       "qa_report": "docs/characters/pteranodon-size-sync-v10-qa.json",
       "canonical_identity": {
-        "path": "work/characters/pteranodon/master-match-v9/reference.png",
+        "path": "assets/pteranodon/source/reference.png",
         "sha256": "7c9d71fe2033b0be2644bb8df1bb8d3cd5e5d38a7a0a71e3b7833c84a0e9e702",
-        "owner_input": "work/characters/pteranodon/master-review/test_scaled_canvas.png"
+        "owner_input": "assets/pteranodon/source/owner-canvas.png"
       },
-      "size_transform_reference": "work/characters/pteranodon/size-sync-v10/transform.json"
+      "size_transform_reference": "docs/contracts/pteranodon/size-sync-v10-transform.json"
     },
     {
       "character_id": "tasmanian_king_crab",
@@ -1516,13 +1516,13 @@
         "atlas_sha256": "c62f2776ffb15133fae9128436c899e222d3e4ed717c2abc46cd64db579da30d",
         "previous_workflow_id": "PIPE-004",
         "previous_approval_archive": [
-          "work/characters/tasmanian_king_crab/step2-visual-fix/snapshot-before/owner_approval.json",
+          "docs/releases/tasmanian_king_crab-v0.7.0-approval.json",
           "docs/releases/tasmanian_king_crab-v0.7.0-approval.json"
         ],
         "previous_atlas_sha256": "bf079cf2fc96d59fc1cebb86012b39b1548a19c62c5a239e4a9528212efc51e1"
       },
       "canonical_identity": {
-        "path": "work/characters/tasmanian_king_crab/size-master/master.png",
+        "path": "assets/tasmanian_king_crab/source/master.png",
         "sha256": "020b0494ed66e90dac831e93b2ca758b436cda698a4c012eb7dfa87c6c704b0d"
       },
       "motion_quality": {
@@ -1558,7 +1558,7 @@
           "dark",
           "checker"
         ],
-        "review_evidence": "work/characters/tasmanian_king_crab/uniform-color-v1/keyframe-review.json",
+        "review_evidence": "docs/contracts/tasmanian_king_crab/uniform-color-keyframe-review.json",
         "revision": "uniform-color-v1",
         "owner_accepted_motion": true,
         "workflow_id": "PIPE-012",
@@ -1772,13 +1772,13 @@
         "atlas_sha256": "81595756c2d1d7d4ca7ddf530bb972eca8964427311db69a38905502fed2a959",
         "previous_workflow_id": "PIPE-005",
         "previous_approval_archive": [
-          "work/characters/sarcosuchus/step2-visual-fix/snapshot-before/owner_approval.json",
+          "docs/releases/sarcosuchus-v0.8.1-approval.json",
           "docs/releases/sarcosuchus-v0.8.1-approval.json"
         ],
         "previous_atlas_sha256": "4a8751e850128988284160e74cb24cf790034bee749678f105303b100a0f1951"
       },
       "canonical_identity": {
-        "path": "work/characters/sarcosuchus/master-review/master-gameplay-v1.png",
+        "path": "assets/sarcosuchus/source/master.png",
         "sha256": "8adeda8cbb99493640c296748c76cb05df7110cee909e43b84b844a5e8675ddc"
       },
       "motion_quality": {
@@ -1815,7 +1815,7 @@
           "dark",
           "checker"
         ],
-        "review_evidence": "work/characters/sarcosuchus/step2-visual-fix/keyframe-review.json",
+        "review_evidence": "docs/contracts/sarcosuchus/step2-keyframe-review.json",
         "revision": "step2-visual-fix+calibration-v1",
         "owner_accepted_motion": true,
         "workflow_id": "PIPE-013",
@@ -1851,13 +1851,13 @@
         "atlas_sha256": "b56bdb47d903f14ea8072831dda6eb039f7d883a5cdadbbecf9548c9458e097b",
         "previous_workflow_id": "PIPE-006",
         "previous_approval_archive": [
-          "work/characters/dilophosaurus/step2-visual-fix/snapshot-before/owner_approval.json",
+          "docs/releases/dilophosaurus-v0.9.1-approval.json",
           "docs/releases/dilophosaurus-v0.9.1-approval.json"
         ],
         "previous_atlas_sha256": "3dc6d0370e02128509680e6b57f9b67c42390571c39a4df160b29807f60fe157"
       },
       "canonical_identity": {
-        "path": "work/characters/dilophosaurus/master-review/frill-v2/master-gameplay-v2.png",
+        "path": "assets/dilophosaurus/source/master.png",
         "sha256": "93ad864ffa41df0c168e4666af3212632825ae5d8aca314ed06d49c71fccc4a8"
       },
       "facing_contract": {
@@ -2079,7 +2079,7 @@
           "dark",
           "checker"
         ],
-        "review_evidence": "work/characters/dilophosaurus/step2-visual-fix/keyframe-review.json",
+        "review_evidence": "docs/contracts/dilophosaurus/step2-keyframe-review.json",
         "revision": "step2-visual-fix+calibration-v1",
         "owner_accepted_motion": true,
         "workflow_id": "PIPE-014",
@@ -2252,7 +2252,7 @@
           "perspective_turns": "Owner chose front_only stationary idle-only; no turn requested."
         },
         "unresolved_structural_failures": [],
-        "review_evidence": "work/characters/shenron/idle-v5-hover/evidence/review.json",
+        "review_evidence": "docs/contracts/shenron/idle-v5-hover-review.json",
         "naturalness_verdict": "owner_approved",
         "revision": "idle-v5-hover",
         "approved_at": "2026-11-15T12:36:59.698744+00:00",
@@ -2260,7 +2260,7 @@
       },
       "qa_report": "docs/characters/shenron-idle-v5-hover-qa.json",
       "canonical_identity": {
-        "path": "work/characters/shenron/master-v1/master.png",
+        "path": "assets/shenron/source/master.png",
         "sha256": "7d32a92302b9af7a4286d8c11f07222d2874c555e3fa51c5f1738e0af87e0526"
       }
     },

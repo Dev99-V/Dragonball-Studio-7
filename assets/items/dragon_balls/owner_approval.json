@@ -13,10 +13,10 @@
   "tres_path": "assets/items/dragon_balls/godot/dragon_balls.tres",
   "tres_sha256": "2f3c4dab5e21a3918b4fb4a458f5ff096c9a9c7c5ddd2bad07320bec89c6b5a5",
   "export_path": "assets/items/dragon_balls/item-export.json",
-  "export_sha256": "bc84d80d3ffedd54cf00ec3cd6423fc2f5da1caa3dd0ac4adb398ab2fadac8a8",
+  "export_sha256": "07294ccb2fe6e920beb9ba43bcfb64fe78a6c116ce5f75917c560998d99f5da7",
   "prefab_path": "scenes/items/DragonBallItem2D.tscn",
   "prefab_sha256": "dab264947885b708f68d9b0aa678a3864681b915a89df400ab3c59898d4641cf",
   "script_path": "scenes/items/DragonBallItem2D.gd",
-  "script_sha256": "6fd67625cf2707fe7dd9768b72f97295c33d62cf4d76d806700cad08d69e2dd1",
+  "script_sha256": "9303ffb5a1f292d3b4345dc212bb358f59b2de670a187f502bd1441187fda68b",
   "qa_doc_path": "docs/items/dragon-balls-v1-qa.json"
 }

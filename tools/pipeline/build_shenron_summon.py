@@ -7,7 +7,7 @@ from PIL import Image,ImageFilter,ImageDraw
 from scipy import ndimage
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'assets/rituals/shenron_summon'
-WORK=ROOT/'work/rituals/shenron_summon/v5-dismiss-flash-wish'
+WORK=ROOT/'docs/contracts/shenron_summon'
 
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 
@@ -35,14 +35,14 @@ def extract(rgb,component):
 
 def build():
     OUT.mkdir(parents=True,exist_ok=True);(OUT/'items').mkdir(exist_ok=True)
-    (WORK/'source').mkdir(parents=True,exist_ok=True);(WORK/'evidence').mkdir(exist_ok=True)
-    src1=ROOT/'image copy.png' if (ROOT/'image copy.png').is_file() else WORK/'source'/'owner-1.png'
-    src2=ROOT/'image copy 2.png' if (ROOT/'image copy 2.png').is_file() else WORK/'source'/'owner-2.png'
+    (OUT/'source').mkdir(parents=True,exist_ok=True);WORK.mkdir(parents=True,exist_ok=True)
+    src1=ROOT/'image copy.png' if (ROOT/'image copy.png').is_file() else OUT/'source'/'owner-1.png'
+    src2=ROOT/'image copy 2.png' if (ROOT/'image copy 2.png').is_file() else OUT/'source'/'owner-2.png'
     sources=[src1,src2]
     for i,p in enumerate(sources):
-        dst=WORK/'source'/f'owner-{i+1}.png'
+        dst=OUT/'source'/f'owner-{i+1}.png'
         if p.resolve()!=dst.resolve():shutil.copy2(p,dst)
-    sources=[WORK/'source'/'owner-1.png',WORK/'source'/'owner-2.png']
+    sources=[OUT/'source'/'owner-1.png',OUT/'source'/'owner-2.png']
     rgb=np.array(Image.open(sources[0]).convert('RGB'));v=rgb.astype(int)
     seed=(v.max(2)-v.min(2)>20)|(v.max(2)<100)
     labels,_=ndimage.label(seed);records={};images={}

@@ -12,7 +12,7 @@
   "previous_workflow_id": "PIPE-009",
   "previous_revision": "turn-v1 / v0.11.2",
   "previous_approval_archive": [
-    "work/characters/bat_chiroptera/calibration-v1/snapshot-before/owner_approval.json",
+    "docs/releases/bat_chiroptera-v0.11.2-approval.json",
     "docs/releases/bat_chiroptera-v0.11.2-approval.json"
   ],
   "previous_atlas_sha256": "4e4ee4b829bf36f13053d47acaad7845d5834496a1644ae4a9c2cac6714d5084",
@@ -68,7 +68,7 @@
     "win"
   ],
   "canonical_identity": {
-    "path": "work/characters/bat_chiroptera/approved-master/master.png",
+    "path": "assets/bat_chiroptera/source/master.png",
     "sha256": "b8656aaba4eb84dc255f24096d889bcb848fb6cb7af53403476ad10372d7555d"
   },
   "render_contract": {
@@ -156,7 +156,7 @@
     }
   },
   "qa_report": "docs/characters/bat-chiroptera-turn-v1-qa.json",
-  "frozen_source": "work/characters/bat_chiroptera/approved-final-frames/animation-clips.json",
+  "frozen_source": "assets/bat_chiroptera/clips/animation-clips.json",
   "approved_runtime_files_sha256": {
     "assets/bat_chiroptera/clips/.gdignore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "assets/bat_chiroptera/clips/animation-clips.json": "37fe1cc686edcbdf25394c82db0954a3de49c2928de6968f800724ff1943c96e",

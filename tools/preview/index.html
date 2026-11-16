@@ -26,7 +26,7 @@
       color: var(--text);
       font-size: 13px;
       line-height: 1.45;
-      overflow-x: hidden;
+      overflow-x: clip;
     }
     header {
       display: flex;
@@ -118,6 +118,22 @@
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 12px;
+    }
+    .arena-pinned-stage {
+      position: sticky;
+      top: 6px;
+      z-index: 25;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+    }
+    .arena-pinned-stage.unpinned {
+      position: relative;
+      top: auto;
+      box-shadow: none;
     }
     .card h2 {
       font-size: 12px;
@@ -377,7 +393,8 @@
       <button class="tab-btn active" data-tab="tab-human">🎯 1. Human Test &amp; Thước Đo Gửi Agent</button>
       <button class="tab-btn" data-tab="tab-arena">⚔️ 2. Sân Tập Gameplay Thực Chiến</button>
     </div>
-    <div>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <a class="btn btn-gold" id="btnDownloadAndroidApkHeader" href="/api/download-android-debug.apk" download="dr7-studio-debug.apk" title="Tải nhanh APK Android Debug (arm64-v8a + x86_64) cài trực tiếp lên Redmi K70E">📱 Tải APK Android (.apk)</a>
       <a class="btn" href="/api/download-godot-pack.zip">📦 Tải Gói Godot 4 (.zip)</a>
     </div>
   </header>
@@ -598,12 +615,32 @@
   <!-- TAB 2: INTERACTIVE 2D GAMEPLAY SANDBOX                                -->
   <!-- ===================================================================== -->
   <section id="tab-arena" class="tab-view">
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-        <div>
-          <b>⚔️ Sân Tập Thực Chiến Mobile 16:9 (<span id="arenaCharLabel">Chưa có nhân vật</span>):</b>
-          <span id="arenaControlHint"><code>A/D</code> Đi bộ • <code>Shift+A/D</code> Chạy nhanh • <code>W/Space</code> Nhảy • <code>J/U/I/K/L/O/P</code> Tuyệt chiêu nhân vật</span>
+    <div id="arenaPinnedStage" class="arena-pinned-stage">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px; font-size:12px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <b>⚔️ Sân Tập Thực Chiến (<span id="arenaCharLabel">Chưa có nhân vật</span>)</b>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer; color:#fde047; font-weight:600;" title="Ghim cố định màn hình test ở đầu trang khi cuộn bảng điều khiển bên dưới">
+            <input type="checkbox" id="chkPinArenaStage" checked /> 📌 Ghim đầu trang
+          </label>
         </div>
+        <span id="arenaStageBadge" style="color:var(--gold); font-weight:600;">1920×1080 • 16:9 • PPU 64</span>
+      </div>
+      <div id="arenaViewportOuter" style="background:#05080f; border:1px solid var(--border); border-radius:10px; padding:8px; display:flex; justify-content:center; align-items:center; overflow:auto;">
+        <div id="arenaPhoneFrame" style="position:relative; width:100%; max-width:min(1020px, calc(56vh * 2096 / 1166)); aspect-ratio:2096/1166; margin:0 auto;">
+          <div id="arenaScreenSlot" style="position:absolute; left:4.198473%; top:4.545455%; width:91.603053%; height:92.624357%; overflow:hidden; border-radius:2.2%; background:#080c14;">
+            <canvas id="arenaCanvas" width="1920" height="1080" style="width:100%; height:100%; image-rendering:pixelated; display:block;"></canvas>
+            <iframe id="godotWebFrame" title="Godot 4.7 Compatibility Web Export" style="display:none; width:100%; height:100%; border:0; background:#080c14;"></iframe>
+            <div id="safeAreaOverlay" style="display:none; position:absolute; inset:0; border:2px dashed rgba(34,197,94,0.85); pointer-events:none; box-sizing:border-box; z-index:4;"></div>
+            <div id="shenronWishOverlay" style="display:none; position:absolute; right:3%; top:14%; width:clamp(220px, 25%, 360px); background:rgba(10,16,30,0.92); border:2px solid #facc15; border-radius:10px; padding:12px; box-shadow:0 8px 28px rgba(0,0,0,0.75); z-index:5;">
+              <div style="color:#fde047; font-weight:700; font-size:14px; margin-bottom:8px;">✨ Chọn Điều Ước Shenron</div>
+              <div id="shenronWishButtons" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+          </div>
+          <img id="arenaPhoneBezelImg" src="/preview-assets/phone-frame-landscape-16x9.png" alt="Landscape 16:9 Phone Frame" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none;" />
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-top:6px;">
+        <span id="arenaControlHint" style="font-size:11.5px; color:var(--muted);"><code>A/D</code> Đi bộ • <code>Shift+A/D</code> Chạy nhanh • <code>W/Space</code> Nhảy • <code>J/U/I/K/L/O/P</code> Tuyệt chiêu</span>
         <div id="arenaActionButtons" style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
           <button class="btn" id="btnMoveLeft">◀ Trái</button>
           <button class="btn" id="btnJump">⬆ Nhảy</button>
@@ -618,6 +655,8 @@
           <span id="arenaSkillButtons" style="display:inline-flex; gap:5px; flex-wrap:wrap;"></span>
         </div>
       </div>
+    </div>
+    <div id="arenaSettingsCard" class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; margin-bottom:6px; background:#0b1220; border:1px solid var(--border); border-radius:6px; font-size:12px;">
         <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;" id="arenaScaleControls">
           <span style="color:var(--muted);">Tỷ lệ nhân vật (Nearest):</span>
@@ -632,12 +671,17 @@
           <input type="number" id="numArenaScale" min="0.5" max="3.0" step="0.05" value="2" style="width:62px; padding:3px 5px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;" />
         </div>
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkPhoneBezel" checked /> 📱 Khung ĐT 16:9</label>
-          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="Hiển thị đúng 1920×1080 CSS pixel thật không co nhỏ"><input type="checkbox" id="chkNative1to1" /> 🖥️ Pixel thật 1:1 (1920×1080)</label>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkPhoneBezel" checked /> 📱 Khung ĐT</label>
+          <select id="selDeviceProfile" style="padding:3px 7px; border-radius:4px; border:1px solid var(--border); background:#080d18; color:#e6ecff;" title="Chọn profile thiết bị mobile D1/D2/D4"></select>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="D2: Mặc định Fractional; bật để làm tròn xuống bội số nguyên (>=1080px, tự khóa ở 720p)"><input type="checkbox" id="chkPixelPerfect" /> 🔲 Pixel Perfect (Integer)</label>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="Chạy bản export HTML5 thật của chính Godot 4.7 Compatibility"><input type="checkbox" id="chkGodotWebRuntime" /> 🎮 Godot Web Thật</label>
+          <a class="btn" href="/godot-web/index.html" target="_blank" rel="noopener" title="Mở Godot toàn màn hình trên chính thiết bị để kiểm tra tỷ lệ và pixel thực">↗ Mở Godot trực tiếp</a>
+          <a class="btn btn-gold" id="btnDownloadAndroidApkArena" href="/api/download-android-debug.apk" download="dr7-studio-debug.apk" title="Tải nhanh APK Android Debug (arm64-v8a + x86_64) cài trực tiếp lên Redmi K70E">📱 Tải APK K70E (.apk)</a>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="Hiển thị đúng 1 CSS px = 1 canvas px (chưa tính devicePixelRatio của màn hình thật)"><input type="checkbox" id="chkNative1to1" /> 🖥️ 1 CSS px = 1 canvas px</label>
           <button class="btn" id="btnFullscreenArena" title="Mở rộng toàn màn hình để soi thực chiến">⛶ Toàn màn hình</button>
-          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkSampleMap" checked /> 🏔️ Map Mẫu</label>
-          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkArenaGrid" checked /> 📐 Thước &amp; Khung</label>
-          <span id="arenaStageBadge" style="color:var(--gold); font-weight:600;">1920×1080 • 16:9 • PPU 64</span>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkSampleMap" checked /> 🏔️ Map Tile 2D</label>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="So sánh nhanh với ảnh JPEG đơn lớp ban đầu"><input type="checkbox" id="chkLegacyBg" /> 📷 Nền JPEG cũ</label>
+          <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chkArenaGrid" /> 📐 Thước &amp; SafeArea</label>
         </div>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:6px 10px; margin-bottom:10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
@@ -678,7 +722,7 @@
         </div>
         <span id="arenaAiStatus" style="color:#fcd34d; font-family:monospace;">AI TẮT • Zone [1120..1600] • &lt;50px nhẹ / 50..200px đuổi / ≥200px power_up</span>
       </div>
-      <div id="arenaItemControls" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; margin-bottom:10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
+      <div id="arenaItemControls" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:6px 10px; background:#09101c; border:1px solid var(--border); border-radius:6px; font-size:12px;">
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
           <button class="btn btn-gold" id="btnToggleArenaItems">🔮 Ẩn Ngọc</button>
           <button class="btn" id="btnMonsterDeathDrop" title="Quái bên phải chết -> ngọc nhảy lên 10px, rơi xuống đất, lăn 10px rồi quét sáng">💀 Quái Chết Rơi Ngọc</button>
@@ -704,18 +748,6 @@
           <canvas id="bagSlotCanvas" width="308" height="44" style="image-rendering:pixelated; display:block;"></canvas>
         </div>
       </div>
-      <div id="arenaViewportOuter" style="background:#05080f; border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; justify-content:center; align-items:center; overflow:auto;">
-        <div id="arenaPhoneFrame" style="position:relative; width:100%; max-width:1180px; aspect-ratio:2096/1166; margin:0 auto;">
-          <div id="arenaScreenSlot" style="position:absolute; left:4.198473%; top:4.545455%; width:91.603053%; height:92.624357%; overflow:hidden; border-radius:2.2%; background:#080c14;">
-            <canvas id="arenaCanvas" width="1920" height="1080" style="width:100%; height:100%; image-rendering:pixelated; display:block;"></canvas>
-            <div id="shenronWishOverlay" style="display:none; position:absolute; right:3%; top:14%; width:clamp(220px, 25%, 360px); background:rgba(10,16,30,0.92); border:2px solid #facc15; border-radius:10px; padding:12px; box-shadow:0 8px 28px rgba(0,0,0,0.75); z-index:5;">
-              <div style="color:#fde047; font-weight:700; font-size:14px; margin-bottom:8px;">✨ Chọn Điều Ước Shenron</div>
-              <div id="shenronWishButtons" style="display:flex; flex-direction:column; gap:6px;"></div>
-            </div>
-          </div>
-          <img id="arenaPhoneBezelImg" src="/preview-assets/phone-frame-landscape-16x9.png" alt="Landscape 16:9 Phone Frame" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none;" />
-        </div>
-      </div>
     </div>
   </section>
 
@@ -726,6 +758,7 @@
     const RULER_PAD = 28;
     const state = {
       api: null,
+      terrain: null,
       wasmExports: null,
       bundlesById: {},
       itemsById: {},
@@ -789,24 +822,87 @@
       }
     }
 
-    function loadImage(url) {
+    state.failedAssets = {};
+    let _assetRedrawTimer = null;
+    function scheduleUiAssetRedraw(immediate = false) {
+      const flush = () => {
+        _assetRedrawTimer = null;
+        if (!state.api) return;
+        if (state.api?.roster?.characters?.length) renderRosterList();
+        if (state.activeChar) buildFilmstrip(getActiveTimelineFrames());
+        if (state.activeTab === 'tab-human') {
+          renderInspector();
+          renderDragonBallItemInspector();
+        } else if (state.activeTab === 'tab-arena') {
+          stepAndRenderArena(0);
+        }
+      };
+      if (immediate || typeof setTimeout !== 'function') {
+        flush();
+        return;
+      }
+      if (_assetRedrawTimer !== null) return;
+      _assetRedrawTimer = setTimeout(flush, 60);
+    }
+
+    function loadImage(url, attempt = 0) {
+      if (!url) return Promise.reject(new Error('URL ảnh rỗng'));
       if (state.images[url]) return Promise.resolve(state.images[url]);
-      if (state.imagePromises[url]) return state.imagePromises[url];
+      if (attempt === 0 && state.imagePromises[url]) return state.imagePromises[url];
       const p = new Promise((resolve, reject) => {
         const img = new Image();
-        img.onload = () => {
-          state.images[url] = img;
+        let settled = false;
+        const timer = typeof setTimeout === 'function'
+          ? setTimeout(() => {
+              if (settled) return;
+              settled = true;
+              delete state.imagePromises[url];
+              if (attempt < 2) {
+                const retry = setTimeout(() => loadImage(url, attempt + 1).then(resolve, reject), 450 * (attempt + 1));
+                void retry;
+              } else {
+                reject(new Error(`Quá thời gian tải ảnh ${url}`));
+              }
+            }, 45000)
+          : null;
+        const done = ok => {
+          if (settled) return;
+          settled = true;
+          if (timer !== null && typeof clearTimeout === 'function') clearTimeout(timer);
           delete state.imagePromises[url];
-          resolve(img);
+          const w = img.naturalWidth || img.width || 0;
+          if (ok && w > 0) {
+            state.images[url] = img;
+            delete state.failedAssets[url];
+            scheduleUiAssetRedraw();
+            resolve(img);
+          } else if (attempt < 2 && typeof setTimeout === 'function') {
+            setTimeout(() => loadImage(url, attempt + 1).then(resolve, reject), 450 * (attempt + 1));
+          } else {
+            state.failedAssets[url] = true;
+            reject(new Error(`Không tải được ảnh ${url}`));
+          }
         };
-        img.onerror = () => {
-          delete state.imagePromises[url];
-          reject(new Error(`Không tải được ảnh ${url}`));
-        };
+        img.onload = () => done(true);
+        img.onerror = () => done(false);
         img.src = url;
+      }).catch(err => {
+        if (attempt >= 2) showRuntimeError('loadImage', err);
+        throw err;
       });
       state.imagePromises[url] = p;
       return p;
+    }
+
+    function ensureBundleImagesLoaded(bundle) {
+      if (!bundle || !bundle.animations) return;
+      for (const anim of Object.values(bundle.animations)) {
+        for (const f of (anim.frames || [])) {
+          if (f?.atlas_url && !state.images[f.atlas_url]) {
+            loadImage(f.atlas_url).catch(() => null);
+          }
+        }
+      }
     }
 
     function getCharBundle(ch = state.activeChar) {
@@ -822,6 +918,10 @@
           fetch('/rust_combat_sim.wasm').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null),
         ]);
         state.api = bRes;
+        state.terrain = bRes.terrain || null;
+        arena.terrainPlatforms = Array.isArray(state.terrain?.platforms) ? state.terrain.platforms : [];
+        applyDeviceProfilesConfig(bRes.device_profiles, bRes.godot_web_ready);
+        applyAndroidApkInfo(bRes.android_apk);
         applyArenaStageConfig(bRes.arena_stage);
 
         if (wasmBytes) {
@@ -829,36 +929,87 @@
           state.wasmExports = mod.instance.exports;
         }
 
-        const preloadUrlSet = new Set();
-        if (arena.mapWebPath) preloadUrlSet.add(arena.mapWebPath);
+        const reviewQuery = typeof URLSearchParams === 'function'
+          ? new URLSearchParams(globalThis.location?.search || '') : null;
+        const reqTab = reviewQuery?.get('tab');
+        const arenaTabActive = reqTab === 'arena';
+        const priorityUrlSet = new Set();
+        const bgUrlSet = new Set();
+        const addByTab = (url, forArena) => {
+          if (!url) return;
+          if (forArena ? arenaTabActive : true) priorityUrlSet.add(url);
+          else bgUrlSet.add(url);
+        };
+        if (arena.mapWebPath) addByTab(arena.mapWebPath, true);
+        if (state.terrain) {
+          const bd = state.terrain.backdrop || {};
+          if (bd.bg_web_path) addByTab(bd.bg_web_path, true);
+          if (bd.wing_left?.web_path) bgUrlSet.add(bd.wing_left.web_path);
+          if (bd.wing_right?.web_path) bgUrlSet.add(bd.wing_right.web_path);
+          for (const pInfo of Object.values(state.terrain.parallax || {})) {
+            if (pInfo?.web_path) addByTab(pInfo.web_path, true);
+          }
+          if (state.terrain.tileset?.web_path) addByTab(state.terrain.tileset.web_path, true);
+          if (state.terrain.platforms_sheet?.web_path) bgUrlSet.add(state.terrain.platforms_sheet.web_path);
+          if (state.terrain.dust_fx?.web_path) addByTab(state.terrain.dust_fx.web_path, true);
+        }
         state.itemsById = {};
         if (bRes.items?.by_id) {
           for (const [itemId, itemSet] of Object.entries(bRes.items.by_id)) {
             state.itemsById[itemId] = itemSet;
-            if (itemSet.atlas_url) preloadUrlSet.add(itemSet.atlas_url);
+            if (itemSet.atlas_url) priorityUrlSet.add(itemSet.atlas_url);
           }
         }
-      if(bRes.rituals?.shenron_summon){preloadUrlSet.add("/"+bRes.rituals.shenron_summon.atlas);if(bRes.rituals.shenron_summon.reveal)preloadUrlSet.add("/"+bRes.rituals.shenron_summon.reveal.mask);}
+        if (bRes.rituals?.shenron_summon) {
+          bgUrlSet.add('/' + bRes.rituals.shenron_summon.atlas);
+          if (bRes.rituals.shenron_summon.reveal) bgUrlSet.add('/' + bRes.rituals.shenron_summon.reveal.mask);
+        }
         for (const b of bRes.bundles) {
           state.bundlesById[b.id] = b;
           for (const anim of Object.values(b.animations)) {
             for (const f of anim.frames) {
-              if (f.atlas_url) preloadUrlSet.add(f.atlas_url);
+              if (f.atlas_url) bgUrlSet.add(f.atlas_url);
             }
           }
         }
-        const preloadUrls = Array.from(preloadUrlSet).map(u =>
-          u === arena.mapWebPath ? loadImage(u).catch(() => null) : loadImage(u)
-        );
-        await Promise.all(preloadUrls);
+
+        const firstChar = bRes.roster.characters.find(c => c.character_id === reviewQuery?.get('character'))
+          || bRes.roster.characters[0] || null;
+        const firstBundle = firstChar ? getCharBundle(firstChar) : null;
+        if (firstBundle) {
+          for (const anim of Object.values(firstBundle.animations || {})) {
+            for (const f of (anim.frames || [])) {
+              if (f?.atlas_url) priorityUrlSet.add(f.atlas_url);
+            }
+          }
+        }
+        for (const u of priorityUrlSet) bgUrlSet.delete(u);
 
         setupEventListeners();
         renderParityHeader();
 
-        const reviewQuery = typeof URLSearchParams === 'function'
-          ? new URLSearchParams(globalThis.location?.search || '') : null;
-        const firstChar = bRes.roster.characters.find(c => c.character_id === reviewQuery?.get('character'))
-          || bRes.roster.characters[0] || null;
+        if (reqTab === 'arena' || reqTab === 'human') {
+          const targetTabId = reqTab === 'arena' ? 'tab-arena' : 'tab-human';
+          const tabBtns = Array.from(document.querySelectorAll('.tab-btn') || []);
+          const matchedBtn = tabBtns.find(btn => btn?.dataset?.tab === targetTabId);
+          if (matchedBtn && typeof matchedBtn.click === 'function') matchedBtn.click();
+        }
+
+        // Prioritize active tab essentials (3.5s soft cap); each arriving asset triggers scheduleUiAssetRedraw() automatically
+        const priorityPromises = Array.from(priorityUrlSet).map(u => loadImage(u).catch(() => null));
+        if (priorityPromises.length) {
+          let capTimer = null;
+          await Promise.race([
+            Promise.allSettled(priorityPromises).finally(() => {
+              if (capTimer !== null && typeof clearTimeout === 'function') clearTimeout(capTimer);
+            }),
+            new Promise(res => {
+              capTimer = typeof setTimeout === 'function' ? setTimeout(res, 3500) : null;
+              if (capTimer === null) res();
+            }),
+          ]);
+        }
+
         if (firstChar) {
           populateEnemySelectOptions();
           selectCharacter(firstChar.character_id);
@@ -881,8 +1032,16 @@
         renderInspector();
         renderDragonBallItemInspector();
         stepAndRenderArena(16.67);
-
         requestAnimationFrame(mainLoop);
+
+        // Preload remaining roster atlases & wings in gentle pairs of 2; avatars refresh as each resolves
+        const remaining = Array.from(bgUrlSet);
+        (async () => {
+          for (let i = 0; i < remaining.length; i += 2) {
+            await Promise.allSettled(remaining.slice(i, i + 2).map(u => loadImage(u).catch(() => null)));
+          }
+          scheduleUiAssetRedraw(true);
+        })();
       } catch (err) {
         showRuntimeError('initApp', err);
       }
@@ -943,6 +1102,7 @@
       arena.patrolEnabled=false;arena.patrolDir=arena.flip?-1:1;arena.patrolRun=false;
       state.archMode = 'combined_1layer';
       const activeBundle = getCharBundle(ch);
+      ensureBundleImagesLoaded(activeBundle);
       const independent = activeBundle?.render_contract;
       const hasAura = Boolean(independent?.aura?.loop_clip && activeBundle?.animations[independent.aura.loop_clip]);
       if(independent) { state.activeClipName='idle'; state.auraEnabled=false; state.fxTicks=0; arena.rageMode=false; }
@@ -974,6 +1134,7 @@
       if (!arena.enemyAi.pinned || !arena.enemyAi.charId) {
         selectEnemyCharacter(arena.playerCharId || ch.character_id, false);
       }
+      syncArenaWalkBounds();
       updateEnemyAiStatusUI();
 
       const [cw, chPx] = getCanvasSize(ch);
@@ -1867,14 +2028,26 @@
       enemyScale: 2,
       customSpeedPxPerSec: null,
       burrowDustScale: 2.65,
+      pinArenaStage: true,
       native1to1: false,
       showPhoneBezel: true,
       showSampleMap: true,
-      showGridOverlay: true,
+      useLegacyBackdrop: false,
+      terrainPlatforms: [],
+      dropThroughMs: 0,
+      prevOnGround: true,
+      stepDustAccumPx: 0,
+      dustFx: [],
+      showGridOverlay: false,
       mapWebPath: '/assets/maps/rocky_plateau/rocky-plateau-bg.jpg',
       bezelWebPath: '/preview-assets/phone-frame-landscape-16x9.png',
       bezelImageSize: [2096, 1166],
       bezelHoleRect: [88, 53, 1920, 1080],
+      deviceProfiles: [],
+      selectedProfileId: 'fhd_16_9',
+      pixelPerfect: false,
+      useGodotWebRuntime: false,
+      godotWebReady: false,
       jumpVelocityPxPerMs: -0.78,
       gravityPxPerMs2: 0.0020,
       fxTicks:0,
@@ -1964,6 +2137,34 @@
       if (!bb) return [0, 0];
       if (Array.isArray(bb)) return [Number(bb[0]) || 0, Number(bb[1]) || 0];
       return [Number(bb.w) || 0, Number(bb.h) || 0];
+    }
+
+    function computeCharacterWalkBoundsX(ch, scaleVal) {
+      const canvas = document.getElementById('arenaCanvas');
+      const visW = Math.max(1, Number(arena.viewportWidth) || Number(canvas?.width) || 1920);
+      const viewLeft = (1920 - visW) * 0.5;
+      const viewRight = (1920 + visW) * 0.5;
+      const [bodyW] = getBodyDims(ch);
+      const sc = Number(scaleVal) || 2;
+      const rawHalf = bodyW > 0 ? (bodyW * sc * 0.5) : (70.0 * sc);
+      const pad = Math.min(Math.max(16, visW * 0.45), Math.max(16, rawHalf));
+      return [viewLeft + pad, viewRight - pad];
+    }
+
+    function syncArenaWalkBounds() {
+      const pEntry = getPlayerRosterEntry();
+      const [pMin, pMax] = computeCharacterWalkBoundsX(pEntry, arena.charScale);
+      arena.minX = pMin;
+      arena.maxX = pMax;
+      arena.x = Math.max(arena.minX, Math.min(arena.maxX, arena.x));
+      if (typeof getEnemyRosterEntry === 'function') {
+        const eEntry = getEnemyRosterEntry();
+        const [eMin, eMax] = computeCharacterWalkBoundsX(eEntry, arena.enemyScale);
+        arena.dummyX = Math.max(eMin, Math.min(eMax, arena.dummyX));
+        arena.enemyAi.x = Math.max(eMin, Math.min(eMax, arena.enemyAi.x));
+        arena.enemyAi.zoneMinX = Math.max(eMin, Math.min(eMax - 40, arena.enemyAi.zoneMinX));
+        arena.enemyAi.zoneMaxX = Math.max(arena.enemyAi.zoneMinX + 40, Math.min(eMax, arena.enemyAi.zoneMaxX));
+      }
     }
 
     function isFlyingBundle(b = getCharBundle()) {
@@ -2381,6 +2582,7 @@
       const ch = (state.api?.roster?.characters || []).find(c => c.character_id === charId);
       if (!ch) return false;
       const eb = getCharBundle(ch);
+      ensureBundleImagesLoaded(eb);
       arena.enemyAi.charId = ch.character_id;
       arena.enemyAi.pinned = pin;
       arena.enemyScale = getDefaultCharScale(eb);
@@ -2398,6 +2600,7 @@
       arena.enemyAi.turnBoostMs = 0;
       arena.enemyAi.chiloAction = null;
       resetEnemyAiZone(arena.dummyX);
+      syncArenaWalkBounds();
       const sel = document.getElementById('selEnemyChar');
       if (sel && sel.value !== ch.character_id) sel.value = ch.character_id;
       updateEnemyAiStatusUI();
@@ -2639,20 +2842,138 @@
       return { eCh, eb };
     }
 
+    function getSelectedDeviceProfile() {
+      const list = arena.deviceProfiles || [];
+      return list.find(p => p.id === arena.selectedProfileId) || null;
+    }
+
+    function computeDeviceLayoutMetrics(prof, pixelPerfectReq) {
+      const w = Number(prof?.width_px) || 1920;
+      const h = Number(prof?.height_px) || 1080;
+      const dpr = Number(prof?.dpr) || 1.0;
+      const below1080p = h < 1080;
+      const integerApplied = Boolean(pixelPerfectReq) && !below1080p;
+      let scaleF = h / 1080;
+      if ((w / h) < (1920 / 1080)) scaleF = w / 1920;
+      const effScale = integerApplied ? Math.max(1, Math.floor(scaleF)) : scaleF;
+      const visW = Math.max(1920, Math.round(w / Math.max(0.01, effScale)));
+      const visH = (w / h) < (1920 / 1080) && !integerApplied ? Math.max(1080, Math.round(h / Math.max(0.01, effScale))) : 1080;
+      return { w, h, dpr, below1080p, integerApplied, effScale, visW, visH };
+    }
+
+    function applyAndroidApkInfo(apkInfo) {
+      const available = Boolean(apkInfo && apkInfo.available);
+      const url = (apkInfo && apkInfo.download_url) || '/api/download-android-debug.apk';
+      const filename = (apkInfo && apkInfo.filename) || 'dr7-studio-debug.apk';
+      const sizeLabel = available && apkInfo.size_mb ? `${apkInfo.size_mb} MB` : '';
+      const shaShort = available && apkInfo.sha256 ? String(apkInfo.sha256).slice(0, 12) : '';
+      const builtAt = available && apkInfo.built_at_utc ? ` | Build: ${apkInfo.built_at_utc}` : '';
+      const targets = [
+        { id: 'btnDownloadAndroidApkHeader', readyText: `📱 Tải APK Android (${sizeLabel || '.apk'})`, missingText: '📱 Chưa có APK' },
+        { id: 'btnDownloadAndroidApkArena', readyText: `📱 Tải APK K70E (${sizeLabel || '.apk'})`, missingText: '📱 Chưa có APK' },
+      ];
+      for (const spec of targets) {
+        const el = document.getElementById(spec.id);
+        if (!el) continue;
+        el.href = url;
+        el.download = filename;
+        el.textContent = available ? spec.readyText : spec.missingText;
+        el.title = available
+          ? `Tải ${filename} (${sizeLabel}, SHA ${shaShort}${builtAt}) để cài trên Redmi K70E`
+          : 'Chưa build APK — chạy ./loop.sh apk-debug';
+        el.style.opacity = available ? '' : '0.55';
+        el.style.pointerEvents = available ? '' : 'none';
+        el.setAttribute('aria-disabled', available ? 'false' : 'true');
+      }
+    }
+
+    function applyDeviceProfilesConfig(profilesDoc, godotWebReady = false) {
+      arena.godotWebReady = Boolean(godotWebReady);
+      arena.useGodotWebRuntime = arena.godotWebReady;
+      arena.deviceProfiles = Array.isArray(profilesDoc?.profiles) ? profilesDoc.profiles : [];
+      const sel = document.getElementById('selDeviceProfile');
+      if (sel) {
+        sel.innerHTML = '';
+        const baseOpt = document.createElement('option');
+        baseOpt.value = 'fhd_16_9';
+        baseOpt.textContent = '🖥️ 1920×1080 (16:9 Chuẩn Base)';
+        sel.appendChild(baseOpt);
+        for (const p of arena.deviceProfiles) {
+          if (p.id === 'fhd_16_9') continue;
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `📱 ${p.name} (${p.width_px}×${p.height_px})`;
+          sel.appendChild(opt);
+        }
+        sel.value = arena.selectedProfileId || 'fhd_16_9';
+      }
+      const chkGodot = document.getElementById('chkGodotWebRuntime');
+      if (chkGodot) {
+        chkGodot.disabled = !arena.godotWebReady;
+        chkGodot.checked = arena.useGodotWebRuntime;
+      }
+    }
+
     function updateArenaFrameLayout() {
       const frame = document.getElementById('arenaPhoneFrame');
       const slot = document.getElementById('arenaScreenSlot');
       const bezelImg = document.getElementById('arenaPhoneBezelImg');
+      const safeOverlay = document.getElementById('safeAreaOverlay');
+      const canvas = document.getElementById('arenaCanvas');
+      const godotFrame = document.getElementById('godotWebFrame');
       const chkBezel = document.getElementById('chkPhoneBezel');
       const chkNative = document.getElementById('chkNative1to1');
+      const chkPx = document.getElementById('chkPixelPerfect');
+      const chkGodot = document.getElementById('chkGodotWebRuntime');
+      const chkPin = document.getElementById('chkPinArenaStage');
+      const pinnedBox = document.getElementById('arenaPinnedStage');
       if (chkBezel) chkBezel.checked = arena.showPhoneBezel;
       if (chkNative) chkNative.checked = arena.native1to1;
+      if (chkPx) chkPx.checked = arena.pixelPerfect;
+      if (chkGodot) chkGodot.checked = arena.useGodotWebRuntime;
+      if (chkPin) chkPin.checked = arena.pinArenaStage;
+      if (pinnedBox && pinnedBox.classList) pinnedBox.classList.toggle('unpinned', !arena.pinArenaStage);
       if (!frame || !slot) return;
+
+      const prof = getSelectedDeviceProfile();
+      const dm = computeDeviceLayoutMetrics(prof, arena.pixelPerfect);
+      arena.viewportWidth = dm.visW;
+      arena.viewportHeight = dm.visH;
+      syncArenaWalkBounds();
+      if (canvas && (canvas.width !== dm.visW || canvas.height !== dm.visH)) {
+        canvas.width = dm.visW;
+        canvas.height = dm.visH;
+      }
+      if (canvas) canvas.style.display = arena.useGodotWebRuntime ? 'none' : 'block';
+      for (const id of ['arenaActionButtons', 'arenaScaleControls', 'arenaAiControls', 'arenaItemControls']) {
+        const el = document.getElementById(id);
+        if (el) {
+          if (!el.dataset.runtimeDisplay) el.dataset.runtimeDisplay = el.style.display || 'block';
+          el.style.display = arena.useGodotWebRuntime ? 'none' : el.dataset.runtimeDisplay;
+        }
+      }
+      const controlHint = document.getElementById('arenaControlHint');
+      if (controlHint && arena.useGodotWebRuntime) controlHint.textContent = 'Điều khiển nhân vật, skill và đổi quái trực tiếp trong khung Godot bên trên.';
+      if (godotFrame) {
+        if (arena.useGodotWebRuntime && arena.godotWebReady) {
+          godotFrame.style.display = 'block';
+          if (!godotFrame.src || !godotFrame.src.endsWith('/godot-web/index.html')) {
+            godotFrame.src = '/godot-web/index.html';
+          }
+        } else {
+          godotFrame.style.display = 'none';
+        }
+      }
+
       const [bw, bh] = arena.bezelImageSize;
       const [hx, hy, hw, hh] = arena.bezelHoleRect;
-      if (arena.showPhoneBezel) {
+      const isBase16by9 = !prof || (dm.w === 1920 && dm.h === 1080);
+      if (arena.showPhoneBezel && isBase16by9) {
         if (bezelImg) bezelImg.style.display = 'block';
         frame.style.aspectRatio = `${bw} / ${bh}`;
+        frame.style.border = '';
+        frame.style.padding = '';
+        frame.style.background = '';
         if (arena.native1to1) {
           frame.style.width = `${bw}px`;
           frame.style.minWidth = `${bw}px`;
@@ -2660,7 +2981,7 @@
         } else {
           frame.style.width = '100%';
           frame.style.minWidth = '';
-          frame.style.maxWidth = '1180px';
+          frame.style.maxWidth = arena.pinArenaStage ? `min(1020px, calc(56vh * ${(bw / bh).toFixed(4)}))` : '1180px';
         }
         slot.style.left = `${(hx / bw * 100).toFixed(6)}%`;
         slot.style.top = `${(hy / bh * 100).toFixed(6)}%`;
@@ -2669,22 +2990,41 @@
         slot.style.borderRadius = '2.2%';
       } else {
         if (bezelImg) bezelImg.style.display = 'none';
-        frame.style.aspectRatio = `${arena.viewportWidth} / ${arena.viewportHeight}`;
+        frame.style.aspectRatio = `${dm.w} / ${dm.h}`;
+        frame.style.border = arena.showPhoneBezel ? '10px solid #1e293b' : '';
+        frame.style.borderRadius = arena.showPhoneBezel ? '22px' : '8px';
+        frame.style.background = '#05080f';
         if (arena.native1to1) {
-          frame.style.width = `${arena.viewportWidth}px`;
-          frame.style.minWidth = `${arena.viewportWidth}px`;
+          const cssW = Math.round(dm.w / (dm.dpr > 1 ? dm.dpr : 1));
+          const targetW = isBase16by9 ? 1920 : dm.w;
+          frame.style.width = `${targetW}px`;
+          frame.style.minWidth = `${targetW}px`;
           frame.style.maxWidth = 'none';
         } else {
           frame.style.width = '100%';
           frame.style.minWidth = '';
-          frame.style.maxWidth = '1140px';
+          frame.style.maxWidth = arena.pinArenaStage ? `min(1020px, calc(56vh * ${(dm.w / dm.h).toFixed(4)}))` : '1140px';
         }
         slot.style.left = '0%';
         slot.style.top = '0%';
         slot.style.width = '100%';
         slot.style.height = '100%';
-        slot.style.borderRadius = '8px';
+        slot.style.borderRadius = arena.showPhoneBezel ? '12px' : '8px';
       }
+
+      if (safeOverlay) {
+        if (arena.showGridOverlay && prof && Array.isArray(prof.safe_area_px) && prof.safe_area_px.length === 4) {
+          const [sx, sy, sw, sh] = prof.safe_area_px;
+          safeOverlay.style.display = 'block';
+          safeOverlay.style.left = `${(sx / dm.w * 100).toFixed(3)}%`;
+          safeOverlay.style.top = `${(sy / dm.h * 100).toFixed(3)}%`;
+          safeOverlay.style.right = `${((dm.w - (sx + sw)) / dm.w * 100).toFixed(3)}%`;
+          safeOverlay.style.bottom = `${((dm.h - (sy + sh)) / dm.h * 100).toFixed(3)}%`;
+        } else {
+          safeOverlay.style.display = 'none';
+        }
+      }
+      updateArenaScaleUI();
     }
 
     function formatScaleLabel(s) {
@@ -2696,6 +3036,7 @@
       const clamped = Number.isFinite(raw) ? Math.max(0.5, Math.min(3.5, Math.round(raw * 20) / 20)) : 2;
       arena.charScale = clamped;
       arena.enemyScale = clamped;
+      syncArenaWalkBounds();
       updateArenaScaleUI();
       updateArenaSpeedUI();
     }
@@ -2713,7 +3054,11 @@
         const [bodyW, bodyH] = getBodyDims(getPlayerRosterEntry());
         const sLabel = formatScaleLabel(arena.charScale);
         const sizeNote = bodyH ? ` • Thân ${sLabel}× ≈ ${Math.round(bodyW * arena.charScale)}×${Math.round(bodyH * arena.charScale)}px (${(bodyH * arena.charScale / arena.viewportHeight * 100).toFixed(1)}% 1080p)` : '';
-        badge.textContent = `${arena.viewportWidth}×${arena.viewportHeight} • 16:9 • ${sLabel}× Nearest${sizeNote}`;
+        const prof = getSelectedDeviceProfile();
+        const dm = computeDeviceLayoutMetrics(prof, arena.pixelPerfect);
+        const modeTxt = arena.useGodotWebRuntime ? 'Godot Web' : 'Mô phỏng JS+WASM';
+        const pxTxt = (dm.below1080p && arena.pixelPerfect) ? 'Fractional (Khóa <1080p)' : (dm.integerApplied ? 'Integer' : 'Fractional');
+        badge.textContent = `${arena.viewportWidth}×${arena.viewportHeight} (${prof ? prof.aspect_label : '16:9'}, scale ${dm.effScale.toFixed(3)} ${pxTxt}, ${modeTxt}) • ${sLabel}× Nearest${sizeNote}`;
       }
     }
 
@@ -3059,6 +3404,47 @@
       }
     }
 
+    function getNearestSupportYBelow(posX, posY) {
+      let bestY = arena.groundY;
+      for (const plat of (arena.terrainPlatforms || [])) {
+        if (posX >= plat.x - 10 && posX <= plat.x + plat.w + 10 && posY <= plat.y + 6 && plat.y < bestY) {
+          bestY = plat.y;
+        }
+      }
+      return bestY;
+    }
+
+    function spawnGroundDust(worldX, surfaceY, scaleMult = 1.0) {
+      const dfx = state.terrain?.dust_fx;
+      if (!dfx?.web_path) return;
+      arena.dustFx.push({
+        x: worldX,
+        y: surfaceY,
+        elapsedMs: 0,
+        scale: (Number(dfx.scale) || 2) * Math.max(0.7, Math.min(1.5, scaleMult)),
+      });
+    }
+
+    function drawPixelContactShadow(ctx, posX, posY, bodyW, scaleVal, visible = true) {
+      if (!visible) return;
+      const supY = getNearestSupportYBelow(posX, posY);
+      const h = Math.max(0, supY - posY);
+      const cs = state.terrain?.contact_shadow || {};
+      const maxH = Number(cs.max_height_px) || 320;
+      const ratio = Math.max(0.25, Math.min(1.0, 1.0 - h / Math.max(1, maxH)));
+      const minHw = Number(cs.min_half_w_px) || 18;
+      const baseHw = bodyW > 0 ? Math.max(22, Math.min(88, bodyW * scaleVal * 0.36)) : (Number(cs.base_half_w_px) || 52);
+      const hw = Math.round(minHw + (Math.max(minHw, baseHw) - minHw) * ratio);
+      ctx.save();
+      const outer = cs.outer_rgba || [35, 22, 16, 60];
+      const inner = cs.inner_rgba || [24, 14, 10, 85];
+      ctx.fillStyle = `rgba(${outer[0]}, ${outer[1]}, ${outer[2]}, ${((outer[3] / 255) * ratio).toFixed(3)})`;
+      ctx.fillRect(Math.round(posX - hw), Math.round(supY - 4), hw * 2, 8);
+      ctx.fillStyle = `rgba(${inner[0]}, ${inner[1]}, ${inner[2]}, ${((inner[3] / 255) * ratio).toFixed(3)})`;
+      ctx.fillRect(Math.round(posX - hw * 0.68), Math.round(supY - 6), Math.round(hw * 1.36), 10);
+      ctx.restore();
+    }
+
     function triggerArenaJump() {
       if(isSummonCasting())return;
       const pb = getPlayerBundle();
@@ -3069,8 +3455,10 @@
         return;
       }
       if(!b?.animations.jump)return;
-      if (arena.y >= arena.groundY - 1) {
+      const supY = getNearestSupportYBelow(arena.x, arena.y);
+      if (arena.y >= supY - 2 && arena.vy >= 0) {
         arena.vy = arena.jumpVelocityPxPerMs;
+        spawnGroundDust(arena.x, supY, 0.9);
         if (!arena.actionClip && b && b.animations['jump']) {
           arena.clip = 'jump';
           arena.step = 0;
@@ -3121,14 +3509,110 @@
       }
       ctx.imageSmoothingEnabled = false;
 
+      const dmNow = typeof computeDeviceLayoutMetrics === 'function' ? computeDeviceLayoutMetrics(getSelectedDeviceProfile(), arena.pixelPerfect) : null;
+      const stageOffsetX = Math.max(0, Math.round((canvas.width - 1920) * 0.5));
+
       const drawStageBackdrop = () => {
         ctx.fillStyle = '#070d18';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const ter = state.terrain;
+        const bd = ter?.backdrop || null;
+        const skyImg = ter?.parallax?.sky_clouds?.web_path ? state.images[ter.parallax.sky_clouds.web_path] : null;
+        const tsImg = ter?.tileset?.web_path ? state.images[ter.tileset.web_path] : null;
         const mapImg = arena.mapWebPath ? state.images[arena.mapWebPath] : null;
-        if (arena.showSampleMap && mapImg && mapImg.width > 0) {
+        const origImg = (bd?.bg_web_path ? state.images[bd.bg_web_path] : null) || mapImg;
+        if (arena.showSampleMap && !arena.useLegacyBackdrop && ter && tsImg && (origImg || skyImg)) {
+          ctx.save();
+          if (bd?.mode === 'original_jpg' && origImg && (origImg.naturalWidth || origImg.width || 0) > 0) {
+            ctx.imageSmoothingEnabled = true;
+            const origW = origImg.naturalWidth || origImg.width || 1199;
+            ctx.drawImage(origImg, stageOffsetX, 0, 1920, canvas.height);
+            if (stageOffsetX > 0) {
+              const wlImg = bd.wing_left?.web_path ? state.images[bd.wing_left.web_path] : null;
+              const wrImg = bd.wing_right?.web_path ? state.images[bd.wing_right.web_path] : null;
+              if (wlImg && (wlImg.naturalWidth || wlImg.width || 0) > 0) {
+                const wlSrcW = wlImg.naturalWidth || wlImg.width || 320;
+                const wlDrawW = Math.round(wlSrcW * (1920 / origW));
+                for (let lx = stageOffsetX - wlDrawW; lx > -wlDrawW; lx -= wlDrawW) {
+                  ctx.drawImage(wlImg, lx, 0, wlDrawW, canvas.height);
+                }
+              }
+              if (wrImg && (wrImg.naturalWidth || wrImg.width || 0) > 0) {
+                const wrSrcW = wrImg.naturalWidth || wrImg.width || 320;
+                const wrDrawW = Math.round(wrSrcW * (1920 / origW));
+                for (let rx = stageOffsetX + 1920; rx < canvas.width; rx += wrDrawW) {
+                  ctx.drawImage(wrImg, rx, 0, wrDrawW, canvas.height);
+                }
+              }
+            }
+          } else if (skyImg) {
+            ctx.imageSmoothingEnabled = false;
+            const camOffsetX = (arena.x - 960);
+            for (const lid of ['sky_clouds', 'far_canyon_river', 'mid_cliffs']) {
+              const pCfg = ter.parallax?.[lid];
+              const pImg = pCfg?.web_path ? state.images[pCfg.web_path] : null;
+              const pW = pImg ? (pImg.naturalWidth || pImg.width || 0) : 0;
+              if (!pImg || pW <= 0) continue;
+              const pH = pImg.naturalHeight || pImg.height || 0;
+              const pSc = Number(pCfg.render_scale) || 2;
+              const spanW = pW * pSc;
+              const spanH = pH * pSc;
+              const topY = Number(pCfg.top_y_world_px) || 0;
+              const scroll = Number(pCfg.scroll_factor) || 0.2;
+              const baseX = stageOffsetX + (1920 - spanW) * 0.5;
+              const shift = (((-camOffsetX * scroll) % spanW) + spanW) % spanW;
+              for (let rx = baseX + shift - spanW * 2; rx < canvas.width + spanW; rx += spanW) {
+                ctx.drawImage(pImg, Math.round(rx), topY, spanW, spanH);
+              }
+            }
+          }
+          // Draw seamless 32x32 -> 64x64 Ground TileSet across entire viewport width (Nearest 1:1 with Godot TileMapLayer)
+          ctx.imageSmoothingEnabled = false;
+          const tPx = Number(ter.tileset.tile_px) || 32;
+          const tCols = Number(ter.tileset.columns) || 30;
+          const tRows = Number(ter.tileset.rows) || 4;
+          const gSc = Number(ter.ground?.render_scale) || 2;
+          const tScreen = tPx * gSc;
+          const surfTopY = Number(ter.ground?.surface_top_y) || (arena.groundY - 16);
+          const startCol = Math.floor(-stageOffsetX / tScreen) - 1;
+          const endCol = Math.ceil((canvas.width - stageOffsetX) / tScreen) + 1;
+          for (let gx = startCol; gx <= endCol; gx++) {
+            const cIdx = ((gx % tCols) + tCols) % tCols;
+            const dx = stageOffsetX + gx * tScreen;
+            for (let gy = 0; gy < 4; gy++) {
+              const syRow = Math.min(gy, tRows - 1);
+              ctx.drawImage(tsImg, cIdx * tPx, syRow * tPx, tPx, tPx, dx, surfTopY + gy * tScreen, tScreen, tScreen);
+            }
+          }
+          // Draw optional One-Way Platforms only if map terrain explicitly defines any
+          const psImg = ter.platforms_sheet?.web_path ? state.images[ter.platforms_sheet.web_path] : null;
+          if (psImg && (psImg.naturalWidth || psImg.width || 0) > 0) {
+            const pieces = ter.platforms_sheet.pieces || {};
+            for (const plat of (arena.terrainPlatforms || [])) {
+              const pm = pieces[plat.tile_key];
+              if (!pm) continue;
+              const [rx, ry, rw, rh] = pm.rect_px;
+              const drawY = plat.y - (Number(pm.surface_offset_y_2x) || 10);
+              ctx.drawImage(psImg, rx, ry, rw, rh, stageOffsetX + plat.x, drawY, rw * 2, rh * 2);
+            }
+          }
+          ctx.restore();
+        } else if (arena.showSampleMap && mapImg && (mapImg.naturalWidth || mapImg.width || 0) > 0) {
           ctx.save();
           ctx.imageSmoothingEnabled = true;
-          ctx.drawImage(mapImg, 0, 0, canvas.width, canvas.height);
+          ctx.drawImage(mapImg, stageOffsetX, 0, 1920, canvas.height);
+          if (stageOffsetX > 0) {
+            ctx.save();
+            ctx.translate(stageOffsetX, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(mapImg, 0, 0, 1920, canvas.height);
+            ctx.restore();
+            ctx.save();
+            ctx.translate(stageOffsetX + 3840, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(mapImg, 0, 0, 1920, canvas.height);
+            ctx.restore();
+          }
           ctx.restore();
         } else {
           const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -3142,36 +3626,15 @@
 
         if (arena.showGridOverlay) {
           ctx.save();
-          // Walkable ground baseline y = arena.groundY and [minX, maxX] boundary posts
-          ctx.strokeStyle = 'rgba(250, 204, 21, 0.72)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(arena.minX, arena.groundY);
-          ctx.lineTo(arena.maxX, arena.groundY);
-          ctx.stroke();
-
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-          ctx.lineWidth = 1;
-          for (let gx = arena.minX; gx <= arena.maxX; gx += 64) {
-            const major = ((gx - arena.minX) % 256) === 0;
+          ctx.translate(stageOffsetX, 0);
+          for (const plat of (arena.terrainPlatforms || [])) {
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.78)';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(gx, arena.groundY - (major ? 14 : 7));
-            ctx.lineTo(gx, arena.groundY + (major ? 14 : 7));
+            ctx.moveTo(plat.x, plat.y);
+            ctx.lineTo(plat.x + plat.w, plat.y);
             ctx.stroke();
           }
-
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
-          ctx.setLineDash([8, 6]);
-          ctx.beginPath();
-          ctx.moveTo(arena.minX, arena.groundY - 220);
-          ctx.lineTo(arena.minX, arena.groundY + 40);
-          ctx.moveTo(arena.maxX, arena.groundY - 220);
-          ctx.lineTo(arena.maxX, arena.groundY + 40);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = 'rgba(250, 204, 21, 0.9)';
-          ctx.font = 'bold 16px monospace';
-          ctx.fillText(`ground_y=${arena.groundY} | bounds=[${arena.minX}, ${arena.maxX}]`, arena.minX + 12, arena.groundY + 34);
           ctx.restore();
         }
       };
@@ -3181,10 +3644,10 @@
       if (!state.activeChar || !b) {
         drawStageBackdrop();
         ctx.fillStyle = 'rgba(11,14,23,0.82)';
-        ctx.fillRect(18, 18, 960, 42);
+        ctx.fillRect(18, 18, Math.min(960, canvas.width - 36), 42);
         ctx.fillStyle = '#e6ecff';
         ctx.font = 'bold 20px monospace';
-        ctx.fillText('Khung: 1920×1080 (16:9 Mobile) | Chưa có nhân vật (Roster rỗng)', 32, 46);
+        ctx.fillText(`Khung: ${canvas.width}×${canvas.height} (Mobile Expand) | Chưa có nhân vật (Roster rỗng)`, 32, 46);
         return;
       }
 
@@ -3246,7 +3709,17 @@
             : (arena.actionClip ? 0.08 * scaleFactor : movePxPerMs * turnMult);
           dxPx = dir * baseMove * dtMs;
         }
+        const prevPlayerX = arena.x;
         arena.x = Math.max(patrolMinX, Math.min(patrolMaxX, arena.x + dxPx));
+        if (!isFlight && Math.abs(arena.x - prevPlayerX) > 0 && arena.y >= getNearestSupportYBelow(arena.x, arena.y) - 2) {
+          arena.stepDustAccumPx = (arena.stepDustAccumPx || 0) + Math.abs(arena.x - prevPlayerX);
+          if (arena.stepDustAccumPx >= 96) {
+            arena.stepDustAccumPx = 0;
+            spawnGroundDust(arena.x, getNearestSupportYBelow(arena.x, arena.y), 0.72);
+          }
+        } else if (dir === 0) {
+          arena.stepDustAccumPx = 64;
+        }
         if(chilo&&arena.chiloPatrol&&!arena.actionClip&&((dir>0&&arena.x>=patrolMaxX)||(dir<0&&arena.x<=patrolMinX))) {
           arena.turnPrevDir = arena.flip ? -1 : 1;
           arena.turnTargetFlip=dir>0;arena.chiloPatrolDir=-dir;
@@ -3269,6 +3742,8 @@
           }
         }
 
+        if (arena.dropThroughMs > 0) arena.dropThroughMs = Math.max(0, arena.dropThroughMs - dtMs);
+        const dropDown = Boolean(arena.keys['KeyS'] || arena.keys['ArrowDown']);
         let flyDirY = 0;
         if (isFlight && !isSummonCasting()) {
           const flyUp = arena.keys['KeyW'] || arena.keys['ArrowUp'] || arena.holdFlyUp;
@@ -3280,19 +3755,39 @@
         } else if (isStationaryBundle(b)||isSummonCasting()) {
           arena.vy = 0;
         } else {
-          arena.y += arena.vy * dtMs;
-          if (arena.y < arena.groundY) {
-            arena.vy += arena.gravityPxPerMs2 * dtMs;
-          } else {
-            arena.y = arena.groundY;
+          let prevY = arena.y;
+          if (dropDown && prevY < arena.groundY - 4) {
+            arena.dropThroughMs = 220;
+            prevY += 2;
+          }
+          const nextY = prevY + arena.vy * dtMs;
+          let supY = arena.groundY;
+          if (arena.dropThroughMs <= 0 && arena.vy >= 0) {
+            for (const plat of (arena.terrainPlatforms || [])) {
+              if (arena.x >= plat.x - 10 && arena.x <= plat.x + plat.w + 10 && prevY <= plat.y + 6 && nextY >= plat.y && plat.y < supY) {
+                supY = plat.y;
+              }
+            }
+          }
+          if (nextY >= supY) {
+            if (!arena.prevOnGround && arena.vy >= 0.16) {
+              spawnGroundDust(arena.x, supY, Math.max(0.65, Math.min(1.3, arena.vy / 0.78)));
+            }
+            arena.y = supY;
             arena.vy = 0;
+            arena.prevOnGround = true;
+          } else {
+            arena.y = nextY;
+            arena.vy += arena.gravityPxPerMs2 * dtMs;
+            arena.prevOnGround = false;
           }
         }
 
         // Auto locomotion clip when not executing an active skill
         if (!arena.actionClip) {
           let desired = !b.render_contract && arena.rageMode && b.animations['aura_loop'] ? 'aura_loop' : 'idle';
-          if (!isFlight && arena.y < arena.groundY - 2 && b.animations['jump']) {
+          const supClipY = getNearestSupportYBelow(arena.x, arena.y);
+          if (!isFlight && arena.y < supClipY - 3 && b.animations['jump']) {
             desired = 'jump';
           } else if (dir !== 0 || (isFlight && flyDirY !== 0)) {
             const motion=b.render_contract?.locomotion?.clip||'walk';
@@ -3383,6 +3878,13 @@
       stepArenaItemDrops(dtMs);
 
       drawStageBackdrop();
+      ctx.save();
+      ctx.translate(stageOffsetX, 0);
+      if (arena.itemDrop.enabled) {
+        for (const d of (arena.itemDrop.drops || [])) {
+          if (d.phase !== 'collected') drawPixelContactShadow(ctx, d.x, d.y, 28, d.scale || 1, true);
+        }
+      }
       drawDroppedItemsOnArena(ctx);
       renderDragonBallBagSlots();
 
@@ -3404,8 +3906,6 @@
         ctx.fillText(`Tầm bay mặc định Y=${arena.flyDefaultY} (Giữa màn ${flyDiffMid >= 0 ? '+' : ''}${flyDiffMid}px)`, arena.minX + 12, arena.flyDefaultY - 8);
         ctx.restore();
       }
-
-      ctx.save();
 
       const pEntry = getPlayerRosterEntry();
       const [cw, chPx] = getCanvasSize(pEntry);
@@ -3451,6 +3951,8 @@
         elapsedMs: arena.enemyAi.enabled ? arena.enemyAi.elapsed : 0,
         ...enemyChiloOpts,
       });
+      const enemyVisibleOnSurface = !eb.render_contract?.chilopoda || !(enemyClip === 'attack_light' && enemyStep >= 6 && enemyStep <= 9);
+      drawPixelContactShadow(ctx, enemyDrawX, enemyDrawY, eBodyW || 140, eScale, enemyVisibleOnSurface);
       ctx.save();
       ctx.imageSmoothingEnabled = false;
       ctx.translate(enemyDrawX, enemyDrawY);
@@ -3499,7 +4001,9 @@
         ctx.restore();
       }
 
-      // 2. Draw Player Controlled Character (1:1 Nearest pixel parity with Godot 4, no ellipse shadow)
+      // 2. Draw Player Controlled Character (1:1 Nearest pixel parity with Godot 4 + Dynamic Pixel Contact Shadow)
+      const playerVisibleOnSurface = !b.render_contract?.chilopoda || !(arena.clip === 'attack_light' && arena.step >= 6 && arena.step <= 9);
+      drawPixelContactShadow(ctx, arena.x, arena.y, bodyW || 140, scale, playerVisibleOnSurface);
       offCtx.clearRect(0, 0, cw, chPx);
       const chiOptions=b.render_contract?.chilopoda?{turnFacingHandled:true,dustScale:arena.burrowDustScale,...(arena.chiloAction&&arena.actionClip?{targetGroundCanvasPx:arena.chiloAction.target,sceneOriginShift:[(arena.x-arena.chiloAction.startX)/scale/arena.chiloAction.sign,0]}:{})}:{};
       drawCompositeStep(offCtx, arena.clip, arena.step, 1.0, 1.0, {bundle:b,character:pEntry,auraEnabled:arena.rageMode,fxTicks:arena.fxTicks,elapsedMs:arena.elapsed,...chiOptions});
@@ -3509,6 +4013,29 @@
       if (arena.flip) ctx.scale(-1, 1);
       ctx.drawImage(offscreenCanvas, -ax * scale, -ay * scale, cw * scale, chPx * scale);
       ctx.restore();
+
+      // Step & render 60Hz Pixel Footstep / Landing Dust FX
+      const dfxCfg = state.terrain?.dust_fx;
+      const dfxImg = dfxCfg?.web_path ? state.images[dfxCfg.web_path] : null;
+      for (let di = arena.dustFx.length - 1; di >= 0; di--) {
+        const dObj = arena.dustFx[di];
+        dObj.elapsedMs += dtMs;
+        const tpf = Number(dfxCfg?.ticks_per_frame) || 3;
+        const fc = Number(dfxCfg?.frame_count) || 6;
+        const [dfw, dfh] = dfxCfg?.frame_size_1x_px || [32, 20];
+        const [dax, day] = dfxCfg?.anchor_1x_px || [16, 17];
+        const fi = Math.floor((dObj.elapsedMs * 0.06) / tpf);
+        if (fi >= fc) {
+          arena.dustFx.splice(di, 1);
+          continue;
+        }
+        if (dfxImg && dfxImg.width > 0) {
+          ctx.save();
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(dfxImg, fi * dfw, 0, dfw, dfh, Math.round(dObj.x - dax * dObj.scale), Math.round(dObj.y - day * dObj.scale), dfw * dObj.scale, dfh * dObj.scale);
+          ctx.restore();
+        }
+      }
 
       if (arena.showGridOverlay && bodyW > 0 && bodyH > 0) {
         const bwPx = bodyW * scale;
@@ -3561,7 +4088,7 @@
         if (hitPlayer) {
           arena.popups.push({ x: arena.x, y: arena.y - 105 * scale, text: '-280 ELECTRIC ORB!', life: 800 });
           arena.projectiles.splice(pi, 1);
-        } else if (proj.lifeMs <= 0 || proj.x < 0 || proj.x > arena.viewportWidth) {
+        } else if (proj.lifeMs <= 0 || proj.x < -stageOffsetX || proj.x > 1920 + stageOffsetX) {
           arena.projectiles.splice(pi, 1);
         }
       }
@@ -3574,8 +4101,14 @@
       }
       ctx.restore();
 
+      const hudProf = getSelectedDeviceProfile();
+      const safeArr = Array.isArray(hudProf?.safe_area_px) && hudProf.safe_area_px.length === 4 ? hudProf.safe_area_px : null;
+      const safeScale = Math.max(0.01, dmNow ? dmNow.effScale : 1.0);
+      const hudLeftPad = Math.max(16, safeArr ? Math.round(safeArr[0] / safeScale) + 12 : 16);
+      const hudRightPad = Math.max(16, safeArr && dmNow ? Math.round((dmNow.w - (safeArr[0] + safeArr[2])) / safeScale) + 12 : 16);
+      const aspectText = hudProf ? hudProf.aspect_label : '16:9';
       ctx.fillStyle = 'rgba(11,14,23,0.84)';
-      ctx.fillRect(16, 16, 1888, 38);
+      ctx.fillRect(hudLeftPad, 16, Math.max(320, canvas.width - hudLeftPad - hudRightPad), 38);
       ctx.fillStyle = '#e6ecff';
       ctx.font = 'bold 17px monospace';
       const hudDir = (arena.keys['ArrowRight'] || arena.keys['KeyD'] || arena.holdRight ? 1 : 0) - (arena.keys['ArrowLeft'] || arena.keys['KeyA'] || arena.holdLeft ? 1 : 0) || (arena.patrolEnabled ? arena.patrolDir : 0);
@@ -3583,14 +4116,16 @@
       const screenSizeNote = bodyW > 0 ? ` | Thân ${scaleLabel}×: ${Math.round(bodyW * scale)}×${Math.round(bodyH * scale)}px (${(bodyH * scale / canvas.height * 100).toFixed(1)}% màn)` : '';
       const effSpeedNow = Math.round(getEffectiveWalkSpeedPxPerS(b, scale, arena.patrolEnabled));
       ctx.fillText(
-        `1920×1080 (16:9) | ${state.activeChar.character_id} | ${scaleLabel}× Nearest${screenSizeNote} | Speed: ${effSpeedNow} px/s | Clip: ${arena.clip} (#${arena.step}) | Pos: (${Math.round(arena.x)}, ${Math.round(arena.y)})${hudLock}`,
-        28, 41
+        `${canvas.width}×${canvas.height} (${aspectText}) | ${state.activeChar.character_id} | ${scaleLabel}× Nearest${screenSizeNote} | Speed: ${effSpeedNow} px/s | Clip: ${arena.clip} (#${arena.step}) | Pos: (${Math.round(arena.x)}, ${Math.round(arena.y)})${hudLock}`,
+        hudLeftPad + 12, 41
       );
       if(arena.wishNotice&&arena.wishNotice.lifeMs>0){
+        const wishW = Math.min(1000, Math.max(360, canvas.width - 80));
+        const wishX = Math.round((canvas.width - wishW) * 0.5);
         ctx.save();ctx.fillStyle='rgba(11,14,23,0.9)';ctx.strokeStyle='#facc15';ctx.lineWidth=2;
-        ctx.fillRect(460,64,1000,42);ctx.strokeRect(460,64,1000,42);
+        ctx.fillRect(wishX,64,wishW,42);ctx.strokeRect(wishX,64,wishW,42);
         ctx.fillStyle='#fde047';ctx.font='bold 20px monospace';ctx.textAlign='center';
-        ctx.fillText(`✨ ${arena.wishNotice.text}`,960,92);ctx.restore();
+        ctx.fillText(`✨ ${arena.wishNotice.text}`,Math.round(canvas.width * 0.5),92);ctx.restore();
       }
       if(arena.summon){const flash=(arena.summon.dismissing?sampleShenronDismiss(arena.summon.dismissTick,arena.summon.origin,arena.summon.tick):sampleShenronSummon(arena.summon.tick,arena.summon.origin)).flashAlpha;if(flash>0){ctx.save();ctx.globalAlpha=flash;ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();}}
     }
@@ -3734,7 +4269,7 @@
       const itemSet = state.itemsById?.dragon_balls;
       const sc = Number(arena.itemDrop.scale) || 1.0;
       const bn = Math.max(0, Math.min(7, Number(arena.itemDrop.ballNumber) || 0));
-      const centerX = arena.viewportWidth * 0.5;
+      const centerX = 960;
       const next = [];
       if (bn === 0) {
         const stepX = Math.round(44 * Math.max(1.0, sc));
@@ -3870,7 +4405,7 @@
       const itemSet = state.itemsById?.dragon_balls;
       if (!itemSet) return;
       const pp = itemSet.pickup_physics || {};
-      const collectDurMs = (Number(pp.duration_ticks ?? 24) / 60.0) * 1000.0;
+      const collectDurMs = (Number(pp.duration_ticks ?? 30) / 60.0) * 1000.0;
       const endScaleRatio = Number(pp.end_scale ?? 0.05);
       const liftPx = Number(pp.arc_lift_px ?? 18.0);
       const spAnim = itemSet.animations?.sparkle_fx;
@@ -4013,7 +4548,20 @@
           state.activeTab = btn.dataset.tab;
           document.getElementById(state.activeTab).classList.add('active');
           if (state.activeTab === 'tab-human') renderInspector();
-          if (state.activeTab === 'tab-arena') stepAndRenderArena(16.67);
+          if (state.activeTab === 'tab-arena') {
+            const bd = state.terrain?.backdrop || {};
+            for (const u of [
+              arena.mapWebPath,
+              bd.bg_web_path,
+              bd.wing_left?.web_path,
+              bd.wing_right?.web_path,
+              state.terrain?.tileset?.web_path,
+              state.terrain?.dust_fx?.web_path,
+            ]) {
+              if (u && !state.images[u]) loadImage(u).catch(() => null);
+            }
+            stepAndRenderArena(16.67);
+          }
         };
       });
 
@@ -4247,8 +4795,16 @@
       if (rngDust) rngDust.oninput = e => { arena.burrowDustScale = Math.max(1.0, Math.min(4.0, Number(e.target.value) || 2.65)); updateArenaDustScaleUI(); };
       const chkBezel = document.getElementById('chkPhoneBezel');
       if (chkBezel) chkBezel.onchange = e => { arena.showPhoneBezel = e.target.checked; updateArenaFrameLayout(); };
+      const selDevProf = document.getElementById('selDeviceProfile');
+      if (selDevProf) selDevProf.onchange = e => { arena.selectedProfileId = e.target.value || 'fhd_16_9'; updateArenaFrameLayout(); };
+      const chkPxPerf = document.getElementById('chkPixelPerfect');
+      if (chkPxPerf) chkPxPerf.onchange = e => { arena.pixelPerfect = Boolean(e.target.checked); updateArenaFrameLayout(); };
+      const chkGodotWeb = document.getElementById('chkGodotWebRuntime');
+      if (chkGodotWeb) chkGodotWeb.onchange = e => { arena.useGodotWebRuntime = Boolean(e.target.checked) && arena.godotWebReady; updateArenaFrameLayout(); };
       const chkNative = document.getElementById('chkNative1to1');
       if (chkNative) chkNative.onchange = e => { arena.native1to1 = Boolean(e.target.checked); updateArenaFrameLayout(); };
+      const chkPin = document.getElementById('chkPinArenaStage');
+      if (chkPin) chkPin.onchange = e => { arena.pinArenaStage = Boolean(e.target.checked); updateArenaFrameLayout(); };
       const btnFs = document.getElementById('btnFullscreenArena');
       if (btnFs) btnFs.onclick = () => {
         const target = document.getElementById('arenaPhoneFrame') || document.getElementById('arenaCanvas');
@@ -4256,8 +4812,10 @@
       };
       const chkMap = document.getElementById('chkSampleMap');
       if (chkMap) chkMap.onchange = e => { arena.showSampleMap = e.target.checked; };
+      const chkLegacy = document.getElementById('chkLegacyBg');
+      if (chkLegacy) chkLegacy.onchange = e => { arena.useLegacyBackdrop = Boolean(e.target.checked); };
       const chkGrid = document.getElementById('chkArenaGrid');
-      if (chkGrid) chkGrid.onchange = e => { arena.showGridOverlay = e.target.checked; };
+      if (chkGrid) chkGrid.onchange = e => { arena.showGridOverlay = e.target.checked; updateArenaFrameLayout(); };
       const chkAi = document.getElementById('chkUtilityAI');
       if (chkAi) chkAi.onchange = e => setUtilityAiEnabled(e.target.checked);
       const selPlayer = document.getElementById('selPlayerChar');
@@ -4309,7 +4867,8 @@
           if (!arena.itemDrop.enabled || !arenaCvEl.getBoundingClientRect) return;
           const rect = arenaCvEl.getBoundingClientRect();
           if (!rect || rect.width <= 0 || rect.height <= 0) return;
-          const ax = ((ev.clientX - rect.left) / rect.width) * arena.viewportWidth;
+          const clickStageOffsetX = Math.max(0, Math.round((arenaCvEl.width - 1920) * 0.5));
+          const ax = ((ev.clientX - rect.left) / rect.width) * arena.viewportWidth - clickStageOffsetX;
           const ay = ((ev.clientY - rect.top) / rect.height) * arena.viewportHeight;
           let bestIdx = -1, bestDist = 42 * Math.max(1, arena.itemDrop.scale);
           for (let i = 0; i < arena.itemDrop.drops.length; i++) {
@@ -4386,6 +4945,11 @@
       pickupArenaItems,
       stepArenaItemDrops,
       syncStaticArenaSampleDrops,
+      computeDeviceLayoutMetrics,
+      applyAndroidApkInfo,
+      getSelectedDeviceProfile,
+      getNearestSupportYBelow,
+      spawnGroundDust,
     };
 
     initApp();

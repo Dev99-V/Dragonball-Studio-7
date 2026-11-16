@@ -59,3 +59,7 @@ jobs:
           timeout 60s ./tools/godot/godot --headless --path . --script res://tests/test_arena_sandbox.gd
           timeout 60s ./tools/godot/godot --headless --path . --script res://tests/test_shenron_summon.gd
           timeout 60s ./tools/godot/godot --headless --path . --script res://tests/test_dragon_ball_items.gd
+          if command -v xvfb-run >/dev/null 2>&1; then
+            timeout 60s xvfb-run -a ./tools/godot/godot --rendering-driver opengl3 --path . --script res://tests/test_compatibility_shaders.gd
+            timeout 60s xvfb-run -a ./tools/godot/godot --rendering-driver opengl3 --path . --script res://tests/test_shenron_dissolve_render.gd
+          fi

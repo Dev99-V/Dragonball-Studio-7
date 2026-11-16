@@ -33,6 +33,7 @@ class DragonBallItemTests(unittest.TestCase):
         self.assertTrue(db["sparkle_fx"]["show_on_map_after_roll"])
         self.assertEqual(db["drop_physics"]["jump_height_px"], 10.0)
         self.assertEqual(db["drop_physics"]["roll_distance_px"], 10.0)
+        self.assertEqual(db["pickup_physics"]["duration_ticks"], 30)
         self.assertLess(db["pickup_physics"]["end_scale"], 0.1)
 
         # Standalone character discovery must NOT confuse items with roster fighters

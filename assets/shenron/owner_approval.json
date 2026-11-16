@@ -90,13 +90,13 @@
     }
   },
   "canonical_identity": {
-    "path": "work/characters/shenron/master-v1/master.png",
+    "path": "assets/shenron/source/master.png",
     "sha256": "7d32a92302b9af7a4286d8c11f07222d2874c555e3fa51c5f1738e0af87e0526"
   },
   "qa_report": "docs/characters/shenron-idle-v5-hover-qa.json",
   "summon_qa_report": "docs/characters/shenron-summon-v3-qa.json",
-  "frozen_source": "work/characters/shenron/approved-final-frames/animation-clips.json",
-  "frozen_ritual": "work/rituals/shenron_summon/approved-final",
+  "frozen_source": "assets/shenron/clips/animation-clips.json",
+  "frozen_ritual": "assets/rituals/shenron_summon",
   "approved_runtime_files_sha256": {
     "assets/rituals/shenron_summon/atlas.png": "c82ec5e8460a2bf01ef515793e87cfdf2be96f448eeab1b914d9e9fec7215aba",
     "assets/rituals/shenron_summon/core.png": "586b1c3a6467cd99653efab6834e1e3f486bd759aba92940a5bd97dc9dbfee70",

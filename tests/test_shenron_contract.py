@@ -66,7 +66,7 @@ class ShenronContract(unittest.TestCase):
     def test_hover_translates_whole_approved_wave_without_deforming_parts(self):
         offsets=[0,-1,-2,-1,0,1,2,1]
         for index,dy in enumerate(offsets):
-            source=Image.open(ROOT/f'work/characters/shenron/idle-v3-wave/idle_{index:02d}.png').convert('RGBA')
+            source=Image.open(ROOT/f'assets/shenron/source/idle-v3-wave/idle_{index:02d}.png').convert('RGBA')
             expected=Image.new('RGBA',source.size);expected.paste(source,(0,dy))
             current=Image.open(ROOT/f'assets/shenron/clips/frames/frame-{index:02d}.png').convert('RGBA')
             self.assertEqual(current.tobytes(),expected.tobytes())

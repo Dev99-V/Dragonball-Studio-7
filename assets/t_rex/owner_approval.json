@@ -12,7 +12,7 @@
   "previous_workflow_id": "PIPE-001",
   "previous_revision": "walk-style-v4 / v0.6.0",
   "previous_approval_archive": [
-    "work/characters/t_rex/turn-v1/snapshot-before/owner_approval.json",
+    "docs/releases/t_rex-v0.6.0-approval.json",
     "docs/releases/t_rex-v0.6.0-approval.json"
   ],
   "previous_atlas_sha256": "d78b3b750c51793de4eafe3532c2350fff52bce9d54ecd40b879fc6e44c1d1b7",
@@ -68,7 +68,7 @@
     "win"
   ],
   "canonical_identity": {
-    "reference": "work/characters/t_rex/walk-style-v4/walk-00-reference.png",
+    "reference": "assets/t_rex/source/walk-00-reference.png",
     "sha256": "d4dc74e198774a0af2097962967492e3d2f909831b40b7c811ea7b5aa3208e69",
     "owner_reference": "T-rex walk frame0",
     "source_roles": "Walk0 alone determines identity, pixel detail and baked shading; other sheets are original pose-layout references."
@@ -143,7 +143,7 @@
     }
   },
   "qa_report": "docs/characters/t-rex-turn-v1-qa.json",
-  "frozen_source": "work/characters/t_rex/approved-final-frames/animation-clips.json",
+  "frozen_source": "assets/t_rex/clips/animation-clips.json",
   "approved_runtime_files_sha256": {
     "assets/t_rex/clips/animation-clips.json": "243cf0c12d254f5af984fa2e3e754d3223b9fa7fc86e03b16317e355fc32b7ea",
     "assets/t_rex/clips/clips/clip-00.webp": "1f1a35911b966e6679742fe7b9b071a103db68f5383b5ea510a8d6679d0968e3",

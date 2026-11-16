@@ -27,7 +27,7 @@ var _arc_dx_px: float = 8.0
 var _roll_distance_px: float = 10.0
 var _roll_duration_s: float = 18.0 / 60.0
 var _roll_angle_rad: float = 0.625
-var _pickup_duration_s: float = 24.0 / 60.0
+var _pickup_duration_s: float = 30.0 / 60.0
 var _pickup_end_scale_ratio: float = 0.05
 var _pickup_arc_lift_px: float = 18.0
 
@@ -76,7 +76,7 @@ func _load_contract() -> void:
 		_roll_angle_rad = float(dp.get("roll_angle_rad", 0.625))
 	var pp: Variant = meta.get("pickup_physics", {})
 	if pp is Dictionary:
-		_pickup_duration_s = float(pp.get("duration_ticks", 24)) / 60.0
+		_pickup_duration_s = float(pp.get("duration_ticks", 30)) / 60.0
 		_pickup_end_scale_ratio = float(pp.get("end_scale", 0.05))
 		_pickup_arc_lift_px = float(pp.get("arc_lift_px", 18.0))
 

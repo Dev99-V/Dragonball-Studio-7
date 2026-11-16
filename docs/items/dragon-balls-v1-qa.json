@@ -4,7 +4,7 @@
   "status": "owner_approved",
   "atlas_sha256": "5ee1a97b09624b6c15c7a895ff436cb7aab9ccd10964d5485dcace3a59e40bb2",
   "tres_sha256": "2f3c4dab5e21a3918b4fb4a458f5ff096c9a9c7c5ddd2bad07320bec89c6b5a5",
-  "export_sha256": "bc84d80d3ffedd54cf00ec3cd6423fc2f5da1caa3dd0ac4adb398ab2fadac8a8",
+  "export_sha256": "07294ccb2fe6e920beb9ba43bcfb64fe78a6c116ce5f75917c560998d99f5da7",
   "frame_size": [
     32,
     32
