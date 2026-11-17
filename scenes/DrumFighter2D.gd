@@ -19,8 +19,9 @@ var _orb_active: bool = false
 var _orb_dir: float = 1.0
 var _orb_elapsed_s: float = 0.0
 var _orb_lifetime_s: float = 0.45
-var _orb_speed_px_per_s: float = 840.0
+var _orb_speed_px_per_s: float = 1260.0
 var _orb_released: bool = false
+var external_orb_managed: bool = false
 
 
 func _ensure_nodes() -> void:
@@ -92,14 +93,17 @@ func play_clip(clip_name: StringName) -> bool:
 
 
 func _process(delta: float) -> void:
-	if is_instance_valid(sprite) and sprite.animation == &"power_up" and sprite.is_playing():
+	if not external_orb_managed and is_instance_valid(sprite) and sprite.animation == &"power_up" and sprite.is_playing():
 		if sprite.frame >= 10 and not _orb_released:
 			_orb_released = true
 			_launch_electric_orb()
 	if _orb_active and is_instance_valid(projectile_fx):
 		_orb_elapsed_s += delta
+		var previous_orb_pos := projectile_fx.global_position
 		projectile_fx.position.x += _orb_dir * _orb_speed_px_per_s * delta
-		if _orb_elapsed_s >= _orb_lifetime_s:
+		var stage := get_tree().current_scene
+		var terrain_hit := stage != null and stage.has_method("terrain_blocks_segment") and bool(stage.call("terrain_blocks_segment", previous_orb_pos, projectile_fx.global_position))
+		if terrain_hit or _orb_elapsed_s >= _orb_lifetime_s:
 			_orb_active = false
 			projectile_fx.visible = false
 			projectile_fx.stop()

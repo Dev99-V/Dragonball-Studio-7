@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-16T15:29:21Z",
+  "updated_at": "2026-11-17T12:28:56Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.16.0",
@@ -152,9 +152,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "FLOATING-CAMERA-FINALIZE",
+    "active_task_id": "COMBAT-005",
     "status": "completed",
-    "summary": "Owner chốt Floating Camera (PIPE-021, v0.16.0): chuyển chính thức vào assets/floating_camera/, scenes/FloatingCamera.tscn, scenes/FloatingCameraFighter2D.gd và assets/roster.json (11/11 nhân vật hoàn thiện), ghi skills.md & owner_approval.json, xóa sạch review/, work/, FloatingCamera.gif & image.png, xuất Godot Web & Android Debug APK 1:1 và chuẩn bị push lên main.",
+    "summary": "Giảm thêm 20% hiệu ứng rung (tướng/quái/boss, HIT_SHAKE_SCALE_MUL=0.80) và 20% lóa sáng trúng đòn (HIT_FLASH_BRIGHTNESS_MUL=0.64, HIT_FLASH_ALPHA_MUL=0.80, draw_hit_impact lum=0.64); đồng bộ Web + APK + localhost",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -949,6 +949,138 @@
       "timestamp": "2026-11-16T15:29:21Z",
       "status": "completed",
       "summary": "Owner chốt Floating Camera (PIPE-021, v0.16.0): chuyển chính thức vào assets/floating_camera/, scenes/FloatingCamera.tscn, scenes/FloatingCameraFighter2D.gd và assets/roster.json (11/11 nhân vật hoàn thiện), ghi skills.md & owner_approval.json, xóa sạch review/, work/, FloatingCamera.gif & image.png, xuất Godot Web & Android Debug APK 1:1 và chuẩn bị push lên main."
+    },
+    {
+      "id": "SESSION-LOAD-LOCALHOST",
+      "timestamp": "2026-11-17T00:48:31Z",
+      "status": "completed",
+      "summary": "Nạp trạng thái và quy định dự án; khởi chạy preview localhost:8080."
+    },
+    {
+      "id": "K70E-MAP-AUDIT",
+      "timestamp": "2026-11-17T00:56:45Z",
+      "status": "completed",
+      "summary": "Audit viewport, camera và giới hạn map; ghi chuẩn K70E, parity Godot/APK và camera ngang vào hiến pháp; chiều cao chờ Owner chốt."
+    },
+    {
+      "id": "MAP-DESCENT-CONCEPT",
+      "timestamp": "2026-11-17T01:26:25Z",
+      "status": "ready_for_owner_review",
+      "summary": "Ảnh ý tưởng AI đoạn map nối bên phải, cảnh đồi hạ dần; chưa tích hợp sân tập hoặc kiểm đường nối."
+    },
+    {
+      "id": "MAP-DESCENT-STEPS",
+      "timestamp": "2026-11-17T01:28:15Z",
+      "status": "ready_for_owner_review",
+      "summary": "Chỉnh ảnh demo mặt đất thành các khối bậc hạ dần sang phải; chưa tích hợp sân tập."
+    },
+    {
+      "id": "MAP-CONTINUATION-VIEW",
+      "timestamp": "2026-11-17T02:09:56Z",
+      "status": "ready_for_owner_review",
+      "summary": "Ảnh ý tưởng góc nhìn gần map gốc, mặt đất phẳng; chờ duyệt khớp nối trước khi tạo bậc."
+    },
+    {
+      "id": "MAP-HALF-STEPS",
+      "timestamp": "2026-11-17T02:42:27Z",
+      "status": "ready_for_owner_review",
+      "summary": "Demo nửa trái bằng phẳng, nửa phải hạ dần bằng các bậc đá; chờ Owner duyệt."
+    },
+    {
+      "id": "MAP-RIGHT-SEAM-CONCEPT",
+      "timestamp": "2026-11-17T02:53:45Z",
+      "status": "ready_for_owner_review",
+      "summary": "Demo tiếp nối bên phải vách đá map gốc, bỏ sông giữa ảnh và điều chỉnh tỷ lệ bậc; chưa xác minh đường nối."
+    },
+    {
+      "id": "MAP-CONTINUATION-INTEGRATION",
+      "timestamp": "2026-11-17T03:39:49Z",
+      "status": "in_progress",
+      "summary": "Map 2 đoạn K70E đã chạy trên Godot Web localhost, camera theo player và bậc hạ; ./loop.sh test và web-export exit 0. Còn vết cảnh ở vách đá; APK bị chặn bởi thiếu Android SDK."
+    },
+    {
+      "id": "MAP-SEAM-SOFTEN",
+      "timestamp": "2026-11-17T04:05:19Z",
+      "status": "in_progress",
+      "summary": "Thay đoạn pha ảnh gây bóng đôi bằng vùng chuyển tiếp vẽ lại; kiểm seam x=2400 RGB jump trung bình 7.0096; test/Web export exit 0, localhost HTTP 200; chờ đánh giá K70E và APK."
+    },
+    {
+      "id": "MAP-STEP-TERRAIN",
+      "timestamp": "2026-11-17T04:29:21Z",
+      "status": "in_progress",
+      "summary": "Sửa tile overlay và ảnh ba bậc gần đều; thêm 3 collider, đi xuống rơi/đi lên phải nhảy, chặn một số đạn bằng terrain_blocks_segment. Test/Web export exit 0, localhost HTTP200. Skill runtime đã đóng băng cần audit thêm, APK chưa có Android SDK."
+    },
+    {
+      "id": "MAP-DRUM-SURFACE-SHENRON",
+      "timestamp": "2026-11-17T04:48:58Z",
+      "status": "in_progress",
+      "summary": "Sửa Drum rơi ngay khi qua mép và hạ cao độ bậc cuối 1020->975; AI theo mặt đất; Shenron theo tâm camera/sàn tại vị trí người gọi. test/Web export/check exit0, localhost HTTP200; còn chờ nhìn trên K70E/APK."
+    },
+    {
+      "id": "MAP-STEP-EDGE-HANDOFF",
+      "timestamp": "2026-11-17T04:57:26Z",
+      "status": "ready_for_next_agent",
+      "summary": "Documented unresolved Drum hover at step edge and platform-2 visual depth in docs/map-step-edge-drum-handoff-todo.md; no code or asset fix this session."
+    },
+    {
+      "id": "MAP-STEP-EDGE-ALL-CHARS",
+      "timestamp": "2026-11-17T05:21:33Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Da sua mep bac dia hinh (STEP_ONE_X=2850, STEP_TWO_X=3695, san 840/890/945) cho toan bo nhan vat (walk/run/turn/teleport/burrow/AI/bay/ngoc/bong), sua DisplayPolicy integer vis_h va camera zoom/pan thich nghi moi he may (ke ca iPad & man lon/cao/dai), dong bo Godot Web; cho Owner Human Test va build APK tai may co Android SDK."
+    },
+    {
+      "id": "PIXEL-RULER-MODAL",
+      "timestamp": "2026-11-17T05:52:23Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Da do khoang cach Drum khoanh tron (world_x~355-360) toi Drum doi dien (world_x=1360) ~1000-1005 px tam-tam (~860 px mep than), va them PixelRulerModal (Thuoc Do PX 1:1 World PX dong bo Godot Web <-> APK) trong ArenaSandbox.gd + scenes/runtime/PixelRulerModal.gd; da xuat web-export."
+    },
+    {
+      "id": "FIELD-COMBAT-PAD-HUD",
+      "timestamp": "2026-11-17T07:50:18Z",
+      "status": "DONE",
+      "summary": "Implemented FieldCombatManager (5 ground + 5 flying monsters, 7s respawns + dilophosaurus alternation + flying rotation, homing power_up orbs, 1500HP/100Mana Drum hero spawn toggle & 3s KO respawn, monster Stamina 100->0 3s mini-stun HIT, 67.6% weighted Dragon Ball drops z_index=50 + 1s unlock, Target Pointer button 8), MobileActionPad (Analog + 1..8 flexible circular buttons + settings), OverheadBarsDraw, ArenaTheme (+30% sharper font + frosted UI), Godot headless tests and Web export"
+    },
+    {
+      "id": "FIELD-IMMORTAL-AND-RANGE-TOGGLE",
+      "timestamp": "2026-11-17T08:16:20Z",
+      "status": "DONE",
+      "summary": "Added Hero Immortal toggle and Monster Range visual overlay toggle, synced Web and APK builds"
+    },
+    {
+      "id": "FIELD-FLY-360-ORBIT-ARC-FIX",
+      "timestamp": "2026-11-17T08:43:36Z",
+      "status": "DONE",
+      "summary": "Fixed flying monster turn oscillation, hid duplicate prefab FX in Field Mode without breaking frozen SHA-256 receipts, added elliptical flying orbit + 360-deg curved homing FX + continuous 360-deg analog flight for flying characters, rebuilt synced Web and APK"
+    },
+    {
+      "id": "FIELD-EDGE-COMBAT-ICON-30DROP",
+      "timestamp": "2026-11-17T10:52:22Z",
+      "status": "DONE",
+      "summary": "Restarted localhost:8080 test server, set image copy 6.png as APK/app icon, added exact character body-edge Rect2 interactions (body collision separation, melee/skill edge impacts, skill clash), hit feedback FX (flash/shake/burst/damage popup), direct touch target selection + kept button 8 cycle, auto-approach on normal attack, reduced Dragon Ball drop gate to 30% + star table, rebuilt synced Web & APK"
+    },
+    {
+      "id": "FIELD-SILHOUETTE-X-HIT-EXPLOSION-LAYERS",
+      "timestamp": "2026-11-17T11:29:18Z",
+      "status": "DONE",
+      "summary": "Increased Drum skill speed +50% (1170 px/s), looped monster HIT animation during 3s stun & guarded FloatingCamera hit->ko in Field, fixed hero hit flash + damage subtraction + powerup_explosion FX from image copy 7.png, baked non-box body silhouettes + tâm thân core for all 11 fighters, added sequential calligraphic red X target + double-tap auto-attack, set Z-layering (Monster 10 < Hero 20 < Boss 30), rebuilt synced Web & APK and verified localhost:8080"
+    },
+    {
+      "id": "COMBAT-003",
+      "timestamp": "2026-11-17T11:53:32Z",
+      "status": "completed",
+      "summary": "Tinh chỉnh Combat & FX: giảm rung Drum, giảm 20% size nổ (0.68), 1 chữ X đỏ tại tâm thân trên layer z=60 bỏ viền box, nổ mặc định cho Drum và nhân vật thiếu FX nổ riêng, broken-stamina 1 đòn = 1 clip hit (khóa đánh trả 3s, di chuyển bình thường khi không bị đánh); Web/APK SHA-256 sync & test exit 0"
+    },
+    {
+      "id": "COMBAT-004",
+      "timestamp": "2026-11-17T12:09:36Z",
+      "status": "completed",
+      "summary": "Giảm 20% ánh sáng nháy sáng trúng đòn (tướng/boss/quái) & xóa trễ 1 frame; chữ X cảm ứng chỉ hiện khi thao tác rồi tự mờ ẩn sau 0.75s; đánh thường có 0.2s hồi chiêu và không nhồi đòn; test + Web + APK + localhost HTTP 200 đồng bộ"
+    },
+    {
+      "id": "COMBAT-005",
+      "timestamp": "2026-11-17T12:28:56Z",
+      "status": "completed",
+      "summary": "Giảm thêm 20% hiệu ứng rung (tướng/quái/boss, HIT_SHAKE_SCALE_MUL=0.80) và 20% lóa sáng trúng đòn (HIT_FLASH_BRIGHTNESS_MUL=0.64, HIT_FLASH_ALPHA_MUL=0.80, draw_hit_impact lum=0.64); đồng bộ Web + APK + localhost"
     }
   ],
   "quick_resume_commands": [
@@ -1200,30 +1332,10 @@
     }
   ],
   "owner_defaults": {
-    "character_art_style": "pixel_art",
-    "avoid": "HD sharpening/detail inflation",
-    "independent_ki_aura": true,
-    "excluded_clips": [
-      "guard",
-      "win"
-    ],
-    "do_not_reask_excluded_clips": true,
-    "character_sharpness_standard": {
-      "path": "docs/art-standards/character-pixel-sharpness.json",
-      "reference_png": "docs/art-standards/t-rex-sharpness-reference.png",
-      "reference_png_sha256": "8c46b31b6fd328fef3b5b4bd8a1d1ebbd30d51f4d5720c673b3f2437ad565311",
-      "gameplay_detail_pitch_px": 1,
-      "reference_sobel": 245.516,
-      "scope": "Owner-selected sharpness standard for future characters; animation approval independent"
-    },
-    "character_identity_rule": "One canonical identity master/SHA per character for every action. Rejected-action artwork is motion guide only; compare proportions/palette/shading independently from sharpness/motion. character_identity=false blocks delivery.",
-    "adverse_status_effects": {
-      "body_clips": "Do not add separate crowd-control/stun body animations.",
-      "stun": "Freeze a suitable existing hit pose; independently clocked VFX above head; end by status duration.",
-      "turn_meaning": "Facing-change transition, not stun/control.",
-      "scope": "All existing and future characters; current task records the policy, no new gameplay effect implementation claimed."
-    },
-    "turn_policy": "Keep existing turn for authored facing rotation; explicitly confirmed by Owner. It is not stun. No removal."
+    "default_powerup_explosion_fx": "assets/fx/powerup_explosion/powerup_explosion.tres",
+    "default_powerup_explosion_scale": 0.68,
+    "clash_explosion_scale": 0.58,
+    "explosion_rule": "Bat ky tuong hoac quai nao (ke ca Drum) khong co hieu ung vu no rieng di kem sheet/atlas hoac yeu cau rieng mac dinh dung assets/fx/powerup_explosion/ khi don chuong va cham muc tieu. Dilophosaurus giu bo 3 nhat chem rieng khong them vu no mac dinh."
   },
   "session_bootstrap": {
     "loaded_at": "2026-11-13T01:01:44.309572+00:00",

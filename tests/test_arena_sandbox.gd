@@ -48,6 +48,9 @@ func run_test() -> void:
 	var packed := loaded_scene as PackedScene
 
 	var arena := packed.instantiate()
+	if arena == null or not arena.has_method("_get_walk_speed_px_per_s"):
+		fail("ArenaSandbox failed to load script cleanly")
+		return
 	var stationary_entry := {"render_contract": {"locomotion": {"kind": "stationary", "speed_px_per_second": 123.0}}}
 	if arena._get_walk_speed_px_per_s(stationary_entry) != 0.0:
 		fail("Stationary entry must never fall back to walk speed")
@@ -70,7 +73,7 @@ func run_test() -> void:
 		fail("ArenaSandbox show_grid_overlay must default to false (no yellow/blue boundary lines)")
 		return
 	var expected_trex_half_w := 187.0 * 1.75 * 0.5
-	if arena.ground_y != 840.0 or absf(arena.walkable_min_x - expected_trex_half_w) > 1.0 or absf(arena.walkable_max_x - (1920.0 - expected_trex_half_w)) > 1.0:
+	if arena.ground_y != 840.0 or absf(arena.walkable_min_x - (-240.0 + expected_trex_half_w)) > 1.0 or absf(arena.walkable_max_x - (4560.0 - expected_trex_half_w)) > 1.0:
 		fail("ArenaSandbox gameplay bounds mismatch: ground=%s bounds=[%s,%s]" % [str(arena.ground_y), str(arena.walkable_min_x), str(arena.walkable_max_x)])
 		return
 	if absf(arena.char_scale - 1.75) > 0.001:
@@ -82,8 +85,12 @@ func run_test() -> void:
 		fail("Missing BackgroundSprite texture on ArenaSandbox")
 		return
 	var rendered_bg_size := bg_sprite.texture.get_size() * bg_sprite.scale
-	if absf(rendered_bg_size.x - 1920.0) > 0.5 or absf(rendered_bg_size.y - 1080.0) > 0.5:
-		fail("BackgroundSprite does not fill 1920x1080 exactly: " + str(rendered_bg_size))
+	if absf(rendered_bg_size.x - 4800.0) > 0.5 or absf(rendered_bg_size.y - 1350.0) > 0.5:
+		fail("Extended BackgroundSprite size mismatch: " + str(rendered_bg_size))
+		return
+	var terrain_body := arena.get_node_or_null("TerrainLayer/GroundFloorCollider") as StaticBody2D
+	if terrain_body == null or terrain_body.get_child_count() != 3 or arena._ground_tilemap == null or arena._ground_tilemap.visible:
+		fail("Review terrain must use three solid step colliders and no foreground tile overlay")
 		return
 
 	# Verify DisplayPolicy D1/D2/D4 across Redmi K70E (2712x1220), 720p (<1080p guard), and 16:9 FHD
@@ -95,24 +102,112 @@ func run_test() -> void:
 	var bg_w := bg_sprite.texture.get_size().x * bg_sprite.scale.x
 	var view_left := 960.0 - k70e_visible_w * 0.5
 	var view_right := 960.0 + k70e_visible_w * 0.5
-	if absf(arena.walkable_min_x - (view_left + expected_trex_half_w)) > 1.0 or absf(arena.walkable_max_x - (view_right - expected_trex_half_w)) > 1.0:
-		fail("K70E T-rex walkable bounds must fit full visible display width: bounds=[%s,%s] vis=[%s,%s]" % [str(arena.walkable_min_x), str(arena.walkable_max_x), str(view_left), str(view_right)])
+	if absf(arena.walkable_min_x - (-240.0 + expected_trex_half_w)) > 1.0 or absf(arena.walkable_max_x - (4560.0 - expected_trex_half_w)) > 1.0:
+		fail("K70E T-rex world bounds mismatch: bounds=[%s,%s]" % [str(arena.walkable_min_x), str(arena.walkable_max_x)])
 		return
+	var camera := arena.get_node_or_null("ArenaCamera") as Camera2D
+	if camera == null or arena.player_node == null:
+		fail("Extended map requires player and Camera2D")
+		return
+	var original_player_x: float = float(arena.player_node.position.x)
+	arena.player_node.position.x = 2800.0
+	arena._update_follow_camera()
+	if absf(camera.position.x - 2800.0) > 1.0 or absf(arena._ground_y_at(2800.0) - 840.0) > 0.1:
+		fail("Camera must follow player through the flat map join")
+		return
+	if absf(arena._ground_y_at(3200.0) - 890.0) > 0.1:
+		fail("Middle plateau (platform 2) must use walkable floor y=890")
+		return
+	if absf(arena._ground_y_at(4200.0) - 945.0) > 0.1:
+		fail("Rightmost descending step must use shared world ground height y=945")
+		return
+	if arena._can_cross_terrain_step(3696.0, 3694.0, 945.0) or not arena._can_cross_terrain_step(3696.0, 3694.0, 885.0):
+		fail("Walking uphill must be blocked until the player jumps above the upper surface")
+		return
+	if not arena._can_cross_terrain_step(3694.0, 3696.0, 890.0):
+		fail("Walking downhill must allow an automatic drop")
+		return
+	if not arena.terrain_blocks_segment(Vector2(3708.0, 940.0), Vector2(3682.0, 940.0)):
+		fail("A skill projectile must hit the vertical step face")
+		return
+	arena.player_node.position = Vector2(2849.0, 840.0)
+	arena.player_vy = 0.0
+	arena._move_player_horizontal(3.0)
+	for _fall_tick in range(30):
+		arena.step_player_vertical_physics(1.0 / 60.0, false, false)
+	if absf(arena.player_node.position.y - 890.0) > 1.0:
+		fail("Walking off the first step must fall to the lower floor y=890")
+		return
+	arena._move_player_horizontal(-3.0)
+	if arena.player_node.position.x < 2850.0:
+		fail("Lower floor must block walking uphill")
+		return
+	arena.step_player_vertical_physics(1.0 / 60.0, true, false)
+	for _jump_tick in range(8):
+		arena.step_player_vertical_physics(1.0 / 60.0, false, false)
+	arena._move_player_horizontal(-3.0)
+	if arena.player_node.position.x >= 2850.0:
+		fail("A high enough jump must allow crossing back onto the upper floor")
+		return
+	arena.player_vy = 0.0
+	arena.player_node.position.x = original_player_x
+	arena._update_follow_camera()
+	arena.player_node.position = Vector2(4200.0, 945.0)
+	arena._update_follow_camera()
+	arena._on_summon_button_pressed()
+	if not arena.shenron_summon.active or absf(arena.shenron_summon.global_position.x + 960.0 - camera.position.x) > 1.0 or absf(arena.shenron_summon.global_position.y - 105.0) > 1.0:
+		fail("Shenron ritual must center on the current camera and local ground")
+		return
+	arena.shenron_summon.dismiss()
+	arena.player_node.position = Vector2(original_player_x, 840.0)
+	arena._update_follow_camera()
 	if bg_sprite.position.x > view_left + 1.0 or bg_sprite.position.x + bg_w < 960.0 + k70e_visible_w * 0.5 - 1.0:
 		fail("K70E original background fails to cover the full width")
 		return
 	if arena._bg_left_ext != null and arena._bg_left_ext.visible or arena._bg_right_ext != null and arena._bg_right_ext.visible:
 		fail("K70E must show the original image without wing inserts")
 		return
-	if absf(bg_sprite.scale.x * bg_sprite.texture.get_size().x / 1920.0 - bg_sprite.scale.y * bg_sprite.texture.get_size().y / 1080.0) > 0.001:
-		fail("Background cover distorted the original image aspect")
+	if absf(bg_sprite.scale.x * bg_sprite.texture.get_size().x / 4800.0 - bg_sprite.scale.y * bg_sprite.texture.get_size().y / 1350.0) > 0.001:
+		fail("Extended background distorted the map aspect")
 		return
-	var ipad_layout: Dictionary = arena.apply_device_profile("ipad_10th")
-	var ipad_h := float(ipad_layout["visible_logic_size"][1])
-	var view_top := 540.0 - ipad_h * 0.5
-	if bg_sprite.position.y > view_top + 1.0:
-		fail("iPad has an uncovered strip above the original background")
-		return
+	# Verify camera framing + zero uncovered strips + pan across ALL device profiles (including iPad & tall/wide screens)
+	var bg_h := bg_sprite.texture.get_size().y * bg_sprite.scale.y
+	var profiles_doc: Dictionary = load("res://scenes/runtime/DisplayPolicy.gd").load_device_profiles()
+	for prof in profiles_doc.get("profiles", []):
+		if not (prof is Dictionary):
+			continue
+		var pid_prof := str(prof.get("id", ""))
+		for pp_mode in [false, true]:
+			arena.pixel_perfect_enabled = pp_mode
+			var prof_layout: Dictionary = arena.apply_device_profile(pid_prof)
+			var vis_arr: Array = prof_layout.get("visible_logic_size", [1920.0, 1080.0])
+			var eff_vis := Vector2(float(vis_arr[0]), float(vis_arr[1])) / camera.zoom
+			if absf(camera.zoom.x - camera.zoom.y) > 0.0001:
+				fail("Camera zoom must remain uniform on %s (pp=%s): %s" % [pid_prof, str(pp_mode), str(camera.zoom)])
+				return
+			for test_px in [-120.0, 2160.0, 4440.0]:
+				arena.player_node.position = Vector2(test_px, arena._ground_y_at(test_px))
+				arena._update_follow_camera()
+				var c_left := camera.position.x - eff_vis.x * 0.5
+				var c_right := camera.position.x + eff_vis.x * 0.5
+				var c_top := camera.position.y - eff_vis.y * 0.5
+				var c_bot := camera.position.y + eff_vis.y * 0.5
+				if bg_sprite.position.x > c_left + 0.5 or bg_sprite.position.x + bg_w < c_right - 0.5 or bg_sprite.position.y > c_top + 0.5 or bg_sprite.position.y + bg_h < c_bot - 0.5:
+					fail("Device %s (pp=%s) uncovered area at px=%s: cam=[%s..%s, %s..%s] bg=[%s..%s, %s..%s]" % [pid_prof, str(pp_mode), str(test_px), str(c_left), str(c_right), str(c_top), str(c_bot), str(bg_sprite.position.x), str(bg_sprite.position.x + bg_w), str(bg_sprite.position.y), str(bg_sprite.position.y + bg_h)])
+					return
+	# Also test giant/tall hypothetical viewport (e.g. 2732x2048 iPad Pro & 3840x2160 4K)
+	for extra_sz in [Vector2i(2732, 2048), Vector2i(3840, 2160), Vector2i(3440, 1440)]:
+		var ex_layout: Dictionary = arena.set_pixel_perfect_enabled(false, extra_sz)
+		var ex_vis := Vector2(float(ex_layout["visible_logic_size"][0]), float(ex_layout["visible_logic_size"][1])) / camera.zoom
+		arena.player_node.position = Vector2(3300.0, arena._ground_y_at(3300.0))
+		arena._update_follow_camera()
+		var ex_top := camera.position.y - ex_vis.y * 0.5
+		var ex_bot := camera.position.y + ex_vis.y * 0.5
+		if bg_sprite.position.y > ex_top + 0.5 or bg_sprite.position.y + bg_h < ex_bot - 0.5:
+			fail("Large viewport %s left uncovered vertical area: top=%s bot=%s" % [str(extra_sz), str(ex_top), str(ex_bot)])
+			return
+	arena.pixel_perfect_enabled = false
+	arena.apply_device_profile("ipad_10th")
 	if arena._ground_tilemap.get_cell_source_id(Vector2i(0, 11)) != 0:
 		fail("iPad ground tiles do not reach the bottom of the expanded view")
 		return
@@ -681,8 +776,8 @@ func run_test() -> void:
 	var k70e_drum_layout: Dictionary = arena.apply_device_profile("redmi_k70e")
 	var k70e_drum_vis_w := float(k70e_drum_layout.get("visible_logic_size", [2400.7869, 1080.0])[0])
 	var drum_half_w := 56.0 * 2.5 * 0.5
-	var exp_drum_min := (960.0 - k70e_drum_vis_w * 0.5) + drum_half_w
-	var exp_drum_max := (960.0 + k70e_drum_vis_w * 0.5) - drum_half_w
+	var exp_drum_min := -240.0 + drum_half_w
+	var exp_drum_max := 4560.0 - drum_half_w
 	if absf(arena.walkable_min_x - exp_drum_min) > 1.0 or absf(arena.walkable_max_x - exp_drum_max) > 1.0:
 		fail("K70E Drum walkable bounds mismatch: got=[%s,%s] exp=[%s,%s]" % [str(arena.walkable_min_x), str(arena.walkable_max_x), str(exp_drum_min), str(exp_drum_max)])
 		return
@@ -695,8 +790,8 @@ func run_test() -> void:
 	drum_player.position.x = 1850.0
 	for _t in range(180):
 		arena.step_player_movement(1.0 / 60.0, 1)
-	if drum_player.position.x <= 2050.0 or absf(drum_player.position.x - arena.walkable_max_x) > 1.0:
-		fail("K70E Drum must walk past old 1780px wall right up to body-edge visible right bound: x=%s max=%s" % [str(drum_player.position.x), str(arena.walkable_max_x)])
+	if drum_player.position.x <= 2050.0:
+		fail("K70E Drum must walk past original screen right edge: x=%s" % str(drum_player.position.x))
 		return
 	arena.set_pixel_perfect_enabled(false, Vector2i(1920, 1080))
 
@@ -733,6 +828,133 @@ func run_test() -> void:
 		return
 	arena.set_utility_ai_enabled(false)
 
+	# Verify step-edge immediate drop, uphill blocking, AI step handling, and flight floor across ALL ground/flying archetypes
+	for step_cid in ["drum", "t_rex", "spinosaurus", "chilopoda", "tasmanian_king_crab", "sarcosuchus", "dilophosaurus"]:
+		arena.select_character(step_cid)
+		await process_frame
+		# 1. Walk off Step 1 (2850, 840 -> 890): must start falling on the VERY FIRST frame past edge!
+		arena.player_node.position = Vector2(2848.0, 840.0)
+		arena.player_vy = 0.0
+		var fell_immediately := false
+		for _t in range(12):
+			arena.step_player_movement(1.0 / 60.0, 1)
+			if arena.player_node.position.x >= 2850.0:
+				if arena.player_node.position.y > 840.0:
+					fell_immediately = true
+				else:
+					fail("%s hovered at step 1 edge x=%s y=%s" % [step_cid, str(arena.player_node.position.x), str(arena.player_node.position.y)])
+					return
+				break
+		if not fell_immediately:
+			fail("%s failed to step off and begin falling at step 1" % step_cid)
+			return
+		# Continue falling to Step 2 floor (890), then walk off Step 2 (3695 -> 945)
+		for _t in range(40):
+			arena.step_player_movement(1.0 / 60.0, 0)
+		if absf(arena.player_node.position.y - 890.0) > 1.0:
+			fail("%s did not land on Step 2 floor y=890, got y=%s" % [step_cid, str(arena.player_node.position.y)])
+			return
+		# Walking back left uphill into Step 1 wall must be blocked
+		arena.player_node.position = Vector2(2880.0, 890.0)
+		for _t in range(25):
+			arena.step_player_movement(1.0 / 60.0, -1)
+		if arena.player_node.position.x < 2850.0:
+			fail("%s walked uphill through Step 1 wall to x=%s" % [step_cid, str(arena.player_node.position.x)])
+			return
+		# Walk off Step 2 (3695) -> must start falling immediately and land on y=945 (including after turning right)
+		arena.player_node.position = Vector2(3693.0, 890.0)
+		arena.player_vy = 0.0
+		var fell_step2 := false
+		for _t in range(60):
+			await physics_frame
+			arena.step_player_movement(1.0 / 60.0, 1)
+			if arena.player_node.position.x >= 3695.0:
+				if arena.player_node.position.y > 890.0:
+					fell_step2 = true
+				else:
+					fail("%s hovered at step 2 edge x=%s y=%s" % [step_cid, str(arena.player_node.position.x), str(arena.player_node.position.y)])
+					return
+				break
+		if not fell_step2:
+			fail("%s failed to begin falling at step 2 (x=%s y=%s turning=%s)" % [step_cid, str(arena.player_node.position.x), str(arena.player_node.position.y), str(arena._is_fighter_turning(arena.player_node))])
+			return
+		for _t in range(45):
+			arena.step_player_movement(1.0 / 60.0, 0)
+		if absf(arena.player_node.position.y - 945.0) > 1.0:
+			fail("%s did not land on Step 3 floor y=945, got y=%s" % [step_cid, str(arena.player_node.position.y)])
+			return
+	# Verify Drum teleport cannot tunnel uphill through Step 1 wall and falls if teleporting off Step 1
+	arena.select_character("drum")
+	await process_frame
+	arena.step_player_movement(1.0 / 60.0, -1)
+	arena.player_node.position = Vector2(2900.0, 890.0)
+	arena._request_player_action("teleport")
+	for _t in range(30):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+	if arena.player_node.position.x < 2850.0:
+		fail("Drum teleport must be blocked by Step 1 cliff wall, got x=%s" % str(arena.player_node.position.x))
+		return
+	# Verify AI (Utility AI) across step edges: chasing downhill drops to y=890; chasing uphill stops at Step 1 wall
+	arena.select_character("t_rex")
+	await process_frame
+	arena.select_enemy_character("spinosaurus", true)
+	await process_frame
+	arena.set_utility_ai_enabled(true)
+	arena.ai_controller.reset_zone(3050.0, 2600.0, 3400.0)
+	arena.dummy_node.position = Vector2(2842.0, 840.0)
+	arena.enemy_vy = 0.0
+	arena.player_node.position = Vector2(3270.0, 890.0)
+	for _t in range(45):
+		await physics_frame
+		arena.step_utility_ai(1.0 / 60.0)
+	if arena.dummy_node.position.x < 2850.0 or absf(arena.dummy_node.position.y - 890.0) > 1.0:
+		fail("AI chasing downhill off Step 1 must drop cleanly to y=890, got " + str(arena.dummy_node.position))
+		return
+	arena.player_node.position = Vector2(2700.0, 840.0)
+	for _t in range(30):
+		await physics_frame
+		arena.step_utility_ai(1.0 / 60.0)
+	if arena.dummy_node.position.x < 2850.0:
+		fail("AI chasing uphill from Step 2 must be blocked by Step 1 cliff wall, got " + str(arena.dummy_node.position))
+		return
+	arena.set_utility_ai_enabled(false)
+
+	# Verify flying characters descend to lower step floor y=945 cleanly
+	arena.select_character("floating_camera")
+	await process_frame
+	arena.player_node.position = Vector2(4100.0, 840.0)
+	arena.step_flight_vertical(1.0, 5.0)
+	if absf(arena.player_node.position.y - 945.0) > 0.5:
+		fail("Flying character over Step 3 must descend to local floor y=945, got " + str(arena.player_node.position.y))
+		return
+
+	# Verify PixelRulerModal 1:1 world PX measurements across devices (FHD, K70E, iPad)
+	if arena.ruler_button == null or arena.ruler_modal == null or arena.ruler_modal_visible:
+		fail("Ruler button and hidden PixelRulerModal must initialize cleanly")
+		return
+	arena.select_character("drum")
+	await process_frame
+	arena.set_ruler_modal_visible(true)
+	if not arena.ruler_modal_visible or not arena.ruler_modal.visible:
+		fail("set_ruler_modal_visible(true) must open PixelRulerModal")
+		return
+	arena.player_node.position = Vector2(360.0, 840.0)
+	arena.dummy_node.position = Vector2(1360.0, 840.0)
+	var rm_k70e: Dictionary = {}
+	arena.apply_device_profile("redmi_k70e")
+	rm_k70e = arena.measure_player_enemy_distance()
+	if absf(float(rm_k70e.get("dx_world_px", 0.0)) - 1000.0) > 0.5 or absf(float(rm_k70e.get("player_enemy_edge_gap", 0.0)) - 860.0) > 0.5:
+		fail("Ruler K70E Drum 360<->1360 measurement mismatch: " + str(rm_k70e))
+		return
+	arena.apply_device_profile("ipad_10th")
+	var rm_ipad: Dictionary = arena.measure_player_enemy_distance()
+	if absf(float(rm_ipad.get("dx_world_px", 0.0)) - 1000.0) > 0.5 or absf(float(rm_ipad.get("player_enemy_edge_gap", 0.0)) - 860.0) > 0.5:
+		fail("Ruler iPad Drum 360<->1360 must stay 1:1 world PX invariant: " + str(rm_ipad))
+		return
+	arena.set_ruler_modal_visible(false)
+	arena.set_pixel_perfect_enabled(false, Vector2i(1920, 1080))
+
 	# Smoke test Player movement + power_up across every character in roster without script errors
 	for ch_entry in arena.roster_characters:
 		if not (ch_entry is Dictionary):
@@ -747,6 +969,424 @@ func run_test() -> void:
 			if not arena._request_player_action("power_up"):
 				fail("Roster player power_up failed for " + cid_smoke)
 				return
+
+	# Field Mode verification: 5 ground + 5 flying monsters, Stamina/3s Mini-Stun, Drum Hero, Homing Orbs, 7s Respawns, 67.6% Dragon Ball drops, Pointer & Pad Bindings
+	arena.enable_field_mode(true, false)
+	await process_frame
+	var fm = arena.field_manager
+	if fm == null or not fm.active or fm.slots.size() != 10:
+		fail("Field mode must spawn 10 monster slots (5 ground + 5 flying)")
+		return
+	if arena.player_node != null or fm.player_spawned:
+		fail("Hero Drum must start hidden when entering field mode")
+		return
+	var exp_ids := ["chilopoda", "spinosaurus", "tasmanian_king_crab", "t_rex", "sarcosuchus", "bat_chiroptera", "pteranodon", "floating_camera", "bat_chiroptera", "pteranodon"]
+	var exp_hps := [1300.0, 1500.0, 1300.0, 1800.0, 1500.0, 900.0, 1000.0, 800.0, 900.0, 1000.0]
+	for si in range(10):
+		var s: Dictionary = fm.slots[si]
+		if str(s["character_id"]) != exp_ids[si] or absf(float(s["max_hp"]) - exp_hps[si]) > 0.1:
+			fail("Slot %d mismatch: got %s HP=%s, expected %s HP=%s" % [si, str(s["character_id"]), str(s["max_hp"]), exp_ids[si], str(exp_hps[si])])
+			return
+
+	# Spawn Drum at far left of map
+	arena.set_field_hero_visible(true)
+	await process_frame
+	if arena.player_node == null or not fm.player_spawned or absf(arena.player_node.position.x - (arena.walkable_min_x + 24.0)) > 2.0:
+		fail("Drum must spawn at far left end of map")
+		return
+	if absf(fm.player_hp - 1500.0) > 0.1 or absf(fm.player_mana) > 0.1:
+		fail("Drum must start at 1500 HP and 0 Mana")
+		return
+
+	# Drum melee deals 200 dmg, adds +20 Mana, reduces monster Stamina by 20 without HIT while Stamina > 0; breaks at 0 for 3s mini-stun
+	var slot0: Dictionary = fm.slots[0]
+	var m0 := slot0["node"] as Node2D
+	arena.player_node.position = Vector2(m0.position.x - 40.0, m0.position.y)
+	arena.player_facing_left = false
+	arena.player_node.scale = Vector2(arena.char_scale, arena.char_scale)
+	fm.pointer_kind = "enemy"
+	fm.pointer_slot_id = str(slot0["id"])
+	fm.apply_damage_to_slot(slot0, 200.0, 20.0)
+	if absf(float(slot0["hp"]) - 1100.0) > 0.1 or absf(float(slot0["stamina"]) - 80.0) > 0.1 or float(slot0["stun_timer_s"]) > 0.0:
+		fail("First hit must reduce HP 1300->1100 and Stamina 100->80 without mini-stun")
+		return
+	var m0_spr := m0.get_node_or_null("Sprite") as AnimatedSprite2D
+	if m0_spr != null and m0_spr.animation == &"hit":
+		fail("Monster must NOT play hit while Stamina > 0")
+		return
+	# 4 more stamina breaks -> 0 Stamina -> 3.0s attack-lock + 1 HIT clip per hit!
+	for _k in range(4):
+		fm.apply_damage_to_slot(slot0, 50.0, 20.0)
+	if float(slot0["stamina"]) > 0.1 or absf(float(slot0["stun_timer_s"]) - 3.0) > 0.15 or float(slot0.get("hit_anim_timer_s", 0.0)) <= 0.0:
+		fail("5th stamina hit must break poise to 0, start 3.0s stun lock, and trigger 1 HIT clip")
+		return
+	if m0_spr != null and m0_spr.animation != &"hit":
+		fail("Monster must immediately play HIT animation when receiving damage with broken stamina, anim=%s" % str(m0_spr.animation))
+		return
+	# Wait past 1 hit clip (~0.8s = 50 frames) without attacking -> monster must resume normal movement (NOT stuck in hit), while still attack-locked!
+	for _s1 in range(54):
+		await physics_frame
+		fm.step(1.0 / 60.0)
+	if float(slot0.get("hit_anim_timer_s", 0.0)) > 0.0 or float(slot0["stun_timer_s"]) <= 0.5:
+		fail("Single HIT clip must finish before 3.0s stun lock expires (hit_t=%s stun_t=%s)" % [str(slot0.get("hit_anim_timer_s", 0.0)), str(slot0["stun_timer_s"])])
+		return
+	if m0_spr != null and m0_spr.animation == &"hit":
+		fail("When unattacked after single HIT clip ends, monster must move/idle normally instead of looping hit")
+		return
+	if not str(slot0.get("action_clip", "")).is_empty():
+		fail("Broken-stamina monster must remain locked from attacking back during 3s window")
+		return
+	# Hitting once more while stamina broken triggers 1 more HIT clip and resets 3s lock (1 hit = 1 hit anim)
+	fm.apply_damage_to_slot(slot0, 50.0, 20.0)
+	if float(slot0.get("hit_anim_timer_s", 0.0)) <= 0.0 or (m0_spr != null and m0_spr.animation != &"hit"):
+		fail("Follow-up hit during broken stamina must trigger 1 HIT clip")
+		return
+	# Step remaining 3.1s without hitting -> stun expires and Stamina refills to 100
+	for _s2 in range(190):
+		await physics_frame
+		fm.step(1.0 / 60.0)
+	if float(slot0["stun_timer_s"]) > 0.0 or absf(float(slot0["stamina"]) - 100.0) > 0.1:
+		fail("Monster Stamina must refill to 100 after 3s attack-lock ends without hits")
+		return
+
+	# Check 100 Mana requirement for PowerUp orb (+50% speed = 1170 px/s) + homing 400 dmg + default powerup explosion (-20% scale = 0.68)
+	fm.player_mana = 80.0
+	if fm.request_player_power_up():
+		fail("Drum power_up must fail when Mana < 100")
+		return
+	fm.player_mana = 100.0
+	if not fm.request_player_power_up() or absf(fm.player_mana) > 0.1:
+		fail("Drum power_up must succeed and consume 100 Mana")
+		return
+	fm._explosion_nodes.clear()
+	fm.call("_spawn_homing_projectile", arena.player_node, "drum", "electric_orb_fx", arena.player_node.position, 2.5, slot0, true, 400.0, 20.0)
+	if fm.homing_projectiles.is_empty() or absf(float(fm.homing_projectiles[fm.homing_projectiles.size() - 1]["speed"]) - 1170.0) > 1.0:
+		fail("Drum skill projectile speed must be +50%% (1170 px/s)")
+		return
+	var pre_m0_hp: float = float(slot0["hp"])
+	for _dp in range(180):
+		fm.step(1.0 / 60.0)
+		if float(slot0["hp"]) < pre_m0_hp - 0.1:
+			break
+	if float(slot0["hp"]) >= pre_m0_hp - 0.1 or fm._explosion_nodes.is_empty():
+		fail("Drum power_up projectile must hit target and spawn default powerup explosion (exp=%d)" % fm._explosion_nodes.size())
+		return
+	var drum_exp := fm._explosion_nodes[0] as AnimatedSprite2D
+	if drum_exp == null or absf(drum_exp.scale.x - 0.68) > 0.03:
+		fail("Default explosion scale must be 0.68 (-20%% from 0.85), got %s" % (str(drum_exp.scale.x) if drum_exp != null else "null"))
+		return
+	fm.homing_projectiles.clear()
+	fm._explosion_nodes.clear()
+	# Test enemy projectile hitting Drum: subtracts HP, flashes Drum, and spawns small powerup explosion FX!
+	var fcam_slot: Dictionary = fm.slots[7] # floating_camera (800 HP, 80 dmg)
+	var pre_hp: float = float(fm.player_hp)
+	fm._explosion_nodes.clear()
+	fm.call("_spawn_homing_projectile", fcam_slot["node"], "floating_camera", "projectile_fx", Vector2(2000.0, 260.0), 1.8, {}, false, 80.0, 0.0)
+	arena.player_node.position = Vector2(2620.0, 840.0)
+	for _p in range(240):
+		fm.step(1.0 / 60.0)
+		if float(fm.player_hp) < pre_hp - 0.1:
+			break
+	if absf(fm.player_hp - (pre_hp - 80.0)) > 0.1 or float(fm.player_hit_flash_s) <= 0.0 or fm._explosion_nodes.is_empty():
+		fail("Enemy projectile must hit Drum for 80 dmg (hp=%s->%s), trigger player hit flash (flash=%s), and spawn powerup explosion FX (exp=%d, proj=%d)" % [str(pre_hp), str(fm.player_hp), str(fm.player_hit_flash_s), fm._explosion_nodes.size(), fm.homing_projectiles.size()])
+		return
+	var d_spr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+	if d_spr != null and d_spr.animation == &"hit":
+		fail("Hero Drum must NEVER play HIT stagger animation")
+		return
+
+	# Hero Immortal & Monster Attack Range overlay toggles
+	arena.set_show_monster_ranges(true)
+	if not arena.show_monster_ranges_enabled or not bool(fm.show_monster_ranges):
+		fail("set_show_monster_ranges(true) must enable monster range overlay")
+		return
+	arena.set_show_monster_ranges(false)
+
+	var hp_before_imm: float = float(fm.player_hp)
+	arena.set_hero_immortal(true)
+	fm.apply_damage_to_player(5000.0)
+	if fm.player_dead or absf(float(fm.player_hp) - hp_before_imm) > 0.1:
+		fail("Immortal mode must prevent player HP loss and KO")
+		return
+	arena.set_hero_immortal(false)
+
+	# Player 0 HP KO + 3s respawn at far left with 1500 HP
+	fm.apply_damage_to_player(2000.0)
+	if not fm.player_dead or fm.player_hp > 0.0:
+		fail("Drum at 0 HP must enter KO state")
+		return
+	for _r in range(190):
+		fm.step(1.0 / 60.0)
+	if fm.player_dead or absf(fm.player_hp - 1500.0) > 0.1 or absf(arena.player_node.position.x - (arena.walkable_min_x + 24.0)) > 2.0:
+		fail("Drum must respawn at far left with 1500 HP after 3s KO")
+		return
+
+	# 30%-gated Weighted Dragon Ball drops (gate < 30% -> roll star across 30/20/10/5/2/0.5/0.1) & Top Layer z_index == 50 + 1s unlock + pointer cycle
+	var drop_cases := [
+		[0.0, 0.0, 7],
+		[15.0, 35.0, 6],
+		[29.9, 55.0, 5],
+		[10.0, 62.0, 4],
+		[5.0, 66.0, 3],
+		[1.0, 67.2, 2],
+		[20.0, 67.55, 1],
+		[30.0, 0.0, 0],
+		[45.0, 10.0, 0],
+		[80.0, 5.0, 0],
+	]
+	for dc in drop_cases:
+		var rolled := int(fm.roll_dragon_ball_number(float(dc[0]), float(dc[1])))
+		if rolled != int(dc[2]):
+			fail("Dragon Ball roll mismatch at gate=%s star=%s: got %d expected %d" % [str(dc[0]), str(dc[1]), rolled, int(dc[2])])
+			return
+	var spawned_ball: Node2D = fm.roll_and_spawn_dragon_ball(Vector2(arena.player_node.position.x + 20.0, arena.player_node.position.y), 10.0, 0.0)
+	if spawned_ball == null or arena._item_drop_layer.z_index <= arena.fighters_layer.z_index:
+		fail("Dropped Dragon Ball layer z_index must exceed FightersLayer z_index")
+		return
+	if fm.call("_can_pickup_item", spawned_ball):
+		fail("Dropped item must not be pickable before 1.0s drop completion")
+		return
+	for _b in range(66):
+		arena.step_dropped_items(1.0 / 60.0)
+		fm.step(1.0 / 60.0)
+	if not fm.call("_can_pickup_item", spawned_ball):
+		fail("Dropped item must become pickable after 1.0s")
+		return
+	var cyc: Dictionary = fm.cycle_target_pointer()
+	if str(cyc.get("kind", "")) == "":
+		fail("Target pointer cycle must select a valid candidate")
+		return
+
+	# Ground slot death -> 7s respawn with dilophosaurus alternation; flying slot -> bat/pteranodon/camera rotation
+	var g_slot: Dictionary = fm.slots[1]
+	fm.apply_damage_to_slot(g_slot, 2000.0, 20.0)
+	if bool(g_slot["alive"]):
+		fail("Ground slot 1 must die cleanly")
+		return
+	for _rg in range(430):
+		fm.step(1.0 / 60.0)
+	if not bool(g_slot["alive"]) or str(g_slot["character_id"]) != "dilophosaurus" or absf(float(g_slot["max_hp"]) - 1300.0) > 0.1:
+		fail("First ground respawn must alternate dilophosaurus HP=1300 after 7s, got %s" % str(g_slot.get("character_id", "")))
+		return
+
+	# MobileActionPad slot assignment check (no hard lock on 2..7, 1 & 8 locked)
+	var pad_test = preload("res://scenes/runtime/MobileActionPad.gd").new()
+	arena.add_child(pad_test)
+	pad_test.configure_for_character("drum", PackedStringArray(["idle", "walk", "jump", "teleport", "attack_light", "power_up"]), false)
+	if pad_test.get_slot_binding(1) != "attack_light" or pad_test.get_slot_binding(4) != "power_up" or pad_test.get_slot_binding(8) != "cycle_target":
+		fail("MobileActionPad Drum default slots mismatch")
+		return
+	pad_test.set_slot_binding(5, "power_up")
+	if pad_test.get_slot_binding(5) != "power_up":
+		fail("MobileActionPad flexible slot 5 assignment failed")
+		return
+	pad_test.queue_free()
+
+	# Flying monster stability (no rapid left/right flipping in place), elliptical orbit, single 360-deg curved FX, and 360 flight vector
+	var bat_slot: Dictionary = fm.slots[5] # bat_chiroptera
+	var fcam_s: Dictionary = fm.slots[7] # floating_camera
+	var bat_node := bat_slot["node"] as Node2D
+	var fcam_node := fcam_s["node"] as Node2D
+	var bat_pfx := bat_node.get_node_or_null("ProjectileFX") as Node2D
+	if bat_pfx != null and (bat_pfx.scale.length() > 0.01 or bat_pfx.modulate.a > 0.01):
+		fail("Field bat must hide legacy prefab ProjectileFX so only 1 FX fires, scale=%s mod=%s" % [str(bat_pfx.scale), str(bat_pfx.modulate)])
+		return
+	if not bool(fcam_node.get("external_projectile_managed")):
+		fail("Field floating_camera must have external_projectile_managed=true")
+		return
+
+	bat_slot["cooldown_s"] = 1.2
+	bat_slot["action_clip"] = ""
+	bat_slot["turn_lock_s"] = 0.0
+	bat_slot["orbit_phase"] = 0.8
+	fcam_s["cooldown_s"] = 1.2
+	fcam_s["action_clip"] = ""
+	fcam_s["turn_lock_s"] = 0.0
+	arena.player_node.position = Vector2(bat_node.position.x + 140.0, 840.0)
+	var bat_flips := 0
+	var prev_bat_left := bat_node.scale.x < 0.0
+	var bat_min_y := bat_node.position.y
+	var bat_max_y := bat_node.position.y
+	var bat_min_x := bat_node.position.x
+	var bat_max_x := bat_node.position.x
+	for _fo in range(55):
+		await physics_frame
+		fm.step(1.0 / 60.0)
+		var now_left := bat_node.scale.x < 0.0
+		if now_left != prev_bat_left:
+			bat_flips += 1
+			prev_bat_left = now_left
+		bat_min_y = minf(bat_min_y, bat_node.position.y)
+		bat_max_y = maxf(bat_max_y, bat_node.position.y)
+		bat_min_x = minf(bat_min_x, bat_node.position.x)
+		bat_max_x = maxf(bat_max_x, bat_node.position.x)
+	if bat_flips > 1:
+		fail("Bat must NOT oscillate/turn repeatedly in place during cooldown aggro, flips=%d" % bat_flips)
+		return
+	if (bat_max_x - bat_min_x) < 10.0 or (bat_max_y - bat_min_y) < 3.0:
+		fail("Flying monster must cruise smoothly along circular/elliptical 2D orbit (dx=%s, dy=%s)" % [str(bat_max_x - bat_min_x), str(bat_max_y - bat_min_y)])
+		return
+
+	# Check 360-degree projectile rotation: pointed sonic_screech_fx rotates smoothly toward target; spherical electric_orb_fx stays unrotated
+	arena.set_hero_immortal(true)
+	fm.homing_projectiles.clear()
+	fm.call("_spawn_homing_projectile", bat_node, "bat_chiroptera", "sonic_screech_fx", bat_node.position, 2.0, {}, false, 100.0, 0.0)
+	fm.step(1.0 / 60.0)
+	if fm.homing_projectiles.is_empty():
+		fail("Bat homing sonic_screech_fx must spawn")
+		return
+	var sonic_fx: AnimatedSprite2D = fm.homing_projectiles[0]["sprite"] as AnimatedSprite2D
+	if absf(sonic_fx.rotation) < 0.1:
+		fail("Pointed sonic_screech_fx firing downward at Drum must rotate toward 360-deg trajectory, rot=%s" % str(sonic_fx.rotation))
+		return
+	fm.homing_projectiles.clear()
+	fm.call("_spawn_homing_projectile", arena.player_node, "drum", "electric_orb_fx", arena.player_node.position, 2.0, bat_slot, true, 400.0, 20.0)
+	fm.step(1.0 / 60.0)
+	if fm.homing_projectiles.is_empty():
+		fail("Drum homing electric_orb_fx must spawn")
+		return
+	var orb_fx: AnimatedSprite2D = fm.homing_projectiles[0]["sprite"] as AnimatedSprite2D
+	if absf(orb_fx.rotation) > 0.001:
+		fail("Spherical electric_orb_fx must remain unrotated (rotation=0)")
+		return
+	arena.set_hero_immortal(false)
+
+	# Verify exact non-box body silhouette & tâm thân (both Hero and Monsters),
+	# calligraphic red "X" target animation, double-tap auto-attack, and Hero > Monster Z-layering!
+	var trex_slot2: Dictionary = fm.slots[3] # t_rex (ground)
+	var trex_node2 := trex_slot2["node"] as Node2D
+	var trex_rect: Rect2 = arena.get_fighter_body_rect(trex_node2, "t_rex", float(trex_slot2["scale_val"]))
+	var trex_core: Vector2 = arena.get_fighter_core_world_pos(trex_node2, "t_rex", float(trex_slot2["scale_val"]))
+	var drum_core: Vector2 = arena.get_fighter_core_world_pos(arena.player_node, "drum", arena.char_scale)
+	if not arena.silhouette_contains_point(trex_node2, "t_rex", float(trex_slot2["scale_val"]), trex_core, 0.0):
+		fail("T-rex body silhouette must contain its tâm thân core")
+		return
+	if not arena.silhouette_contains_point(arena.player_node, "drum", arena.char_scale, drum_core, 0.0):
+		fail("Drum body silhouette must contain its tâm thân core")
+		return
+	# Empty top-left corner of T-rex bounding box (above tail) must NOT count as solid body!
+	var empty_corner := Vector2(trex_rect.position.x + 2.0, trex_rect.position.y + 2.0)
+	if arena.silhouette_contains_point(trex_node2, "t_rex", float(trex_slot2["scale_val"]), empty_corner, 0.0):
+		fail("Empty bounding-box corner above T-rex tail must NOT register as solid body hit")
+		return
+
+	# Layer priority: Monster (10) < Hero (20) < Boss (30) and overlapping layers allowed
+	if trex_node2.z_index != arena.Z_LAYER_MONSTER or arena.player_node.z_index != arena.Z_LAYER_HERO or arena.player_node.z_index <= trex_node2.z_index:
+		fail("Layer priority must place Hero (%d) above Monster (%d)" % [arena.player_node.z_index, trex_node2.z_index])
+		return
+
+	# Single tap -> selects T-rex & starts transient calligraphic red "X" animation (0.0 -> 0.28s) that later fades out
+	if float(fm.pointer_x_visible_s) > 0.001:
+		fail("Calligraphic red X must NOT stay visible before touch interaction")
+		return
+	var tap_res: Dictionary = fm.select_target_at_world_pos(trex_core)
+	if not bool(tap_res.get("selected", false)) or fm.pointer_slot_id != str(trex_slot2["id"]) or float(fm.pointer_x_anim_s) > 0.001 or float(fm.pointer_x_visible_s) <= 0.5:
+		fail("Single tap must target T-rex and show transient calligraphic red X, got %s" % str(tap_res))
+		return
+	# Wait 0.90s without further interaction -> calligraphic X must disappear automatically!
+	for _xv in range(54):
+		fm.step(1.0 / 60.0)
+	if float(fm.pointer_x_visible_s) > 0.001:
+		fail("Calligraphic red X must disappear after interaction ends, remaining=%s" % str(fm.pointer_x_visible_s))
+		return
+	# Re-tap then double-tap 260px away -> shows X again & triggers auto-approach attack!
+	fm.select_target_at_world_pos(trex_core)
+	for _dt_step in range(8):
+		fm.step(1.0 / 60.0)
+	var pre_trex_hp: float = float(trex_slot2["hp"])
+	arena.player_node.position = Vector2(trex_rect.position.x - 260.0, trex_node2.position.y)
+	arena.player_vy = 0.0
+	fm.hit_impacts.clear()
+	fm.floating_texts.clear()
+	var dbl_res: Dictionary = fm.select_target_at_world_pos(trex_core)
+	if not bool(dbl_res.get("double_tap_attack", false)) or not bool(fm.auto_approach_active) or float(fm.pointer_x_visible_s) <= 0.5:
+		fail("Double-tap on target must show X and start auto-approach attack, got %s" % str(dbl_res))
+		return
+	for _aa in range(180):
+		await physics_frame
+		fm.step(1.0 / 60.0)
+		if float(trex_slot2["hp"]) < pre_trex_hp:
+			break
+	if float(trex_slot2["hp"]) >= pre_trex_hp:
+		fail("Double-tap auto-approach must walk close to target core and deal melee damage")
+		return
+	if fm.hit_impacts.is_empty() or fm.floating_texts.is_empty() or float(trex_slot2.get("hit_flash_s", 0.0)) <= 0.0:
+		fail("Hit feedback FX (impact burst + damage popup + flash) must trigger on hit")
+		return
+	# Check additional -20% hit-flash brightness on monster & hero sprites (max RGB <= 0.64 during flash)
+	var m_flash_spr := trex_node2.get_node_or_null("Sprite") as AnimatedSprite2D
+	if m_flash_spr != null and m_flash_spr.modulate.r > 0.65:
+		fail("Monster hit flash brightness must be reduced by 20%% again (r <= 0.64), got %s" % str(m_flash_spr.modulate))
+		return
+	fm.apply_damage_to_player(10.0)
+	fm.step(1.0 / 60.0)
+	var h_flash_spr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+	if h_flash_spr != null and h_flash_spr.modulate.r > 0.65:
+		fail("Hero hit flash brightness must be reduced by 20%% again (r <= 0.64), got %s" % str(h_flash_spr.modulate))
+		return
+
+	# Normal attack 0.2s cooldown & anti-mash (no input queueing): finish clip, reject spam during 0.2s, allow after 0.2s
+	for _wait_clip in range(60):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+		fm.step(1.0 / 60.0)
+		if not arena._is_player_action_playing() and float(arena.player_light_cooldown_s) <= 0.0:
+			break
+	if not fm.request_player_primary_action():
+		fail("First normal attack from ready state must succeed (playing=%s cd=%s dead=%s)" % [str(arena._is_player_action_playing()), str(arena.player_light_cooldown_s), str(fm.player_dead)])
+		return
+	if fm.request_player_primary_action() or arena.player_node.has_meta(&"_arena_queued_action"):
+		fail("Mashing normal attack during active clip must be rejected without queueing")
+		return
+	for _finish_clip in range(60):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+		fm.step(1.0 / 60.0)
+		if not arena._is_player_action_playing():
+			break
+	# One extra movement step transitions _player_light_clip_active -> 0.2s cooldown right when clip ends
+	arena.step_player_movement(1.0 / 60.0, 0)
+	if float(arena.player_light_cooldown_s) <= 0.14 or fm.request_player_primary_action():
+		fail("Normal attack must enforce 0.2s recovery cooldown after finishing clip, cd=%s" % str(arena.player_light_cooldown_s))
+		return
+	for _cd_step in range(15):
+		await physics_frame
+		arena.step_player_movement(1.0 / 60.0, 0)
+		fm.step(1.0 / 60.0)
+	if float(arena.player_light_cooldown_s) > 0.001 or not fm.request_player_primary_action():
+		fail("Normal attack must become ready again once 0.2s cooldown expires, cd=%s" % str(arena.player_light_cooldown_s))
+		return
+
+	# Skill-vs-Skill clash: player power_up orb cuts enemy projectile with clash FX + explosion
+	fm.homing_projectiles.clear()
+	fm.hit_impacts.clear()
+	fm._explosion_nodes.clear()
+	fm.call("_spawn_homing_projectile", arena.player_node, "drum", "electric_orb_fx", Vector2(3000.0, 760.0), 2.5, trex_slot2, true, 400.0, 20.0)
+	fm.call("_spawn_homing_projectile", trex_node2, "t_rex", "fireball_fx", Vector2(3015.0, 760.0), 1.75, {}, false, 100.0, 0.0)
+	fm.step(1.0 / 60.0)
+	var saw_clash := false
+	for imp in fm.hit_impacts:
+		if str(imp.get("kind", "")) == "clash":
+			saw_clash = true
+			break
+	if not saw_clash or fm._explosion_nodes.is_empty():
+		fail("Colliding player & enemy skill projectiles must trigger a 'clash' impact + explosion FX")
+		return
+
+	arena.enable_field_mode(false, false)
+	await process_frame
+
+	# Verify 360-degree continuous analog vector flight on flying character (Pteranodon) without affecting Drum
+	arena.select_character("pteranodon")
+	await process_frame
+	var fly_start: Vector2 = arena.player_node.position
+	var ang_vec := Vector2(cos(0.65), sin(0.65))
+	for _fv in range(20):
+		arena.step_player_movement(1.0 / 60.0, 1, 0, false, false, false, ang_vec)
+	var fly_delta: Vector2 = arena.player_node.position - fly_start
+	if fly_delta.x <= 15.0 or fly_delta.y <= 10.0:
+		fail("Flying fighter must support smooth 360-degree multi-axis analog flight, delta=%s" % str(fly_delta))
+		return
 
 	var verified_roster_count: int = arena.roster_characters.size()
 	arena.queue_free()

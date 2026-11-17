@@ -7,12 +7,31 @@ extends Node2D
 
 const STAGE_JSON_PATH := "res://assets/maps/rocky_plateau/arena-stage.json"
 const TERRAIN_JSON_PATH := "res://assets/maps/rocky_plateau/terrain.json"
+const EXTENDED_MAP_PATH := "res://review/rocky_plateau_extension/combined.png"
+const MAP_LEFT_X := -240.0
+const MAP_RIGHT_X := 4560.0
+const MAP_TOP_Y := -210.0
+const MAP_BOTTOM_Y := 1140.0
+const MAP_JOIN_X := 2160.0
+const STEP_ONE_X := 2850.0
+const STEP_TWO_X := 3695.0
+const STEP_ONE_DROP_Y := 50.0
+const STEP_TWO_DROP_Y := 105.0
 const ROSTER_JSON_PATH := "res://assets/roster.json"
 const REVIEW_ROSTER_JSON_PATH := "res://review/review-roster.json"
+const BODY_SILHOUETTES_JSON_PATH := "res://assets/body_silhouettes.json"
+const Z_LAYER_MONSTER := 10
+const Z_LAYER_HERO := 20
+const Z_LAYER_BOSS := 30
+const PLAYER_LIGHT_ATTACK_COOLDOWN_S: float = 0.2
 const ShenronSummonScript := preload("res://scenes/ShenronSummon2D.gd")
 const DragonBallItemScene := preload("res://scenes/items/DragonBallItem2D.tscn")
 const DisplayPolicyScript := preload("res://scenes/runtime/DisplayPolicy.gd")
 const TouchHudOverlayScript := preload("res://scenes/runtime/TouchHudOverlay.gd")
+const PixelRulerModalScript := preload("res://scenes/runtime/PixelRulerModal.gd")
+const ArenaThemeScript := preload("res://scenes/runtime/ArenaTheme.gd")
+const MobileActionPadScript := preload("res://scenes/runtime/MobileActionPad.gd")
+const FieldCombatManagerScript := preload("res://scenes/runtime/FieldCombatManager.gd")
 const WebSocketTransportScript := preload("res://scenes/net/WebSocketTransport.gd")
 const ZoneClientSyncScript := preload("res://scenes/net/ZoneClientSync.gd")
 
@@ -48,6 +67,7 @@ var _player_drop_timer_s: float = 0.0
 var _prev_player_on_ground: bool = true
 var _step_dust_accum_px: float = 0.0
 var roster_characters: Array = []
+var _body_silhouettes: Dictionary = {}
 var active_character_id: String = ""
 var char_scale: float = 1.75
 var enemy_scale: float = 1.75
@@ -70,6 +90,7 @@ var _enemy_pinned: bool = false
 var player_node: Node2D = null
 var dummy_node: Node2D = null
 var player_vy: float = 0.0
+var enemy_vy: float = 0.0
 var player_facing_left: bool = false
 var enemy_facing_left: bool = true
 var utility_ai_enabled: bool = false
@@ -79,6 +100,8 @@ var _ai_action_clip: String = ""
 var _ai_action_timer_s: float = 0.0
 var _ai_drum_teleport_relocated: bool = false
 var _player_drum_teleport_relocated: bool = false
+var player_light_cooldown_s: float = 0.0
+var _player_light_clip_active: bool = false
 var _enemy_orb_sprite: AnimatedSprite2D = null
 var _enemy_orb_active: bool = false
 var _enemy_orb_dir: float = 1.0
@@ -110,6 +133,37 @@ var collected_bag_balls: Array[int] = []
 var item_toggle_button: Button = null
 var item_drop_test_button: Button = null
 var item_pickup_button: Button = null
+var ruler_button: Button = null
+var ruler_modal: PixelRulerModal = null
+var ruler_modal_visible: bool = false
+var ruler_pick_mode: bool = false
+var ruler_grid_enabled: bool = false
+var ruler_has_a: bool = false
+var ruler_has_b: bool = false
+var ruler_point_a: Vector2 = Vector2.ZERO
+var ruler_point_b: Vector2 = Vector2.ZERO
+var _ruler_dragging: bool = false
+var _ruler_drag_start_screen: Vector2 = Vector2.ZERO
+var _ruler_awaiting_b: bool = false
+var _t_key_was_down: bool = false
+var _tab_key_was_down: bool = false
+var _last_touch_tap_msec: int = -10000
+var _flight_vel: Vector2 = Vector2.ZERO
+
+var field_mode_enabled: bool = false
+var hud_ui_hidden: bool = false
+var hero_immortal_enabled: bool = false
+var show_monster_ranges_enabled: bool = false
+var field_manager = null
+var _field_overlay_node: Node2D = null
+var mobile_pad = null
+var pixel_perfect_button: Button = null
+var toggle_hero_button: Button = null
+var pad_settings_button: Button = null
+var toggle_ui_button: Button = null
+var immortal_button: Button = null
+var monster_range_button: Button = null
+var _arena_theme: Theme = null
 
 @onready var background_sprite: Sprite2D = get_node_or_null("BackgroundLayer/BackgroundSprite")
 @onready var fighters_layer: Node2D = get_node_or_null("FightersLayer")
@@ -121,11 +175,17 @@ func _ready() -> void:
 	_apply_stage_layout()
 	_setup_camera_and_display_policy()
 	_setup_network_client_stub()
+	_apply_arena_theme()
 	_setup_summon_control()
 	_setup_item_controls()
 	_setup_touch_hud()
+	_setup_ruler_control()
+	_setup_field_hud_controls()
+	_ensure_field_manager()
 	_refresh_dropped_items()
-	if not roster_characters.is_empty():
+	if DisplayServer.get_name() != "headless":
+		enable_field_mode(true, false)
+	elif not roster_characters.is_empty():
 		var start_id := default_character_id
 		if _find_character_entry(start_id).is_empty():
 			start_id = str(roster_characters[0].get("character_id", ""))
@@ -140,9 +200,11 @@ func _setup_camera_and_display_policy() -> void:
 		_arena_camera.enabled = true
 		add_child(_arena_camera)
 		_arena_camera.make_current()
+	_update_follow_camera()
 	var root_win := get_tree().root if get_tree() != null else null
 	display_layout_info = DisplayPolicyScript.apply_to_root_window(root_win, pixel_perfect_enabled)
 	_update_background_cover()
+	_apply_hud_safe_area()
 	if root_win != null and not root_win.size_changed.is_connected(_on_root_window_resized):
 		root_win.size_changed.connect(_on_root_window_resized)
 
@@ -151,8 +213,11 @@ func _on_root_window_resized() -> void:
 	var root_win := get_tree().root if get_tree() != null else null
 	display_layout_info = DisplayPolicyScript.apply_to_root_window(root_win, pixel_perfect_enabled)
 	_update_background_cover()
+	_apply_hud_safe_area()
 	if touch_hud != null and is_instance_valid(touch_hud) and touch_hud.has_method("apply_safe_area"):
 		touch_hud.call("apply_safe_area", display_layout_info)
+	if mobile_pad != null and is_instance_valid(mobile_pad):
+		mobile_pad.apply_safe_area(display_layout_info)
 
 
 func set_pixel_perfect_enabled(enabled: bool, sim_win_size: Vector2i = Vector2i.ZERO, sim_safe_rect: Rect2i = Rect2i()) -> Dictionary:
@@ -160,8 +225,13 @@ func set_pixel_perfect_enabled(enabled: bool, sim_win_size: Vector2i = Vector2i.
 	var root_win := get_tree().root if get_tree() != null else null
 	display_layout_info = DisplayPolicyScript.apply_to_root_window(root_win, pixel_perfect_enabled, sim_win_size, sim_safe_rect)
 	_update_background_cover()
+	_apply_hud_safe_area()
 	if touch_hud != null and is_instance_valid(touch_hud) and touch_hud.has_method("apply_safe_area"):
 		touch_hud.call("apply_safe_area", display_layout_info)
+	if mobile_pad != null and is_instance_valid(mobile_pad):
+		mobile_pad.apply_safe_area(display_layout_info)
+	if pixel_perfect_button != null:
+		pixel_perfect_button.text = "Pixel: Perfect" if pixel_perfect_enabled else "Pixel: Fractional"
 	return display_layout_info
 
 
@@ -182,28 +252,120 @@ func _setup_network_client_stub() -> void:
 	zone_sync.attach_transport(net_transport)
 
 
+func _apply_arena_theme() -> void:
+	_arena_theme = ArenaThemeScript.build_theme()
+	if hud_label != null and _arena_theme != null:
+		hud_label.theme = _arena_theme
+		hud_label.add_theme_font_size_override("font_size", 21)
+		hud_label.add_theme_color_override("font_color", Color(0.95, 0.97, 1.0, 1.0))
+		hud_label.add_theme_color_override("font_outline_color", Color(0.03, 0.05, 0.10, 0.96))
+		hud_label.add_theme_constant_override("outline_size", 3)
+		var pill := StyleBoxFlat.new()
+		pill.bg_color = Color(0.05, 0.08, 0.16, 0.62)
+		pill.border_color = Color(0.75, 0.85, 0.98, 0.34)
+		pill.set_border_width_all(1)
+		pill.set_corner_radius_all(8)
+		pill.content_margin_left = 10
+		pill.content_margin_right = 10
+		pill.content_margin_top = 4
+		pill.content_margin_bottom = 4
+		hud_label.add_theme_stylebox_override("normal", pill)
+
+
+func _ensure_field_manager() -> void:
+	if field_manager == null or not is_instance_valid(field_manager):
+		field_manager = FieldCombatManagerScript.new()
+		field_manager.name = "FieldCombatManager"
+		add_child(field_manager)
+		field_manager.setup(self)
+		field_manager.player_state_changed.connect(_sync_field_pad_state)
+		field_manager.pointer_changed.connect(func(_k: String) -> void:
+			_sync_field_pad_state()
+			if _field_overlay_node != null and is_instance_valid(_field_overlay_node):
+				_field_overlay_node.queue_redraw()
+		)
+	if _field_overlay_node == null or not is_instance_valid(_field_overlay_node):
+		_field_overlay_node = Node2D.new()
+		_field_overlay_node.name = "FieldOverlayLayer"
+		_field_overlay_node.z_index = 60
+		add_child(_field_overlay_node)
+		_field_overlay_node.draw.connect(_on_field_overlay_draw)
+
+
+func _on_field_overlay_draw() -> void:
+	if _field_overlay_node == null or not is_instance_valid(_field_overlay_node):
+		return
+	if field_mode_enabled and field_manager != null and field_manager.active:
+		field_manager.draw_overlays(_field_overlay_node)
+
+
 func _setup_touch_hud() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var hud_layer := get_node_or_null("HUDLayer")
 	if hud_layer == null:
 		return
-	touch_hud = TouchHudOverlayScript.new()
-	touch_hud.name = "TouchHudOverlay"
-	hud_layer.add_child(touch_hud)
-	if touch_hud.has_signal("pixel_perfect_toggled"):
-		touch_hud.connect("pixel_perfect_toggled", func(enabled: bool) -> void:
-			set_pixel_perfect_enabled(enabled)
-		)
-	if touch_hud.has_signal("touch_action_triggered"):
-		touch_hud.connect("touch_action_triggered", _on_touch_action)
-	if touch_hud.has_method("apply_safe_area"):
-		touch_hud.call("apply_safe_area", display_layout_info)
+	mobile_pad = MobileActionPadScript.new()
+	mobile_pad.name = "MobileActionPad"
+	if _arena_theme != null:
+		mobile_pad.theme = _arena_theme
+	hud_layer.add_child(mobile_pad)
+	mobile_pad.action_triggered.connect(_on_mobile_pad_action)
+	mobile_pad.target_cycle_requested.connect(_on_target_cycle_requested)
+	mobile_pad.apply_safe_area(display_layout_info)
+
+
+func _collect_clip_names(fighter: Node2D) -> PackedStringArray:
+	var out := PackedStringArray()
+	if fighter == null:
+		return out
+	var spr := fighter.get_node_or_null("Sprite") as AnimatedSprite2D
+	if spr != null and spr.sprite_frames != null:
+		for anim in spr.sprite_frames.get_animation_names():
+			out.append(String(anim))
+	return out
+
+
+func _align_player_facing_to_active_move_dir() -> void:
+	if player_node == null:
+		return
+	var dir := 0
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT) or Input.is_action_pressed(&"move_right"):
+		dir += 1
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT) or Input.is_action_pressed(&"move_left"):
+		dir -= 1
+	if mobile_pad != null and is_instance_valid(mobile_pad) and mobile_pad.analog_dir_x != 0:
+		dir = clampi(mobile_pad.analog_dir_x, -1, 1)
+	if touch_hud != null and is_instance_valid(touch_hud) and int(touch_hud.get("touch_dir_x")) != 0:
+		dir = clampi(int(touch_hud.get("touch_dir_x")), -1, 1)
+	if dir != 0:
+		player_facing_left = dir < 0
+		player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
+
+
+func _on_mobile_pad_action(_slot_id: int, action_id: String) -> void:
+	_on_touch_action(action_id)
+
+
+func _on_target_cycle_requested() -> void:
+	if field_manager != null and field_manager.active:
+		field_manager.cycle_target_pointer()
+		_sync_field_pad_state()
+
+
+func _sync_field_pad_state() -> void:
+	if mobile_pad == null or not is_instance_valid(mobile_pad) or field_manager == null:
+		return
+	mobile_pad.set_mana_and_pointer_state(field_manager.player_mana, field_manager.player_max_mana, field_manager.pointer_kind)
 
 
 func _on_touch_action(action_name: String) -> void:
 	if player_node == null:
 		return
+	if field_mode_enabled and field_manager != null and field_manager.active and field_manager.player_dead:
+		return
+	if action_name != "attack_light" and field_manager != null:
+		field_manager.cancel_auto_approach()
 	if action_name == "jump":
 		if _is_flying_entry(_find_character_entry(active_character_id)):
 			step_flight_vertical(-1.0, 1.0 / 60.0)
@@ -214,9 +376,22 @@ func _on_touch_action(action_name: String) -> void:
 		if not _is_flying_entry(_find_character_entry(active_character_id)) and player_node.position.y >= sup_y - 2.0 and player_vy >= 0.0:
 			player_vy = jump_velocity_px_per_s
 			_spawn_ground_dust(player_node.position.x, sup_y, 0.9)
+	elif action_name == "teleport":
+		_align_player_facing_to_active_move_dir()
+		_request_player_action("teleport")
 	elif action_name == "pickup_items":
 		pickup_dropped_items()
-	elif action_name in ["attack_light", "attack_heavy", "power_up"]:
+	elif action_name == "attack_light":
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_primary_action()
+		else:
+			_request_player_action("attack_light")
+	elif action_name == "power_up":
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_power_up()
+		else:
+			_request_player_action("power_up")
+	elif action_name in ["attack_heavy"]:
 		_request_player_action(action_name)
 
 
@@ -227,12 +402,45 @@ func _is_fighter_turning(fighter: Node) -> bool:
 	return bool(pending) if pending != null else false
 
 
+func _is_light_attack_clip(clip_name: String) -> bool:
+	return clip_name == "attack_light" or clip_name == "attack_nomal"
+
+
+func can_player_light_attack() -> bool:
+	if player_node == null:
+		return false
+	if player_light_cooldown_s > 0.0:
+		return false
+	if _is_fighter_turning(player_node) or _is_player_action_playing():
+		return false
+	return _has_clip_name(player_node, &"attack_light") or _has_clip_name(player_node, &"attack_nomal")
+
+
+func _step_player_light_cooldown(delta: float) -> void:
+	if player_node == null:
+		return
+	var spr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+	var light_playing_now := spr != null and spr.is_playing() and _is_light_attack_clip(String(spr.animation))
+	if _player_light_clip_active and not light_playing_now:
+		_player_light_clip_active = false
+		player_light_cooldown_s = PLAYER_LIGHT_ATTACK_COOLDOWN_S
+	elif not light_playing_now and player_light_cooldown_s > 0.0:
+		player_light_cooldown_s = maxf(0.0, player_light_cooldown_s - delta)
+
+
 func _request_player_action(clip_name: String) -> bool:
 	if player_node == null:
 		return false
 	if clip_name == "attack_light" and not _has_clip_name(player_node, &"attack_light") and _has_clip_name(player_node, &"attack_nomal"):
 		clip_name = "attack_nomal"
 	if not _has_clip_name(player_node, StringName(clip_name)):
+		return false
+	if _is_light_attack_clip(clip_name):
+		if player_light_cooldown_s > 0.0 or _is_fighter_turning(player_node) or _is_player_action_playing():
+			return false
+		if _play_fighter_clip(player_node, clip_name):
+			_player_light_clip_active = true
+			return true
 		return false
 	if _is_fighter_turning(player_node) or _is_player_action_playing():
 		player_node.set_meta(&"_arena_queued_action", clip_name)
@@ -335,6 +543,455 @@ func _setup_item_controls() -> void:
 		pickup_dropped_items()
 	)
 	hud_layer.add_child(item_pickup_button)
+	_apply_hud_safe_area()
+
+
+func _apply_hud_safe_area() -> void:
+	var insets: Dictionary = display_layout_info.get("safe_insets_logic", {})
+	var ins_l := float(insets.get("left", 0.0))
+	var ins_t := float(insets.get("top", 0.0))
+	var ins_r := float(insets.get("right", 0.0))
+	var vis := _get_visible_logic_size()
+	var compact_top := vis.x < 1260.0
+	if hud_label != null:
+		hud_label.offset_left = 20.0 + ins_l
+		hud_label.offset_top = 14.0 + ins_t
+	if summon_button != null:
+		summon_button.offset_left = -320.0 - ins_r
+		summon_button.offset_right = -40.0 - ins_r
+		summon_button.offset_top = 78.0 + ins_t
+		summon_button.offset_bottom = 134.0 + ins_t
+	if item_toggle_button != null:
+		item_toggle_button.offset_left = -320.0 - ins_r
+		item_toggle_button.offset_right = -184.0 - ins_r
+		item_toggle_button.offset_top = 142.0 + ins_t
+		item_toggle_button.offset_bottom = 184.0 + ins_t
+	if item_drop_test_button != null:
+		item_drop_test_button.offset_left = -178.0 - ins_r
+		item_drop_test_button.offset_right = -40.0 - ins_r
+		item_drop_test_button.offset_top = 142.0 + ins_t
+		item_drop_test_button.offset_bottom = 184.0 + ins_t
+	if item_pickup_button != null:
+		item_pickup_button.offset_left = -320.0 - ins_r
+		item_pickup_button.offset_right = -40.0 - ins_r
+		item_pickup_button.offset_top = 190.0 + ins_t
+		item_pickup_button.offset_bottom = 232.0 + ins_t
+	if wish_panel != null:
+		wish_panel.offset_left = -500.0 - ins_r
+		wish_panel.offset_right = -40.0 - ins_r
+		wish_panel.offset_top = 248.0 + ins_t
+	var row1_t := 68.0 + ins_t
+	var row1_b := 112.0 + ins_t
+	var row2_t := (120.0 + ins_t) if compact_top else row1_t
+	var row2_b := (164.0 + ins_t) if compact_top else row1_b
+	if pixel_perfect_button != null:
+		pixel_perfect_button.offset_left = 20.0 + ins_l
+		pixel_perfect_button.offset_right = 216.0 + ins_l
+		pixel_perfect_button.offset_top = row1_t
+		pixel_perfect_button.offset_bottom = row1_b
+	if ruler_button != null:
+		ruler_button.offset_left = 224.0 + ins_l
+		ruler_button.offset_right = 376.0 + ins_l
+		ruler_button.offset_top = row1_t
+		ruler_button.offset_bottom = row1_b
+	if toggle_hero_button != null:
+		toggle_hero_button.offset_left = 384.0 + ins_l
+		toggle_hero_button.offset_right = 632.0 + ins_l
+		toggle_hero_button.offset_top = row1_t
+		toggle_hero_button.offset_bottom = row1_b
+	if pad_settings_button != null:
+		pad_settings_button.offset_left = (20.0 + ins_l) if compact_top else (640.0 + ins_l)
+		pad_settings_button.offset_right = (148.0 + ins_l) if compact_top else (768.0 + ins_l)
+		pad_settings_button.offset_top = row2_t
+		pad_settings_button.offset_bottom = row2_b
+	if toggle_ui_button != null:
+		toggle_ui_button.offset_left = (156.0 + ins_l) if compact_top else (776.0 + ins_l)
+		toggle_ui_button.offset_right = (288.0 + ins_l) if compact_top else (908.0 + ins_l)
+		toggle_ui_button.offset_top = row2_t
+		toggle_ui_button.offset_bottom = row2_b
+	var row2_only_t := 118.0 + ins_t
+	var row2_only_b := 162.0 + ins_t
+	if immortal_button != null:
+		immortal_button.offset_left = (296.0 + ins_l) if compact_top else (20.0 + ins_l)
+		immortal_button.offset_right = (464.0 + ins_l) if compact_top else (196.0 + ins_l)
+		immortal_button.offset_top = row2_only_t
+		immortal_button.offset_bottom = row2_only_b
+	if monster_range_button != null:
+		monster_range_button.offset_left = (472.0 + ins_l) if compact_top else (204.0 + ins_l)
+		monster_range_button.offset_right = (676.0 + ins_l) if compact_top else (408.0 + ins_l)
+		monster_range_button.offset_top = row2_only_t
+		monster_range_button.offset_bottom = row2_only_b
+	if ruler_modal != null and is_instance_valid(ruler_modal):
+		ruler_modal.apply_safe_area(insets)
+	if mobile_pad != null and is_instance_valid(mobile_pad):
+		mobile_pad.apply_safe_area(display_layout_info)
+
+
+func _setup_ruler_control() -> void:
+	var hud_layer := get_node_or_null("HUDLayer")
+	if hud_layer == null:
+		return
+	ruler_button = Button.new()
+	ruler_button.name = "RulerModalButton"
+	ruler_button.text = "📏 Thước PX"
+	ruler_button.offset_left = 300.0
+	ruler_button.offset_right = 446.0
+	ruler_button.offset_top = 60.0
+	ruler_button.offset_bottom = 98.0
+	ruler_button.pressed.connect(func() -> void:
+		set_ruler_modal_visible(not ruler_modal_visible)
+	)
+	hud_layer.add_child(ruler_button)
+
+	ruler_modal = PixelRulerModalScript.new()
+	ruler_modal.name = "PixelRulerModal"
+	ruler_modal.visible = false
+	hud_layer.add_child(ruler_modal)
+	ruler_modal.pick_mode_changed.connect(func(enabled: bool) -> void:
+		ruler_pick_mode = enabled
+		_ruler_awaiting_b = false
+		_ruler_dragging = false
+	)
+	ruler_modal.ruler_grid_toggled.connect(func(enabled: bool) -> void:
+		ruler_grid_enabled = enabled
+		queue_redraw()
+	)
+	ruler_modal.measure_pair_requested.connect(func() -> void:
+		measure_player_enemy_distance()
+	)
+	ruler_modal.set_point_a_player_requested.connect(func() -> void:
+		if player_node != null:
+			ruler_point_a = player_node.position
+			ruler_has_a = true
+			_ruler_awaiting_b = true
+			_sync_ruler_ui()
+	)
+	ruler_modal.snap_point_b_requested.connect(func(wx: float) -> void:
+		ruler_point_b = Vector2(wx, _ground_y_at(wx))
+		ruler_has_b = true
+		if not ruler_has_a and player_node != null:
+			ruler_point_a = player_node.position
+			ruler_has_a = true
+		_sync_ruler_ui()
+	)
+	ruler_modal.clear_points_requested.connect(func() -> void:
+		ruler_has_a = false
+		ruler_has_b = false
+		_ruler_awaiting_b = false
+		_ruler_dragging = false
+		_sync_ruler_ui()
+	)
+	ruler_modal.modal_closed.connect(func() -> void:
+		set_ruler_modal_visible(false)
+	)
+	_apply_hud_safe_area()
+
+
+func _setup_field_hud_controls() -> void:
+	var hud_layer := get_node_or_null("HUDLayer")
+	if hud_layer == null:
+		return
+	if DisplayServer.get_name() != "headless":
+		pixel_perfect_button = Button.new()
+		pixel_perfect_button.name = "PixelPerfectButton"
+		pixel_perfect_button.text = "Pixel: Perfect" if pixel_perfect_enabled else "Pixel: Fractional"
+		pixel_perfect_button.pressed.connect(func() -> void:
+			set_pixel_perfect_enabled(not pixel_perfect_enabled)
+		)
+		hud_layer.add_child(pixel_perfect_button)
+
+		toggle_hero_button = Button.new()
+		toggle_hero_button.name = "ToggleHeroButton"
+		toggle_hero_button.text = "👤 Hiện Tướng (Drum)"
+		toggle_hero_button.pressed.connect(func() -> void:
+			var spawned_now: bool = field_manager != null and bool(field_manager.player_spawned)
+			set_field_hero_visible(not spawned_now)
+		)
+		hud_layer.add_child(toggle_hero_button)
+
+		pad_settings_button = Button.new()
+		pad_settings_button.name = "PadSettingsButton"
+		pad_settings_button.text = "⚙️ Phím"
+		pad_settings_button.pressed.connect(func() -> void:
+			if mobile_pad != null and is_instance_valid(mobile_pad):
+				mobile_pad.toggle_settings_modal()
+		)
+		hud_layer.add_child(pad_settings_button)
+
+		toggle_ui_button = Button.new()
+		toggle_ui_button.name = "ToggleUiButton"
+		toggle_ui_button.text = "👁️ Ẩn UI"
+		toggle_ui_button.pressed.connect(func() -> void:
+			set_hud_ui_hidden(not hud_ui_hidden)
+		)
+		hud_layer.add_child(toggle_ui_button)
+
+		immortal_button = Button.new()
+		immortal_button.name = "ImmortalModeButton"
+		immortal_button.pressed.connect(func() -> void:
+			set_hero_immortal(not hero_immortal_enabled)
+		)
+		hud_layer.add_child(immortal_button)
+		_sync_immortal_button()
+
+		monster_range_button = Button.new()
+		monster_range_button.name = "MonsterRangeButton"
+		monster_range_button.pressed.connect(func() -> void:
+			set_show_monster_ranges(not show_monster_ranges_enabled)
+		)
+		hud_layer.add_child(monster_range_button)
+		_sync_monster_range_button()
+
+	if _arena_theme != null:
+		for c in hud_layer.get_children():
+			if c is Control and c != mobile_pad:
+				(c as Control).theme = _arena_theme
+	_apply_hud_safe_area()
+
+
+func _sync_immortal_button() -> void:
+	if immortal_button == null or not is_instance_valid(immortal_button):
+		return
+	if hero_immortal_enabled:
+		immortal_button.text = "🛡️ Bất tử: BẬT"
+		immortal_button.add_theme_color_override("font_color", Color(1.0, 0.90, 0.30, 1.0))
+	else:
+		immortal_button.text = "🛡️ Bất tử: TẮT"
+		immortal_button.remove_theme_color_override("font_color")
+
+
+func _sync_monster_range_button() -> void:
+	if monster_range_button == null or not is_instance_valid(monster_range_button):
+		return
+	if show_monster_ranges_enabled:
+		monster_range_button.text = "🎯 Tầm quái: BẬT"
+		monster_range_button.add_theme_color_override("font_color", Color(0.45, 0.96, 0.62, 1.0))
+	else:
+		monster_range_button.text = "🎯 Tầm quái: TẮT"
+		monster_range_button.remove_theme_color_override("font_color")
+
+
+func set_hero_immortal(enabled: bool) -> void:
+	hero_immortal_enabled = enabled
+	_ensure_field_manager()
+	field_manager.set_player_immortal(enabled)
+	_sync_immortal_button()
+	_update_hud()
+	queue_redraw()
+
+
+func set_show_monster_ranges(enabled: bool) -> void:
+	show_monster_ranges_enabled = enabled
+	show_grid_overlay = enabled
+	_ensure_field_manager()
+	field_manager.show_monster_ranges = enabled
+	_sync_monster_range_button()
+	_update_hud()
+	queue_redraw()
+
+
+func set_hud_ui_hidden(hidden: bool) -> void:
+	hud_ui_hidden = hidden
+	var vis_flag := not hidden
+	for n in [hud_label, pixel_perfect_button, ruler_button, pad_settings_button, immortal_button, monster_range_button, summon_button, item_toggle_button, item_drop_test_button, item_pickup_button]:
+		if n != null and is_instance_valid(n):
+			n.visible = vis_flag
+	if toggle_ui_button != null:
+		toggle_ui_button.text = "👁️ Hiện UI" if hidden else "👁️ Ẩn UI"
+
+
+func enable_field_mode(enabled: bool, spawn_hero: bool = false) -> void:
+	field_mode_enabled = enabled
+	_ensure_field_manager()
+	if not enabled:
+		field_manager.clear_all()
+		var role_hud := get_node_or_null("ArenaRoleHud") as CanvasLayer
+		if role_hud != null:
+			role_hud.visible = true
+		return
+	utility_ai_enabled = false
+	_clear_fighter(dummy_node)
+	dummy_node = null
+	_clear_fighter(player_node)
+	player_node = null
+	_clear_dropped_items()
+	var role_hud := get_node_or_null("ArenaRoleHud") as CanvasLayer
+	if role_hud != null:
+		role_hud.visible = false
+	field_manager.start_field(false)
+	set_field_hero_visible(spawn_hero)
+	_update_follow_camera()
+	_update_hud()
+	queue_redraw()
+
+
+func _spawn_field_hero(char_id: String) -> bool:
+	var entry := _find_character_entry(char_id)
+	if entry.is_empty():
+		return false
+	var prefab_path := _resolve_prefab_path(entry)
+	if prefab_path.is_empty() or not ResourceLoader.exists(prefab_path):
+		return false
+	var loaded_res: Resource = ResourceLoader.load(prefab_path)
+	if not (loaded_res is PackedScene):
+		return false
+	var packed := loaded_res as PackedScene
+	_clear_fighter(player_node)
+	var p_inst: Node = packed.instantiate()
+	if not (p_inst is Node2D):
+		return false
+	player_node = p_inst as Node2D
+	var parent_layer: Node = fighters_layer if fighters_layer != null else self
+	parent_layer.add_child(player_node)
+	player_node.name = "PlayerFighter"
+	active_character_id = char_id
+	player_facing_left = false
+	player_vy = 0.0
+	_player_drop_timer_s = 0.0
+	_prev_player_on_ground = not _is_flying_entry(entry)
+	_step_dust_accum_px = 0.0
+	char_scale = _get_entry_default_scale(entry)
+	_player_turn_boost_s = 0.0
+	_player_turn_elapsed_s = 0.0
+	_player_turn_duration_s = 0.0
+	player_light_cooldown_s = 0.0
+	_player_light_clip_active = false
+	if player_node.get("external_orb_managed") != null:
+		player_node.set("external_orb_managed", true)
+	_update_walkable_bounds()
+	var spawn_x := walkable_min_x + 24.0
+	var spawn_y := _get_entry_flight_y(entry) if _is_flying_entry(entry) else _ground_y_at(spawn_x)
+	_configure_fighter_instance(player_node, spawn_x, spawn_y, false, char_scale)
+	player_node.z_index = get_fighter_layer_z(char_id, true)
+	return true
+
+
+func set_field_hero_visible(visible_flag: bool) -> void:
+	_ensure_field_manager()
+	active_character_id = "drum"
+	if visible_flag:
+		if _spawn_field_hero("drum"):
+			field_manager.player_spawned = true
+			field_manager.player_hp = field_manager.player_max_hp
+			field_manager.player_mana = 0.0
+			field_manager.player_dead = false
+			field_manager.player_respawn_timer_s = 0.0
+			field_manager.refresh_pointer_valid()
+			if mobile_pad != null and is_instance_valid(mobile_pad):
+				mobile_pad.visible = true
+				mobile_pad.configure_for_character("drum", _collect_clip_names(player_node), false)
+				_sync_field_pad_state()
+	else:
+		_clear_fighter(player_node)
+		player_node = null
+		field_manager.player_spawned = false
+		field_manager.player_dead = false
+		field_manager.pointer_slot_id = ""
+		field_manager.pointer_item_node = null
+		if mobile_pad != null and is_instance_valid(mobile_pad):
+			mobile_pad.configure_for_character("", PackedStringArray(), false)
+			mobile_pad.visible = false
+	if toggle_hero_button != null:
+		toggle_hero_button.text = "👤 Ẩn Tướng (Drum)" if (field_manager != null and field_manager.player_spawned) else "👤 Hiện Tướng (Drum)"
+	_update_follow_camera()
+	_update_hud()
+	queue_redraw()
+
+
+func set_ruler_modal_visible(visible_flag: bool) -> void:
+	ruler_modal_visible = visible_flag
+	if ruler_modal != null and is_instance_valid(ruler_modal):
+		ruler_modal.visible = visible_flag
+	if visible_flag:
+		_sync_ruler_ui()
+	else:
+		ruler_pick_mode = false
+		_ruler_dragging = false
+		_ruler_awaiting_b = false
+		if ruler_modal != null and is_instance_valid(ruler_modal):
+			ruler_modal.set_pick_mode(false)
+	queue_redraw()
+
+
+func screen_to_world_pos(screen_pos: Vector2) -> Vector2:
+	if DisplayServer.get_name() != "headless" and get_viewport() != null:
+		var xf := get_viewport().get_canvas_transform()
+		if xf != Transform2D.IDENTITY:
+			return xf.affine_inverse() * screen_pos
+	var vis := _get_visible_logic_size()
+	var cam_pos := _arena_camera.position if _arena_camera != null else Vector2(float(viewport_width) * 0.5, float(viewport_height) * 0.5)
+	var cam_z := _arena_camera.zoom if _arena_camera != null else Vector2.ONE
+	return cam_pos + (screen_pos - vis * 0.5) / Vector2(maxf(0.01, cam_z.x), maxf(0.01, cam_z.y))
+
+
+func set_ruler_points(point_a: Vector2, point_b: Vector2) -> Dictionary:
+	ruler_point_a = Vector2(roundf(point_a.x), roundf(point_a.y))
+	ruler_point_b = Vector2(roundf(point_b.x), roundf(point_b.y))
+	ruler_has_a = true
+	ruler_has_b = true
+	_sync_ruler_ui()
+	return get_ruler_metrics()
+
+
+func measure_player_enemy_distance() -> Dictionary:
+	if player_node != null and dummy_node != null:
+		ruler_point_a = Vector2(roundf(player_node.position.x), roundf(player_node.position.y))
+		ruler_point_b = Vector2(roundf(dummy_node.position.x), roundf(dummy_node.position.y))
+		ruler_has_a = true
+		ruler_has_b = true
+	_sync_ruler_ui()
+	return get_ruler_metrics()
+
+
+func get_ruler_metrics() -> Dictionary:
+	var p_entry := _find_character_entry_ro(active_character_id)
+	var e_entry := _find_character_entry_ro(enemy_character_id)
+	var p_dims := _get_body_dims(p_entry)
+	var e_dims := _get_body_dims(e_entry)
+	var pw := float(p_dims.x) if p_dims.x > 0 else 140.0
+	var ph := float(p_dims.y) if p_dims.y > 0 else 140.0
+	var ew := float(e_dims.x) if e_dims.x > 0 else 140.0
+	var eh := float(e_dims.y) if e_dims.y > 0 else 140.0
+	var p_pos := player_node.position if player_node != null else Vector2(player_spawn_x, ground_y)
+	var e_pos := dummy_node.position if dummy_node != null else Vector2(dummy_spawn_x, ground_y)
+	var r_a: Rect2 = UtilityAIControllerScript.compute_body_rect(p_pos.x, p_pos.y, pw, ph, char_scale)
+	var r_b: Rect2 = UtilityAIControllerScript.compute_body_rect(e_pos.x, e_pos.y, ew, eh, enemy_scale)
+	var edge_gap: float = UtilityAIControllerScript.compute_edge_distance(r_a, r_b)
+	var dx := absf(ruler_point_b.x - ruler_point_a.x) if (ruler_has_a and ruler_has_b) else 0.0
+	var dy := absf(ruler_point_b.y - ruler_point_a.y) if (ruler_has_a and ruler_has_b) else 0.0
+	var dist := ruler_point_a.distance_to(ruler_point_b) if (ruler_has_a and ruler_has_b) else 0.0
+	var vis := _get_visible_logic_size()
+	var cam_pos := _arena_camera.position if _arena_camera != null else Vector2(float(viewport_width) * 0.5, float(viewport_height) * 0.5)
+	var cam_z := _arena_camera.zoom.x if _arena_camera != null else 1.0
+	return {
+		"modal_visible": ruler_modal_visible,
+		"pick_mode": ruler_pick_mode,
+		"grid_enabled": ruler_grid_enabled,
+		"has_a": ruler_has_a,
+		"has_b": ruler_has_b,
+		"point_a": [ruler_point_a.x, ruler_point_a.y],
+		"point_b": [ruler_point_b.x, ruler_point_b.y],
+		"dx_world_px": dx,
+		"dy_world_px": dy,
+		"dist_world_px": dist,
+		"player_pos": [p_pos.x, p_pos.y],
+		"enemy_pos": [e_pos.x, e_pos.y],
+		"player_size_px": [pw * char_scale, ph * char_scale],
+		"enemy_size_px": [ew * enemy_scale, eh * enemy_scale],
+		"player_enemy_center_dx": absf(e_pos.x - p_pos.x),
+		"player_enemy_dy": absf(e_pos.y - p_pos.y),
+		"player_enemy_edge_gap": edge_gap,
+		"effective_scale": float(display_layout_info.get("effective_scale", 1.0)),
+		"camera_zoom": cam_z,
+		"camera_pos": [cam_pos.x, cam_pos.y],
+		"visible_logic_size": [vis.x, vis.y],
+	}
+
+
+func _sync_ruler_ui() -> void:
+	if ruler_modal != null and is_instance_valid(ruler_modal):
+		ruler_modal.update_metrics(get_ruler_metrics())
+	queue_redraw()
 
 func _on_shenron_summon_ready() -> void:
 	if wish_panel != null:
@@ -374,10 +1031,12 @@ func _on_summon_button_pressed() -> void:
 		var entry := _find_character_entry(active_character_id)
 		var dims := _get_body_dims(entry)
 		var source_pos := player_node.position - Vector2(0, float(dims.y) * char_scale * 0.5)
+		var camera_x := _arena_camera.position.x if _arena_camera != null else player_node.position.x
+		shenron_summon.position = Vector2(camera_x - float(viewport_width) * 0.5, _ground_y_at(player_node.position.x) - ground_y)
 		if wish_notice_label != null:
 			wish_notice_label.visible = false
 		_wish_notice_timer_s = 0.0
-		if shenron_summon.start_from(source_pos):
+		if shenron_summon.start_from(source_pos - shenron_summon.position):
 			_play_fighter_clip(player_node, "idle")
 			player_vy = 0.0
 			summon_button.text = "Thu hồi Shenron"
@@ -425,6 +1084,9 @@ func load_stage_and_roster() -> void:
 		for review_entry in review_chars:
 			if review_entry is Dictionary:
 				roster_characters.append(review_entry)
+	var sil_doc := _read_json_dict(BODY_SILHOUETTES_JSON_PATH)
+	var sil_chars: Variant = sil_doc.get("characters", {})
+	_body_silhouettes = sil_chars if sil_chars is Dictionary else {}
 	_update_walkable_bounds()
 
 
@@ -478,11 +1140,31 @@ func _get_visible_logic_size() -> Vector2:
 	return Vector2(float(viewport_width), float(viewport_height))
 
 
+func _has_extended_terrain_steps() -> bool:
+	return ResourceLoader.exists(EXTENDED_MAP_PATH)
+
+
+func _get_terrain_sections() -> Array:
+	if not _has_extended_terrain_steps():
+		return [{"left_x": MAP_LEFT_X, "right_x": MAP_RIGHT_X, "ground_y": ground_y}]
+	return [
+		{"left_x": MAP_LEFT_X, "right_x": STEP_ONE_X, "ground_y": ground_y},
+		{"left_x": STEP_ONE_X, "right_x": STEP_TWO_X, "ground_y": ground_y + STEP_ONE_DROP_Y},
+		{"left_x": STEP_TWO_X, "right_x": MAP_RIGHT_X, "ground_y": ground_y + STEP_TWO_DROP_Y},
+	]
+
+
+func _get_terrain_step_edges() -> Array[float]:
+	if not _has_extended_terrain_steps():
+		return []
+	return [STEP_ONE_X, STEP_TWO_X]
+
+
 func _get_fighter_walk_bounds_x(entry: Dictionary, sc: float) -> Vector2:
 	var vis_w := _get_visible_logic_size().x
 	var center_x := float(viewport_width) * 0.5
-	var view_left := center_x - vis_w * 0.5
-	var view_right := center_x + vis_w * 0.5
+	var view_left := MAP_LEFT_X if _has_extended_terrain_steps() else (center_x - vis_w * 0.5)
+	var view_right := MAP_RIGHT_X if _has_extended_terrain_steps() else (center_x + vis_w * 0.5)
 	var dims := _get_body_dims(entry)
 	var raw_half := (float(dims.x) * sc * 0.5) if dims.x > 0 else (70.0 * sc)
 	var pad := clampf(raw_half, 16.0, maxf(16.0, vis_w * 0.45))
@@ -515,6 +1197,16 @@ func _update_background_cover() -> void:
 		_update_walkable_bounds()
 		return
 	var vis := _get_visible_logic_size()
+	if _has_extended_terrain_steps():
+		var extension := _load_texture_2d(EXTENDED_MAP_PATH)
+		if extension != null:
+			background_sprite.texture = extension
+			background_sprite.scale = Vector2.ONE
+			background_sprite.position = Vector2(MAP_LEFT_X, MAP_TOP_Y)
+			_update_walkable_bounds()
+			_update_follow_camera()
+			queue_redraw()
+			return
 	var vis_w := vis.x
 	var vis_h := vis.y
 	var cover := maxf(vis_w / float(viewport_width), vis_h / float(viewport_height))
@@ -526,7 +1218,135 @@ func _update_background_cover() -> void:
 	if _bg_right_ext != null:
 		_bg_right_ext.visible = false
 	_update_walkable_bounds()
+	_update_follow_camera()
 	queue_redraw()
+
+
+func _update_follow_camera() -> void:
+	if _arena_camera == null:
+		return
+	var vis := _get_visible_logic_size()
+	var has_ext := _has_extended_terrain_steps()
+	var left_b := MAP_LEFT_X if has_ext else 0.0
+	var right_b := MAP_RIGHT_X if has_ext else float(viewport_width)
+	var top_b := MAP_TOP_Y if has_ext else 0.0
+	var bottom_b := MAP_BOTTOM_Y if has_ext else float(viewport_height)
+	var map_w := maxf(1.0, right_b - left_b)
+	var map_h := maxf(1.0, bottom_b - top_b)
+
+	var cam_zoom := maxf(1.0, maxf(vis.x / map_w, vis.y / map_h)) if has_ext else 1.0
+	_arena_camera.zoom = Vector2(cam_zoom, cam_zoom)
+
+	var eff_half_w := (vis.x / cam_zoom) * 0.5
+	var eff_half_h := (vis.y / cam_zoom) * 0.5
+	var min_cam_x := left_b + eff_half_w
+	var max_cam_x := right_b - eff_half_w
+	var min_cam_y := top_b + eff_half_h
+	var max_cam_y := bottom_b - eff_half_h
+
+	var target_x := player_node.position.x if player_node != null else ((left_b + eff_half_w) if field_mode_enabled else float(viewport_width) * 0.5)
+	var cam_x := (left_b + right_b) * 0.5 if min_cam_x >= max_cam_x else clampf(target_x, min_cam_x, max_cam_x)
+
+	var base_cam_y := float(viewport_height) * 0.5
+	var follow_dy := 0.0
+	if player_node != null:
+		if player_node.position.y > ground_y:
+			follow_dy = minf(60.0, (player_node.position.y - ground_y) * 0.45)
+		elif player_node.position.y < 180.0:
+			follow_dy = maxf(-120.0, (player_node.position.y - 180.0) * 0.6)
+	var target_y := base_cam_y + follow_dy
+	var cam_y := (top_b + bottom_b) * 0.5 if min_cam_y >= max_cam_y else clampf(target_y, min_cam_y, max_cam_y)
+	_arena_camera.position = Vector2(cam_x, cam_y)
+
+
+func _ground_y_at(world_x: float) -> float:
+	if not _has_extended_terrain_steps():
+		return ground_y
+	if world_x < STEP_ONE_X:
+		return ground_y
+	if world_x < STEP_TWO_X:
+		return ground_y + STEP_ONE_DROP_Y
+	return ground_y + STEP_TWO_DROP_Y
+
+
+func terrain_blocks_segment(from_pos: Vector2, to_pos: Vector2) -> bool:
+	# The same world geometry drives projectile hits and solid step walls.
+	if to_pos.y >= _ground_y_at(to_pos.x):
+		return true
+	for edge_x in _get_terrain_step_edges():
+		if (from_pos.x - edge_x) * (to_pos.x - edge_x) > 0.0 or is_equal_approx(from_pos.x, to_pos.x):
+			continue
+		var t: float = (float(edge_x) - from_pos.x) / (to_pos.x - from_pos.x)
+		var hit_y := lerpf(from_pos.y, to_pos.y, t)
+		var wall_top_y := minf(_ground_y_at(edge_x - 1.0), _ground_y_at(edge_x + 1.0))
+		if hit_y >= wall_top_y:
+			return true
+	return false
+
+
+func _can_cross_terrain_step(from_x: float, to_x: float, foot_y: float, flying: bool = false) -> bool:
+	var min_x := minf(from_x, to_x)
+	var max_x := maxf(from_x, to_x)
+	var clearance := 0.0 if flying else 2.0
+	for edge_x in _get_terrain_step_edges():
+		if min_x < edge_x and max_x >= edge_x:
+			var left_y := _ground_y_at(edge_x - 1.0)
+			var right_y := _ground_y_at(edge_x + 1.0)
+			var moving_uphill := (to_x < from_x and left_y < right_y) or (to_x > from_x and right_y < left_y)
+			if moving_uphill:
+				var upper_y := minf(left_y, right_y)
+				if foot_y > upper_y - clearance:
+					return false
+	return true
+
+
+func _get_fighter_half_width_px(char_id: String, sc: float) -> float:
+	var entry := _find_character_entry_ro(char_id)
+	var dims := _get_body_dims(entry)
+	return (float(dims.x) * sc * 0.5) if dims.x > 0 else (56.0 * sc)
+
+
+func _resolve_terrain_horizontal_move(from_x: float, raw_target_x: float, foot_y: float, flying: bool, min_bound: float, max_bound: float, body_half_w: float = 0.0) -> float:
+	var target_x := clampf(raw_target_x, min_bound, max_bound)
+	if is_equal_approx(from_x, target_x):
+		return target_x
+	var clearance := 0.0 if flying else 2.0
+	var wall_pad := 0.0 if flying else clampf(body_half_w * 0.25, 0.0, 24.0)
+	var edges := _get_terrain_step_edges()
+	if target_x < from_x:
+		for i in range(edges.size() - 1, -1, -1):
+			var edge_x := edges[i]
+			var left_y := _ground_y_at(edge_x - 1.0)
+			var right_y := _ground_y_at(edge_x + 1.0)
+			if left_y < right_y and foot_y > left_y - clearance:
+				var stop_x := (edge_x + wall_pad) if from_x >= edge_x + wall_pad else edge_x
+				if from_x >= edge_x and target_x < stop_x:
+					target_x = maxf(target_x, stop_x)
+	else:
+		for edge_x in edges:
+			var left_y := _ground_y_at(edge_x - 1.0)
+			var right_y := _ground_y_at(edge_x + 1.0)
+			if right_y < left_y and foot_y > right_y - clearance:
+				var stop_x := (edge_x - wall_pad) if from_x <= edge_x - wall_pad else (edge_x - 0.01)
+				if from_x < edge_x and target_x > stop_x:
+					target_x = minf(target_x, stop_x)
+	return clampf(target_x, min_bound, max_bound)
+
+
+func _move_node_horizontal(node: Node2D, distance: float, flying: bool, min_bound: float, max_bound: float, body_half_w: float = 0.0) -> float:
+	if node == null:
+		return 0.0
+	var from_x := node.position.x
+	var resolved_x := _resolve_terrain_horizontal_move(from_x, from_x + distance, node.position.y, flying, min_bound, max_bound, body_half_w)
+	node.position.x = resolved_x
+	return resolved_x - from_x
+
+
+func _move_player_horizontal(distance: float, flying: bool = false) -> void:
+	if player_node == null:
+		return
+	var half_w := _get_fighter_half_width_px(active_character_id, char_scale)
+	_move_node_horizontal(player_node, distance, flying, walkable_min_x, walkable_max_x, half_w)
 
 
 func _setup_terrain_layer() -> void:
@@ -603,21 +1423,27 @@ func _setup_terrain_layer() -> void:
 		_ground_tilemap.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_ground_tilemap.scale = Vector2(g_scale, g_scale)
 		_ground_tilemap.position = Vector2(0.0, surf_top_y)
-		for gx in range(-16, 48):
+		# The review panorama contains its own foreground; the old tiled overlay ended mid-step.
+		_ground_tilemap.visible = not ResourceLoader.exists(EXTENDED_MAP_PATH)
+		for gx in range(-16, 56):
 			var c_idx := posmod(gx, cols)
 			for gy in range(12):
 				_ground_tilemap.set_cell(Vector2i(gx, gy), 0, Vector2i(c_idx, mini(gy, rows - 1)))
 		_terrain_root.add_child(_ground_tilemap)
 
-	# Solid Floor Collider at ground_y
+	# Solid stepped terrain: tops support actors and vertical faces stop skills/projectiles.
 	var ground_body := StaticBody2D.new()
 	ground_body.name = "GroundFloorCollider"
-	var ground_shape := CollisionShape2D.new()
-	var ground_rect := RectangleShape2D.new()
-	ground_rect.size = Vector2(4096.0, 64.0)
-	ground_shape.shape = ground_rect
-	ground_shape.position = Vector2(float(viewport_width) * 0.5, ground_y + 32.0)
-	ground_body.add_child(ground_shape)
+	for section in _get_terrain_sections():
+		var left_x := float(section["left_x"])
+		var right_x := float(section["right_x"])
+		var top_y := float(section["ground_y"])
+		var ground_shape := CollisionShape2D.new()
+		var ground_rect := RectangleShape2D.new()
+		ground_rect.size = Vector2(right_x - left_x, 1400.0 - top_y)
+		ground_shape.shape = ground_rect
+		ground_shape.position = Vector2((left_x + right_x) * 0.5, (top_y + 1400.0) * 0.5)
+		ground_body.add_child(ground_shape)
 	_terrain_root.add_child(ground_body)
 
 	# One-Way Rocky Platforms (Sprite2D + StaticBody2D collider)
@@ -665,7 +1491,7 @@ func _setup_terrain_layer() -> void:
 
 
 func get_nearest_support_y_below(pos_x: float, pos_y: float) -> float:
-	var best_y := ground_y
+	var best_y := _ground_y_at(pos_x)
 	for plat in terrain_platforms:
 		if not (plat is Dictionary):
 			continue
@@ -677,28 +1503,39 @@ func get_nearest_support_y_below(pos_x: float, pos_y: float) -> float:
 	return best_y
 
 
-func step_player_vertical_physics(delta: float, jump_pressed: bool, drop_pressed: bool) -> Dictionary:
+func _try_start_player_jump(jump_pressed: bool, drop_pressed: bool) -> bool:
+	if player_node == null:
+		return false
+	var px := player_node.position.x
+	var prev_y := player_node.position.y
+	if drop_pressed and prev_y < _ground_y_at(px) - 4.0:
+		_player_drop_timer_s = 0.22
+		player_node.position.y = prev_y + 2.0
+		return false
+	var pre_sup_y := get_nearest_support_y_below(px, prev_y)
+	if jump_pressed and prev_y >= pre_sup_y - 2.0 and player_vy >= 0.0:
+		player_vy = jump_velocity_px_per_s
+		_spawn_ground_dust(px, pre_sup_y, 0.9)
+		return true
+	return false
+
+
+func _integrate_player_vertical(delta: float, jumped: bool = false) -> Dictionary:
 	if player_node == null:
 		return {"y": ground_y, "vy": 0.0, "support_y": ground_y, "on_ground": true, "landed": false, "jumped": false}
 	var px := player_node.position.x
 	var prev_y := player_node.position.y
 	if _player_drop_timer_s > 0.0:
 		_player_drop_timer_s = maxf(0.0, _player_drop_timer_s - delta)
-	if drop_pressed and prev_y < ground_y - 4.0:
-		_player_drop_timer_s = 0.22
-		prev_y += 2.0
-		player_node.position.y = prev_y
 
-	var jumped := false
-	var pre_sup_y := get_nearest_support_y_below(px, prev_y)
-	if jump_pressed and prev_y >= pre_sup_y - 2.0 and player_vy >= 0.0:
-		player_vy = jump_velocity_px_per_s
-		jumped = true
-		_spawn_ground_dust(px, pre_sup_y, 0.9)
-
-	var next_y := prev_y + player_vy * delta
+	var sup_y := _ground_y_at(px)
+	if not jumped and prev_y < sup_y - 0.5 and player_vy == 0.0:
+		player_vy = gravity_px_per_s2 * delta
+	var step_dy := player_vy * delta
+	if not jumped and prev_y < sup_y - 0.5 and player_vy >= 0.0 and step_dy < 2.0:
+		step_dy = minf(2.0, sup_y - prev_y)
+	var next_y := prev_y + step_dy
 	var landed := false
-	var sup_y := ground_y
 	if _player_drop_timer_s <= 0.0 and player_vy >= 0.0:
 		for plat in terrain_platforms:
 			if not (plat is Dictionary):
@@ -729,6 +1566,13 @@ func step_player_vertical_physics(delta: float, jump_pressed: bool, drop_pressed
 		"landed": landed,
 		"jumped": jumped,
 	}
+
+
+func step_player_vertical_physics(delta: float, jump_pressed: bool, drop_pressed: bool) -> Dictionary:
+	if player_node == null:
+		return {"y": ground_y, "vy": 0.0, "support_y": ground_y, "on_ground": true, "landed": false, "jumped": false}
+	var jumped := _try_start_player_jump(jump_pressed, drop_pressed)
+	return _integrate_player_vertical(delta, jumped)
 
 
 func _spawn_ground_dust(world_x: float, surface_y: float, scale_mult: float = 1.0) -> void:
@@ -859,6 +1703,8 @@ func select_character(char_id: String) -> bool:
 	_player_turn_boost_s = 0.0
 	_player_turn_elapsed_s = 0.0
 	_player_turn_duration_s = 0.0
+	player_light_cooldown_s = 0.0
+	_player_light_clip_active = false
 
 	var p_inst: Node = packed.instantiate()
 	if not (p_inst is Node2D):
@@ -1106,11 +1952,7 @@ func step_utility_ai(delta: float) -> Dictionary:
 		_ai_turn_elapsed_s += maxf(0.0, delta)
 		var turn_mom := _turn_momentum_factor(_ai_turn_elapsed_s, _ai_turn_duration_s, _ai_turn_prev_dir, -1 if _ai_turn_target_left else 1)
 		var turn_spd := _get_walk_speed_px_per_s(e_entry, enemy_scale) * turn_mom
-		dummy_node.position.x = clampf(
-			dummy_node.position.x + turn_spd * maxf(0.0, delta),
-			ai_controller.zone_min_x,
-			ai_controller.zone_max_x
-		)
+		_move_node_horizontal(dummy_node, turn_spd * maxf(0.0, delta), bool(caps["is_flying"]), ai_controller.zone_min_x, ai_controller.zone_max_x, ew * enemy_scale * 0.5)
 
 	var target_rect: Rect2 = UtilityAIControllerScript.compute_body_rect(player_node.position.x, player_node.position.y, pw, ph, char_scale)
 	var self_rect: Rect2 = UtilityAIControllerScript.compute_body_rect(dummy_node.position.x, dummy_node.position.y, ew, eh, enemy_scale)
@@ -1162,7 +2004,7 @@ func step_utility_ai(delta: float) -> Dictionary:
 		var clip := str(res.get("attack_clip", caps["light_clip"]))
 		if str(caps["character_id"]) == "chilopoda" and dummy_node.has_method(&"set_combat_target_global"):
 			var clamped_tx := clampf(player_node.position.x, walkable_min_x, walkable_max_x)
-			dummy_node.call(&"set_combat_target_global", Vector2(clamped_tx, ground_y))
+			dummy_node.call(&"set_combat_target_global", Vector2(clamped_tx, _ground_y_at(clamped_tx)))
 		elif str(caps["character_id"]) == "dilophosaurus" and dummy_node.has_method(&"set_slash_target_global"):
 			dummy_node.call(&"set_slash_target_global", player_node.position)
 		if _play_fighter_clip(dummy_node, clip):
@@ -1177,13 +2019,9 @@ func step_utility_ai(delta: float) -> Dictionary:
 		if move_dir != 0:
 			var boost := _get_turn_speed_multiplier(e_entry) if _ai_turn_boost_s > 0.0 else 1.0
 			var spd := _get_walk_speed_px_per_s(e_entry, enemy_scale) * boost
-			dummy_node.position.x = clampf(
-				dummy_node.position.x + float(move_dir) * spd * delta,
-				ai_controller.zone_min_x,
-				ai_controller.zone_max_x
-			)
+			_move_node_horizontal(dummy_node, float(move_dir) * spd * delta, bool(caps["is_flying"]), ai_controller.zone_min_x, ai_controller.zone_max_x, ew * enemy_scale * 0.5)
 			if bool(caps["is_flying"]):
-				dummy_node.position.y = clampf(dummy_node.position.y, fly_min_y, ground_y)
+				dummy_node.position.y = clampf(dummy_node.position.y, fly_min_y, _ground_y_at(dummy_node.position.x))
 			_ensure_fighter_locomotion(dummy_node, str(caps["locomotion_clip"]), bool(caps["preserve_idle_walk_phase"]))
 		else:
 			_ensure_fighter_locomotion(dummy_node, "idle", bool(caps["preserve_idle_walk_phase"]))
@@ -1194,7 +2032,20 @@ func step_utility_ai(delta: float) -> Dictionary:
 		if str(caps["character_id"]) == "drum" and ai_controller.has_method("reset_drum_state"):
 			ai_controller.reset_drum_state()
 
+	_reconcile_chilopoda_terrain(dummy_node, str(caps["character_id"]), ai_controller.zone_min_x, ai_controller.zone_max_x, enemy_scale)
 	enemy_facing_left = dummy_node.scale.x < 0.0
+	if not bool(caps["is_flying"]) and not bool(caps["is_stationary"]):
+		var enemy_floor := _ground_y_at(dummy_node.position.x)
+		if dummy_node.position.y < enemy_floor - 0.5:
+			if enemy_vy == 0.0:
+				enemy_vy = gravity_px_per_s2 * delta
+			else:
+				enemy_vy += gravity_px_per_s2 * delta
+			var dy_enemy := maxf(2.0, enemy_vy * delta)
+			dummy_node.position.y = minf(enemy_floor, dummy_node.position.y + dy_enemy)
+		else:
+			dummy_node.position.y = enemy_floor
+			enemy_vy = 0.0
 	ai_last_decision = res
 	queue_redraw()
 	return res
@@ -1210,11 +2061,11 @@ func _step_drum_midclip(spr: AnimatedSprite2D, pw: float, ew: float) -> void:
 			var min_b: float = maxf(enemy_bounds.x, float(ai_controller.zone_min_x))
 			var max_b: float = minf(enemy_bounds.y, float(ai_controller.zone_max_x))
 			var cand_x: float = player_node.position.x + side * target_dist
-			if cand_x < min_b or cand_x > max_b:
+			if cand_x < min_b or cand_x > max_b or not _can_cross_terrain_step(dummy_node.position.x, cand_x, dummy_node.position.y, false):
 				var alt_x: float = player_node.position.x - side * target_dist
-				if alt_x >= min_b and alt_x <= max_b:
+				if alt_x >= min_b and alt_x <= max_b and _can_cross_terrain_step(dummy_node.position.x, alt_x, dummy_node.position.y, false):
 					cand_x = alt_x
-			dummy_node.position.x = clampf(cand_x, min_b, max_b)
+			dummy_node.position.x = _resolve_terrain_horizontal_move(dummy_node.position.x, cand_x, dummy_node.position.y, false, min_b, max_b, ew * enemy_scale * 0.5)
 			enemy_facing_left = player_node.position.x < dummy_node.position.x
 			dummy_node.scale = Vector2(-enemy_scale if enemy_facing_left else enemy_scale, enemy_scale)
 			_ai_drum_teleport_relocated = true
@@ -1250,9 +2101,11 @@ func _step_enemy_orb_projectile(delta: float, pw: float, _ph: float) -> void:
 	if not _enemy_orb_active or not is_instance_valid(_enemy_orb_sprite):
 		return
 	_enemy_orb_elapsed_s += maxf(0.0, delta)
-	_enemy_orb_sprite.position.x += _enemy_orb_dir * (12.0 * 60.0 * enemy_scale) * maxf(0.0, delta)
+	var prev_pos := _enemy_orb_sprite.position
+	_enemy_orb_sprite.position.x += _enemy_orb_dir * (18.0 * 60.0 * enemy_scale) * maxf(0.0, delta)
+	var terrain_hit := terrain_blocks_segment(prev_pos, _enemy_orb_sprite.position)
 	var hit_x := absf(_enemy_orb_sprite.position.x - player_node.position.x) <= maxf(24.0, pw * char_scale * 0.45)
-	if hit_x or _enemy_orb_elapsed_s >= 0.65:
+	if terrain_hit or hit_x or _enemy_orb_elapsed_s >= 0.65:
 		_enemy_orb_active = false
 		_enemy_orb_sprite.visible = false
 		_enemy_orb_sprite.stop()
@@ -1260,6 +2113,11 @@ func _step_enemy_orb_projectile(delta: float, pw: float, _ph: float) -> void:
 
 func _sync_role_hud(p_entry: Dictionary, e_entry: Dictionary) -> void:
 	if DisplayServer.get_name() == "headless":
+		return
+	if field_mode_enabled:
+		var existing_hud := get_node_or_null("ArenaRoleHud") as CanvasLayer
+		if existing_hud != null:
+			existing_hud.visible = false
 		return
 	var p_id := str(p_entry.get("character_id", ""))
 	var role := str(p_entry.get("combat_role", "sandbox"))
@@ -1463,6 +2321,139 @@ func _get_body_dims(entry: Dictionary) -> Vector2i:
 	return Vector2i.ZERO
 
 
+func get_fighter_body_rect(node: Node2D, char_id: String, scale_val: float) -> Rect2:
+	if node == null or not is_instance_valid(node):
+		return Rect2()
+	var sc := maxf(0.1, scale_val)
+	var entry := _find_character_entry_ro(char_id)
+	var m: Dictionary = entry.get("map_sync_metrics", {})
+	var bbox: Variant = m.get("body_only_bbox_px", null)
+	var anchor: Variant = m.get("foot_anchor_px", null)
+	if bbox is Dictionary and anchor is Array and (anchor as Array).size() >= 2:
+		var bx := float(bbox.get("x", 0.0))
+		var by := float(bbox.get("y", 0.0))
+		var bw := float(bbox.get("w", 0.0))
+		var bh := float(bbox.get("h", 0.0))
+		var ax := float(anchor[0])
+		var ay := float(anchor[1])
+		if bw > 0.0 and bh > 0.0:
+			var facing_left := node.scale.x < 0.0
+			var local_l := (ax - (bx + bw)) if facing_left else (bx - ax)
+			var local_r := (ax - bx) if facing_left else (bx + bw - ax)
+			var local_t := by - ay
+			var local_b := by + bh - ay
+			return Rect2(
+				node.position.x + local_l * sc,
+				node.position.y + local_t * sc,
+				maxf(16.0, (local_r - local_l) * sc),
+				maxf(16.0, (local_b - local_t) * sc)
+			)
+	var dims := _get_body_dims(entry)
+	var fw := float(dims.x) if dims.x > 0 else 140.0
+	var fh := float(dims.y) if dims.y > 0 else 140.0
+	return UtilityAIControllerScript.compute_body_rect(node.position.x, node.position.y, fw, fh, sc)
+
+
+func get_fighter_layer_z(char_id: String, is_hero: bool) -> int:
+	var entry := _find_character_entry_ro(char_id)
+	var role := str(entry.get("combat_role", ""))
+	if role == "boss":
+		return Z_LAYER_BOSS
+	return Z_LAYER_HERO if is_hero else Z_LAYER_MONSTER
+
+
+func get_fighter_core_world_pos(node: Node2D, char_id: String, scale_val: float) -> Vector2:
+	if node == null or not is_instance_valid(node):
+		return Vector2.ZERO
+	var sc := maxf(0.1, scale_val)
+	var sil: Variant = _body_silhouettes.get(char_id, {})
+	if sil is Dictionary and sil.has("core_offset_px"):
+		var co: Array = sil.get("core_offset_px", [0.0, -40.0])
+		if co.size() >= 2:
+			var facing_left := node.scale.x < 0.0
+			var cx := -float(co[0]) if facing_left else float(co[0])
+			var cy := float(co[1])
+			return node.position + Vector2(cx * sc, cy * sc)
+	return get_fighter_body_rect(node, char_id, sc).get_center()
+
+
+func get_fighter_silhouette_rects(node: Node2D, char_id: String, scale_val: float) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if node == null or not is_instance_valid(node):
+		return out
+	var sc := maxf(0.1, scale_val)
+	var sil: Variant = _body_silhouettes.get(char_id, {})
+	if sil is Dictionary and sil.has("bands"):
+		var bands: Variant = sil.get("bands", [])
+		if bands is Array and not (bands as Array).is_empty():
+			var facing_left := node.scale.x < 0.0
+			var px := node.position.x
+			var py := node.position.y
+			for b in (bands as Array):
+				if not (b is Array) or (b as Array).size() < 4:
+					continue
+				var y0 := float(b[0]) * sc
+				var y1 := float(b[1]) * sc
+				var x0 := float(b[2]) * sc
+				var x1 := float(b[3]) * sc
+				var lx := -x1 if facing_left else x0
+				var rx := -x0 if facing_left else x1
+				out.append(Rect2(px + lx, py + y0, maxf(2.0, rx - lx), maxf(2.0, y1 - y0)))
+			if not out.is_empty():
+				return out
+	out.append(get_fighter_body_rect(node, char_id, sc))
+	return out
+
+
+func silhouette_contains_point(node: Node2D, char_id: String, scale_val: float, world_pos: Vector2, pad_px: float = 0.0) -> bool:
+	var rects := get_fighter_silhouette_rects(node, char_id, scale_val)
+	for r in rects:
+		if r.grow(pad_px).has_point(world_pos):
+			return true
+	return false
+
+
+func silhouette_intersects_rect(node: Node2D, char_id: String, scale_val: float, q_rect: Rect2) -> bool:
+	var rects := get_fighter_silhouette_rects(node, char_id, scale_val)
+	for r in rects:
+		if r.intersects(q_rect):
+			return true
+	return false
+
+
+func compute_silhouette_edge_gap(node_a: Node2D, cid_a: String, sc_a: float, node_b: Node2D, cid_b: String, sc_b: float) -> float:
+	var rects_a := get_fighter_silhouette_rects(node_a, cid_a, sc_a)
+	var rects_b := get_fighter_silhouette_rects(node_b, cid_b, sc_b)
+	if rects_a.is_empty() or rects_b.is_empty():
+		return 99999.0
+	var best := 99999.0
+	for ra in rects_a:
+		for rb in rects_b:
+			var d := UtilityAIControllerScript.compute_edge_distance(ra, rb)
+			if d < best:
+				best = d
+				if best <= 0.0:
+					return 0.0
+	return best
+
+
+func compute_nearest_silhouette_point(node: Node2D, char_id: String, scale_val: float, from_pos: Vector2) -> Vector2:
+	var rects := get_fighter_silhouette_rects(node, char_id, scale_val)
+	if rects.is_empty():
+		return get_fighter_core_world_pos(node, char_id, scale_val)
+	var best_pt := get_fighter_core_world_pos(node, char_id, scale_val)
+	var best_d2 := 999999999.0
+	for r in rects:
+		var cx := clampf(from_pos.x, r.position.x, r.end.x)
+		var cy := clampf(from_pos.y, r.position.y, r.end.y)
+		var pt := Vector2(cx, cy)
+		var d2 := pt.distance_squared_to(from_pos)
+		if d2 < best_d2:
+			best_d2 = d2
+			best_pt = pt
+	return best_pt
+
+
 func _get_walk_speed_px_per_s(entry: Dictionary, scale_override: float = -1.0) -> float:
 	if _is_stationary_entry(entry):
 		return 0.0
@@ -1480,10 +2471,11 @@ func _get_walk_speed_px_per_s(entry: Dictionary, scale_override: float = -1.0) -
 func step_flight_vertical(fly_dir_y: float, delta: float) -> float:
 	if player_node == null:
 		return fly_default_y
+	var max_y := _ground_y_at(player_node.position.x)
 	player_node.position.y = clampf(
 		player_node.position.y + fly_dir_y * fly_vertical_speed_px_per_s * (char_scale / 2.0) * delta,
 		fly_min_y,
-		ground_y
+		max_y
 	)
 	player_vy = 0.0
 	return player_node.position.y
@@ -1504,28 +2496,53 @@ func _step_player_drum_midclip() -> void:
 	var spr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
 	if spr != null and spr.is_playing() and spr.animation == &"teleport" and spr.frame >= 2:
 		var move_dir := -1.0 if player_node.scale.x < 0.0 else 1.0
-		player_node.position.x = clampf(player_node.position.x + move_dir * 120.0 * char_scale, walkable_min_x, walkable_max_x)
+		_move_player_horizontal(move_dir * 120.0 * char_scale, false)
 		_player_drum_teleport_relocated = true
 
 
-func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_req: bool = false, drop_req: bool = false, is_run: bool = false) -> void:
+func _reconcile_chilopoda_terrain(node: Node2D, char_id: String, min_b: float, max_b: float, sc: float = -1.0) -> void:
+	if node == null or char_id != "chilopoda":
+		return
+	var spr := node.get_node_or_null("Sprite") as AnimatedSprite2D
+	if spr != null and spr.is_playing() and spr.animation == &"attack_light":
+		var orig: Variant = node.get("action_origin_global")
+		var origin_x: float = orig.x if orig is Vector2 else node.position.x
+		var use_sc := sc if sc > 0.0 else char_scale
+		var resolved_x := _resolve_terrain_horizontal_move(origin_x, node.position.x, _ground_y_at(origin_x), false, min_b, max_b, _get_fighter_half_width_px(char_id, use_sc))
+		node.position.x = resolved_x
+		node.position.y = _ground_y_at(resolved_x)
+
+
+func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_req: bool = false, drop_req: bool = false, is_run: bool = false, analog_vec: Vector2 = Vector2.ZERO) -> void:
 	if player_node == null or delta <= 0.0:
 		return
+	_step_player_light_cooldown(delta)
 	_flush_player_queued_action()
-	_step_player_drum_midclip()
 
 	var entry := _find_character_entry(active_character_id)
 	var is_flying := _is_flying_entry(entry)
+	var is_stationary := _is_stationary_entry(entry)
 	var action_playing := _is_player_action_playing()
-	var dir := 0 if (_is_stationary_entry(entry) or action_playing) else clampi(move_dir, -1, 1)
+	var dir := 0 if (is_stationary or action_playing) else clampi(move_dir, -1, 1)
 	var eff_fly_dir_y := 0 if action_playing else clampi(fly_dir_y, -1, 1)
+	var fly_input_vec := Vector2.ZERO
+	if is_flying and not is_stationary and not action_playing:
+		if analog_vec.length() > 0.12:
+			fly_input_vec = analog_vec.limit_length(1.0)
+			if absf(fly_input_vec.x) > 0.18:
+				dir = -1 if fly_input_vec.x < 0.0 else 1
+			else:
+				dir = 0
+		elif dir != 0 or eff_fly_dir_y != 0:
+			fly_input_vec = Vector2(float(dir), float(eff_fly_dir_y)).normalized()
 
-	if is_flying:
-		step_flight_vertical(float(eff_fly_dir_y), delta)
-	elif _is_stationary_entry(entry):
-		player_vy = 0.0
-	else:
-		step_player_vertical_physics(delta, jump_req and _has_clip_name(player_node, &"jump"), drop_req)
+	var jumped_now := false
+	if not is_flying and not is_stationary:
+		_flight_vel = Vector2.ZERO
+		jumped_now = _try_start_player_jump(jump_req, drop_req)
+
+	var prev_px := player_node.position.x
+	_step_player_drum_midclip()
 
 	var sideways_locked := _is_sideways_locked(entry)
 	var walk_speed := _get_walk_speed_px_per_s(entry)
@@ -1557,32 +2574,48 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 			var tgt_left_v: Variant = player_node.get("_turn_target_left")
 			var tgt_dir := -1 if (bool(tgt_left_v) if tgt_left_v != null else (dir < 0)) else 1
 			var mom := _turn_momentum_factor(_player_turn_elapsed_s, _player_turn_duration_s, _player_turn_prev_dir, tgt_dir)
-			player_node.position.x = clampf(player_node.position.x + base_speed * mom * delta, walkable_min_x, walkable_max_x)
+			_move_player_horizontal(base_speed * mom * delta, is_flying)
 	else:
 		player_facing_left = player_node.scale.x < 0.0
 		var p_boost := _get_turn_speed_multiplier(entry) if _player_turn_boost_s > 0.0 else 1.0
-		var prev_px := player_node.position.x
-		player_node.position.x = clampf(
-			player_node.position.x + float(dir) * base_speed * p_boost * delta,
-			walkable_min_x,
-			walkable_max_x
-		)
-		var sup_now := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
-		if not is_flying and player_node.position.y >= sup_now - 2.0 and dir != 0:
-			_step_dust_accum_px += absf(player_node.position.x - prev_px)
-			if _step_dust_accum_px >= 96.0:
-				_step_dust_accum_px = 0.0
-				_spawn_ground_dust(player_node.position.x, sup_now, 0.72)
-		elif dir == 0:
-			_step_dust_accum_px = 64.0
+		if is_flying:
+			var target_fvel := fly_input_vec * (base_speed * p_boost)
+			_flight_vel = _flight_vel.lerp(target_fvel, minf(1.0, delta * 12.0))
+			if _flight_vel.length() < 2.0 and fly_input_vec == Vector2.ZERO:
+				_flight_vel = Vector2.ZERO
+			_move_player_horizontal(_flight_vel.x * delta, true)
+		else:
+			_move_player_horizontal(float(dir) * base_speed * p_boost * delta, is_flying)
 
+	_reconcile_chilopoda_terrain(player_node, active_character_id, walkable_min_x, walkable_max_x)
+
+	if is_flying:
+		var max_fly_y := _ground_y_at(player_node.position.x)
+		player_node.position.y = clampf(player_node.position.y + _flight_vel.y * delta, fly_min_y, max_fly_y)
+		player_vy = 0.0
+	elif is_stationary:
+		player_vy = 0.0
+	else:
+		_integrate_player_vertical(delta, jumped_now)
+
+	var sup_now := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+	if not is_flying and not is_stationary and player_node.position.y >= sup_now - 2.0 and dir != 0 and not turning_now:
+		_step_dust_accum_px += absf(player_node.position.x - prev_px)
+		if _step_dust_accum_px >= 96.0:
+			_step_dust_accum_px = 0.0
+			_spawn_ground_dust(player_node.position.x, sup_now, 0.72)
+	elif dir == 0:
+		_step_dust_accum_px = 64.0
+
+	if not turning_now:
 		var spr := player_node.get_node_or_null("Sprite")
 		if spr is AnimatedSprite2D and not action_playing:
 			var aspr := spr as AnimatedSprite2D
 			var target_clip := &"idle"
+			var moving_fly := is_flying and fly_input_vec.length() > 0.12
 			if not is_flying and player_node.position.y < sup_now - 3.0 and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"jump"):
 				target_clip = &"jump"
-			elif (dir != 0 or eff_fly_dir_y != 0) and aspr.sprite_frames != null:
+			elif (dir != 0 or eff_fly_dir_y != 0 or moving_fly) and aspr.sprite_frames != null:
 				if is_run and aspr.sprite_frames.has_animation(&"run"):
 					target_clip = &"run"
 				elif aspr.sprite_frames.has_animation(&"walk"):
@@ -1596,8 +2629,6 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
 		return
-	if player_node == null:
-		return
 
 	if _wish_notice_timer_s > 0.0:
 		_wish_notice_timer_s = maxf(0.0, _wish_notice_timer_s - delta)
@@ -1606,32 +2637,87 @@ func _physics_process(delta: float) -> void:
 	if shenron_summon != null and shenron_summon.is_casting():
 		player_vy = 0.0
 		return
-	for action_name in [&"attack_light", &"attack_heavy", &"power_up"]:
-		if Input.is_action_just_pressed(action_name):
-			_request_player_action(String(action_name))
 
-	var dir := 0
-	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT) or Input.is_action_pressed(&"move_right"):
-		dir += 1
-	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT) or Input.is_action_pressed(&"move_left"):
-		dir -= 1
-	if touch_hud != null and is_instance_valid(touch_hud) and int(touch_hud.get("touch_dir_x")) != 0:
-		dir = clampi(int(touch_hud.get("touch_dir_x")), -1, 1)
-	var is_run := Input.is_key_pressed(KEY_SHIFT)
+	var t_down := Input.is_key_pressed(KEY_T)
+	var tab_down := Input.is_key_pressed(KEY_TAB)
+	var t_just := t_down and not _t_key_was_down
+	var tab_just := tab_down and not _tab_key_was_down
+	_t_key_was_down = t_down
+	_tab_key_was_down = tab_down
 
-	var fly_dir_y := 0
-	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP) or Input.is_action_pressed(&"move_up"):
-		fly_dir_y -= 1
-	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.is_action_pressed(&"move_down"):
-		fly_dir_y += 1
-	if touch_hud != null and is_instance_valid(touch_hud) and int(touch_hud.get("touch_dir_y")) != 0:
-		fly_dir_y = clampi(int(touch_hud.get("touch_dir_y")), -1, 1)
+	if player_node == null:
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.step(delta)
+			_update_follow_camera()
+			_step_ground_dust(delta)
+			_update_parallax_scroll()
+			_update_hud()
+			queue_redraw()
+		return
 
-	var jump_req := _has_clip_name(player_node, &"jump") and (Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_UP) or Input.is_action_pressed(&"jump"))
-	var drop_req := Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.is_action_pressed(&"move_down")
-	step_player_movement(delta, dir, fly_dir_y, jump_req, drop_req, is_run)
+	var field_dead: bool = field_mode_enabled and field_manager != null and bool(field_manager.active) and bool(field_manager.player_dead)
+	if not field_dead:
+		if tab_just and field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.cycle_target_pointer()
+			_sync_field_pad_state()
+		if t_just:
+			if field_manager != null:
+				field_manager.cancel_auto_approach()
+			_align_player_facing_to_active_move_dir()
+			_request_player_action("teleport")
+		for action_name in [&"attack_light", &"attack_heavy", &"power_up"]:
+			if Input.is_action_just_pressed(action_name):
+				var aname := String(action_name)
+				if aname != "attack_light" and field_manager != null:
+					field_manager.cancel_auto_approach()
+				if field_mode_enabled and field_manager != null and field_manager.active:
+					if aname == "attack_light":
+						field_manager.request_player_primary_action()
+					elif aname == "power_up":
+						field_manager.request_player_power_up()
+					else:
+						_request_player_action(aname)
+				else:
+					_request_player_action(aname)
 
-	if utility_ai_enabled:
+		var dir := 0
+		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT) or Input.is_action_pressed(&"move_right"):
+			dir += 1
+		if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT) or Input.is_action_pressed(&"move_left"):
+			dir -= 1
+		if mobile_pad != null and is_instance_valid(mobile_pad) and mobile_pad.analog_dir_x != 0:
+			dir = clampi(mobile_pad.analog_dir_x, -1, 1)
+		elif touch_hud != null and is_instance_valid(touch_hud) and int(touch_hud.get("touch_dir_x")) != 0:
+			dir = clampi(int(touch_hud.get("touch_dir_x")), -1, 1)
+		var is_run := Input.is_key_pressed(KEY_SHIFT)
+
+		var fly_dir_y := 0
+		if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP) or Input.is_action_pressed(&"move_up"):
+			fly_dir_y -= 1
+		if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.is_action_pressed(&"move_down"):
+			fly_dir_y += 1
+		if mobile_pad != null and is_instance_valid(mobile_pad) and _is_flying_entry(_find_character_entry_ro(active_character_id)) and mobile_pad.analog_dir_y != 0:
+			fly_dir_y = clampi(mobile_pad.analog_dir_y, -1, 1)
+		elif touch_hud != null and is_instance_valid(touch_hud) and int(touch_hud.get("touch_dir_y")) != 0:
+			fly_dir_y = clampi(int(touch_hud.get("touch_dir_y")), -1, 1)
+
+		var jump_req := Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_UP) or Input.is_action_pressed(&"jump")
+		var drop_req := Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.is_action_pressed(&"move_down")
+		var pad_vec: Vector2 = mobile_pad.analog_vector if (mobile_pad != null and is_instance_valid(mobile_pad)) else Vector2.ZERO
+		var has_manual_move := dir != 0 or fly_dir_y != 0 or jump_req or drop_req or pad_vec.length() > 0.12
+		if has_manual_move and field_manager != null:
+			field_manager.cancel_auto_approach()
+		if not (field_mode_enabled and field_manager != null and field_manager.active and bool(field_manager.auto_approach_active)):
+			step_player_movement(delta, dir, fly_dir_y, jump_req, drop_req, is_run, pad_vec)
+	else:
+		player_vy = 0.0
+
+	_update_follow_camera()
+
+	if field_mode_enabled and field_manager != null and field_manager.active:
+		field_manager.step(delta)
+		_sync_field_pad_state()
+	elif utility_ai_enabled:
 		step_utility_ai(delta)
 
 	_step_ground_dust(delta)
@@ -1640,7 +2726,132 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 
+func _is_ruler_ui_hit(screen_pos: Vector2) -> bool:
+	if ruler_button != null and is_instance_valid(ruler_button) and ruler_button.get_global_rect().has_point(screen_pos):
+		return true
+	if ruler_modal != null and is_instance_valid(ruler_modal) and ruler_modal.is_screen_point_inside(screen_pos):
+		return true
+	return false
+
+
+func _input(event: InputEvent) -> void:
+	if not ruler_pick_mode:
+		return
+	var is_press := false
+	var is_release := false
+	var is_drag := false
+	var pos := Vector2.ZERO
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index != MOUSE_BUTTON_LEFT:
+			return
+		pos = mb.position
+		is_press = mb.pressed
+		is_release = not mb.pressed
+	elif event is InputEventMouseMotion:
+		if not _ruler_dragging:
+			return
+		pos = (event as InputEventMouseMotion).position
+		is_drag = true
+	elif event is InputEventScreenTouch:
+		var st := event as InputEventScreenTouch
+		if st.index != 0:
+			return
+		pos = st.position
+		is_press = st.pressed
+		is_release = not st.pressed
+	elif event is InputEventScreenDrag:
+		var sd := event as InputEventScreenDrag
+		if sd.index != 0 or not _ruler_dragging:
+			return
+		pos = sd.position
+		is_drag = true
+	else:
+		return
+
+	if is_press:
+		if _is_ruler_ui_hit(pos):
+			return
+		var wp := screen_to_world_pos(pos)
+		var snapped := Vector2(roundf(wp.x), roundf(wp.y))
+		_ruler_dragging = true
+		_ruler_drag_start_screen = pos
+		if _ruler_awaiting_b and ruler_has_a:
+			ruler_point_b = snapped
+			ruler_has_b = true
+		else:
+			ruler_point_a = snapped
+			ruler_has_a = true
+			ruler_point_b = snapped
+			ruler_has_b = false
+		_sync_ruler_ui()
+		get_viewport().set_input_as_handled()
+	elif is_drag and _ruler_dragging:
+		var wp := screen_to_world_pos(pos)
+		ruler_point_b = Vector2(roundf(wp.x), roundf(wp.y))
+		ruler_has_b = true
+		_sync_ruler_ui()
+		get_viewport().set_input_as_handled()
+	elif is_release and _ruler_dragging:
+		var wp := screen_to_world_pos(pos)
+		var snapped := Vector2(roundf(wp.x), roundf(wp.y))
+		var moved_px := pos.distance_to(_ruler_drag_start_screen)
+		_ruler_dragging = false
+		if moved_px >= 8.0:
+			ruler_point_b = snapped
+			ruler_has_b = true
+			_ruler_awaiting_b = false
+		elif _ruler_awaiting_b:
+			ruler_point_b = snapped
+			ruler_has_b = true
+			_ruler_awaiting_b = false
+		else:
+			ruler_point_a = snapped
+			ruler_has_a = true
+			ruler_has_b = false
+			_ruler_awaiting_b = true
+		_sync_ruler_ui()
+		get_viewport().set_input_as_handled()
+
+
+func _is_point_over_hud_controls(screen_pos: Vector2) -> bool:
+	if _is_ruler_ui_hit(screen_pos):
+		return true
+	if mobile_pad != null and is_instance_valid(mobile_pad) and bool(mobile_pad.call("is_screen_point_over_pad", screen_pos)):
+		return true
+	for ctrl in [summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, pixel_perfect_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, monster_range_button]:
+		if ctrl != null and is_instance_valid(ctrl) and (ctrl as Control).visible:
+			if (ctrl as Control).get_global_rect().has_point(screen_pos):
+				return true
+	return false
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if field_mode_enabled and field_manager != null and field_manager.active and not ruler_pick_mode:
+		var tap_pos := Vector2.ZERO
+		var is_tap := false
+		if event is InputEventScreenTouch:
+			var st := event as InputEventScreenTouch
+			if st.pressed:
+				_last_touch_tap_msec = Time.get_ticks_msec()
+				tap_pos = st.position
+				is_tap = true
+		elif event is InputEventMouseButton:
+			var mb := event as InputEventMouseButton
+			if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+				if Time.get_ticks_msec() - _last_touch_tap_msec < 60:
+					return
+				tap_pos = mb.position
+				is_tap = true
+		if is_tap:
+			if _is_point_over_hud_controls(tap_pos):
+				return
+			var wp := screen_to_world_pos(tap_pos)
+			var picked: Dictionary = field_manager.select_target_at_world_pos(wp)
+			if bool(picked.get("selected", false)):
+				_sync_field_pad_state()
+				get_viewport().set_input_as_handled()
+			return
 	if not (event is InputEventKey):
 		return
 	var kev := event as InputEventKey
@@ -1659,7 +2870,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif kev.keycode == KEY_G:
 		show_grid_overlay = not show_grid_overlay
 		queue_redraw()
-	elif kev.keycode == KEY_Q or kev.keycode == KEY_TAB:
+	elif kev.keycode == KEY_Q or (kev.keycode == KEY_TAB and not field_mode_enabled):
 		if not roster_characters.is_empty():
 			_char_index = (_char_index + 1) % roster_characters.size()
 			var next_id := str(roster_characters[_char_index].get("character_id", ""))
@@ -1678,8 +2889,62 @@ func _draw_pixel_contact_shadow(pos_x: float, pos_y: float, body_w: float, scale
 	var cfg: Dictionary = terrain_config.get("contact_shadow", {})
 	var outer: Array = cfg.get("outer_rgba", [35, 22, 16, 60])
 	var inner: Array = cfg.get("inner_rgba", [24, 14, 10, 85])
-	draw_rect(Rect2(pos_x - hw, sy - 4.0, hw * 2.0, 8.0), Color8(int(outer[0]), int(outer[1]), int(outer[2]), int(round(float(outer[3]) * alpha))))
-	draw_rect(Rect2(pos_x - hw * 0.68, sy - 6.0, hw * 1.36, 10.0), Color8(int(inner[0]), int(inner[1]), int(inner[2]), int(round(float(inner[3]) * alpha))))
+	var sec_left := MAP_LEFT_X
+	var sec_right := MAP_RIGHT_X
+	for sec in _get_terrain_sections():
+		var sl := float(sec["left_x"])
+		var sr := float(sec["right_x"])
+		if pos_x >= sl and pos_x < sr:
+			sec_left = sl
+			sec_right = sr
+			break
+	var ox0 := maxf(pos_x - hw, sec_left) if pos_y <= sy + 24.0 else (pos_x - hw)
+	var ox1 := minf(pos_x + hw, sec_right) if pos_y <= sy + 24.0 else (pos_x + hw)
+	if ox1 > ox0:
+		draw_rect(Rect2(ox0, sy - 4.0, ox1 - ox0, 8.0), Color8(int(outer[0]), int(outer[1]), int(outer[2]), int(round(float(outer[3]) * alpha))))
+	var ix0 := maxf(pos_x - hw * 0.68, sec_left) if pos_y <= sy + 24.0 else (pos_x - hw * 0.68)
+	var ix1 := minf(pos_x + hw * 0.68, sec_right) if pos_y <= sy + 24.0 else (pos_x + hw * 0.68)
+	if ix1 > ix0:
+		draw_rect(Rect2(ix0, sy - 6.0, ix1 - ix0, 10.0), Color8(int(inner[0]), int(inner[1]), int(inner[2]), int(round(float(inner[3]) * alpha))))
+
+
+func _draw_ruler_overlay() -> void:
+	var font := ThemeDB.fallback_font
+	if ruler_grid_enabled:
+		var start_x := int(MAP_LEFT_X)
+		var end_x := int(MAP_RIGHT_X)
+		for wx in range(start_x, end_x + 1, 100):
+			var fx := float(wx)
+			var major := (wx % 200 == 0)
+			var gy := _ground_y_at(fx)
+			draw_line(Vector2(fx, gy - (16.0 if major else 8.0)), Vector2(fx, gy + (12.0 if major else 6.0)), Color(0.22, 0.74, 0.97, 0.75 if major else 0.45), 1.5 if major else 1.0)
+			if major and font != null:
+				draw_string(font, Vector2(fx + 3.0, gy + 24.0), "%d" % wx, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.72, 0.92, 1.0, 0.9))
+		for edge_x in _get_terrain_step_edges():
+			draw_line(Vector2(edge_x, MAP_TOP_Y), Vector2(edge_x, MAP_BOTTOM_Y), Color(0.98, 0.45, 0.09, 0.7), 2.0)
+			if font != null:
+				draw_string(font, Vector2(edge_x + 6.0, _ground_y_at(edge_x - 1.0) - 24.0), "STEP %d" % int(round(edge_x)), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1.0, 0.78, 0.45, 0.95))
+	if ruler_has_a:
+		draw_line(ruler_point_a - Vector2(14.0, 0.0), ruler_point_a + Vector2(14.0, 0.0), Color(0.13, 0.83, 0.93, 0.95), 2.5)
+		draw_line(ruler_point_a - Vector2(0.0, 14.0), ruler_point_a + Vector2(0.0, 14.0), Color(0.13, 0.83, 0.93, 0.95), 2.5)
+		if font != null:
+			draw_string(font, ruler_point_a + Vector2(8.0, -10.0), "A(%d,%d)" % [int(round(ruler_point_a.x)), int(round(ruler_point_a.y))], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(0.56, 0.95, 1.0, 1.0))
+	if ruler_has_a and ruler_has_b:
+		draw_line(ruler_point_b - Vector2(14.0, 0.0), ruler_point_b + Vector2(14.0, 0.0), Color(0.98, 0.80, 0.08, 0.95), 2.5)
+		draw_line(ruler_point_b - Vector2(0.0, 14.0), ruler_point_b + Vector2(0.0, 14.0), Color(0.98, 0.80, 0.08, 0.95), 2.5)
+		var corner := Vector2(ruler_point_b.x, ruler_point_a.y)
+		draw_line(ruler_point_a, corner, Color(0.22, 0.74, 0.97, 0.7), 2.0)
+		draw_line(corner, ruler_point_b, Color(0.98, 0.80, 0.08, 0.7), 2.0)
+		draw_line(ruler_point_a, ruler_point_b, Color(0.35, 0.95, 0.62, 0.95), 3.0)
+		if font != null:
+			draw_string(font, ruler_point_b + Vector2(8.0, -10.0), "B(%d,%d)" % [int(round(ruler_point_b.x)), int(round(ruler_point_b.y))], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1.0, 0.92, 0.45, 1.0))
+			var mid := (ruler_point_a + ruler_point_b) * 0.5
+			var dx := absf(ruler_point_b.x - ruler_point_a.x)
+			var dy := absf(ruler_point_b.y - ruler_point_a.y)
+			var dist := ruler_point_a.distance_to(ruler_point_b)
+			var txt := "dX=%.0fpx | dY=%.0fpx | D=%.1fpx" % [dx, dy, dist]
+			draw_rect(Rect2(mid.x - 115.0, mid.y - 28.0, 230.0, 22.0), Color(0.04, 0.07, 0.14, 0.86))
+			draw_string(font, Vector2(mid.x - 108.0, mid.y - 12.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.55, 0.98, 0.72, 1.0))
 
 
 func _draw() -> void:
@@ -1690,10 +2955,24 @@ func _draw() -> void:
 	if dummy_node != null:
 		var e_dims := _get_body_dims(_find_character_entry_ro(enemy_character_id))
 		_draw_pixel_contact_shadow(dummy_node.position.x, dummy_node.position.y, float(e_dims.x), enemy_scale, _is_fighter_surface_visible(dummy_node, enemy_character_id))
+	if field_mode_enabled and field_manager != null and field_manager.active:
+		for slot in field_manager.slots:
+			if bool(slot.get("alive", false)):
+				var mnode := slot.get("node") as Node2D
+				if mnode != null and is_instance_valid(mnode):
+					var cid := str(slot.get("character_id", ""))
+					var m_dims := _get_body_dims(_find_character_entry_ro(cid))
+					_draw_pixel_contact_shadow(mnode.position.x, mnode.position.y, float(m_dims.x), float(slot.get("scale_val", 2.0)), _is_fighter_surface_visible(mnode, cid))
 	if item_drop_enabled:
 		for item_n in _dropped_item_nodes:
 			if is_instance_valid(item_n) and item_n.visible:
 				_draw_pixel_contact_shadow(item_n.position.x, item_n.position.y, 28.0, item_n.scale.x, true)
+
+	if _field_overlay_node != null and is_instance_valid(_field_overlay_node):
+		_field_overlay_node.visible = field_mode_enabled and field_manager != null and field_manager.active
+		_field_overlay_node.queue_redraw()
+
+	_draw_ruler_overlay()
 
 	if not show_grid_overlay:
 		return
@@ -1733,9 +3012,28 @@ func _update_hud() -> void:
 			int(round(ai_controller.zone_min_x)),
 			int(round(ai_controller.zone_max_x)),
 		]
-	hud_label.text = "%dx%d (16:9) | %s | %.2fx Nearest (%dx%dpx, %.1f%% 1080p) | FPS: %d/60 | Speed: %d px/s | Pos: (%d, %d) | [1/2/3/-/+] Scale%s" % [
-		viewport_width, viewport_height, active_character_id, char_scale, scaled_w, scaled_h, pct_h, Engine.get_frames_per_second(), spd, px, py, ai_txt
-	]
+	var vis := _get_visible_logic_size()
+	if field_mode_enabled and field_manager != null and field_manager.active:
+		var alive_cnt := 0
+		for s in field_manager.slots:
+			if bool(s.get("alive", false)):
+				alive_cnt += 1
+		var hero_txt := "Ẩn (bấm Hiện Tướng)"
+		if field_manager.player_spawned and player_node != null:
+			if field_manager.player_dead:
+				hero_txt = "Drum KO (%.1fs)" % field_manager.player_respawn_timer_s
+			else:
+				var imm_tag := " [BẤT TỬ]" if field_manager.player_immortal else ""
+				hero_txt = "Drum %d/%d HP%s | %d/%d MP (%d,%d)" % [int(round(field_manager.player_hp)), int(round(field_manager.player_max_hp)), imm_tag, int(round(field_manager.player_mana)), int(round(field_manager.player_max_mana)), px, py]
+		hud_label.text = "%dx%d | FPS %d/60 | Quái: %d/%d | %s | Ngọc: %d" % [
+			int(round(vis.x)), int(round(vis.y)), Engine.get_frames_per_second(), alive_cnt, field_manager.slots.size(), hero_txt, collected_bag_balls.size()
+		]
+	else:
+		hud_label.text = "%dx%d | %s | %.2fx Nearest (%dx%dpx, %.1f%% 1080p) | FPS: %d/60 | Speed: %d px/s | Pos: (%d, %d) | [1/2/3/-/+] Scale%s" % [
+			int(round(vis.x)), int(round(vis.y)), active_character_id, char_scale, scaled_w, scaled_h, pct_h, Engine.get_frames_per_second(), spd, px, py, ai_txt
+		]
+	if ruler_modal_visible and ruler_modal != null and is_instance_valid(ruler_modal):
+		ruler_modal.update_metrics(get_ruler_metrics())
 
 
 func set_item_drop_preview(enabled: bool, ball_number: int = 0, item_scale: float = 1.0) -> void:
@@ -1765,9 +3063,11 @@ func _ensure_item_drop_layer() -> Node2D:
 	if _item_drop_layer == null or not is_instance_valid(_item_drop_layer):
 		_item_drop_layer = Node2D.new()
 		_item_drop_layer.name = "ItemDropsLayer"
-		_item_drop_layer.z_index = 9
+		_item_drop_layer.z_index = 50
 		_item_drop_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(_item_drop_layer)
+	else:
+		_item_drop_layer.z_index = 50
 	_item_drop_layer.visible = item_drop_enabled
 	return _item_drop_layer
 
@@ -1796,7 +3096,8 @@ func _refresh_dropped_items() -> void:
 			var item := DragonBallItemScene.instantiate() as Node2D
 			item.set("display_mode", "map")
 			item.set("ball_number", i + 1)
-			item.position = Vector2(start_x + float(i) * step_x, ground_y)
+			var ix := start_x + float(i) * step_x
+			item.position = Vector2(ix, _ground_y_at(ix))
 			item.scale = Vector2(item_drop_scale, item_drop_scale)
 			if item.has_signal("collected"):
 				item.connect("collected", _on_dropped_item_collected)
@@ -1806,7 +3107,7 @@ func _refresh_dropped_items() -> void:
 		var item := DragonBallItemScene.instantiate() as Node2D
 		item.set("display_mode", "map")
 		item.set("ball_number", item_drop_ball)
-		item.position = Vector2(center_x, ground_y)
+		item.position = Vector2(center_x, _ground_y_at(center_x))
 		item.scale = Vector2(item_drop_scale, item_drop_scale)
 		if item.has_signal("collected"):
 			item.connect("collected", _on_dropped_item_collected)
@@ -1823,7 +3124,8 @@ func trigger_monster_death_drop(ball_num: int = 0) -> Node2D:
 		_next_monster_drop_ball = (_next_monster_drop_ball % 7) + 1
 	if dummy_node != null:
 		_play_fighter_clip(dummy_node, "ko")
-	var spawn_pos := dummy_node.position if dummy_node != null else Vector2(dummy_spawn_x, ground_y)
+	var spawn_pos := dummy_node.position if dummy_node != null else Vector2(dummy_spawn_x, _ground_y_at(dummy_spawn_x))
+	var drop_floor_y := _ground_y_at(spawn_pos.x)
 	var px := player_node.position.x if player_node != null else player_spawn_x
 	var roll_dir := -1.0 if px <= spawn_pos.x else 1.0
 	var item := DragonBallItemScene.instantiate() as Node2D
@@ -1831,7 +3133,7 @@ func trigger_monster_death_drop(ball_num: int = 0) -> Node2D:
 	if item.has_signal("collected"):
 		item.connect("collected", _on_dropped_item_collected)
 	layer.add_child(item)
-	item.call("start_drop_from", spawn_pos, ground_y, roll_dir, item_drop_scale)
+	item.call("start_drop_from", spawn_pos, drop_floor_y, roll_dir, item_drop_scale)
 	_dropped_item_nodes.append(item)
 	return item
 

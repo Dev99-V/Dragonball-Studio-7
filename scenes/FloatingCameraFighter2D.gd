@@ -7,6 +7,7 @@ const PROJECTILE_LIFETIME_S := 0.7
 var _projectile_time_left := 0.0
 var _projectile_dir := 1.0
 var _projectile_scale := 1.0
+var external_projectile_managed: bool = false
 
 
 func _get_projectile_origin_local() -> Vector2:
@@ -54,14 +55,21 @@ func _physics_process(delta: float) -> void:
 	if _projectile_time_left <= 0.0 or projectile_sprite == null:
 		return
 	_projectile_time_left -= delta
+	var previous_projectile_pos := projectile_sprite.global_position
 	projectile_sprite.global_position.x += _projectile_dir * _get_projectile_speed() * _projectile_scale * delta
-	if _projectile_time_left <= 0.0:
+	var stage := get_tree().current_scene
+	var terrain_hit := stage != null and stage.has_method("terrain_blocks_segment") and bool(stage.call("terrain_blocks_segment", previous_projectile_pos, projectile_sprite.global_position))
+	if terrain_hit or _projectile_time_left <= 0.0:
+		_projectile_time_left = 0.0
 		projectile_sprite.visible = false
 		projectile_sprite.stop()
 		projectile_sprite.top_level = false
 
 
 func _on_skill_event(event_name: String, frame_index: int, at_ms: int, payload: Dictionary) -> void:
+	if external_projectile_managed:
+		action_event.emit(event_name, frame_index, at_ms, payload)
+		return
 	super._on_skill_event(event_name, frame_index, at_ms, payload)
 	if event_name == "custom:launch" and projectile_sprite != null:
 		var origin := _get_projectile_origin_local()
@@ -78,6 +86,10 @@ func _on_skill_event(event_name: String, frame_index: int, at_ms: int, payload: 
 
 func _on_skill_finished(clip_name: StringName) -> void:
 	super._on_skill_finished(clip_name)
+	if external_projectile_managed:
+		if clip_name == &"ko" and sprite != null:
+			sprite.visible = false
+		return
 	if clip_name == &"hit":
 		play_clip(&"ko")
 	elif clip_name == &"ko":

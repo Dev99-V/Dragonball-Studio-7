@@ -1304,6 +1304,15 @@ if (apiPayload.roster.characters.length > 0) {
   assert.equal(k70eInt.integerApplied, true, 'Pixel Perfect integer must activate on 1220p (>=1080)');
   assert.equal(getEl('arenaCanvas').width, 2712);
 
+  getEl('selDeviceProfile').onchange({ target: { value: 'ipad_10th' } });
+  const ipadFrac = T.computeDeviceLayoutMetrics(T.getSelectedDeviceProfile(), false);
+  assert.equal(ipadFrac.visW, 1920);
+  assert.equal(ipadFrac.visH, 1334);
+  const ipadInt = T.computeDeviceLayoutMetrics(T.getSelectedDeviceProfile(), true);
+  assert.equal(ipadInt.integerApplied, true);
+  assert.equal(ipadInt.visW, 2360);
+  assert.equal(ipadInt.visH, 1640);
+
   getEl('selDeviceProfile').onchange({ target: { value: 'android_720p_20_9' } });
   const p720 = T.computeDeviceLayoutMetrics(T.getSelectedDeviceProfile(), true);
   assert.equal(p720.below1080p, true);

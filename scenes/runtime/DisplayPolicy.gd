@@ -42,7 +42,7 @@ static func compute_profile_layout(win_w: int, win_h: int, pixel_perfect_request
 	var vis_h := maxf(float(BASE_H), float(safe_h) / maxf(0.01, scale_val))
 	if integer_applied:
 		vis_w = maxf(float(BASE_W), float(safe_w) / maxf(1.0, scale_val))
-		vis_h = float(BASE_H)
+		vis_h = maxf(float(BASE_H), float(safe_h) / maxf(1.0, scale_val))
 
 	var left_inset_logic := float(safe_box.position.x) / maxf(0.01, scale_val)
 	var top_inset_logic := float(safe_box.position.y) / maxf(0.01, scale_val)

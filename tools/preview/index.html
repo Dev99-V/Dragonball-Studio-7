@@ -2911,7 +2911,7 @@
       if ((w / h) < (1920 / 1080)) scaleF = w / 1920;
       const effScale = integerApplied ? Math.max(1, Math.floor(scaleF)) : scaleF;
       const visW = Math.max(1920, Math.round(w / Math.max(0.01, effScale)));
-      const visH = (w / h) < (1920 / 1080) && !integerApplied ? Math.max(1080, Math.round(h / Math.max(0.01, effScale))) : 1080;
+      const visH = Math.max(1080, Math.round(h / Math.max(0.01, effScale)));
       return { w, h, dpr, below1080p, integerApplied, effScale, visW, visH };
     }
 

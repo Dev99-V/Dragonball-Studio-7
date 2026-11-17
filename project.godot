@@ -14,7 +14,7 @@ config/name="DR7-Studio DragonBall 2D"
 config/version="0.16.0"
 run/main_scene="res://scenes/ArenaSandbox.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-config/icon="res://assets/icon.svg"
+config/icon="res://assets/app_icon/icon_512.png"
 
 [display]
 

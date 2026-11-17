@@ -72,6 +72,7 @@ Chi tiết kỹ thuật chốt tại [docs/adr/0001-architecture-and-scale-roadm
    - **Tab Sân Tập** là nơi thử gameplay thực trên **Godot Web** và **APK trên màn Android thực tế**. Trước khi mời Owner test, phải đưa cùng atlas, `.tres`, prefab, thông số size/speed/flight và hành vi tấn công/trúng đòn/chết vào Godot, export Web/APK, kiểm SHA-256 và chạy thử. Canvas2D riêng hoặc trang HTML giả lập không được nhận là Godot Web/Sân Tập thực.
    - Asset chờ duyệt có thể nằm trong vùng `review/` được export có kiểm soát cho Godot Web/APK; không ghi là `finalized` trong `assets/roster.json`. Sau Owner Human Test OK mới chuyển vào bundle chính thức và dọn nguồn demo `/work`, `review/`.
    - Với quái bay, xác nhận **hướng nòng súng/đầu trên pose nguồn** bằng pixel cụ thể; chiều chuyển động, hướng nhìn, điểm phát skill và lật ngang phải đồng bộ theo hướng đó ở Human Test, Godot Web và APK. Cấm suy hướng từ thứ tự ô trong sheet hoặc giữ hướng bay ngược nòng súng.
+5. **Chuẩn kiểm thử K70E & parity khi đóng gói/chốt version (Owner 2026-11-17)**: Redmi K70E thực tế là thiết bị chuẩn hiện tại. Mỗi lần đóng gói và chốt version phải đồng bộ 1:1 Godot chạy trực tiếp tại localhost với APK về cùng bản build, nguồn asset, map, camera, gameplay, cấu hình hiển thị và tick; kiểm bằng chứng build/hash và chạy thử, đối chiếu trên K70E thực tế trước khi kết luận đạt. So sánh tại cùng tỷ lệ viewport và trạng thái gameplay; không coi Canvas2D giả lập là Godot. Yêu cầu đồng bộ iOS và Godot Web tại Điều 5.2 vẫn áp dụng.
 
 ---
 
@@ -84,7 +85,7 @@ Chi tiết kỹ thuật chốt tại [docs/adr/0001-architecture-and-scale-roadm
 
 ## Điều 7. Chuẩn Bộ Hoạt Ảnh, Độ Nét, Hướng Nhìn, Item (`assets/items/`) & Bản Đồ 2D (`assets/maps/`)
 
-1. **Bộ clip chuẩn**: Tham chiếu `idle`, `walk`, `run`, `jump`, `attack_light`, `attack_heavy`, `power_up`, `aura_loop`, `hit`, `ko` (+ kỹ năng đặc trưng). **Owner chốt phạm vi chung: không tạo `guard` và `win`**; giữ WARN tham chiếu không tạo clip giả.
+1. **Bộ clip chuẩn**: Tham chiếu `idle`, `walk`, `run`, `jump`, `attack_light`, `attack_heavy`, `power_up`, `aura_loop`, `hit`, `ko` (+ kỹ năng đặc trưng). **Owner chốt phạm vi chung: không tạo `guard` và `win`**; giữ WARN tham chiếu không tạo clip giả. Tướng/quái không có hiệu ứng vụ nổ va chạm riêng kèm sheet/atlas hoặc yêu cầu riêng mặc định dùng `assets/fx/powerup_explosion/` (`scale 0.68`).
 2. **Mốc độ nét chuẩn — T-rex (`2026-11-12`) & Thẩm mỹ mặc định**:
    - Đối chiếu [t-rex-sharpness-reference.png](docs/art-standards/t-rex-sharpness-reference.png) và [character-pixel-sharpness.json](docs/art-standards/character-pixel-sharpness.json): **1px gameplay, Nearest**, alpha thân 100%; VFX được alpha mềm (`idle0` mẫu 384×256, anchor `[176,224]`, Sobel **245.516**). Đo bằng `python3 tools/art/measure_pixel_sharpness.py <frame.png>`, không blur/sharpen/dither ép số.
    - Quái thú/sinh vật mặc định phong cách **"Hung tợn"** (nanh nhọn, mắt dữ, vuốt bén, màu đậm) trừ khi Owner chỉ định riêng. Công bố đủ metrics chuẩn trong `roster.json`.
@@ -104,6 +105,13 @@ Chi tiết kỹ thuật chốt tại [docs/adr/0001-architecture-and-scale-roadm
      - **TileSet Khối Đất Ngang `32×32` (`TileMapLayer` + `StaticBody2D`, scale `2× = 64px` khớp `ppu_reference=64`)**: Bóc tách trực tiếp màu sắc và kết cấu vốn có từ ảnh mẫu gốc để dựng 1 bục sàn ngang góc nhìn `side-view` (`ground_y`) liền mạch không vết ghép; chỉ bổ sung bục phụ (`One-Way Platforms`) khi map được chỉ định rõ (Sân Tập giữ đúng 1 bục sàn ngang chuẩn).
      - **Tương Tác Chân–Đất (`Ground Interaction FX`)**: Bắt buộc có **Dynamic Pixel Contact Shadow** bám bề mặt đỡ gần nhất bên dưới chân (co nhỏ & giảm alpha theo độ cao nhảy/bay; ẩn khi độn thổ; cấm vẽ elip thô) và **Footstep / Landing Dust Pixel FX** khi tiếp đất/bứt chạy.
      - **Duyệt Demo Trước Khi Nhân Rộng**: Với map mẫu mới, xuất demo chạy thử trên cả Godot & Sân Tập `localhost:8080` để Owner nghiệm thu trực quan trước khi nhân bản `35 map` (`D10`).
+7. **Kích thước map độc lập màn hình & camera ngang (Owner 2026-11-17)**:
+   - Neo kích thước thế giới và biên gameplay của map theo góc nhìn K70E được Owner chọn làm chuẩn; lưu biên theo tọa độ thế giới dùng chung cho mọi thiết bị, có thể mở rộng chiều dài theo từng map. Không lấy mép viewport làm biên map, va chạm hay giới hạn di chuyển; tọa độ, khoảng cách và kết quả combat phải thống nhất giữa các client.
+   - Thiết bị có vùng nhìn ngang hẹp hơn chuẩn phải cuộn camera theo player khi đi về phía cuối map, giới hạn camera tại biên map chuẩn; không thay đổi chiều dài map hay kéo giãn nhân vật. Vùng nhìn và camera là hiển thị cục bộ, không thay đổi trạng thái thế giới dùng chung.
+   - Kích thước số cụ thể của map chuẩn và chính sách chiều cao cho màn hình cao hơn K70E cần đo/đối chiếu và Owner chốt; không tự coi kích thước viewport 1920×1080 là biên map đã duyệt. Quy định mới về biên thế giới thay thế cách giới hạn đi lại theo mép màn hình trước đây; việc triển khai và kiểm thử phải được xác minh riêng.
+8. **Bậc địa hình rắn và tương tác skill (Owner 2026-11-17)**: Mọi bậc hạ cấp phải có mặt ngang đủ rộng, tương đương bậc cao trong cùng đoạn map; mặt cắt đứng và mặt sàn dùng chung tọa độ với ảnh, va chạm và bóng tiếp xúc. Nhân vật đi xuống mép bậc được rơi theo trọng lực; đi ngược lên bị mặt cắt chặn và chỉ vượt khi nhảy đủ cao, không tự nâng chân/trồi lên. Skill/đạn phải dừng hoặc va chạm với mặt cắt và khối đất, không xuyên địa hình. Kiểm đường đi hai chiều và đường bay skill trên các cao độ trước Human Test; áp dụng cho mọi map về sau.
+   - Căn chân nhân vật theo **mặt đi được trong ảnh**, không theo mép trước của vách đá; đo ở từng bậc và ở cả frame vừa vượt mép, tránh đứng lơ lửng hoặc chìm sâu trong đất. Nhân vật AI dùng cùng cao độ địa hình.
+   - Nghi thức triệu hồi Shenron và hiệu ứng đặt theo **tâm camera hiện tại** cùng cao độ sàn tại khu vực người gọi; không quay về tâm map gốc khi người chơi đã đi sang khu khác.
 
 ---
 
