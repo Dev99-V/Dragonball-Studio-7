@@ -1,6 +1,7 @@
 extends SceneTree
 
 const UtilityAIScript := preload("res://scenes/UtilityAIController.gd")
+const OverheadBarsDrawScript := preload("res://scenes/runtime/OverheadBarsDraw.gd")
 
 
 func fail(msg: String) -> void:
@@ -73,7 +74,7 @@ func run_test() -> void:
 		fail("ArenaSandbox show_grid_overlay must default to false (no yellow/blue boundary lines)")
 		return
 	var expected_trex_half_w := 187.0 * 1.75 * 0.5
-	if arena.ground_y != 840.0 or absf(arena.walkable_min_x - (-240.0 + expected_trex_half_w)) > 1.0 or absf(arena.walkable_max_x - (4560.0 - expected_trex_half_w)) > 1.0:
+	if arena.ground_y != 840.0 or absf(arena.walkable_min_x - (-240.0 + expected_trex_half_w)) > 1.0 or absf(arena.walkable_max_x - (6360.0 - expected_trex_half_w)) > 1.0:
 		fail("ArenaSandbox gameplay bounds mismatch: ground=%s bounds=[%s,%s]" % [str(arena.ground_y), str(arena.walkable_min_x), str(arena.walkable_max_x)])
 		return
 	if absf(arena.char_scale - 1.75) > 0.001:
@@ -85,13 +86,37 @@ func run_test() -> void:
 		fail("Missing BackgroundSprite texture on ArenaSandbox")
 		return
 	var rendered_bg_size := bg_sprite.texture.get_size() * bg_sprite.scale
-	if absf(rendered_bg_size.x - 4800.0) > 0.5 or absf(rendered_bg_size.y - 1350.0) > 0.5:
+	if absf(rendered_bg_size.x - 6600.0) > 0.5 or absf(rendered_bg_size.y - 1350.0) > 0.5:
 		fail("Extended BackgroundSprite size mismatch: " + str(rendered_bg_size))
 		return
 	var terrain_body := arena.get_node_or_null("TerrainLayer/GroundFloorCollider") as StaticBody2D
-	if terrain_body == null or terrain_body.get_child_count() != 3 or arena._ground_tilemap == null or arena._ground_tilemap.visible:
-		fail("Review terrain must use three solid step colliders and no foreground tile overlay")
+	if terrain_body == null or terrain_body.get_child_count() != 5 or arena._ground_tilemap == null or arena._ground_tilemap.visible:
+		fail("Review terrain must use five solid step colliders and no foreground tile overlay")
 		return
+	var foreground := arena.get_node_or_null("ReviewForegroundTrees") as Node2D
+	var map_layer := arena.get_node_or_null("BackgroundLayer") as Node2D
+	if foreground == null or foreground.get_child_count() != 3 or map_layer == null or not (map_layer.z_index < foreground.z_index and foreground.z_index < 0):
+		fail("Review extension needs exactly three trees between map and fighters")
+		return
+	var expected_tree_min_h := [900.0, 1060.0, 1080.0]
+	var expected_tree_bottom_y := [828.0, 888.0, 954.0]
+	for tree_i in range(3):
+		var tree_sprite := foreground.get_child(tree_i) as Sprite2D
+		if tree_sprite == null or tree_sprite.texture.get_size().y < float(expected_tree_min_h[tree_i]):
+			fail("Tree %d must include full planted roots and +30%% canopy (h >= %s)" % [tree_i, str(expected_tree_min_h[tree_i])])
+			return
+		var visual_bottom := tree_sprite.position.y + tree_sprite.texture.get_size().y * tree_sprite.scale.y
+		if absf(visual_bottom - float(expected_tree_bottom_y[tree_i])) > 14.0:
+			fail("Tree %d roots must plant into the rear ground rim near y=%s, got %s" % [tree_i, str(expected_tree_bottom_y[tree_i]), str(visual_bottom)])
+			return
+		if tree_i == 0 and (tree_sprite.position.x + 264.51 * tree_sprite.scale.x) >= arena.STEP_THREE_X:
+			fail("First tree must stand on the left upper plateau before Step 3 cliff cut, trunk_x=%s" % str(tree_sprite.position.x + 264.51 * tree_sprite.scale.x))
+			return
+		var tree_left := tree_sprite.position.x
+		var tree_right := tree_sprite.position.x + tree_sprite.texture.get_size().x * tree_sprite.scale.x
+		if tree_left < arena.MAP_LEFT_X or tree_right > arena.MAP_RIGHT_X:
+			fail("Tree %d canopy must fit inside map world bounds [%s, %s]: [%s, %s]" % [tree_i, str(arena.MAP_LEFT_X), str(arena.MAP_RIGHT_X), str(tree_left), str(tree_right)])
+			return
 
 	# Verify DisplayPolicy D1/D2/D4 across Redmi K70E (2712x1220), 720p (<1080p guard), and 16:9 FHD
 	var k70e_frac: Dictionary = arena.apply_device_profile("redmi_k70e")
@@ -102,7 +127,7 @@ func run_test() -> void:
 	var bg_w := bg_sprite.texture.get_size().x * bg_sprite.scale.x
 	var view_left := 960.0 - k70e_visible_w * 0.5
 	var view_right := 960.0 + k70e_visible_w * 0.5
-	if absf(arena.walkable_min_x - (-240.0 + expected_trex_half_w)) > 1.0 or absf(arena.walkable_max_x - (4560.0 - expected_trex_half_w)) > 1.0:
+	if absf(arena.walkable_min_x - (-240.0 + expected_trex_half_w)) > 1.0 or absf(arena.walkable_max_x - (6360.0 - expected_trex_half_w)) > 1.0:
 		fail("K70E T-rex world bounds mismatch: bounds=[%s,%s]" % [str(arena.walkable_min_x), str(arena.walkable_max_x)])
 		return
 	var camera := arena.get_node_or_null("ArenaCamera") as Camera2D
@@ -119,8 +144,28 @@ func run_test() -> void:
 		fail("Middle plateau (platform 2) must use walkable floor y=890")
 		return
 	if absf(arena._ground_y_at(4200.0) - 945.0) > 0.1:
-		fail("Rightmost descending step must use shared world ground height y=945")
+		fail("Existing third plateau must retain shared world ground height y=945")
 		return
+	if absf(arena._ground_y_at(5200.0) - 975.0) > 0.1 or absf(arena._ground_y_at(6000.0) - 1030.0) > 0.1:
+		fail("New descending plateaus must use walkable floor heights y=975 and y=1030")
+		return
+	if arena._can_cross_terrain_step(4741.0, 4739.0, 975.0) or not arena._can_cross_terrain_step(4741.0, 4739.0, 940.0):
+		fail("Third step must block uphill walking and allow a high jump")
+		return
+	if not arena.terrain_blocks_segment(Vector2(5567.0, 1010.0), Vector2(5553.0, 1010.0)):
+		fail("Skill projectile must hit the fourth step face")
+		return
+	for edge_case in [[4740.0, 945.0, 975.0], [5560.0, 975.0, 1030.0]]:
+		var step_edge := float(edge_case[0])
+		var upper_y := float(edge_case[1])
+		var lower_y := float(edge_case[2])
+		arena.player_node.position = Vector2(step_edge - 1.0, upper_y)
+		arena.player_vy = 0.0
+		arena._move_player_horizontal(2.0)
+		var fall_result: Dictionary = arena.step_player_vertical_physics(1.0 / 60.0, false, false)
+		if arena.player_node.position.x <= step_edge or float(fall_result["y"]) <= upper_y or float(fall_result["support_y"]) != lower_y:
+			fail("Actor must fall on first tick beyond painted step edge %s: x=%s y=%s" % [str(step_edge), str(arena.player_node.position.x), str(fall_result["y"])])
+			return
 	if arena._can_cross_terrain_step(3696.0, 3694.0, 945.0) or not arena._can_cross_terrain_step(3696.0, 3694.0, 885.0):
 		fail("Walking uphill must be blocked until the player jumps above the upper surface")
 		return
@@ -139,16 +184,40 @@ func run_test() -> void:
 		fail("Walking off the first step must fall to the lower floor y=890")
 		return
 	arena._move_player_horizontal(-3.0)
-	if arena.player_node.position.x < 2850.0:
-		fail("Lower floor must block walking uphill")
+	if arena.player_node.position.x < 2876.0:
+		fail("Lower floor must block walking uphill before penetrating cliff base")
 		return
 	arena.step_player_vertical_physics(1.0 / 60.0, true, false)
 	for _jump_tick in range(8):
 		arena.step_player_vertical_physics(1.0 / 60.0, false, false)
-	arena._move_player_horizontal(-3.0)
+	arena._move_player_horizontal(-40.0)
 	if arena.player_node.position.x >= 2850.0:
 		fail("A high enough jump must allow crossing back onto the upper floor")
 		return
+	# Verify Drum walking left against Step 4 & Step 3 painted cliff walls stops BEFORE entering the rock cut, and can still walk-jump up Step 4.
+	arena.select_character("drum")
+	await process_frame
+	arena.player_node.position = Vector2(5720.0, 1030.0)
+	arena.player_vy = 0.0
+	for _wl in range(90):
+		arena.step_player_movement(1.0 / 60.0, -1, 0, false, false, false, Vector2.ZERO)
+	if arena.player_node.position.x < 5620.0:
+		fail("Drum walking left against Step 4 cliff wall must stop cleanly outside cliff cut (>=5620), got x=%s" % str(arena.player_node.position.x))
+		return
+	for _wj in range(42):
+		arena.step_player_movement(1.0 / 60.0, -1, 0, _wj == 0, false, false, Vector2.ZERO)
+	if arena.player_node.position.x >= 5560.0 or arena.player_node.position.y > 980.0:
+		fail("Drum must still be able to jump from Step 4 cliff stop onto upper floor, got pos=%s" % str(arena.player_node.position))
+		return
+	arena.player_node.position = Vector2(4910.0, 975.0)
+	arena.player_vy = 0.0
+	for _wl3 in range(90):
+		arena.step_player_movement(1.0 / 60.0, -1, 0, false, false, false, Vector2.ZERO)
+	if arena.player_node.position.x < 4815.0:
+		fail("Drum walking left against Step 3 cliff wall must stop cleanly outside cliff cut (>=4815), got x=%s" % str(arena.player_node.position.x))
+		return
+	arena.select_character("t_rex")
+	await process_frame
 	arena.player_vy = 0.0
 	arena.player_node.position.x = original_player_x
 	arena._update_follow_camera()
@@ -167,7 +236,7 @@ func run_test() -> void:
 	if arena._bg_left_ext != null and arena._bg_left_ext.visible or arena._bg_right_ext != null and arena._bg_right_ext.visible:
 		fail("K70E must show the original image without wing inserts")
 		return
-	if absf(bg_sprite.scale.x * bg_sprite.texture.get_size().x / 4800.0 - bg_sprite.scale.y * bg_sprite.texture.get_size().y / 1350.0) > 0.001:
+	if absf(bg_sprite.scale.x * bg_sprite.texture.get_size().x / 6600.0 - bg_sprite.scale.y * bg_sprite.texture.get_size().y / 1350.0) > 0.001:
 		fail("Extended background distorted the map aspect")
 		return
 	# Verify camera framing + zero uncovered strips + pan across ALL device profiles (including iPad & tall/wide screens)
@@ -777,7 +846,7 @@ func run_test() -> void:
 	var k70e_drum_vis_w := float(k70e_drum_layout.get("visible_logic_size", [2400.7869, 1080.0])[0])
 	var drum_half_w := 56.0 * 2.5 * 0.5
 	var exp_drum_min := -240.0 + drum_half_w
-	var exp_drum_max := 4560.0 - drum_half_w
+	var exp_drum_max := 6360.0 - drum_half_w
 	if absf(arena.walkable_min_x - exp_drum_min) > 1.0 or absf(arena.walkable_max_x - exp_drum_max) > 1.0:
 		fail("K70E Drum walkable bounds mismatch: got=[%s,%s] exp=[%s,%s]" % [str(arena.walkable_min_x), str(arena.walkable_max_x), str(exp_drum_min), str(exp_drum_max)])
 		return
@@ -865,7 +934,7 @@ func run_test() -> void:
 		arena.player_node.position = Vector2(3693.0, 890.0)
 		arena.player_vy = 0.0
 		var fell_step2 := false
-		for _t in range(60):
+		for _t in range(120):
 			await physics_frame
 			arena.step_player_movement(1.0 / 60.0, 1)
 			if arena.player_node.position.x >= 3695.0:
@@ -970,19 +1039,19 @@ func run_test() -> void:
 				fail("Roster player power_up failed for " + cid_smoke)
 				return
 
-	# Field Mode verification: 5 ground + 5 flying monsters, Stamina/3s Mini-Stun, Drum Hero, Homing Orbs, 7s Respawns, 67.6% Dragon Ball drops, Pointer & Pad Bindings
+	# Field Mode verification: 7 ground + 7 flying monsters, Stamina/3s Mini-Stun, Drum Hero, Homing Orbs, 7s Respawns, Dragon Ball drops, Pointer & Pad Bindings
 	arena.enable_field_mode(true, false)
 	await process_frame
 	var fm = arena.field_manager
-	if fm == null or not fm.active or fm.slots.size() != 10:
-		fail("Field mode must spawn 10 monster slots (5 ground + 5 flying)")
+	if fm == null or not fm.active or fm.slots.size() != 14:
+		fail("Field mode must spawn 14 monster slots (7 ground + 7 flying)")
 		return
 	if arena.player_node != null or fm.player_spawned:
 		fail("Hero Drum must start hidden when entering field mode")
 		return
-	var exp_ids := ["chilopoda", "spinosaurus", "tasmanian_king_crab", "t_rex", "sarcosuchus", "bat_chiroptera", "pteranodon", "floating_camera", "bat_chiroptera", "pteranodon"]
-	var exp_hps := [1300.0, 1500.0, 1300.0, 1800.0, 1500.0, 900.0, 1000.0, 800.0, 900.0, 1000.0]
-	for si in range(10):
+	var exp_ids := ["chilopoda", "spinosaurus", "tasmanian_king_crab", "t_rex", "sarcosuchus", "dilophosaurus", "spinosaurus", "bat_chiroptera", "pteranodon", "floating_camera", "bat_chiroptera", "pteranodon", "floating_camera", "bat_chiroptera"]
+	var exp_hps := [1300.0, 1500.0, 1300.0, 1800.0, 1500.0, 1300.0, 1500.0, 900.0, 1000.0, 800.0, 900.0, 1000.0, 800.0, 900.0]
+	for si in range(14):
 		var s: Dictionary = fm.slots[si]
 		if str(s["character_id"]) != exp_ids[si] or absf(float(s["max_hp"]) - exp_hps[si]) > 0.1:
 			fail("Slot %d mismatch: got %s HP=%s, expected %s HP=%s" % [si, str(s["character_id"]), str(s["max_hp"]), exp_ids[si], str(exp_hps[si])])
@@ -1078,7 +1147,7 @@ func run_test() -> void:
 	fm.homing_projectiles.clear()
 	fm._explosion_nodes.clear()
 	# Test enemy projectile hitting Drum: subtracts HP, flashes Drum, and spawns small powerup explosion FX!
-	var fcam_slot: Dictionary = fm.slots[7] # floating_camera (800 HP, 80 dmg)
+	var fcam_slot: Dictionary = fm.slots[9] # floating_camera (800 HP, 80 dmg)
 	var pre_hp: float = float(fm.player_hp)
 	fm._explosion_nodes.clear()
 	fm.call("_spawn_homing_projectile", fcam_slot["node"], "floating_camera", "projectile_fx", Vector2(2000.0, 260.0), 1.8, {}, false, 80.0, 0.0)
@@ -1157,16 +1226,21 @@ func run_test() -> void:
 		fail("Target pointer cycle must select a valid candidate")
 		return
 
-	# Ground slot death -> 7s respawn with dilophosaurus alternation; flying slot -> bat/pteranodon/camera rotation
+	# Ground slot death -> 12s respawn with dilophosaurus alternation; flying slot -> bat/pteranodon/camera rotation
 	var g_slot: Dictionary = fm.slots[1]
 	fm.apply_damage_to_slot(g_slot, 2000.0, 20.0)
 	if bool(g_slot["alive"]):
 		fail("Ground slot 1 must die cleanly")
 		return
-	for _rg in range(430):
+	for _rg_early in range(430):
+		fm.step(1.0 / 60.0)
+	if bool(g_slot["alive"]):
+		fail("Ground slot 1 must stay dead at 7.16s now that monster respawn is 12s")
+		return
+	for _rg in range(300):
 		fm.step(1.0 / 60.0)
 	if not bool(g_slot["alive"]) or str(g_slot["character_id"]) != "dilophosaurus" or absf(float(g_slot["max_hp"]) - 1300.0) > 0.1:
-		fail("First ground respawn must alternate dilophosaurus HP=1300 after 7s, got %s" % str(g_slot.get("character_id", "")))
+		fail("First ground respawn must alternate dilophosaurus HP=1300 after 12s, got %s" % str(g_slot.get("character_id", "")))
 		return
 
 	# MobileActionPad slot assignment check (no hard lock on 2..7, 1 & 8 locked)
@@ -1180,11 +1254,19 @@ func run_test() -> void:
 	if pad_test.get_slot_binding(5) != "power_up":
 		fail("MobileActionPad flexible slot 5 assignment failed")
 		return
+	if pad_test.safe_root == null or pad_test.find_child("WorldPositionMap", true, false) != null or pad_test.has_method("set_map_progress"):
+		fail("WorldPositionMap mini-map must be removed per Owner request")
+		return
+	var btn1 := pad_test._slot_buttons.get(1) as Button
+	var btn8 := pad_test._slot_buttons.get(8) as Button
+	if btn1 == null or btn1.get_node_or_null("Visual") == null or btn8 == null or btn8.get_node_or_null("Visual") == null:
+		fail("MobileActionPad buttons must attach custom vector visual overlays")
+		return
 	pad_test.queue_free()
 
 	# Flying monster stability (no rapid left/right flipping in place), elliptical orbit, single 360-deg curved FX, and 360 flight vector
-	var bat_slot: Dictionary = fm.slots[5] # bat_chiroptera
-	var fcam_s: Dictionary = fm.slots[7] # floating_camera
+	var bat_slot: Dictionary = fm.slots[7] # bat_chiroptera
+	var fcam_s: Dictionary = fm.slots[9] # floating_camera
 	var bat_node := bat_slot["node"] as Node2D
 	var fcam_node := fcam_s["node"] as Node2D
 	var bat_pfx := bat_node.get_node_or_null("ProjectileFX") as Node2D
@@ -1195,14 +1277,18 @@ func run_test() -> void:
 		fail("Field floating_camera must have external_projectile_managed=true")
 		return
 
-	bat_slot["cooldown_s"] = 1.2
+	bat_slot["cooldown_s"] = 2.0
 	bat_slot["action_clip"] = ""
 	bat_slot["turn_lock_s"] = 0.0
 	bat_slot["orbit_phase"] = 0.8
-	fcam_s["cooldown_s"] = 1.2
+	bat_node.position = Vector2(float(bat_slot["x_home"]), float(bat_slot["y_home"]))
+	fcam_s["cooldown_s"] = 2.0
 	fcam_s["action_clip"] = ""
 	fcam_s["turn_lock_s"] = 0.0
 	arena.player_node.position = Vector2(bat_node.position.x + 140.0, 840.0)
+	for _warm in range(30):
+		await physics_frame
+		fm.step(1.0 / 60.0)
 	var bat_flips := 0
 	var prev_bat_left := bat_node.scale.x < 0.0
 	var bat_min_y := bat_node.position.y
@@ -1313,16 +1399,36 @@ func run_test() -> void:
 	if fm.hit_impacts.is_empty() or fm.floating_texts.is_empty() or float(trex_slot2.get("hit_flash_s", 0.0)) <= 0.0:
 		fail("Hit feedback FX (impact burst + damage popup + flash) must trigger on hit")
 		return
-	# Check additional -20% hit-flash brightness on monster & hero sprites (max RGB <= 0.64 during flash)
+	# Check -40% hit-flash & blink contrast reduction on monster & hero sprites (60% contrast from Color.WHITE)
 	var m_flash_spr := trex_node2.get_node_or_null("Sprite") as AnimatedSprite2D
-	if m_flash_spr != null and m_flash_spr.modulate.r > 0.65:
-		fail("Monster hit flash brightness must be reduced by 20%% again (r <= 0.64), got %s" % str(m_flash_spr.modulate))
-		return
+	if m_flash_spr != null:
+		fm.call("_apply_hit_flash_modulate", m_flash_spr, true, true, false)
+		var m_on: Color = m_flash_spr.modulate
+		fm.call("_apply_hit_flash_modulate", m_flash_spr, true, false, false)
+		var m_off: Color = m_flash_spr.modulate
+		if m_on.g < 0.45 or absf(m_off.g - m_on.g) > 0.28 or m_on.r > 0.82:
+			fail("Monster hit-flash & blink contrast must be reduced by 40%%, on=%s off=%s" % [str(m_on), str(m_off)])
+			return
 	fm.apply_damage_to_player(10.0)
 	fm.step(1.0 / 60.0)
 	var h_flash_spr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
-	if h_flash_spr != null and h_flash_spr.modulate.r > 0.65:
-		fail("Hero hit flash brightness must be reduced by 20%% again (r <= 0.64), got %s" % str(h_flash_spr.modulate))
+	if h_flash_spr != null:
+		fm.call("_apply_hit_flash_modulate", h_flash_spr, true, true, true)
+		var h_on: Color = h_flash_spr.modulate
+		fm.call("_apply_hit_flash_modulate", h_flash_spr, true, false, true)
+		var h_off: Color = h_flash_spr.modulate
+		if h_on.g < 0.45 or absf(h_off.g - h_on.g) > 0.30 or h_on.r > 0.82:
+			fail("Hero hit-flash & blink contrast must be reduced by 40%%, on=%s off=%s" % [str(h_on), str(h_off)])
+			return
+	# Verify normal ("melee") and heavy ("heavy") collision impact FX metadata + clear duration separation
+	fm.hit_impacts.clear()
+	fm.call("_spawn_hit_impact_fx", Vector2(3100.0, 820.0), "melee", "-50", Color.YELLOW, Vector2(1.0, 0.0))
+	fm.call("_spawn_hit_impact_fx", Vector2(3140.0, 820.0), "heavy", "-70", Color.ORANGE, Vector2(-1.0, 0.0))
+	if fm.hit_impacts.size() != 2 or str(fm.hit_impacts[0]["kind"]) != "melee" or str(fm.hit_impacts[1]["kind"]) != "heavy" or float(fm.hit_impacts[1]["duration_s"]) <= float(fm.hit_impacts[0]["duration_s"]):
+		fail("Normal & heavy collision FX must register distinct impact kinds and timings: %s" % str(fm.hit_impacts))
+		return
+	if int(OverheadBarsDrawScript.FLOATING_DAMAGE_FONT_SIZE) != 24 or int(OverheadBarsDrawScript.FLOATING_DAMAGE_OUTLINE_SIZE) != 5:
+		fail("Floating damage popup font must stay +20%% larger (24px, outline 5)")
 		return
 
 	# Normal attack 0.2s cooldown & anti-mash (no input queueing): finish clip, reject spam during 0.2s, allow after 0.2s
@@ -1371,6 +1477,121 @@ func run_test() -> void:
 			break
 	if not saw_clash or fm._explosion_nodes.is_empty():
 		fail("Colliding player & enemy skill projectiles must trigger a 'clash' impact + explosion FX")
+		return
+
+	# === BOSS MAP DRUM EVENT TESTS ===
+	# 1) 5' initial timer must pause/reset while no Hero exists in map, then spawn after 300s with Hero present.
+	arena.set_field_hero_visible(false)
+	fm.start_field(false)
+	for _nb in range(32):
+		fm.step(10.0)
+	if not fm.boss_slot.is_empty() or absf(fm.boss_spawn_timer_s - 300.0) > 0.1:
+		fail("Boss Drum must NOT spawn or count down 5' timer when no Hero exists in map (timer=%.1f)" % fm.boss_spawn_timer_s)
+		return
+	arena.set_field_hero_visible(true)
+	fm.set_player_immortal(false)
+	for _hb in range(29):
+		fm.step(10.0)
+	fm.step(9.0)
+	if not fm.boss_slot.is_empty() and bool(fm.boss_slot.get("alive", false)):
+		fail("Boss Drum must not spawn before Hero reaches 300s (5') in map (timer=%.2f)" % fm.boss_spawn_timer_s)
+		return
+	fm.step(1.5)
+	if fm.slots.size() != 14 or fm.boss_slot.is_empty() or not bool(fm.boss_slot.get("alive", false)):
+		fail("Boss Drum must spawn after 5' with Hero while preserving 14 normal slots")
+		return
+	var bnode0 := fm.boss_slot.get("node") as Node2D
+	if bnode0 == null or bnode0.name != "FieldBoss_drum" or bnode0.z_index != arena.Z_LAYER_BOSS or absf(bnode0.scale.y - 2.5) > 0.01:
+		fail("Boss Drum visual identity/scale/z_index mismatch: name=%s z=%d scale=%s" % [str(bnode0.name if bnode0 else ""), int(bnode0.z_index if bnode0 else -1), str(bnode0.scale if bnode0 else Vector2.ZERO)])
+		return
+	if absf(float(fm.boss_slot["max_hp"]) - 5000.0) > 0.1 or absf(float(fm.boss_slot["max_stamina"]) - 200.0) > 0.1:
+		fail("Boss Drum stats mismatch: hp=%.1f stam=%.1f" % [float(fm.boss_slot["max_hp"]), float(fm.boss_slot["max_stamina"])])
+		return
+
+	# 2) Entry Teleport from far random spawn (~5900px) -> right beside Hero + shoulder attack_light (120 dmg)
+	fm.start_field(false)
+	arena.set_field_hero_visible(true)
+	fm.set_player_immortal(false)
+	arena.player_node.position = Vector2(400.0, float(arena.call("_ground_y_at", 400.0)))
+	var hp_before_boss: float = fm.player_hp
+	var bs: Dictionary = fm.spawn_boss_drum(5900.0)
+	if bs.is_empty() or str(bs.get("action_clip", "")) != "teleport":
+		fail("Boss Drum spawn must immediately initiate entry 'teleport' clip toward Hero")
+		return
+	var bnode := bs["node"] as Node2D
+	for _tp_f in range(36):
+		fm.step(1.0 / 60.0)
+	if absf(bnode.position.x - arena.player_node.position.x) > 360.0:
+		fail("Boss Drum entry teleport must relocate from 5900px beside Hero (~400px), got x=%.1f" % bnode.position.x)
+		return
+	for _melee_f in range(36):
+		fm.step(1.0 / 60.0)
+	if absf(fm.player_hp - (hp_before_boss - 120.0)) > 0.1 and fm.player_hp > hp_before_boss - 119.0:
+		fail("Boss Drum post-teleport light attack must deal 120 damage, hp before=%.1f after=%.1f" % [hp_before_boss, fm.player_hp])
+		return
+
+	# 3) UtilityAI ranged power_up (220 dmg) at 200..400px & global pursuit >400px
+	fm.homing_projectiles.clear()
+	var b_ai: UtilityAIController = bs["ai"] as UtilityAIController
+	b_ai.cooldown_remaining = 0.0
+	b_ai.set_meta(&"drum_phase", "engaged")
+	bs["action_clip"] = ""
+	bs["action_timer_s"] = 0.0
+	arena.player_node.position = Vector2(bnode.position.x + 360.0, float(arena.call("_ground_y_at", bnode.position.x + 360.0)))
+	fm.step(1.0 / 60.0)
+	if str(bs.get("action_clip", "")) != "power_up":
+		fail("Boss Drum UtilityAI at ~360px center distance must cast 'power_up', got '%s'" % str(bs.get("action_clip", "")))
+		return
+	var saw_boss_orb := false
+	for _pw_f in range(60):
+		fm.step(1.0 / 60.0)
+		for pr in fm.homing_projectiles:
+			if not bool(pr.get("is_player", true)) and absf(float(pr.get("damage", 0.0)) - 220.0) < 0.1:
+				saw_boss_orb = true
+	if not saw_boss_orb:
+		fail("Boss Drum power_up must launch homing electric_orb_fx dealing 220 damage")
+		return
+
+	arena.player_node.position = Vector2(3300.0, float(arena.call("_ground_y_at", 3300.0)))
+	bs["action_clip"] = ""
+	bs["action_timer_s"] = 0.0
+	fm._boss_teleport_chase_cd_s = 0.0
+	for _ch_f in range(40):
+		fm.step(1.0 / 60.0)
+	if absf(bnode.position.x - arena.player_node.position.x) > 400.0:
+		fail("Boss Drum must globally pursue & teleport to Hero at x=3300 (>400px away), got x=%.1f" % bnode.position.x)
+		return
+
+	# 4) Manual HUD summon button & Boss KO -> 100% Dragon Ball drop + 30' (1800s) respawn cooldown
+	if DisplayServer.get_name() != "headless" and (arena.boss_spawn_button == null or arena.boss_spawn_button.text != "⚡ Gọi Boss Drum"):
+		fail("ArenaSandbox must expose '⚡ Gọi Boss Drum' manual test button")
+		return
+	arena.enable_field_mode(true, true)
+	var b_manual: Dictionary = arena.spawn_boss_drum_now()
+	if b_manual.is_empty() or not bool(b_manual.get("alive", false)):
+		fail("spawn_boss_drum_now() button helper must spawn alive Boss Drum")
+		return
+	await process_frame
+	if "Boss Drum:" not in arena.hud_label.text:
+		fail("HUD must show alive Boss Drum HP status, got '%s'" % arena.hud_label.text)
+		return
+
+	var drops_before: int = arena._dropped_item_nodes.size()
+	fm.apply_damage_to_slot(fm.boss_slot, 5000.0, 20.0)
+	if bool(fm.boss_slot.get("alive", true)) or absf(fm.boss_respawn_timer_s - 1800.0) > 0.1:
+		fail("Defeated Boss Drum must set alive=false and 1800s (30') respawn timer (got %.1f)" % fm.boss_respawn_timer_s)
+		return
+	if arena._dropped_item_nodes.size() <= drops_before:
+		fail("Defeated Boss Drum must drop Dragon Ball at 100%% rate")
+		return
+	for _cd30 in range(179):
+		fm.step(10.0)
+	if bool(fm.boss_slot.get("alive", false)):
+		fail("Boss Drum must NOT respawn before 1800s (30') elapsed (rem=%.1f)" % fm.boss_respawn_timer_s)
+		return
+	fm.step(12.0)
+	if not bool(fm.boss_slot.get("alive", false)):
+		fail("Boss Drum must respawn once 1800s (30') elapsed with Hero in map")
 		return
 
 	arena.enable_field_mode(false, false)

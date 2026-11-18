@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-17T12:28:56Z",
+  "updated_at": "2026-11-18T12:58:03Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.16.0",
@@ -152,9 +152,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "COMBAT-005",
-    "status": "completed",
-    "summary": "Giảm thêm 20% hiệu ứng rung (tướng/quái/boss, HIT_SHAKE_SCALE_MUL=0.80) và 20% lóa sáng trúng đòn (HIT_FLASH_BRIGHTNESS_MUL=0.64, HIT_FLASH_ALPHA_MUL=0.80, draw_hit_impact lum=0.64); đồng bộ Web + APK + localhost",
+    "active_task_id": "BOSS-DRUM-MAP-EVENT",
+    "status": "ready_for_owner_human_test",
+    "summary": "Cấu hình Boss Map Drum: đếm 5' (300s) khi có Tướng Player trong map, hồi sinh 30' (1800s) sau KO; HP=5000, Stamina=200, light_dmg=120, power_dmg=220, scale=2.5, Z=30; tên Drum màu đỏ + thanh máu đỏ 152x17px; teleport đến cạnh Tướng khi xuất hiện & tấn công/truy đuổi toàn map bằng UtilityAI; drop Ngọc Rồng 100%; nút ⚡ Gọi Boss Drum trong Sân Tập.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1081,6 +1081,60 @@
       "timestamp": "2026-11-17T12:28:56Z",
       "status": "completed",
       "summary": "Giảm thêm 20% hiệu ứng rung (tướng/quái/boss, HIT_SHAKE_SCALE_MUL=0.80) và 20% lóa sáng trúng đòn (HIT_FLASH_BRIGHTNESS_MUL=0.64, HIT_FLASH_ALPHA_MUL=0.80, draw_hit_impact lum=0.64); đồng bộ Web + APK + localhost"
+    },
+    {
+      "id": "LOCAL-001",
+      "timestamp": "2026-11-18T06:01:46Z",
+      "status": "completed",
+      "summary": "Khởi chạy preview localhost:8080; HTTP GET / trả 200."
+    },
+    {
+      "id": "MAP-RIVER-EXTENSION",
+      "timestamp": "2026-11-18T07:31:00Z",
+      "status": "human_test_pending",
+      "summary": "Review map +1800px, hai bậc X4877/X5643, 2 quái bộ + 2 quái bay, 3 cây tiền cảnh; Godot Web/APK export và ./loop.sh test exit 0; chờ Owner xem seam trên K70E."
+    },
+    {
+      "id": "MAP-STEP-EDGE-FIX",
+      "timestamp": "2026-11-18T09:31:44Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien review map noi sau mat san combined-depth-review.png (hieu chuan duong noi x=4800), 3 cay tren dai co sau X4940/5420/6050 khong cat tan/choi, va HUD MobileActionPad theo image copy 8.png (analog, nut hanh dong vector + vong xanh, mini-map khong de nut); dong bo Godot Web + Android APK cho Owner Human Test."
+    },
+    {
+      "id": "MAP-STEP-CLIFF-TREES-FX",
+      "timestamp": "2026-11-18T11:08:46Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Chuan hoa mat cat 2.5D 4 bac (wall_x=[2876,3724,4778,5582] + wall_pad<=48 + truot mep roi), xuat planted-trees-review.png co re cam dat cho 3 cay, xoa mini-map WorldPositionMap, giam 40% tuong phan hit-flash/blink (0.60) va nang cap FX va cham danh thuong (melee) & danh nang (heavy); dong bo Web + APK + localhost:8080 cho Owner Human Test."
+    },
+    {
+      "id": "MAP-TREE-REPOSITION",
+      "timestamp": "2026-11-18T11:37:01Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Dua cay #1 len buc trai cach mat cat bac 3 ~30px (X=4695), ha toan bo 3 cay xuong +20px (Y=[828,888,954]) va dong bo Web + APK + localhost:8080."
+    },
+    {
+      "id": "MAP-TREE-CANOPY-PLUS30",
+      "timestamp": "2026-11-18T11:48:19Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Tang kich thuoc tan la cua ca 3 cay len +30% trong planted-trees-review.png (2027x1088, chuyen tiep muot ve than/re 1.0x), cap nhat ArenaSandbox + test_arena_sandbox + dong bo Web, APK & localhost:8080."
+    },
+    {
+      "id": "DAMAGE-POPUP-PLUS20",
+      "timestamp": "2026-11-18T12:21:03Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Tang kich thuoc diem sat thuong noi them 20% (FLOATING_DAMAGE_FONT_SIZE=24/outline=5 trong OverheadBarsDraw.gd va 26px trong tools/preview/index.html), cap nhat test & dong bo Web, APK, localhost:8080."
+    },
+    {
+      "id": "MONSTER-RESPAWN-12S",
+      "timestamp": "2026-11-18T12:39:17Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Tang thoi gian quai hoi sinh trong FieldCombatManager.gd tu 7.0s len 12.0s (RESPAWN_MONSTER_DELAY_S=12.0), cap nhat test_arena_sandbox.gd va dong bo Web + APK."
+    },
+    {
+      "id": "BOSS-DRUM-MAP-EVENT",
+      "timestamp": "2026-11-18T12:58:03Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Cấu hình Boss Map Drum: đếm 5' (300s) khi có Tướng Player trong map, hồi sinh 30' (1800s) sau KO; HP=5000, Stamina=200, light_dmg=120, power_dmg=220, scale=2.5, Z=30; tên Drum màu đỏ + thanh máu đỏ 152x17px; teleport đến cạnh Tướng khi xuất hiện & tấn công/truy đuổi toàn map bằng UtilityAI; drop Ngọc Rồng 100%; nút ⚡ Gọi Boss Drum trong Sân Tập."
     }
   ],
   "quick_resume_commands": [
