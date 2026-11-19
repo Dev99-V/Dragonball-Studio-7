@@ -234,6 +234,105 @@ class GovernanceAndPreviewTests(unittest.TestCase):
         )
         self.assertEqual(res.returncode, 0, msg=f"Frontend E2E failed:\n{res.stdout}\n{res.stderr}")
 
+    def test_server_auto_godot_web_bootstrap_contract(self) -> None:
+        import tempfile
+
+        args_default = preview_server.parse_cli_args([])
+        self.assertFalse(args_default.no_auto_godot, "Server must auto-bootstrap Godot Web by default")
+        self.assertEqual(args_default.port, 8080)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tdir = pathlib.Path(tmp)
+            self.assertFalse(preview_server.is_godot_web_built(tdir))
+            for fname in ("index.html", "index.pck", "index.wasm", "index.js"):
+                (tdir / fname).write_text("ok", encoding="utf-8")
+            self.assertTrue(preview_server.is_godot_web_built(tdir))
+
+        st = preview_server.get_godot_web_bootstrap_status()
+        for key in ("state", "godot_version", "godot_installed", "templates_installed", "godot_web_ready"):
+            self.assertIn(key, st)
+
+        install_txt = (REPO_ROOT / "tools" / "godot" / "install_godot.sh").read_text(encoding="utf-8")
+        self.assertIn("--with-templates", install_txt)
+        loop_txt = (REPO_ROOT / "loop.sh").read_text(encoding="utf-8")
+        self.assertIn("serve)", loop_txt)
+        self.assertIn("build/.gdignore", loop_txt)
+
+    def test_godot_zip_completeness_ios_preset_and_d8_compliance(self) -> None:
+        import io
+        import zipfile
+
+        zbytes = preview_server.build_godot_zip_bytes()
+        with zipfile.ZipFile(io.BytesIO(zbytes)) as zf:
+            names = set(zf.namelist())
+        for req in (
+            "assets/fx/powerup_explosion/powerup_explosion.tres",
+            "assets/body_silhouettes.json",
+            "assets/app_icon/icon_512.png",
+            "assets/maps/rocky_plateau/rocky-plateau-extended-4steps.png",
+            "assets/maps/rocky_plateau/rocky-plateau-foreground-trees.png",
+        ):
+            self.assertIn(req, names, f"Godot ZIP missing required runtime asset: {req}")
+
+        html_txt = (REPO_ROOT / "tools" / "preview" / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn("GDExtension", html_txt, "index.html must not claim GDExtension (AGENTS.md D8)")
+
+        presets_txt = (REPO_ROOT / "export_presets.cfg").read_text(encoding="utf-8")
+        self.assertIn("architectures/arm64-v8a=true", presets_txt)
+        self.assertIn("architectures/x86_64=false", presets_txt)
+        self.assertIn("progressive_web_app/enabled=true", presets_txt)
+        self.assertIn('platform="iOS"', presets_txt)
+
+        self.assertTrue((REPO_ROOT / ".github" / "workflows" / "build-ios-ipa.yml").is_file())
+        self.assertTrue((REPO_ROOT / "tools" / "infra" / "install_cloud_clis.sh").is_file())
+        self.assertTrue((REPO_ROOT / "tools" / "ios" / "generate_altstore_source.py").is_file())
+        self.assertTrue((REPO_ROOT / "tools" / "ios" / "repack_ios_pck.sh").is_file())
+        self.assertTrue((REPO_ROOT / "docs" / "ios" / "sideload-and-testflight-setup.md").is_file())
+
+        # Verify locked 5-language i18n pack (default en, settings-only change)
+        i18n_cfg = json.loads((REPO_ROOT / "assets" / "i18n" / "languages.json").read_text(encoding="utf-8"))
+        self.assertEqual(i18n_cfg["default_locale"], "en")
+        self.assertFalse(i18n_cfg["auto_detect_os_locale"])
+        self.assertTrue(i18n_cfg["change_only_in_settings"])
+        codes = [loc["code"] for loc in i18n_cfg["supported_locales"]]
+        self.assertEqual(codes, ["en", "zh-CN", "vi", "es", "pt-BR"])
+
+        # Verify AltStore / SideStore source JSON generator
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_ipa = pathlib.Path(tmp) / "test.ipa"
+            fake_ipa.write_bytes(b"PK\x03\x04dr7-test-ipa")
+            out_json = pathlib.Path(tmp) / "altstore-source.json"
+            res = subprocess.run(
+                [
+                    sys.executable,
+                    str(REPO_ROOT / "tools" / "ios" / "generate_altstore_source.py"),
+                    "--version", "0.16.0",
+                    "--ipa", str(fake_ipa),
+                    "--download-url", "https://example.com/dr7.ipa",
+                    "--output", str(out_json),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(res.returncode, 0, res.stderr)
+            src = json.loads(out_json.read_text(encoding="utf-8"))
+            self.assertEqual(src["apps"][0]["bundleIdentifier"], "com.dr7studio.dragonball2d")
+            self.assertEqual(src["apps"][0]["versions"][0]["size"], fake_ipa.stat().st_size)
+            self.assertEqual(src["apps"][0]["appPermissions"]["entitlements"], [])
+
+            # Verify server get_ios_ipa_info metadata contract
+            ipa_meta = preview_server.get_ios_ipa_info(fake_ipa, fake_ipa)
+            self.assertTrue(ipa_meta["available"])
+            self.assertEqual(ipa_meta["download_url"], "/api/download-ios-unsigned.ipa")
+            self.assertEqual(ipa_meta["altstore_source_url"], "/api/ios-altstore-source.json")
+            self.assertTrue(ipa_meta["base_ipa_present"])
+
+        loop_txt2 = (REPO_ROOT / "loop.sh").read_text(encoding="utf-8")
+        self.assertIn("build-all)", loop_txt2)
+        self.assertIn("ios-repack)", loop_txt2)
+
 
 if __name__ == "__main__":
     unittest.main()

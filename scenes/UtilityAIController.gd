@@ -37,14 +37,19 @@ func configure_from_stage(stage_config: Dictionary) -> void:
 	zone_width_px = minf(zone_width_max_px, float(uc.get("zone_width_default_px", 480.0)))
 
 
-func reset_zone(center_x: float, walkable_min_x: float, walkable_max_x: float) -> void:
-	var half := minf(zone_width_px, zone_width_max_px) * 0.5
+func reset_zone(center_x: float, walkable_min_x: float, walkable_max_x: float, ignore_width_cap: bool = false) -> void:
 	var min_allowed := walkable_min_x
 	var max_allowed := walkable_max_x
-	var span := maxf(40.0, minf(zone_width_max_px, half * 2.0))
-	home_x = clampf(center_x, min_allowed + span * 0.5, max_allowed - span * 0.5)
-	zone_min_x = clampf(home_x - span * 0.5, min_allowed, max_allowed)
-	zone_max_x = clampf(home_x + span * 0.5, zone_min_x + 40.0, max_allowed)
+	if ignore_width_cap:
+		zone_min_x = min_allowed
+		zone_max_x = maxf(min_allowed + 40.0, max_allowed)
+		home_x = clampf(center_x, zone_min_x, zone_max_x)
+	else:
+		var half := minf(zone_width_px, zone_width_max_px) * 0.5
+		var span := maxf(40.0, minf(zone_width_max_px, half * 2.0))
+		home_x = clampf(center_x, min_allowed + span * 0.5, max_allowed - span * 0.5)
+		zone_min_x = clampf(home_x - span * 0.5, min_allowed, max_allowed)
+		zone_max_x = clampf(home_x + span * 0.5, zone_min_x + 40.0, max_allowed)
 	cooldown_remaining = 0.0
 	light_chain_count = 0
 	patrol_dir = -1

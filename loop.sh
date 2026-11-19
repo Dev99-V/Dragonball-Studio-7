@@ -269,6 +269,11 @@ PY
 
   web-export)
     mkdir -p "$ROOT_DIR/build/web"
+    touch "$ROOT_DIR/build/.gdignore"
+    if [ ! -x "$ROOT_DIR/tools/godot/godot" ] || [ ! -f "$HOME/.local/share/godot/export_templates/4.7.2.stable/web_nothreads_release.zip" ]; then
+      echo "[loop.sh] Đang tự động tải Godot 4.7.2 + Export Templates cho Godot Web..."
+      bash "$ROOT_DIR/tools/godot/install_godot.sh" --with-templates
+    fi
     echo "[loop.sh] Importing & exporting Godot 4.7.2 Web (Compatibility)..."
     "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --editor --import >/dev/null
     "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --export-release "Web" "$ROOT_DIR/build/web/index.html"
@@ -287,10 +292,58 @@ PY
 
   apk-debug)
     mkdir -p "$ROOT_DIR/build/android"
+    touch "$ROOT_DIR/build/.gdignore"
+    if [ ! -x "$ROOT_DIR/tools/godot/godot" ] || [ ! -f "$HOME/.local/share/godot/export_templates/4.7.2.stable/android_debug.apk" ]; then
+      echo "[loop.sh] Đang tự động tải Godot 4.7.2 + Export Templates cho Android APK..."
+      bash "$ROOT_DIR/tools/godot/install_godot.sh" --with-templates
+    fi
     echo "[loop.sh] Importing & exporting Godot 4.7.2 Android Debug APK..."
     "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --editor --import >/dev/null
     "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --export-debug "Android" "$ROOT_DIR/build/android/dr7-studio-debug.apk"
     echo "[OK] Android APK xuất xong tại build/android/dr7-studio-debug.apk"
+    ;;
+
+  ios-repack)
+    shift || true
+    BASE_IPA="${1:-$ROOT_DIR/build/ios/base/dr7-studio-base.ipa}"
+    OUT_IPA="$ROOT_DIR/build/ios/dr7-studio-unsigned.ipa"
+    APP_VER="$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")"
+    if [ ! -f "$BASE_IPA" ]; then
+      echo "[WARN] Chưa có base iOS IPA tại: $BASE_IPA" >&2
+      echo "       Hãy chạy 1 lần workflow GitHub Actions 'Build iOS IPA' (signing_mode=unsigned_sideload)," >&2
+      echo "       tải file .ipa nền đặt vào build/ios/base/dr7-studio-base.ipa rồi chạy lại './loop.sh ios-repack' hoặc './loop.sh build-all'." >&2
+      exit 2
+    fi
+    bash "$ROOT_DIR/tools/ios/repack_ios_pck.sh" "$BASE_IPA" "$OUT_IPA"
+    python3 "$ROOT_DIR/tools/ios/generate_altstore_source.py" \
+      --version "$APP_VER" \
+      --ipa "$OUT_IPA" \
+      --download-url "/api/download-ios-unsigned.ipa" \
+      --source-url "/api/ios-altstore-source.json" \
+      --icon-url "/assets/app_icon/icon_512.png" \
+      --output "$ROOT_DIR/build/ios/altstore-source.json"
+    echo "[OK] iOS IPA đồng bộ sẵn sàng tại $OUT_IPA"
+    ;;
+
+  build-all)
+    echo "[loop.sh] === Đồng bộ 1:1 Web + Android APK + iOS IPA (Localhost Human Test) ==="
+    "$ROOT_DIR/loop.sh" web-export
+    "$ROOT_DIR/loop.sh" apk-debug
+    if [ -f "$ROOT_DIR/build/ios/base/dr7-studio-base.ipa" ]; then
+      "$ROOT_DIR/loop.sh" ios-repack "$ROOT_DIR/build/ios/base/dr7-studio-base.ipa"
+    else
+      echo "[INFO] Bỏ qua repack iOS IPA tự động vì chưa có build/ios/base/dr7-studio-base.ipa (cần tải 1 lần từ GitHub Actions macos-latest)."
+    fi
+    echo "[loop.sh] === Tóm tắt SHA-256 đồng bộ bản build ==="
+    sha256sum "$ROOT_DIR/build/web/index.pck" "$ROOT_DIR/build/android/dr7-studio-debug.apk"
+    if [ -f "$ROOT_DIR/build/ios/dr7-studio-unsigned.ipa" ]; then
+      sha256sum "$ROOT_DIR/build/ios/dr7-studio-unsigned.ipa"
+    fi
+    ;;
+
+  serve)
+    shift
+    exec python3 "$ROOT_DIR/tools/preview/server.py" "$@"
     ;;
 
   test)
@@ -325,7 +378,7 @@ PY
     ;;
 
   *)
-    echo "Cách dùng: ./loop.sh {status|check|test|web-export|apk-debug|log-task <ID> <status> <summary>|--agy-session-start}" >&2
+    echo "Cách dùng: ./loop.sh {status|check|test|serve|web-export|apk-debug|ios-repack [base.ipa]|build-all|log-task <ID> <status> <summary>|--agy-session-start}" >&2
     exit 1
     ;;
 esac

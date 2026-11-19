@@ -36,6 +36,7 @@ const CLASH_EXPLOSION_SCALE := 0.58
 const HIT_FLASH_BRIGHTNESS_MUL := 0.64
 const HIT_FLASH_ALPHA_MUL := 0.80
 const HIT_FLASH_CONTRAST_MUL := 0.60
+const HIT_FLASH_BRIGHTNESS_BOOST := 1.40
 const HIT_SHAKE_SCALE_MUL := 0.80
 const POINTER_X_SHOW_DURATION_S := 0.75
 
@@ -125,6 +126,7 @@ var player_hit_shake_s: float = 0.0
 var hit_impacts: Array[Dictionary] = []
 var floating_texts: Array[Dictionary] = []
 var _explosion_nodes: Array[AnimatedSprite2D] = []
+var _fx_frames_cache: Dictionary = {}
 
 
 func setup(owner_arena: Node2D) -> void:
@@ -369,6 +371,11 @@ func _spawn_slot_monster(slot: Dictionary, cid: String) -> void:
 		pfx.visible = false
 		pfx.modulate = Color(1.0, 1.0, 1.0, 0.0)
 		pfx.scale = Vector2.ZERO
+	var ffx := inst.get_node_or_null("FireballFX") as AnimatedSprite2D
+	if ffx != null:
+		ffx.visible = false
+		ffx.modulate = Color(1.0, 1.0, 1.0, 0.0)
+		ffx.sprite_frames = null
 
 
 func step(delta: float) -> void:
@@ -399,11 +406,18 @@ func step(delta: float) -> void:
 	# 4. Apply hit flashes, shakes, pointer fade & impact/text timers immediately after combat updates
 	_step_hit_visuals(delta)
 
-	# 5. Tick dropped item ages (for 1s pickup delay)
-	for item_n in arena._dropped_item_nodes:
-		if is_instance_valid(item_n):
-			var age := float(item_n.get_meta(&"drop_age_s", 0.0)) + delta
-			item_n.set_meta(&"drop_age_s", age)
+	# 5. Tick dropped item ages (for 1s pickup delay) & prune collected item nodes to avoid leak
+	for i in range(arena._dropped_item_nodes.size() - 1, -1, -1):
+		var item_n := arena._dropped_item_nodes[i] as Node2D
+		if item_n == null or not is_instance_valid(item_n):
+			arena._dropped_item_nodes.remove_at(i)
+			continue
+		if str(item_n.get("lifecycle_state")) == "collected":
+			arena._dropped_item_nodes.remove_at(i)
+			item_n.queue_free()
+			continue
+		var age := float(item_n.get_meta(&"drop_age_s", 0.0)) + delta
+		item_n.set_meta(&"drop_age_s", age)
 
 	refresh_pointer_valid()
 
@@ -464,7 +478,14 @@ func spawn_boss_drum(forced_spawn_x: float = -999999.0) -> Dictionary:
 	var ai := UtilityAIControllerScript.new()
 	if arena.stage_config is Dictionary:
 		ai.configure_from_stage(arena.stage_config)
-	ai.reset_zone((boss_bounds.x + boss_bounds.y) * 0.5, boss_bounds.x, boss_bounds.y)
+	ai.reset_zone((boss_bounds.x + boss_bounds.y) * 0.5, boss_bounds.x, boss_bounds.y, true)
+
+	# Free any previous dead/stale Boss Drum node before replacing boss_slot (prevents node leak).
+	var stale_boss_node := boss_slot.get("node") as Node2D
+	if stale_boss_node != null and is_instance_valid(stale_boss_node):
+		if stale_boss_node.get_parent() != null:
+			stale_boss_node.get_parent().remove_child(stale_boss_node)
+		stale_boss_node.queue_free()
 
 	boss_slot = {
 		"id": "boss_drum",
@@ -586,16 +607,13 @@ func _step_boss_drum_ai(slot: Dictionary, delta: float) -> void:
 		_step_slot_patrol(slot, delta)
 		return
 
-	if float(slot["stun_timer_s"]) > 0.0:
-		arena.call("_ensure_fighter_locomotion", mnode, "idle", bool(slot["preserve_phase"]))
-		return
-
+	var can_counter_attack := float(slot["stun_timer_s"]) <= 0.0
 	var px: float = arena.player_node.position.x
 	var py: float = arena.player_node.position.y
 	var self_rect := _get_slot_body_rect(slot)
 	var target_rect := _get_player_body_rect()
 	var res: Dictionary = {}
-	if ai != null:
+	if ai != null and can_counter_attack:
 		res = ai.evaluate({
 			"character_id": "drum",
 			"is_flying": false,
@@ -623,7 +641,7 @@ func _step_boss_drum_ai(slot: Dictionary, delta: float) -> void:
 	var dy := absf(py - mnode.position.y)
 	var edge_dist := float(res.get("edge_dist", _compute_slot_edge_gap(slot)))
 
-	if intent == "attack":
+	if can_counter_attack and intent == "attack":
 		var clip := str(res.get("attack_clip", "attack_light"))
 		if clip == "attack_light" and dy > 110.0 and _boss_teleport_chase_cd_s <= 0.0:
 			if ai != null:
@@ -634,12 +652,12 @@ func _step_boss_drum_ai(slot: Dictionary, delta: float) -> void:
 			return
 		_start_slot_attack(slot, clip, 0.0)
 		return
-	elif intent == "wait_cooldown":
+	elif intent == "wait_cooldown" or (not can_counter_attack and edge_dist <= 50.0):
 		arena.call("_ensure_fighter_locomotion", mnode, "idle", bool(slot["preserve_phase"]))
 		return
 
 	# Hero moved past 400px UtilityAI engagement range or high vertical elevation: global map pursuit!
-	if _boss_teleport_chase_cd_s <= 0.0 or (dy > 110.0 and edge_dist >= 200.0):
+	if can_counter_attack and (_boss_teleport_chase_cd_s <= 0.0 or (dy > 110.0 and edge_dist >= 200.0)):
 		if ai != null:
 			ai.set_meta(&"drum_engaged", true)
 			ai.set_meta(&"drum_phase", "post_teleport_light")
@@ -850,6 +868,20 @@ func request_player_primary_action() -> bool:
 	return false
 
 
+func request_player_heavy_action() -> bool:
+	if not player_spawned or player_dead or arena.player_node == null:
+		return false
+	cancel_auto_approach()
+	var tgt := _resolve_player_attack_target(false)
+	if not tgt.is_empty():
+		var m_core := _get_slot_core_pos(tgt)
+		_face_player_toward_x(m_core.x)
+	if bool(arena.call("_request_player_action", "attack_heavy")):
+		_player_melee_pending = true
+		return true
+	return false
+
+
 func request_player_power_up() -> bool:
 	if not player_spawned or player_dead or arena.player_node == null:
 		return false
@@ -906,7 +938,11 @@ func _launch_player_homing_orb() -> void:
 		return
 	var dir_x: float = -1.0 if arena.player_node.scale.x < 0.0 else 1.0
 	var start_pos: Vector2 = arena.player_node.position + Vector2(42.0 * dir_x * float(arena.char_scale), -28.0 * float(arena.char_scale))
-	_spawn_homing_projectile(arena.player_node, "drum", "electric_orb_fx", start_pos, float(arena.char_scale), tgt, true, PLAYER_POWER_DMG, STAMINA_PER_HIT)
+	var cid: String = str(arena.active_character_id) if not str(arena.active_character_id).is_empty() else "drum"
+	var fx_clip := _resolve_fx_clip_for_character(cid)
+	if fx_clip.is_empty():
+		fx_clip = "electric_orb_fx"
+	_spawn_homing_projectile(arena.player_node, cid, fx_clip, start_pos, float(arena.char_scale), tgt, true, PLAYER_POWER_DMG, STAMINA_PER_HIT)
 
 
 func _spawn_powerup_explosion(world_pos: Vector2, scale_val: float = 0.85) -> void:
@@ -960,8 +996,15 @@ static func _apply_hit_flash_modulate(spr: AnimatedSprite2D, flash_active: bool,
 		base.b * HIT_FLASH_BRIGHTNESS_MUL,
 		base.a * HIT_FLASH_ALPHA_MUL
 	)
-	# Reduce hit-flash and blink contrast by 40% (60% remaining contrast relative to Color.WHITE).
-	spr.modulate = Color.WHITE.lerp(raw_flash, HIT_FLASH_CONTRAST_MUL)
+	# Reduce hit-flash/blink contrast by 40%, then lift brightness by +40% (Owner human-test request 2026-11-19)
+	# so heroes/monsters stay bright and visually legible instead of darkening on hit.
+	var blended := Color.WHITE.lerp(raw_flash, HIT_FLASH_CONTRAST_MUL)
+	spr.modulate = Color(
+		minf(1.35, blended.r * HIT_FLASH_BRIGHTNESS_BOOST),
+		minf(1.35, blended.g * HIT_FLASH_BRIGHTNESS_BOOST),
+		minf(1.35, blended.b * HIT_FLASH_BRIGHTNESS_BOOST),
+		blended.a
+	)
 
 
 func _step_hit_visuals(delta: float) -> void:
@@ -1155,14 +1198,16 @@ func roll_and_spawn_dragon_ball(world_pos: Vector2, forced_gate_roll: float = -1
 	if ball_num <= 0:
 		return null
 	arena.item_drop_enabled = true
+	arena.call("_sync_item_toggle_button")
 	var layer: Node2D = arena.call("_ensure_item_drop_layer")
-	layer.z_index = 50 # Top layer: never occluded by player or monsters
+	layer.z_index = 45 # Above FightersLayer (10) & Boss (40), below Shenron (52) & FieldOverlayLayer (65)
 	var floor_y := float(arena.call("_ground_y_at", world_pos.x))
 	var px: float = arena.player_node.position.x if arena.player_node != null else world_pos.x - 40.0
 	var roll_dir := -1.0 if px <= world_pos.x else 1.0
 	var item := arena.DragonBallItemScene.instantiate() as Node2D
 	item.set("ball_number", ball_num)
-	item.z_index = 50
+	item.set("ground_y_resolver", Callable(arena, "_ground_y_at"))
+	item.z_index = 0
 	item.set_meta(&"drop_age_s", 0.0)
 	if item.has_signal("collected"):
 		item.connect("collected", arena._on_dropped_item_collected)
@@ -1399,11 +1444,19 @@ func _face_slot_toward(slot: Dictionary, want_left: bool) -> void:
 	mnode.scale = Vector2(-sc if want_left else sc, sc)
 
 
+func _get_clamped_slot_target_pos(slot: Dictionary) -> Vector2:
+	if arena == null or arena.player_node == null:
+		return Vector2(float(slot.get("x_home", 0.0)), float(slot.get("y_home", 840.0)))
+	var tx := clampf(arena.player_node.position.x, float(slot.get("zone_min_x", -240.0)), float(slot.get("zone_max_x", 6360.0)))
+	var ty := float(arena.call("_ground_y_at", tx))
+	return Vector2(tx, ty)
+
+
 func _start_slot_attack(slot: Dictionary, clip: String, cd_s: float) -> void:
 	var mnode := slot["node"] as Node2D
 	var cid := str(slot["character_id"])
 	if cid == "chilopoda" and mnode.has_method(&"set_combat_target_global") and arena.player_node != null:
-		mnode.call(&"set_combat_target_global", arena.player_node.position)
+		mnode.call(&"set_combat_target_global", _get_clamped_slot_target_pos(slot))
 	elif cid == "dilophosaurus" and mnode.has_method(&"set_slash_target_global") and arena.player_node != null:
 		mnode.call(&"set_slash_target_global", arena.player_node.position)
 	if bool(arena.call("_play_fighter_clip", mnode, clip)):
@@ -1430,7 +1483,10 @@ func _step_slot_action_effects(slot: Dictionary, spr: AnimatedSprite2D, force_re
 	if cid == "dilophosaurus" and clip == "power_up" and mnode.has_method(&"set_slash_target_global") and arena.player_node != null:
 		mnode.call(&"set_slash_target_global", _get_player_core_pos())
 	elif cid == "chilopoda" and clip == "power_up" and mnode.has_method(&"set_combat_target_global") and arena.player_node != null:
-		mnode.call(&"set_combat_target_global", arena.player_node.position)
+		mnode.call(&"set_combat_target_global", _get_clamped_slot_target_pos(slot))
+	elif cid == "chilopoda" and clip == "attack_light":
+		mnode.position.x = clampf(mnode.position.x, float(slot["zone_min_x"]), float(slot["zone_max_x"]))
+		mnode.position.y = float(arena.call("_ground_y_at", mnode.position.x))
 	var is_ranged_power := (clip == "power_up") or (cid == "floating_camera" and clip == "attack_light")
 	if is_ranged_power and not bool(slot["power_released"]):
 		var rel_frame := 2
@@ -1507,10 +1563,15 @@ func _spawn_homing_projectile(owner_node: Node2D, cid: String, fx_clip: String, 
 	var pivot_arr: Variant = entry.get("render_contract", {}).get("fx_pivot_px", [176.0, 128.0])
 	var pivot := Vector2(float(pivot_arr[0]), float(pivot_arr[1])) if (pivot_arr is Array and pivot_arr.size() >= 2) else Vector2(64.0, 48.0)
 
+	var cache_key := "%s:%s" % [cid, fx_clip]
+	var cached_frames := _fx_frames_cache.get(cache_key) as SpriteFrames
+	if cached_frames == null:
+		cached_frames = spr.sprite_frames.duplicate() as SpriteFrames
+		cached_frames.set_animation_loop(StringName(fx_clip), true)
+		_fx_frames_cache[cache_key] = cached_frames
 	var fx := AnimatedSprite2D.new()
 	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	fx.sprite_frames = spr.sprite_frames.duplicate() as SpriteFrames
-	fx.sprite_frames.set_animation_loop(StringName(fx_clip), true)
+	fx.sprite_frames = cached_frames
 	fx.centered = false
 	fx.offset = -pivot
 	fx.scale = Vector2(sc, sc)

@@ -7,10 +7,10 @@ extends Node2D
 
 const STAGE_JSON_PATH := "res://assets/maps/rocky_plateau/arena-stage.json"
 const TERRAIN_JSON_PATH := "res://assets/maps/rocky_plateau/terrain.json"
-const EXTENDED_MAP_PATH := "res://review/rocky_plateau_extension/combined-depth-review.png"
-const FOREGROUND_PLANTED_TREES_PATH := "res://review/rocky_plateau_extension/planted-trees-review.png"
-const FOREGROUND_TREES_PATH := "res://review/rocky_plateau_extension/three-trees-draft.png"
-const FOREGROUND_TREES_COMPLETE_PATH := "res://review/rocky_plateau_extension/two-trees-complete-review.png"
+const EXTENDED_MAP_PATH := "res://assets/maps/rocky_plateau/rocky-plateau-extended-4steps.png"
+const FOREGROUND_PLANTED_TREES_PATH := "res://assets/maps/rocky_plateau/rocky-plateau-foreground-trees.png"
+const FOREGROUND_TREES_PATH := "res://assets/maps/rocky_plateau/rocky-plateau-foreground-trees.png"
+const FOREGROUND_TREES_COMPLETE_PATH := "res://assets/maps/rocky_plateau/rocky-plateau-foreground-trees.png"
 const MAP_LEFT_X := -240.0
 const MAP_RIGHT_X := 6360.0
 const MAP_TOP_Y := -210.0
@@ -244,7 +244,10 @@ func set_pixel_perfect_enabled(enabled: bool, sim_win_size: Vector2i = Vector2i.
 	if mobile_pad != null and is_instance_valid(mobile_pad):
 		mobile_pad.apply_safe_area(display_layout_info)
 	if pixel_perfect_button != null:
-		pixel_perfect_button.text = "Pixel: Perfect" if pixel_perfect_enabled else "Pixel: Fractional"
+		if bool(display_layout_info.get("below_1080p_guard", false)) and pixel_perfect_enabled:
+			pixel_perfect_button.text = "Pixel: Guard (<1080p)"
+		else:
+			pixel_perfect_button.text = "Pixel: Integer" if bool(display_layout_info.get("pixel_perfect_applied", false)) else "Pixel: Fractional"
 	return display_layout_info
 
 
@@ -300,7 +303,7 @@ func _ensure_field_manager() -> void:
 	if _field_overlay_node == null or not is_instance_valid(_field_overlay_node):
 		_field_overlay_node = Node2D.new()
 		_field_overlay_node.name = "FieldOverlayLayer"
-		_field_overlay_node.z_index = 60
+		_field_overlay_node.z_index = 65
 		add_child(_field_overlay_node)
 		_field_overlay_node.draw.connect(_on_field_overlay_draw)
 
@@ -405,7 +408,10 @@ func _on_touch_action(action_name: String) -> void:
 		else:
 			_request_player_action("power_up")
 	elif action_name in ["attack_heavy"]:
-		_request_player_action(action_name)
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_heavy_action()
+		else:
+			_request_player_action(action_name)
 
 
 func _is_fighter_turning(fighter: Node) -> bool:
@@ -702,6 +708,7 @@ func _setup_ruler_control() -> void:
 	ruler_modal.modal_closed.connect(func() -> void:
 		set_ruler_modal_visible(false)
 	)
+	ruler_modal.set_step_edges(_get_terrain_step_edges())
 	_apply_hud_safe_area()
 
 
@@ -942,6 +949,8 @@ func set_field_hero_visible(visible_flag: bool) -> void:
 func set_ruler_modal_visible(visible_flag: bool) -> void:
 	ruler_modal_visible = visible_flag
 	if ruler_modal != null and is_instance_valid(ruler_modal):
+		if visible_flag:
+			ruler_modal.set_step_edges(_get_terrain_step_edges())
 		ruler_modal.visible = visible_flag
 	if visible_flag:
 		_sync_ruler_ui()
@@ -974,10 +983,36 @@ func set_ruler_points(point_a: Vector2, point_b: Vector2) -> Dictionary:
 	return get_ruler_metrics()
 
 
+func _resolve_ruler_enemy_target() -> Dictionary:
+	if dummy_node != null and is_instance_valid(dummy_node):
+		return {"node": dummy_node, "cid": enemy_character_id, "scale": enemy_scale}
+	if field_mode_enabled and field_manager != null and field_manager.active:
+		var chosen: Dictionary = {}
+		if field_manager.pointer_kind == "enemy" and not str(field_manager.pointer_slot_id).is_empty():
+			for s in field_manager._get_combat_slots():
+				if str(s.get("id", "")) == str(field_manager.pointer_slot_id) and bool(s.get("alive", false)) and is_instance_valid(s.get("node")):
+					chosen = s
+					break
+		if chosen.is_empty():
+			var ref_x := player_node.position.x if player_node != null else player_spawn_x
+			var best_d := 1e9
+			for s in field_manager._get_combat_slots():
+				if bool(s.get("alive", false)) and is_instance_valid(s.get("node")):
+					var d := absf((s["node"] as Node2D).position.x - ref_x)
+					if d < best_d:
+						best_d = d
+						chosen = s
+		if not chosen.is_empty():
+			return {"node": chosen["node"], "cid": str(chosen.get("character_id", "")), "scale": float(chosen.get("scale_val", 2.0))}
+	return {}
+
+
 func measure_player_enemy_distance() -> Dictionary:
-	if player_node != null and dummy_node != null:
+	var enemy_tgt := _resolve_ruler_enemy_target()
+	var enode := enemy_tgt.get("node") as Node2D
+	if player_node != null and enode != null:
 		ruler_point_a = Vector2(roundf(player_node.position.x), roundf(player_node.position.y))
-		ruler_point_b = Vector2(roundf(dummy_node.position.x), roundf(dummy_node.position.y))
+		ruler_point_b = Vector2(roundf(enode.position.x), roundf(enode.position.y))
 		ruler_has_a = true
 		ruler_has_b = true
 	_sync_ruler_ui()
@@ -986,7 +1021,11 @@ func measure_player_enemy_distance() -> Dictionary:
 
 func get_ruler_metrics() -> Dictionary:
 	var p_entry := _find_character_entry_ro(active_character_id)
-	var e_entry := _find_character_entry_ro(enemy_character_id)
+	var enemy_tgt := _resolve_ruler_enemy_target()
+	var enode := enemy_tgt.get("node") as Node2D
+	var ecid := str(enemy_tgt.get("cid", enemy_character_id))
+	var escale := float(enemy_tgt.get("scale", enemy_scale))
+	var e_entry := _find_character_entry_ro(ecid)
 	var p_dims := _get_body_dims(p_entry)
 	var e_dims := _get_body_dims(e_entry)
 	var pw := float(p_dims.x) if p_dims.x > 0 else 140.0
@@ -994,9 +1033,9 @@ func get_ruler_metrics() -> Dictionary:
 	var ew := float(e_dims.x) if e_dims.x > 0 else 140.0
 	var eh := float(e_dims.y) if e_dims.y > 0 else 140.0
 	var p_pos := player_node.position if player_node != null else Vector2(player_spawn_x, ground_y)
-	var e_pos := dummy_node.position if dummy_node != null else Vector2(dummy_spawn_x, ground_y)
+	var e_pos := enode.position if enode != null else Vector2(dummy_spawn_x, ground_y)
 	var r_a: Rect2 = UtilityAIControllerScript.compute_body_rect(p_pos.x, p_pos.y, pw, ph, char_scale)
-	var r_b: Rect2 = UtilityAIControllerScript.compute_body_rect(e_pos.x, e_pos.y, ew, eh, enemy_scale)
+	var r_b: Rect2 = UtilityAIControllerScript.compute_body_rect(e_pos.x, e_pos.y, ew, eh, escale)
 	var edge_gap: float = UtilityAIControllerScript.compute_edge_distance(r_a, r_b)
 	var dx := absf(ruler_point_b.x - ruler_point_a.x) if (ruler_has_a and ruler_has_b) else 0.0
 	var dy := absf(ruler_point_b.y - ruler_point_a.y) if (ruler_has_a and ruler_has_b) else 0.0
@@ -2807,6 +2846,8 @@ func _physics_process(delta: float) -> void:
 				if field_mode_enabled and field_manager != null and field_manager.active:
 					if aname == "attack_light":
 						field_manager.request_player_primary_action()
+					elif aname == "attack_heavy":
+						field_manager.request_player_heavy_action()
 					elif aname == "power_up":
 						field_manager.request_player_power_up()
 					else:
@@ -2953,7 +2994,7 @@ func _is_point_over_hud_controls(screen_pos: Vector2) -> bool:
 		return true
 	if mobile_pad != null and is_instance_valid(mobile_pad) and bool(mobile_pad.call("is_screen_point_over_pad", screen_pos)):
 		return true
-	for ctrl in [summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, pixel_perfect_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, monster_range_button]:
+	for ctrl in [summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, pixel_perfect_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, monster_range_button, boss_spawn_button]:
 		if ctrl != null and is_instance_valid(ctrl) and (ctrl as Control).visible:
 			if (ctrl as Control).get_global_rect().has_point(screen_pos):
 				return true
@@ -3090,7 +3131,7 @@ func _draw() -> void:
 		var e_dims := _get_body_dims(_find_character_entry_ro(enemy_character_id))
 		_draw_pixel_contact_shadow(dummy_node.position.x, dummy_node.position.y, float(e_dims.x), enemy_scale, _is_fighter_surface_visible(dummy_node, enemy_character_id))
 	if field_mode_enabled and field_manager != null and field_manager.active:
-		for slot in field_manager.slots:
+		for slot in field_manager._get_combat_slots():
 			if bool(slot.get("alive", false)):
 				var mnode := slot.get("node") as Node2D
 				if mnode != null and is_instance_valid(mnode):
@@ -3207,11 +3248,11 @@ func _ensure_item_drop_layer() -> Node2D:
 	if _item_drop_layer == null or not is_instance_valid(_item_drop_layer):
 		_item_drop_layer = Node2D.new()
 		_item_drop_layer.name = "ItemDropsLayer"
-		_item_drop_layer.z_index = 50
+		_item_drop_layer.z_index = 45
 		_item_drop_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(_item_drop_layer)
 	else:
-		_item_drop_layer.z_index = 50
+		_item_drop_layer.z_index = 45
 	_item_drop_layer.visible = item_drop_enabled
 	return _item_drop_layer
 
@@ -3274,6 +3315,7 @@ func trigger_monster_death_drop(ball_num: int = 0) -> Node2D:
 	var roll_dir := -1.0 if px <= spawn_pos.x else 1.0
 	var item := DragonBallItemScene.instantiate() as Node2D
 	item.set("ball_number", n)
+	item.set("ground_y_resolver", Callable(self, "_ground_y_at"))
 	if item.has_signal("collected"):
 		item.connect("collected", _on_dropped_item_collected)
 	layer.add_child(item)

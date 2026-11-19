@@ -125,5 +125,7 @@ func _on_body_animation_finished() -> void:
 	if is_instance_valid(charge_fx):
 		charge_fx.visible = false
 		charge_fx.stop()
+	if is_instance_valid(sprite) and sprite.animation == &"ko":
+		return
 	if is_instance_valid(sprite) and sprite.sprite_frames and sprite.sprite_frames.has_animation(&"idle"):
 		sprite.play(&"idle")

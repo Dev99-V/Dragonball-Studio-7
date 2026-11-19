@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bemgdlcmntorr"
-path="res://.godot/imported/three-trees-draft.png-f2fd7da277eadc129c79ee21793d23c5.ctex"
+uid="uid://cpb26yaq6dp2i"
+path="res://.godot/imported/rocky-plateau-foreground-trees.png-1f34dc80127e92089e4e9b85144d6f60.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://review/rocky_plateau_extension/three-trees-draft.png"
-dest_files=["res://.godot/imported/three-trees-draft.png-f2fd7da277eadc129c79ee21793d23c5.ctex"]
+source_file="res://assets/maps/rocky_plateau/rocky-plateau-foreground-trees.png"
+dest_files=["res://.godot/imported/rocky-plateau-foreground-trees.png-1f34dc80127e92089e4e9b85144d6f60.ctex"]
 
 [params]
 

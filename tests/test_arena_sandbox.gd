@@ -1399,15 +1399,15 @@ func run_test() -> void:
 	if fm.hit_impacts.is_empty() or fm.floating_texts.is_empty() or float(trex_slot2.get("hit_flash_s", 0.0)) <= 0.0:
 		fail("Hit feedback FX (impact burst + damage popup + flash) must trigger on hit")
 		return
-	# Check -40% hit-flash & blink contrast reduction on monster & hero sprites (60% contrast from Color.WHITE)
+	# Check -40% hit-flash contrast + +40% brightness lift (Owner human-test 2026-11-19) on monster & hero sprites
 	var m_flash_spr := trex_node2.get_node_or_null("Sprite") as AnimatedSprite2D
 	if m_flash_spr != null:
 		fm.call("_apply_hit_flash_modulate", m_flash_spr, true, true, false)
 		var m_on: Color = m_flash_spr.modulate
 		fm.call("_apply_hit_flash_modulate", m_flash_spr, true, false, false)
 		var m_off: Color = m_flash_spr.modulate
-		if m_on.g < 0.45 or absf(m_off.g - m_on.g) > 0.28 or m_on.r > 0.82:
-			fail("Monster hit-flash & blink contrast must be reduced by 40%%, on=%s off=%s" % [str(m_on), str(m_off)])
+		if m_on.g < 0.65 or m_on.r < 1.0 or m_on.r > 1.36 or m_off.g < 0.95:
+			fail("Monster hit-flash brightness (+40%%) out of expected bright range, on=%s off=%s" % [str(m_on), str(m_off)])
 			return
 	fm.apply_damage_to_player(10.0)
 	fm.step(1.0 / 60.0)
@@ -1417,8 +1417,8 @@ func run_test() -> void:
 		var h_on: Color = h_flash_spr.modulate
 		fm.call("_apply_hit_flash_modulate", h_flash_spr, true, false, true)
 		var h_off: Color = h_flash_spr.modulate
-		if h_on.g < 0.45 or absf(h_off.g - h_on.g) > 0.30 or h_on.r > 0.82:
-			fail("Hero hit-flash & blink contrast must be reduced by 40%%, on=%s off=%s" % [str(h_on), str(h_off)])
+		if h_on.g < 0.62 or h_on.r < 1.0 or h_on.r > 1.36 or h_off.g < 0.95:
+			fail("Hero hit-flash brightness (+40%%) out of expected bright range, on=%s off=%s" % [str(h_on), str(h_off)])
 			return
 	# Verify normal ("melee") and heavy ("heavy") collision impact FX metadata + clear duration separation
 	fm.hit_impacts.clear()
@@ -1594,8 +1594,44 @@ func run_test() -> void:
 		fail("Boss Drum must respawn once 1800s (30') elapsed with Hero in map")
 		return
 
+	# A1/A4/A9/A13 regression checks: no Boss Drum node leak, full-map Boss zone, Z-index order, 4-step ruler in Field Mode
+	await process_frame
+	var boss_nodes_count := 0
+	for ch in arena.fighters_layer.get_children():
+		if str(ch.name).begins_with("FieldBoss_drum"):
+			boss_nodes_count += 1
+	if boss_nodes_count != 1:
+		fail("Boss Drum respawn must not leak orphan FieldBoss_drum nodes, count=%d" % boss_nodes_count)
+		return
+	var boss_ai_check = fm.boss_slot.get("ai")
+	if boss_ai_check == null or (float(boss_ai_check.zone_max_x) - float(boss_ai_check.zone_min_x)) < 5000.0:
+		fail("Boss Drum AI must patrol full map (unbounded_zone), got width=%.1f" % (float(boss_ai_check.zone_max_x) - float(boss_ai_check.zone_min_x) if boss_ai_check != null else -1.0))
+		return
+	if arena._item_drop_layer.z_index >= arena.shenron_summon.z_index or arena.shenron_summon.z_index >= arena._field_overlay_node.z_index:
+		fail("Z-index layering mismatch: ItemDrops=%d Shenron=%d FieldOverlay=%d" % [arena._item_drop_layer.z_index, arena.shenron_summon.z_index, arena._field_overlay_node.z_index])
+		return
+	var step_edges: Array[float] = arena.call("_get_terrain_step_edges")
+	if step_edges.size() != 4:
+		fail("Extended 4-step map must expose 4 ruler step edges, got %s" % str(step_edges))
+		return
+	var field_ruler: Dictionary = arena.measure_player_enemy_distance()
+	if not bool(field_ruler.get("has_b", false)):
+		fail("measure_player_enemy_distance() must resolve active enemy in Field Mode")
+		return
+
 	arena.enable_field_mode(false, false)
 	await process_frame
+
+	# A2 regression check: Drum KO clip must hold final frame instead of resetting back to idle
+	arena.select_character("drum")
+	await process_frame
+	var drum_ko_spr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+	if drum_ko_spr != null and drum_ko_spr.sprite_frames != null and drum_ko_spr.sprite_frames.has_animation(&"ko"):
+		drum_ko_spr.play(&"ko")
+		arena.player_node.call("_on_body_animation_finished")
+		if drum_ko_spr.animation != &"ko":
+			fail("Drum KO must remain on &'ko' after animation finishes, got %s" % str(drum_ko_spr.animation))
+			return
 
 	# Verify 360-degree continuous analog vector flight on flying character (Pteranodon) without affecting Drum
 	arena.select_character("pteranodon")

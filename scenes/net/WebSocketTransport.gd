@@ -7,6 +7,7 @@ var active_endpoint: String = ""
 var active_map_id: String = ""
 var active_zone_id: int = 0
 var _was_open: bool = false
+var _pending_jwt: String = ""
 
 
 func connect_to_zone(endpoint_url: String, map_id: String, zone_id: int, supabase_jwt: String) -> Error:
@@ -14,9 +15,11 @@ func connect_to_zone(endpoint_url: String, map_id: String, zone_id: int, supabas
 	active_endpoint = endpoint_url
 	active_map_id = map_id
 	active_zone_id = zone_id
+	_pending_jwt = supabase_jwt
 	var sep := "&" if endpoint_url.contains("?") else "?"
 	var url := "%s%smap=%s&zone=%d" % [endpoint_url, sep, map_id.uri_encode(), zone_id]
-	if not supabase_jwt.is_empty():
+	# Browsers block custom HTTP headers on WebSocket handshake (Godot Web); send header on native only and always send first-packet auth on STATE_OPEN.
+	if not supabase_jwt.is_empty() and OS.get_name() != "Web":
 		peer.handshake_headers = PackedStringArray(["Authorization: Bearer " + supabase_jwt])
 	var err := peer.connect_to_url(url)
 	_was_open = false
@@ -37,6 +40,14 @@ func poll_events() -> void:
 		if not _was_open:
 			_was_open = true
 			is_connected_state = true
+			if not _pending_jwt.is_empty():
+				send_packet({
+					"type": "auth",
+					"token": _pending_jwt,
+					"map_id": active_map_id,
+					"zone_id": active_zone_id,
+				})
+				_pending_jwt = ""
 			connected.emit({"transport": "websocket", "map_id": active_map_id, "zone_id": active_zone_id})
 		while peer.get_available_packet_count() > 0:
 			var raw := peer.get_packet().get_string_from_utf8()

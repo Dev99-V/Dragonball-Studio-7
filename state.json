@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-18T12:58:03Z",
+  "updated_at": "2026-11-19T05:03:16Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.16.0",
@@ -123,7 +123,7 @@
       "iOS Mobile (.ipa)",
       "Web Compatibility Sandbox (localhost:8080)"
     ],
-    "backend": "Pha 1 (0d): Supabase (JWT Auth + ghi Postgres theo lo) + Cloudflare Free Proxy/WAF (chan IP VN/JP) + Godot Headless WebSocket Server (wss:// 443); Pha 2: Rust Core Server (engines/rust_combat_sim) tren VPS (ADR-0001)",
+    "backend": "Pha 1 (0d): Supabase (JWT Auth bat buoc xac thuc Gmail 100% tai khoan + ghi Postgres theo lo) + Cloudflare Free Proxy/WAF (JP chan cung 100% tim kiem/tai ve/Client/Server; VN chan tim kiem & tai ve nhung mo Client/Server) + Godot Headless WebSocket Server (wss:// 443); Pha 2: Rust Core Server (engines/rust_combat_sim) tren VPS (ADR-0001)",
     "engine_evaluation": {
       "status": "approved_phased_roadmap_adr_0001",
       "phase_1": "Godot 4.7.2 GDScript (GL Compatibility, Combined 1-Layer) Client + Godot Headless WebSocket Server + Supabase Auth/DB + Cloudflare WAF/Proxy (0d, <=50 thuc the/khu)",
@@ -152,9 +152,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "BOSS-DRUM-MAP-EVENT",
+    "active_task_id": "FLEX-IOS-SYNC-AND-GEO-GMAIL-POLICY",
     "status": "ready_for_owner_human_test",
-    "summary": "Cấu hình Boss Map Drum: đếm 5' (300s) khi có Tướng Player trong map, hồi sinh 30' (1800s) sau KO; HP=5000, Stamina=200, light_dmg=120, power_dmg=220, scale=2.5, Z=30; tên Drum màu đỏ + thanh máu đỏ 152x17px; teleport đến cạnh Tướng khi xuất hiện & tấn công/truy đuổi toàn map bằng UtilityAI; drop Ngọc Rồng 100%; nút ⚡ Gọi Boss Drum trong Sân Tập.",
+    "summary": "Bỏ khóa cứng TestFlight trong build-ios-ipa.yml (hỗ trợ unsigned_sideload / signed_adhoc_ota / signed_appstore_testflight + cache Godot tiết kiệm phút macOS); chuẩn hóa 1 lệnh ./loop.sh build-all & ./loop.sh ios-repack đồng bộ Web + APK + IPA ngay trên localhost:8080 (thêm nút 🍎 Tải IPA iOS, /api/download-ios-unsigned.ipa, /api/ios-altstore-source.json); cập nhật AGENTS.md Điều 4, ADR-0001 & state.json (JP chặn cứng 100% tìm kiếm/tải về/Client/Server; VN chặn tìm kiếm & tải về nhưng mở Client/Server; bắt buộc xác thực Gmail 100% tài khoản).",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1135,6 +1135,30 @@
       "timestamp": "2026-11-18T12:58:03Z",
       "status": "ready_for_owner_human_test",
       "summary": "Cấu hình Boss Map Drum: đếm 5' (300s) khi có Tướng Player trong map, hồi sinh 30' (1800s) sau KO; HP=5000, Stamina=200, light_dmg=120, power_dmg=220, scale=2.5, Z=30; tên Drum màu đỏ + thanh máu đỏ 152x17px; teleport đến cạnh Tướng khi xuất hiện & tấn công/truy đuổi toàn map bằng UtilityAI; drop Ngọc Rồng 100%; nút ⚡ Gọi Boss Drum trong Sân Tập."
+    },
+    {
+      "id": "SERVER-AUTO-GODOT-WEB",
+      "timestamp": "2026-11-19T01:05:21Z",
+      "status": "completed",
+      "summary": "Thiết lập mặc định mỗi lần khởi chạy server (./loop.sh serve / tools/preview/server.py) tự kiểm tra và tải Godot 4.7.2 + Export Templates (--with-templates) + xuất build/web/index.html để luôn mở được Godot Web thật; bổ sung /api/godot-web-status, auto-poll bật khung Godot Web trên index.html, build/.gdignore và unit test; cài Android SDK + build đồng bộ Web & APK 99.3MB."
+    },
+    {
+      "id": "AUDIT-FIX-PACK-1-TO-4",
+      "timestamp": "2026-11-19T03:31:42Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoàn tất Gói 1+2+3+4: backup tag/branch pre-cleanup; sửa trọn bộ A1-A14 (Boss Drum no-leak/full-map AI/shadow/HUD click-through, Drum KO hold, Chilopoda 1 fireball + burrow clamp, Mobile Multi-Touch Analog, Z-index stacking, DragonBall prune/roll, attack_heavy + dynamic FX, FX cache, 4-step ruler, WebSocket first-frame auth); chốt map 4 bậc & cây tiền cảnh sang assets/maps/rocky_plateau/ và dọn review/rocky_plateau_extension/; tối ưu APK 99.3MB->49MB & Web .pck 45.2MB->22MB; thêm preset iOS + PWA Safari + workflow build-ios-ipa.yml; nâng độ sáng hit-flash +40%; cài numpy/Pillow/scipy + script tools/infra/install_cloud_clis.sh (supabase 3.2.0, wrangler 4.165.0); đề xuất ADR-0002 thanh toán tự động; full ./loop.sh test PASS 100%."
+    },
+    {
+      "id": "IOS-SIDELOAD-I18N-CONFIG",
+      "timestamp": "2026-11-19T04:39:22Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Cấu hình đầy đủ Sideloadly / AltStore / SideStore (tools/ios/generate_altstore_source.py, tools/ios/repack_ios_pck.sh, docs/ios/sideload-and-testflight-setup.md, cập nhật .github/workflows/build-ios-ipa.yml hỗ trợ altstore-source.json + GitHub Pre-Release & sẵn sàng TestFlight Internal/External); chốt gói 5 ngôn ngữ chuẩn (en mặc định chỉ đổi trong Cài đặt, zh-CN, vi, es, pt-BR) tại assets/i18n/languages.json; cập nhật ADR-0002 (PENDING) chỉ dùng PayPal & ví quốc tế, loại cổng thanh toán VN."
+    },
+    {
+      "id": "FLEX-IOS-SYNC-AND-GEO-GMAIL-POLICY",
+      "timestamp": "2026-11-19T05:03:16Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Bỏ khóa cứng TestFlight trong build-ios-ipa.yml (hỗ trợ unsigned_sideload / signed_adhoc_ota / signed_appstore_testflight + cache Godot tiết kiệm phút macOS); chuẩn hóa 1 lệnh ./loop.sh build-all & ./loop.sh ios-repack đồng bộ Web + APK + IPA ngay trên localhost:8080 (thêm nút 🍎 Tải IPA iOS, /api/download-ios-unsigned.ipa, /api/ios-altstore-source.json); cập nhật AGENTS.md Điều 4, ADR-0001 & state.json (JP chặn cứng 100% tìm kiếm/tải về/Client/Server; VN chặn tìm kiếm & tải về nhưng mở Client/Server; bắt buộc xác thực Gmail 100% tài khoản)."
     }
   ],
   "quick_resume_commands": [

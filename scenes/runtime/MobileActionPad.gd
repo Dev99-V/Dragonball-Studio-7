@@ -283,10 +283,18 @@ func is_screen_point_over_pad(screen_pos: Vector2) -> bool:
 	return false
 
 
+var _configured_char_id: String = ""
+var _custom_bindings_by_char: Dictionary = {}
+
+
 func set_slot_binding(slot_id: int, action_id: String) -> void:
 	if slot_id == 1 or slot_id == 8:
 		return
 	_slot_bindings[slot_id] = action_id
+	if not _configured_char_id.is_empty():
+		var saved: Dictionary = _custom_bindings_by_char.get(_configured_char_id, {})
+		saved[slot_id] = action_id
+		_custom_bindings_by_char[_configured_char_id] = saved
 	_refresh_slot_buttons()
 	slot_binding_changed.emit(slot_id, action_id)
 
@@ -296,6 +304,7 @@ func get_slot_binding(slot_id: int) -> String:
 
 
 func configure_for_character(char_id: String, available_clips: PackedStringArray, is_flying: bool) -> void:
+	_configured_char_id = char_id
 	_flight_mode = is_flying
 	var avail := PackedStringArray(["attack_light"])
 	if is_flying or available_clips.has("jump"):
@@ -323,6 +332,14 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 		_slot_bindings[3] = "teleport"
 		_slot_bindings[4] = "power_up"
 		_slot_bindings[5] = "empty"
+	# Preserve user-customized slot bindings across hide/show hero toggles for the same character.
+	var custom_saved: Variant = _custom_bindings_by_char.get(char_id, {})
+	if custom_saved is Dictionary:
+		for k in (custom_saved as Dictionary).keys():
+			var sid := int(k)
+			var act := str((custom_saved as Dictionary)[k])
+			if sid >= 2 and sid <= 7 and (act == "empty" or avail.has(act)):
+				_slot_bindings[sid] = act
 	_rebuild_settings_rows()
 	_refresh_slot_buttons()
 
@@ -451,6 +468,9 @@ class _AnalogCanvas extends Control:
 				accept_event()
 		elif event is InputEventMouseButton:
 			var mb := event as InputEventMouseButton
+			# Ignore touch-emulated mouse events or any mouse input while a real touch finger owns the analog stick (multi-touch fix for Android & iOS).
+			if mb.device == InputEvent.DEVICE_ID_EMULATION or pad_owner._analog_touch_idx != -1:
+				return
 			if mb.button_index == MOUSE_BUTTON_LEFT:
 				if mb.pressed:
 					pad_owner._analog_mouse_down = true
@@ -459,7 +479,10 @@ class _AnalogCanvas extends Control:
 					pad_owner._reset_analog()
 				accept_event()
 		elif event is InputEventMouseMotion and pad_owner._analog_mouse_down:
-			pad_owner._update_analog_from_local((event as InputEventMouseMotion).position)
+			var mm := event as InputEventMouseMotion
+			if mm.device == InputEvent.DEVICE_ID_EMULATION or pad_owner._analog_touch_idx != -1:
+				return
+			pad_owner._update_analog_from_local(mm.position)
 			accept_event()
 
 	func _draw() -> void:
