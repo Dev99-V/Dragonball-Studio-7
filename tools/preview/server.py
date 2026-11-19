@@ -43,6 +43,8 @@ GODOT_VERSION = os.environ.get("GODOT_VERSION", "4.7.2-stable")
 GODOT_BIN_PATH = REPO_ROOT / "tools" / "godot" / "godot"
 GODOT_INSTALL_SCRIPT = REPO_ROOT / "tools" / "godot" / "install_godot.sh"
 LOOP_SCRIPT = REPO_ROOT / "loop.sh"
+_SHA256_LOCK = threading.Lock()
+_SHA256_FILE_CACHE: dict[tuple[str, int, int], str] = {}
 _APK_SHA256_CACHE: dict[tuple[int, int], str] = {}
 _IPA_SHA256_CACHE: dict[tuple[int, int], str] = {}
 _GODOT_BOOTSTRAP_LOCK = threading.Lock()
@@ -243,18 +245,13 @@ def get_android_apk_info(apk_path: Path | None = None) -> dict:
         }
     st = target.stat()
     cache_key = (int(st.st_size), int(st.st_mtime_ns))
-    sha = _APK_SHA256_CACHE.get(cache_key)
+    with _SHA256_LOCK:
+        sha = _APK_SHA256_CACHE.get(cache_key)
     if sha is None:
-        h = hashlib.sha256()
-        with target.open("rb") as fh:
-            while True:
-                chunk = fh.read(1024 * 1024)
-                if not chunk:
-                    break
-                h.update(chunk)
-        sha = h.hexdigest()
-        _APK_SHA256_CACHE.clear()
-        _APK_SHA256_CACHE[cache_key] = sha
+        sha = sha256_file(target)
+        with _SHA256_LOCK:
+            _APK_SHA256_CACHE.clear()
+            _APK_SHA256_CACHE[cache_key] = sha
     built_at = datetime.datetime.fromtimestamp(st.st_mtime, tz=datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {
         "available": True,
@@ -280,18 +277,13 @@ def get_ios_ipa_info(ipa_path: Path | None = None, base_ipa_path: Path | None = 
         }
     st = target.stat()
     cache_key = (int(st.st_size), int(st.st_mtime_ns))
-    sha = _IPA_SHA256_CACHE.get(cache_key)
+    with _SHA256_LOCK:
+        sha = _IPA_SHA256_CACHE.get(cache_key)
     if sha is None:
-        h = hashlib.sha256()
-        with target.open("rb") as fh:
-            while True:
-                chunk = fh.read(1024 * 1024)
-                if not chunk:
-                    break
-                h.update(chunk)
-        sha = h.hexdigest()
-        _IPA_SHA256_CACHE.clear()
-        _IPA_SHA256_CACHE[cache_key] = sha
+        sha = sha256_file(target)
+        with _SHA256_LOCK:
+            _IPA_SHA256_CACHE.clear()
+            _IPA_SHA256_CACHE[cache_key] = sha
     built_at = datetime.datetime.fromtimestamp(st.st_mtime, tz=datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {
         "available": True,
@@ -443,11 +435,22 @@ def verify_motion_quality() -> dict:
 
 
 def sha256_file(path: Path) -> str:
+    st = path.stat()
+    cache_key = (str(path.resolve()), int(st.st_size), int(st.st_mtime_ns))
+    with _SHA256_LOCK:
+        cached = _SHA256_FILE_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
     h = hashlib.sha256()
     with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(65536), b""):
+        for chunk in iter(lambda: f.read(262144), b""):
             h.update(chunk)
-    return h.hexdigest()
+    digest = h.hexdigest()
+    with _SHA256_LOCK:
+        if len(_SHA256_FILE_CACHE) > 2048:
+            _SHA256_FILE_CACHE.clear()
+        _SHA256_FILE_CACHE[cache_key] = digest
+    return digest
 
 
 def parse_tres(tres_path: Path) -> dict:
@@ -785,9 +788,26 @@ def verify_arena_stage_parity() -> list[str]:
     if not bg_file or not bg_file.is_file():
         errs.append(f"Missing sample map background: {bg_rel}")
     else:
-        actual_sha = hashlib.sha256(bg_file.read_bytes()).hexdigest()
+        actual_sha = sha256_file(bg_file)
         if actual_sha != map_cfg.get("sha256"):
             errs.append(f"Sample map sha256 mismatch: {actual_sha} != {map_cfg.get('sha256')}")
+
+    ext_map = map_cfg.get("extended_map") or {}
+    if ext_map:
+        ext_bg_rel = str(ext_map.get("background_path") or "")
+        ext_bg_file = REPO_ROOT / ext_bg_rel if ext_bg_rel else None
+        if not ext_bg_file or not ext_bg_file.is_file():
+            errs.append(f"Missing extended_map background: {ext_bg_rel}")
+        elif ext_map.get("sha256") and sha256_file(ext_bg_file) != ext_map.get("sha256"):
+            errs.append(f"Extended map sha256 mismatch: {sha256_file(ext_bg_file)} != {ext_map.get('sha256')}")
+        fg_trees = ext_map.get("foreground_trees") or {}
+        if fg_trees:
+            fg_rel = str(fg_trees.get("path") or "")
+            fg_file = REPO_ROOT / fg_rel if fg_rel else None
+            if not fg_file or not fg_file.is_file():
+                errs.append(f"Missing extended_map foreground_trees: {fg_rel}")
+            elif fg_trees.get("sha256") and sha256_file(fg_file) != fg_trees.get("sha256"):
+                errs.append(f"Foreground trees sha256 mismatch: {sha256_file(fg_file)} != {fg_trees.get('sha256')}")
 
     bezel_cfg = stage.get("phone_bezel", {})
     bezel_rel = bezel_cfg.get("repo_path", "")
@@ -812,7 +832,7 @@ def verify_arena_stage_parity() -> list[str]:
             f'window/stretch/scale_mode="{vp.get("stretch_scale_mode", "fractional")}"',
             f"window/handheld/orientation={vp.get('handheld_orientation_code', 0)}",
             f'renderer/rendering_method="{vp.get("renderer", "gl_compatibility")}"',
-            'run/main_scene="res://scenes/ArenaSandbox.tscn"',
+            'run/main_scene="res://scenes/AppStartup.tscn"',
         ]
         for needle in expected_lines:
             if needle not in pg:
@@ -859,13 +879,33 @@ def verify_arena_stage_parity() -> list[str]:
                 errs.append(f"Missing terrain {section_key}: {sinfo.get('path')}")
             elif sha256_file(sfile) != sinfo.get("sha256"):
                 errs.append(f"Terrain {section_key} SHA-256 mismatch")
+        ext_bd = terrain.get("extended_backdrop") or {}
+        if ext_bd:
+            if ext_bd.get("path"):
+                ext_f = REPO_ROOT / str(ext_bd["path"])
+                if not ext_f.is_file():
+                    errs.append(f"Missing terrain extended_backdrop: {ext_bd['path']}")
+                elif ext_bd.get("sha256") and sha256_file(ext_f) != ext_bd.get("sha256"):
+                    errs.append("Terrain extended_backdrop SHA-256 mismatch")
+            if ext_bd.get("foreground_trees_path"):
+                ext_t = REPO_ROOT / str(ext_bd["foreground_trees_path"])
+                if not ext_t.is_file():
+                    errs.append(f"Missing terrain extended_backdrop foreground_trees: {ext_bd['foreground_trees_path']}")
+                elif ext_bd.get("foreground_trees_sha256") and sha256_file(ext_t) != ext_bd.get("foreground_trees_sha256"):
+                    errs.append("Terrain extended_backdrop foreground_trees SHA-256 mismatch")
 
     for sc_rel in (
+        "scenes/AppStartup.tscn",
+        "scenes/AppStartup.gd",
+        "scenes/ui/LoginScreen.gd",
+        "scenes/ui/DragonBallLoadingOverlay.gd",
+        "scenes/net/AlphaSessionClient.gd",
         "scenes/ArenaSandbox.tscn",
         "scenes/ArenaSandbox.gd",
         "scenes/SkillAnimator2D.gd",
         "scenes/runtime/DisplayPolicy.gd",
-        "scenes/runtime/TouchHudOverlay.gd",
+        "scenes/runtime/MobileActionPad.gd",
+        "scenes/runtime/I18nManager.gd",
         "scenes/net/NetworkTransport.gd",
         "scenes/net/WebSocketTransport.gd",
         "scenes/net/ZoneClientSync.gd",
@@ -900,6 +940,8 @@ def build_godot_zip_bytes() -> bytes:
     buf = io.BytesIO()
     include_paths = [
         REPO_ROOT / "project.godot",
+        REPO_ROOT / "export_presets.cfg",
+        REPO_ROOT / "VERSION",
         REPO_ROOT / "scenes",
         REPO_ROOT / "tests",
         ASSETS_DIR / "maps",
@@ -1009,7 +1051,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if extra_headers:
             headers.update(extra_headers)
         size_bytes = file_path.stat().st_size
-        if compress or size_bytes < 4 * 1024 * 1024:
+        if size_bytes < 4 * 1024 * 1024:
             self._send_bytes(
                 200,
                 content_type,
@@ -1114,6 +1156,30 @@ class PreviewHandler(BaseHTTPRequestHandler):
             roster = load_finalized_roster(bundles)
             parity = verify_engine_localhost_parity()
             godot_bootstrap = get_godot_web_bootstrap_status()
+            try:
+                rituals = load_rituals()
+            except Exception as exc:
+                rituals = {}
+                parity["ok"] = False
+                parity["errors"].append(f"load_rituals error: {exc}")
+            try:
+                items = load_items()
+            except Exception as exc:
+                items = {"items": []}
+                parity["ok"] = False
+                parity["errors"].append(f"load_items error: {exc}")
+            try:
+                motion_q = verify_motion_quality()
+            except Exception as exc:
+                motion_q = {"ok_for_human_test": False, "release_approved": False, "characters": {}, "errors": [str(exc)]}
+                parity["ok"] = False
+                parity["errors"].append(f"verify_motion_quality error: {exc}")
+            try:
+                review_content = load_review_content()
+            except Exception as exc:
+                review_content = {"roster": {"schema": "dr7-studio.review_roster.v1", "characters": []}, "bundles": []}
+                parity["ok"] = False
+                parity["errors"].append(f"load_review_content error: {exc}")
             payload = {
                 "project_name": "DR7-Studio — Engine Parity & Human Test Workbench",
                 "bundles": bundles,
@@ -1126,11 +1192,11 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "godot_web_bootstrap": godot_bootstrap,
                 "android_apk": get_android_apk_info(),
                 "ios_ipa": get_ios_ipa_info(),
-                "rituals": load_rituals(),
-                "items": load_items(),
+                "rituals": rituals,
+                "items": items,
                 "parity": parity,
-                "motion_quality": verify_motion_quality(),
-                "review": load_review_content(),
+                "motion_quality": motion_q,
+                "review": review_content,
             }
             data = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
             self._send_bytes(200, "application/json; charset=utf-8", data, compress=True)
@@ -1219,9 +1285,6 @@ class PreviewHandler(BaseHTTPRequestHandler):
             return
 
         if req_path == "/api/ios-altstore-source.json":
-            if IOS_ALTSTORE_JSON_PATH.is_file():
-                self._send_file("application/json; charset=utf-8", IOS_ALTSTORE_JSON_PATH, cache_control="no-cache", compress=True)
-                return
             ipa_info = get_ios_ipa_info()
             if not ipa_info.get("available"):
                 self._send_bytes(404, "application/json; charset=utf-8", b'{"error":"ios_ipa_not_built"}')
@@ -1230,7 +1293,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
             host_hdr = self.headers.get("Host") or "localhost:8080"
             scheme = "https" if self.headers.get("X-Forwarded-Proto", "").lower() == "https" else "http"
             base_url = f"{scheme}://{host_hdr}"
-            sys.path.insert(0, str(REPO_ROOT / "tools" / "ios"))
+            ios_tools_dir = str(REPO_ROOT / "tools" / "ios")
+            if ios_tools_dir not in sys.path:
+                sys.path.insert(0, ios_tools_dir)
             import generate_altstore_source  # type: ignore
             src_payload = generate_altstore_source.build_source_payload(
                 version=ver_txt,

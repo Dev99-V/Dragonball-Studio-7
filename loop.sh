@@ -170,6 +170,14 @@ if rust_cargo.exists():
     if f'version = "{ver_txt}"' not in ct:
         errors.append(f"engines/rust_combat_sim/Cargo.toml chưa đồng bộ version = \"{ver_txt}\"")
 
+export_presets = root / "export_presets.cfg"
+if export_presets.exists():
+    ep = export_presets.read_text(encoding="utf-8")
+    if f'version/name="{ver_txt}"' not in ep:
+        errors.append(f"export_presets.cfg (Android) chưa đồng bộ version/name=\"{ver_txt}\"")
+    if f'application/short_version="{ver_txt}"' not in ep:
+        errors.append(f"export_presets.cfg (iOS) chưa đồng bộ application/short_version=\"{ver_txt}\"")
+
 # 4. skills.md & lerning.md structural markers
 for fname, s_tag, e_tag in [
     ("skills.md", "<!-- SKILLS_ENTRIES_START -->", "<!-- SKILLS_ENTRIES_END -->"),
@@ -179,6 +187,19 @@ for fname, s_tag, e_tag in [
         txt = (root / fname).read_text(encoding="utf-8")
         if s_tag not in txt or e_tag not in txt:
             errors.append(f"{fname} thiếu cặp thẻ đánh dấu {s_tag} ... {e_tag}")
+        elif fname == "lerning.md":
+            m_lr = re.search(rf"{re.escape(s_tag)}(.*?){re.escape(e_tag)}", txt, re.S)
+            if m_lr:
+                inside_ids = re.findall(r"^###\s+\[(LRN-\d+)\]", m_lr.group(1), re.M)
+                all_ids = re.findall(r"^###\s+\[(LRN-\d+)\]", txt, re.M)
+                if len(inside_ids) != len(all_ids):
+                    errors.append(
+                        f"lerning.md có {len(all_ids) - len(inside_ids)} bài học nằm ngoài thẻ {e_tag}"
+                    )
+                if len(all_ids) != len(set(all_ids)):
+                    seen = set()
+                    dups = sorted({x for x in all_ids if x in seen or seen.add(x)})
+                    errors.append(f"lerning.md bị trùng mã bài học: {dups}")
 
 # 5. Validate Engine ⇄ Localhost Zero-Drift Parity & Animation Completeness Gate
 sys.path.insert(0, str(root / "tools" / "preview"))
@@ -242,6 +263,7 @@ st = json.loads(st_path.read_text(encoding="utf-8"))
 now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 st["updated_at"] = now_iso
+st["last_updated_utc"] = now_iso
 st["current_focus"]["active_task_id"] = tid
 st["current_focus"]["status"] = tstatus
 st["current_focus"]["summary"] = tsum
@@ -315,12 +337,13 @@ PY
       exit 2
     fi
     bash "$ROOT_DIR/tools/ios/repack_ios_pck.sh" "$BASE_IPA" "$OUT_IPA"
+    BASE_HOST="${DR7_ALTSTORE_BASE_URL:-http://localhost:8080}"
     python3 "$ROOT_DIR/tools/ios/generate_altstore_source.py" \
       --version "$APP_VER" \
       --ipa "$OUT_IPA" \
-      --download-url "/api/download-ios-unsigned.ipa" \
-      --source-url "/api/ios-altstore-source.json" \
-      --icon-url "/assets/app_icon/icon_512.png" \
+      --download-url "${BASE_HOST}/api/download-ios-unsigned.ipa" \
+      --source-url "${BASE_HOST}/api/ios-altstore-source.json" \
+      --icon-url "${BASE_HOST}/assets/app_icon/icon_512.png" \
       --output "$ROOT_DIR/build/ios/altstore-source.json"
     echo "[OK] iOS IPA đồng bộ sẵn sàng tại $OUT_IPA"
     ;;
@@ -347,6 +370,8 @@ PY
     ;;
 
   test)
+    RAN_SUITES=("Governance" "Python")
+    SKIPPED_SUITES=()
     "$ROOT_DIR/loop.sh" check
     echo "[loop.sh] Đang chạy Python Unit Tests..."
     python3 -m unittest discover -s "$ROOT_DIR/tests" -p "test_*.py" -v
@@ -361,20 +386,43 @@ PY
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_trex_turn.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_chilopoda_actions.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_arena_sandbox.gd
+      "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_alpha_login_and_sync.gd
+      "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_headless_two_clients.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_floating_camera_actions.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_shenron_summon.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_dragon_ball_items.gd
+      RAN_SUITES+=("Godot 4")
       if command -v xvfb-run >/dev/null 2>&1; then
         echo "[loop.sh] Đang chạy Godot Compatibility Shader GPU Tests (opengl3)..."
         xvfb-run -a "$ROOT_DIR/tools/godot/godot" --rendering-driver opengl3 --path "$ROOT_DIR" --script res://tests/test_compatibility_shaders.gd
         xvfb-run -a "$ROOT_DIR/tools/godot/godot" --rendering-driver opengl3 --path "$ROOT_DIR" --script res://tests/test_shenron_dissolve_render.gd
+        RAN_SUITES+=("Shaders")
+      else
+        echo "[SKIP] Bỏ qua Godot OpenGL3 Shader GPU Tests vì môi trường chưa cài 'xvfb-run'." >&2
+        SKIPPED_SUITES+=("Shaders(no-xvfb-run)")
       fi
+    else
+      echo "[SKIP] Bỏ qua Godot 4 Headless Engine Verification vì chưa có binary tools/godot/godot." >&2
+      SKIPPED_SUITES+=("Godot4(no-binary)" "Shaders(no-godot)")
     fi
     if [ -f "$ROOT_DIR/engines/rust_combat_sim/Cargo.toml" ] && command -v cargo >/dev/null 2>&1; then
-      echo "[loop.sh] Đang chạy Rust 1.99.1 Real-Time >2,000 Combat Engine Unit Tests..."
+      RUSTC_VER="$(rustc --version 2>/dev/null || echo 'Rust')"
+      echo "[loop.sh] Đang chạy ${RUSTC_VER} Real-Time >2,000 Combat Engine Unit Tests..."
       cargo test --manifest-path "$ROOT_DIR/engines/rust_combat_sim/Cargo.toml"
+      RAN_SUITES+=("Rust")
+    else
+      echo "[SKIP] Bỏ qua Rust cargo test vì môi trường chưa cài 'cargo'." >&2
+      SKIPPED_SUITES+=("Rust(no-cargo)")
     fi
-    echo "[OK] Kiểm thử kỹ thuật './loop.sh test' (Governance + Python + Godot 4 + Shaders + Rust) exit 0. Nghiệm thu chuyển động theo motion_quality và Owner Human Test riêng."
+    RAN_SUMMARY="$(printf '%s + ' "${RAN_SUITES[@]}")"
+    RAN_SUMMARY="${RAN_SUMMARY% + }"
+    if [ "${#SKIPPED_SUITES[@]}" -gt 0 ]; then
+      SKIP_SUMMARY="$(printf '%s, ' "${SKIPPED_SUITES[@]}")"
+      SKIP_SUMMARY="${SKIP_SUMMARY%, }"
+      echo "[OK] Kiểm thử kỹ thuật './loop.sh test' ĐÃ CHẠY: (${RAN_SUMMARY}) exit 0 | BỎ QUA: [${SKIP_SUMMARY}]. Nghiệm thu chuyển động theo motion_quality và Owner Human Test riêng."
+    else
+      echo "[OK] Kiểm thử kỹ thuật './loop.sh test' (${RAN_SUMMARY}) exit 0. Nghiệm thu chuyển động theo motion_quality và Owner Human Test riêng."
+    fi
     ;;
 
   *)

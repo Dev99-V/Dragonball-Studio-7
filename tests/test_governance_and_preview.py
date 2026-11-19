@@ -150,8 +150,11 @@ class GovernanceAndPreviewTests(unittest.TestCase):
         lerning_txt = (REPO_ROOT / "lerning.md").read_text(encoding="utf-8")
         m_lr = re.search(r"<!-- LERNING_ENTRIES_START -->(.*?)<!-- LERNING_ENTRIES_END -->", lerning_txt, re.S)
         self.assertIsNotNone(m_lr)
-        lr_entries = re.findall(r"^###\s+\[LRN-\d+\]", m_lr.group(1), re.M)
+        lr_entries = re.findall(r"^###\s+\[(LRN-\d+)\]", m_lr.group(1), re.M)
+        all_lr_entries = re.findall(r"^###\s+\[(LRN-\d+)\]", lerning_txt, re.M)
         self.assertGreaterEqual(len(lr_entries), 6, "lerning.md should record verified bug fixes LRN-001..006")
+        self.assertEqual(len(lr_entries), len(all_lr_entries), "No LRN entry may lie outside LERNING_ENTRIES_END")
+        self.assertEqual(len(all_lr_entries), len(set(all_lr_entries)), "All LRN IDs in lerning.md must be unique")
 
     def test_version_sync_across_all_manifests(self) -> None:
         ver = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
@@ -162,6 +165,9 @@ class GovernanceAndPreviewTests(unittest.TestCase):
         self.assertIn(f'config/version="{ver}"', pg)
         cargo_txt = (REPO_ROOT / "engines" / "rust_combat_sim" / "Cargo.toml").read_text(encoding="utf-8")
         self.assertIn(f'version = "{ver}"', cargo_txt)
+        ep_txt = (REPO_ROOT / "export_presets.cfg").read_text(encoding="utf-8")
+        self.assertIn(f'version/name="{ver}"', ep_txt)
+        self.assertIn(f'application/short_version="{ver}"', ep_txt)
 
     def test_engine_localhost_zero_drift_parity_and_dynamic_roster(self) -> None:
         parity = preview_server.verify_engine_localhost_parity()
@@ -215,10 +221,14 @@ class GovernanceAndPreviewTests(unittest.TestCase):
         with zipfile.ZipFile(io.BytesIO(zbytes)) as zf:
             names = set(zf.namelist())
             self.assertIn("project.godot", names)
+            self.assertIn("export_presets.cfg", names)
+            self.assertIn("VERSION", names)
             self.assertIn("assets/roster.json", names)
+            self.assertIn("assets/i18n/languages.json", names)
             self.assertIn("scenes/CharacterFighter2D.gd", names)
             self.assertIn("scenes/SkillAnimator2D.gd", names)
             self.assertIn("scenes/runtime/DisplayPolicy.gd", names)
+            self.assertIn("scenes/runtime/I18nManager.gd", names)
             self.assertIn("scenes/net/WebSocketTransport.gd", names)
             self.assertIn("assets/maps/rocky_plateau/device-profiles.json", names)
             self.assertFalse(any("/godot-sprite3d/" in n or "/aseprite/" in n or "/source/" in n for n in names),
@@ -267,12 +277,15 @@ class GovernanceAndPreviewTests(unittest.TestCase):
             names = set(zf.namelist())
         for req in (
             "assets/fx/powerup_explosion/powerup_explosion.tres",
+            "assets/fx/hit_impact/hit_impact.tres",
+            "assets/fx/hit_impact/hit_impact-atlas-00.png",
             "assets/body_silhouettes.json",
             "assets/app_icon/icon_512.png",
             "assets/maps/rocky_plateau/rocky-plateau-extended-4steps.png",
             "assets/maps/rocky_plateau/rocky-plateau-foreground-trees.png",
         ):
             self.assertIn(req, names, f"Godot ZIP missing required runtime asset: {req}")
+        self.assertNotIn("image copy 2.png", names)
 
         html_txt = (REPO_ROOT / "tools" / "preview" / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("GDExtension", html_txt, "index.html must not claim GDExtension (AGENTS.md D8)")
@@ -322,6 +335,22 @@ class GovernanceAndPreviewTests(unittest.TestCase):
             self.assertEqual(src["apps"][0]["versions"][0]["size"], fake_ipa.stat().st_size)
             self.assertEqual(src["apps"][0]["appPermissions"]["entitlements"], [])
 
+            # Verify generate_altstore_source.py fails non-zero when --ipa is missing
+            res_missing = subprocess.run(
+                [
+                    sys.executable,
+                    str(REPO_ROOT / "tools" / "ios" / "generate_altstore_source.py"),
+                    "--version", "0.16.0",
+                    "--ipa", str(pathlib.Path(tmp) / "does-not-exist.ipa"),
+                    "--download-url", "https://example.com/dr7.ipa",
+                    "--output", str(out_json),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertNotEqual(res_missing.returncode, 0)
+
             # Verify server get_ios_ipa_info metadata contract
             ipa_meta = preview_server.get_ios_ipa_info(fake_ipa, fake_ipa)
             self.assertTrue(ipa_meta["available"])
@@ -329,9 +358,64 @@ class GovernanceAndPreviewTests(unittest.TestCase):
             self.assertEqual(ipa_meta["altstore_source_url"], "/api/ios-altstore-source.json")
             self.assertTrue(ipa_meta["base_ipa_present"])
 
+        # Verify opaque RGB iOS icons match Apple required dimensions (no alpha channel)
+        from PIL import Image
+        for sz in (76, 120, 152, 167, 180, 1024):
+            icon_p = REPO_ROOT / "assets" / "app_icon" / "ios" / f"ios_icon_{sz}.png"
+            self.assertTrue(icon_p.is_file(), f"Missing opaque iOS icon: {icon_p}")
+            with Image.open(icon_p) as im:
+                self.assertEqual(im.mode, "RGB", f"iOS icon {icon_p.name} must be opaque RGB")
+                self.assertEqual(im.size, (sz, sz), f"iOS icon {icon_p.name} size mismatch")
+
         loop_txt2 = (REPO_ROOT / "loop.sh").read_text(encoding="utf-8")
         self.assertIn("build-all)", loop_txt2)
         self.assertIn("ios-repack)", loop_txt2)
+
+        # Verify motion_quality instant_flip exception (Owner 2026-11-14/19: no mandatory turn for new chars)
+        from motion_quality import assess_motion_quality, REQUIRED_CHECKS
+        flip_review = {
+            "status": "reviewed_pending_owner",
+            "method": "imagegen_complete_body_keyframes",
+            "atlas_sha256": "abc123",
+            "checks": {k: (k != "perspective_turns") for k in REQUIRED_CHECKS},
+            "not_applicable_checks": {"perspective_turns": "Instant horizontal flip per AGENTS.md 7.4"},
+        }
+        flip_rc = {"turning": {"method": "instant_flip", "clip": None}}
+        self.assertTrue(assess_motion_quality(flip_review, "abc123", flip_rc)["ok_for_human_test"])
+        non_flip_rc = {"turning": {"method": "perspective_turn", "clip": "turn"}}
+        self.assertFalse(assess_motion_quality(flip_review, "abc123", non_flip_rc)["ok_for_human_test"])
+
+        # Verify /api/ios-altstore-source.json returns absolute URLs dynamically and 404 when IPA missing
+        import http.server
+        import threading
+        import urllib.error
+        import urllib.request
+        orig_ipa = preview_server.IOS_IPA_PATH
+        httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), preview_server.PreviewHandler)
+        port = httpd.server_address[1]
+        th = threading.Thread(target=httpd.serve_forever, daemon=True)
+        th.start()
+        try:
+            with tempfile.TemporaryDirectory() as tmp2:
+                missing_ipa = pathlib.Path(tmp2) / "missing.ipa"
+                preview_server.IOS_IPA_PATH = missing_ipa
+                with self.assertRaises(urllib.error.HTTPError) as ctx:
+                    urllib.request.urlopen(f"http://127.0.0.1:{port}/api/ios-altstore-source.json", timeout=5)
+                self.assertEqual(ctx.exception.code, 404)
+                ctx.exception.close()
+
+                present_ipa = pathlib.Path(tmp2) / "present.ipa"
+                present_ipa.write_bytes(b"PK\x03\x04dr7-altstore-http-test")
+                preview_server.IOS_IPA_PATH = present_ipa
+                with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/ios-altstore-source.json", timeout=5) as resp:
+                    self.assertEqual(resp.status, 200)
+                    alt_doc = json.loads(resp.read().decode("utf-8"))
+                dl_url = alt_doc["apps"][0]["versions"][0]["downloadURL"]
+                self.assertTrue(dl_url.startswith(f"http://127.0.0.1:{port}/api/download-ios-unsigned.ipa"), dl_url)
+        finally:
+            preview_server.IOS_IPA_PATH = orig_ipa
+            httpd.shutdown()
+            httpd.server_close()
 
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@ def build_source_payload(
         "identifier": f"{bundle_id}.source",
         "sourceURL": source_url,
         "iconURL": icon_url,
-        "website": "https://github.com",
+        "website": "https://github.com/Dev99-V/Dragonball-Studio-7",
         "tintColor": "#F97316",
         "featuredApps": [bundle_id],
         "apps": [
@@ -90,7 +90,9 @@ def main(argv: list[str] | None = None) -> int:
 
     size_bytes = args.size
     sha_hex = ""
-    if args.ipa and args.ipa.is_file():
+    if args.ipa:
+        if not args.ipa.is_file():
+            raise SystemExit(f"[ERROR] IPA file not found: {args.ipa}")
         size_bytes = args.ipa.stat().st_size
         sha_hex = sha256_file(args.ipa)
 

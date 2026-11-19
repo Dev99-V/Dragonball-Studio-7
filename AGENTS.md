@@ -85,14 +85,14 @@ Chi tiết kỹ thuật chốt tại [docs/adr/0001-architecture-and-scale-roadm
 
 ## Điều 7. Chuẩn Bộ Hoạt Ảnh, Độ Nét, Hướng Nhìn, Item (`assets/items/`) & Bản Đồ 2D (`assets/maps/`)
 
-1. **Bộ clip chuẩn**: Tham chiếu `idle`, `walk`, `run`, `jump`, `attack_light`, `attack_heavy`, `power_up`, `aura_loop`, `hit`, `ko` (+ kỹ năng đặc trưng). **Owner chốt phạm vi chung: không tạo `lose`, `guard` và `win`**; giữ WARN tham chiếu không tạo clip giả. Tướng/quái không có hiệu ứng vụ nổ va chạm riêng kèm sheet/atlas hoặc yêu cầu riêng mặc định dùng `assets/fx/powerup_explosion/` (`scale 0.68`).
+1. **Bộ clip chuẩn**: Tham chiếu `idle`, `walk`, `run`, `jump`, `attack_light`, `attack_heavy`, `power_up`, `aura_loop`, `hit`, `ko` (+ kỹ năng đặc trưng). **Owner chốt phạm vi chung: không tạo `lose`, `guard` và `win`**; giữ WARN tham chiếu không tạo clip giả. Tướng/quái không có hiệu ứng vụ nổ va chạm riêng kèm sheet/atlas hoặc yêu cầu riêng mặc định dùng `assets/fx/powerup_explosion/` (`scale 0.68`); hiệu ứng va chạm đánh thường (`melee`, `144px`) và đánh nặng (`heavy`, `216px`) cho toàn bộ tướng/quái/boss mặc định dùng `assets/fx/hit_impact/` (`hit_impact.tres`, 7 frame 60Hz Nearest từ mẫu Owner) trừ khi nhân vật có yêu cầu riêng.
 2. **Mốc độ nét chuẩn — T-rex (`2026-11-12`) & Thẩm mỹ mặc định**:
    - Đối chiếu [t-rex-sharpness-reference.png](docs/art-standards/t-rex-sharpness-reference.png) và [character-pixel-sharpness.json](docs/art-standards/character-pixel-sharpness.json): **1px gameplay, Nearest**, alpha thân 100%; VFX được alpha mềm (`idle0` mẫu 384×256, anchor `[176,224]`, Sobel **245.516**). Đo bằng `python3 tools/art/measure_pixel_sharpness.py <frame.png>`, không blur/sharpen/dither ép số.
    - Quái thú/sinh vật mặc định phong cách **"Hung tợn"** (nanh nhọn, mắt dữ, vuốt bén, màu đậm) trừ khi Owner chỉ định riêng. Công bố đủ metrics chuẩn trong `roster.json`.
 3. **Giao tiếp tọa độ UI**: Hỗ trợ `[W, H]`, scrubber, thước X/Y, `RGBA`, khoanh `Rect` → `[DR7-EDIT-SPEC]`.
 4. **Hướng nhìn, Chu kỳ Walk/Run & Turn**:
    - Khóa kiểu camera/hướng nhìn/hướng đánh rõ ràng; không flip dọc hay suy hướng mặt từ vị trí atlas.
-   - `walk`: vòng tiến pha liên tục `0→N-1→0`, đủ 2 nhịp chân đối, cấm ping-pong hay trùng pose đóng vòng. `run`: dáng chạy riêng (không tăng tốc walk). `turn`: bắt buộc trong atlas mới (ngoại lệ King Crab), xoay phối cảnh thật (cấm `flip_h`/thu ngang lật bìa), timing lấy đà → vung → hồi thế.
+   - `walk`: vòng tiến pha liên tục `0→N-1→0`, đủ 2 nhịp chân đối, cấm ping-pong hay trùng pose đóng vòng. `run`: dáng chạy riêng (không tăng tốc walk). `turn`: **không bắt buộc** cho nhân vật mới (Chốt Owner 2026-11-14/19; mặc định dùng lật ngang nhanh khi không có `turn`); chỉ khi nhân vật có `turn` riêng mới yêu cầu xoay phối cảnh thật (cấm `flip_h`/thu ngang lật bìa), timing lấy đà → vung → hồi thế.
 5. **Chuẩn Bắt Buộc Cho Mọi Item Game (`assets/items/`)**:
    - Phải convert về pixel chuẩn trước khi đóng gói `1 PNG atlas, 60Hz Nearest, alpha thân 100% 0/255, .gdignore source/&clips/`, và đạt đủ **4 yếu tố** đồng bộ 1:1 Godot ⇄ Localhost ⇄ Mobile:
      - **Icon Balo (`bag` mode)**: Icon tĩnh nguyên bản, **ẩn 100% hiệu ứng**.

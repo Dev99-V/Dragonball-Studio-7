@@ -14,8 +14,8 @@ func _init() -> void:
 
 
 func run_test() -> void:
-	if str(ProjectSettings.get_setting("application/run/main_scene", "")) != "res://scenes/ArenaSandbox.tscn":
-		fail("project.godot main_scene must be res://scenes/ArenaSandbox.tscn")
+	if str(ProjectSettings.get_setting("application/run/main_scene", "")) != "res://scenes/AppStartup.tscn":
+		fail("project.godot main_scene must be res://scenes/AppStartup.tscn")
 		return
 	if int(ProjectSettings.get_setting("display/window/size/viewport_width", 0)) != 1920:
 		fail("project.godot viewport_width must be 1920")
@@ -542,7 +542,7 @@ func run_test() -> void:
 		fail("Flying enemy at <50px must use attack_light, got " + str(f_close))
 		return
 
-	# 5) Chilopoda special rule: <50px -> power_up (laser), >=50px -> attack_light (burrow)
+	# 5) Chilopoda fires at <50 px and burrows at >=50 px.
 	arena.select_character("chilopoda")
 	await process_frame
 	arena.set_character_scale(1.0)
@@ -551,13 +551,13 @@ func run_test() -> void:
 	arena.player_node.position = Vector2(1330.0, 840.0) # close (<50px gap since bw=160 -> 170-160=10px)
 	var c_close: Dictionary = arena.step_utility_ai(0.016)
 	if c_close.get("attack_clip", "") != "power_up":
-		fail("Chilopoda close (<50px) must fire power_up laser, got " + str(c_close))
+		fail("Chilopoda close (<50px) must fire power_up, got " + str(c_close))
 		return
 	arena._ai_action_clip = ""; arena._ai_action_timer_s = 0.0; arena.ai_controller.cooldown_remaining = 0.0
 	arena.player_node.position = Vector2(1200.0, 840.0) # far (300-160=140px >= 50px)
 	var c_far: Dictionary = arena.step_utility_ai(0.016)
 	if c_far.get("attack_clip", "") != "attack_light":
-		fail("Chilopoda >=50px must fire attack_light burrow, got " + str(c_far))
+		fail("Chilopoda >=50px must use attack_light burrow, got " + str(c_far))
 		return
 
 	# 6) Tasmanian King Crab unlocked horizontal flip (no turn clip): faces enemy behind it before power_up
@@ -1427,6 +1427,17 @@ func run_test() -> void:
 	if fm.hit_impacts.size() != 2 or str(fm.hit_impacts[0]["kind"]) != "melee" or str(fm.hit_impacts[1]["kind"]) != "heavy" or float(fm.hit_impacts[1]["duration_s"]) <= float(fm.hit_impacts[0]["duration_s"]):
 		fail("Normal & heavy collision FX must register distinct impact kinds and timings: %s" % str(fm.hit_impacts))
 		return
+	# Verify canonical default hit_impact SpriteFrames (Owner sample image copy 2.png + dissipation frames)
+	var default_hit_sf: SpriteFrames = OverheadBarsDrawScript.DefaultHitImpactFrames
+	if default_hit_sf == null or not default_hit_sf.has_animation(&"hit") or default_hit_sf.get_frame_count(&"hit") < 6:
+		fail("Default hit_impact.tres must provide >=6 dissipation frames on animation 'hit'")
+		return
+	if absf(float(OverheadBarsDrawScript.DEFAULT_HIT_IMPACT_MELEE_SIZE_PX) - 144.0) > 1.0 or absf(float(OverheadBarsDrawScript.DEFAULT_HIT_IMPACT_HEAVY_SIZE_PX) - 216.0) > 1.0:
+		fail("Default hit_impact sizes must match current melee (144px) and heavy (216px) footprints")
+		return
+	if arena._field_overlay_node == null or arena._field_overlay_node.texture_filter != CanvasItem.TEXTURE_FILTER_NEAREST:
+		fail("FieldOverlayLayer must enforce TEXTURE_FILTER_NEAREST for crisp pixel hit_impact sprites")
+		return
 	if int(OverheadBarsDrawScript.FLOATING_DAMAGE_FONT_SIZE) != 24 or int(OverheadBarsDrawScript.FLOATING_DAMAGE_OUTLINE_SIZE) != 5:
 		fail("Floating damage popup font must stay +20%% larger (24px, outline 5)")
 		return
@@ -1619,6 +1630,21 @@ func run_test() -> void:
 		fail("measure_player_enemy_distance() must resolve active enemy in Field Mode")
 		return
 
+	for expected_clip in ["attack_light", "power_up"]:
+		fm.start_field(false)
+		arena.set_field_hero_visible(true)
+		var chilopoda: Dictionary = fm.slots[0]
+		var monster := chilopoda["node"] as Node2D
+		var target_gap := 25.0 if expected_clip == "power_up" else 100.0
+		arena.player_node.position = monster.position - Vector2(250.0, 0.0)
+		arena.player_node.position.x += float(fm._compute_slot_edge_gap(chilopoda)) - target_gap
+		var actual_gap := float(fm._compute_slot_edge_gap(chilopoda))
+		chilopoda["cooldown_s"] = 0.0
+		fm._step_slot(chilopoda, 1.0 / 60.0)
+		if absf(actual_gap - target_gap) > 10.0 or str(chilopoda["action_clip"]) != expected_clip:
+			fail("Field Chilopoda at %.1fpx (target %.1fpx): expected %s, got %s" % [actual_gap, target_gap, expected_clip, chilopoda["action_clip"]])
+			return
+
 	arena.enable_field_mode(false, false)
 	await process_frame
 
@@ -1643,6 +1669,153 @@ func run_test() -> void:
 	var fly_delta: Vector2 = arena.player_node.position - fly_start
 	if fly_delta.x <= 15.0 or fly_delta.y <= 10.0:
 		fail("Flying fighter must support smooth 360-degree multi-axis analog flight, delta=%s" % str(fly_delta))
+		return
+
+	# Batch 3 regression checks: I18nManager (5 locked locales, default en), WebSocketTransport + ZoneClientSync safety, dynamic extended_map & single-texture trees
+	if arena.get_language_locale() != "en":
+		fail("I18nManager must default strictly to 'en', got %s" % arena.get_language_locale())
+		return
+	if arena.set_language_locale("ja") or arena.get_language_locale() != "en":
+		fail("I18nManager must reject unsupported locale 'ja'")
+		return
+	if not arena.set_language_locale("vi") or arena.get_language_locale() != "vi":
+		fail("I18nManager must allow switching to 'vi' via Settings")
+		return
+	arena.set_language_locale("en")
+	if arena._extended_step_configs.size() != 4 or absf(arena._map_left_x - (-240.0)) > 0.1 or absf(arena._map_right_x - 6360.0) > 0.1:
+		fail("ArenaSandbox must load extended_map bounds and 4 steps dynamically from arena-stage.json")
+		return
+	if arena._foreground_trees != null and arena._foreground_trees.get_child_count() == 3:
+		var t0_atlas: AtlasTexture = (arena._foreground_trees.get_child(0) as Sprite2D).texture as AtlasTexture
+		var t1_atlas: AtlasTexture = (arena._foreground_trees.get_child(1) as Sprite2D).texture as AtlasTexture
+		if t0_atlas == null or t1_atlas == null or t0_atlas.atlas != t1_atlas.atlas:
+			fail("Foreground trees must reuse a single loaded Texture2D atlas instance")
+			return
+	var ws_script := preload("res://scenes/net/WebSocketTransport.gd")
+	var zs_script := preload("res://scenes/net/ZoneClientSync.gd")
+	var ws1 = ws_script.new()
+	var ws2 = ws_script.new()
+	var zs = zs_script.new()
+	zs.attach_transport(ws1)
+	zs.attach_transport(ws2)
+	ws1.packet_received.emit({"op": "zone_snapshot", "tick": 77, "entities": [{"id": "stale"}]})
+	if zs.entities_by_id.has("stale"):
+		fail("ZoneClientSync.attach_transport must disconnect previous transport signals")
+		return
+	ws2.packet_received.emit({"op": "zone_snapshot", "tick": 88, "entities": "malformed_not_array"})
+	if zs.last_snapshot_tick != -1:
+		fail("ZoneClientSync must reject malformed non-Array entities without advancing last_snapshot_tick")
+		return
+	var disc_reasons: Array[String] = []
+	ws2.disconnected.connect(func(r: String) -> void: disc_reasons.append(r))
+	ws2._connecting = true
+	ws2._was_open = false
+	ws2.poll_events()
+	if disc_reasons.is_empty() or disc_reasons[0] != "handshake_failed":
+		fail("WebSocketTransport must emit disconnected('handshake_failed') when closed during connecting, got %s" % str(disc_reasons))
+		return
+
+	# Phase 1 regression checks (alpha-login-cloudflare-handoff.md):
+	# (A) Drum Field Mode Mana & queued power_up overwritten by teleport / repeated input
+	arena.enable_field_mode(true, true)
+	await process_frame
+	var p1_fm = arena.field_manager
+	var p1_spr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+	if p1_fm == null or p1_spr == null:
+		fail("Phase 1 regression: FieldCombatManager or Drum player sprite missing")
+		return
+	p1_fm.homing_projectiles.clear()
+	# (A1) Idle power_up works normally and consumes 100 Mana once
+	arena.call("_play_fighter_clip", arena.player_node, "idle")
+	p1_fm._player_power_pending = false
+	p1_fm.player_mana = 100.0
+	if not p1_fm.request_player_power_up() or absf(p1_fm.player_mana) > 0.01 or String(p1_spr.animation) != "power_up":
+		fail("Phase 1 (A1): Idle Drum power_up must start immediately and consume 100 Mana")
+		return
+	# (A2) Queued power_up during attack_light then overwritten by teleport -> Mana stays 100, no orb
+	arena.call("_play_fighter_clip", arena.player_node, "idle")
+	if arena.player_node.has_meta(&"_arena_queued_action"):
+		arena.player_node.remove_meta(&"_arena_queued_action")
+	p1_fm._player_power_pending = false
+	p1_fm.player_mana = 100.0
+	arena.player_light_cooldown_s = 0.0
+	if not arena.call("_request_player_action", "attack_light"):
+		fail("Phase 1 (A2): Failed to start attack_light")
+		return
+	# Repeated spam presses of power_up during attack_light must NOT deduct Mana while queued
+	p1_fm.request_player_power_up()
+	p1_fm.request_player_power_up()
+	if absf(p1_fm.player_mana - 100.0) > 0.01 or String(arena.player_node.get_meta(&"_arena_queued_action", "")) != "power_up":
+		fail("Phase 1 (A2): Queued power_up must keep Mana=100 until clip actually begins, got mana=%.1f" % p1_fm.player_mana)
+		return
+	# Overwrite queue with teleport before flush
+	arena.call("_request_player_action", "teleport")
+	p1_fm.call("_step_player_combat_hooks")
+	if absf(p1_fm.player_mana - 100.0) > 0.01 or p1_fm._player_power_pending or String(arena.player_node.get_meta(&"_arena_queued_action", "")) != "teleport":
+		fail("Phase 1 (A2): Overwriting queued power_up with teleport must preserve 100 Mana and clear pending")
+		return
+	# Flush queue -> teleport starts, Mana still 100, zero orbs spawned
+	p1_spr.stop()
+	arena.call("_flush_player_queued_action")
+	if String(p1_spr.animation) != "teleport" or absf(p1_fm.player_mana - 100.0) > 0.01 or not p1_fm.homing_projectiles.is_empty():
+		fail("Phase 1 (A2): After teleport flush, Mana must stay 100 and no orb spawned")
+		return
+	# (A3) Queued power_up during attack_light then waited -> starts on flush, deducts 100 Mana ONCE, launches orb at frame 10
+	arena.call("_play_fighter_clip", arena.player_node, "idle")
+	p1_fm._player_power_pending = false
+	p1_fm.player_mana = 100.0
+	arena.player_light_cooldown_s = 0.0
+	arena.call("_request_player_action", "attack_light")
+	p1_fm.request_player_power_up()
+	p1_spr.stop()
+	arena.call("_flush_player_queued_action")
+	if String(p1_spr.animation) != "power_up" or absf(p1_fm.player_mana) > 0.01 or not p1_fm._player_power_pending:
+		fail("Phase 1 (A3): Flushed queued power_up must start, consume 100 Mana once, and arm orb")
+		return
+	p1_spr.frame = 10
+	p1_fm.call("_step_player_combat_hooks")
+	if p1_fm.homing_projectiles.is_empty():
+		fail("Phase 1 (A3): Flushed queued power_up must launch homing orb at frame 10")
+		return
+	p1_fm.homing_projectiles.clear()
+
+	# (B) Continuous terrain_blocks_segment across steps (both directions, grazing, above-cliff, homing turn)
+	if not arena.terrain_blocks_segment(Vector2(3000.0, 853.0), Vector2(2500.0, 811.0)):
+		fail("Phase 1 (B): Diagonal probe (3000,853)->(2500,811) crosses Step 1 solid corner and must return true")
+		return
+	if not arena.terrain_blocks_segment(Vector2(2500.0, 811.0), Vector2(3000.0, 853.0)):
+		fail("Phase 1 (B): Reverse diagonal probe (2500,811)->(3000,853) must also return true")
+		return
+	if not arena.terrain_blocks_segment(Vector2(3000.0, 853.0), Vector2(2847.5, 840.19)):
+		fail("Phase 1 (B): Sub-segment into Step 1 floor must return true")
+		return
+	if not arena.terrain_blocks_segment(Vector2(2847.5, 840.19), Vector2(3000.0, 853.0)):
+		fail("Phase 1 (B): Segment starting under Step 1 floor must return true")
+		return
+	if not arena.terrain_blocks_segment(Vector2(3000.0, 850.0), Vector2(2500.0, 830.0)):
+		fail("Phase 1 (B): Grazing edge crossing Step 1 must return true")
+		return
+	if arena.terrain_blocks_segment(Vector2(3000.0, 852.0), Vector2(2500.0, 810.0)):
+		fail("Phase 1 (B): Diagonal segment staying 0.6px above Step 1 corner must return false")
+		return
+	if arena.terrain_blocks_segment(Vector2(3000.0, 800.0), Vector2(2500.0, 800.0)):
+		fail("Phase 1 (B): Horizontal segment flying cleanly over Step 1 cliff must return false")
+		return
+	# Homing projectile curving into Step 1 wall must terminate on terrain
+	var p1_slot: Dictionary = p1_fm.slots[0]
+	var p1_mnode := p1_slot["node"] as Node2D
+	p1_slot["alive"] = true
+	p1_slot["hp"] = 1000.0
+	p1_mnode.position = Vector2(2700.0, 840.0)
+	p1_fm.call("_spawn_homing_projectile", arena.player_node, "drum", "electric_orb_fx", Vector2(2920.0, 875.0), 2.0, p1_slot, true, 400.0, 20.0)
+	var p1_blocked := false
+	for _ht in range(40):
+		p1_fm.call("_step_homing_projectiles", 1.0 / 60.0)
+		if p1_fm.homing_projectiles.is_empty():
+			p1_blocked = true
+			break
+	if not p1_blocked or float(p1_slot["hp"]) < 999.0:
+		fail("Phase 1 (B): Homing orb steering across Step 1 cliff face must stop on terrain without damaging target behind wall (hp=%.1f)" % float(p1_slot["hp"]))
 		return
 
 	var verified_roster_count: int = arena.roster_characters.size()

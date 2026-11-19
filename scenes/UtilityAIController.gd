@@ -148,7 +148,7 @@ func evaluate(params: Dictionary) -> Dictionary:
 		last_reason = "executing_action"
 		return {"intent": "busy", "move_dir": 0, "attack_clip": "", "desired_face_left": face_left, "edge_dist": edge_dist, "reason": last_reason}
 
-	# Special Case 1: Chilopoda reverses range roles (close -> dual laser power_up, >=50px -> burrow attack_light)
+	# Chilopoda fires at close range and burrows to reach distant targets.
 	if cid == "chilopoda":
 		light_chain_count = 0
 		if cooldown_remaining > 0.0:
@@ -157,7 +157,7 @@ func evaluate(params: Dictionary) -> Dictionary:
 			return {"intent": "wait_cooldown", "move_dir": 0, "attack_clip": "", "desired_face_left": face_left, "edge_dist": edge_dist, "reason": last_reason}
 		var chosen := "power_up" if edge_dist < close_edge_px else light_clip
 		last_intent = "attack"
-		last_reason = "chilopoda_close_laser" if edge_dist < close_edge_px else "chilopoda_far_burrow"
+		last_reason = "chilopoda_close_power_up" if edge_dist < close_edge_px else "chilopoda_far_burrow"
 		cooldown_remaining = attack_cooldown_s
 		return {"intent": "attack", "move_dir": 0, "attack_clip": chosen, "desired_face_left": face_left, "edge_dist": edge_dist, "reason": last_reason}
 

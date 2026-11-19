@@ -835,7 +835,7 @@
         if (state.activeTab === 'tab-human') {
           renderInspector();
           renderDragonBallItemInspector();
-        } else if (state.activeTab === 'tab-arena') {
+        } else if (state.activeTab === 'tab-arena' && !(arena.useGodotWebRuntime && arena.godotWebReady)) {
           stepAndRenderArena(0);
         }
       };
@@ -1039,7 +1039,7 @@
 
         renderInspector();
         renderDragonBallItemInspector();
-        stepAndRenderArena(16.67);
+        if (!(arena.useGodotWebRuntime && arena.godotWebReady)) stepAndRenderArena(16.67);
         requestAnimationFrame(mainLoop);
 
         // Preload remaining roster atlases & wings in gentle pairs of 2; avatars refresh as each resolves
@@ -2475,7 +2475,7 @@
         return { intent: 'busy', move_dir: 0, attack_clip: '', desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
       }
 
-      // Special Case 1: Chilopoda reverses range roles (<50px -> power_up laser, >=50px -> attack_light burrow)
+      // Chilopoda fires at close range and burrows to reach distant targets.
       if (cid === 'chilopoda') {
         aiState.lightChainCount = 0;
         if (aiState.cooldownRemaining > 0) {
@@ -2485,7 +2485,7 @@
         }
         const chosen = edgeDist < closeEdge ? 'power_up' : lightClip;
         aiState.lastIntent = 'attack';
-        aiState.lastReason = edgeDist < closeEdge ? 'chilopoda_close_laser' : 'chilopoda_far_burrow';
+        aiState.lastReason = edgeDist < closeEdge ? 'chilopoda_close_power_up' : 'chilopoda_far_burrow';
         aiState.cooldownRemaining = attackCd;
         return { intent: 'attack', move_dir: 0, attack_clip: chosen, desired_face_left: faceLeft, edge_dist: edgeDist, reason: aiState.lastReason };
       }
@@ -3044,7 +3044,7 @@
       }
     }
 
-    function updateArenaFrameLayout() {
+    function updateArenaFrameLayout(forceLoadGodotFrame = false) {
       const frame = document.getElementById('arenaPhoneFrame');
       const slot = document.getElementById('arenaScreenSlot');
       const bezelImg = document.getElementById('arenaPhoneBezelImg');
@@ -3087,7 +3087,8 @@
       if (godotFrame) {
         if (arena.useGodotWebRuntime && arena.godotWebReady) {
           godotFrame.style.display = 'block';
-          if (!godotFrame.src || !godotFrame.src.endsWith('/godot-web/index.html')) {
+          const shouldLoadFrame = forceLoadGodotFrame || state.activeTab === 'tab-arena';
+          if (shouldLoadFrame && (!godotFrame.src || !godotFrame.src.endsWith('/godot-web/index.html'))) {
             godotFrame.src = '/godot-web/index.html';
           }
         } else {
@@ -4666,7 +4667,7 @@
           stepItemSparkle(dtMs);
           renderInspector();
           renderDragonBallItemInspector();
-        } else if (state.activeTab === 'tab-arena') {
+        } else if (state.activeTab === 'tab-arena' && !(arena.useGodotWebRuntime && arena.godotWebReady)) {
           stepAndRenderArena(dtMs, wallDtMs);
         }
       } catch (err) {
@@ -4686,18 +4687,21 @@
           document.getElementById(state.activeTab).classList.add('active');
           if (state.activeTab === 'tab-human') renderInspector();
           if (state.activeTab === 'tab-arena') {
-            const bd = state.terrain?.backdrop || {};
-            for (const u of [
-              arena.mapWebPath,
-              bd.bg_web_path,
-              bd.wing_left?.web_path,
-              bd.wing_right?.web_path,
-              state.terrain?.tileset?.web_path,
-              state.terrain?.dust_fx?.web_path,
-            ]) {
-              if (u && !state.images[u]) loadImage(u).catch(() => null);
+            updateArenaFrameLayout();
+            if (!(arena.useGodotWebRuntime && arena.godotWebReady)) {
+              const bd = state.terrain?.backdrop || {};
+              for (const u of [
+                arena.mapWebPath,
+                bd.bg_web_path,
+                bd.wing_left?.web_path,
+                bd.wing_right?.web_path,
+                state.terrain?.tileset?.web_path,
+                state.terrain?.dust_fx?.web_path,
+              ]) {
+                if (u && !state.images[u]) loadImage(u).catch(() => null);
+              }
+              stepAndRenderArena(16.67);
             }
-            stepAndRenderArena(16.67);
           }
         };
       });
@@ -4937,7 +4941,7 @@
       const chkPxPerf = document.getElementById('chkPixelPerfect');
       if (chkPxPerf) chkPxPerf.onchange = e => { arena.pixelPerfect = Boolean(e.target.checked); updateArenaFrameLayout(); };
       const chkGodotWeb = document.getElementById('chkGodotWebRuntime');
-      if (chkGodotWeb) chkGodotWeb.onchange = e => { arena.useGodotWebRuntime = Boolean(e.target.checked) && arena.godotWebReady; updateArenaFrameLayout(); };
+      if (chkGodotWeb) chkGodotWeb.onchange = e => { arena.useGodotWebRuntime = Boolean(e.target.checked) && arena.godotWebReady; updateArenaFrameLayout(arena.useGodotWebRuntime); };
       const chkNative = document.getElementById('chkNative1to1');
       if (chkNative) chkNative.onchange = e => { arena.native1to1 = Boolean(e.target.checked); updateArenaFrameLayout(); };
       const chkPin = document.getElementById('chkPinArenaStage');
@@ -5038,8 +5042,10 @@
       });
 
       window.addEventListener('keydown', ev => {
+        const tag = ev.target && ev.target.tagName ? ev.target.tagName : '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (state.activeTab === 'tab-arena' && arena.useGodotWebRuntime && arena.godotWebReady) return;
         arena.keys[ev.code] = true;
-        if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA') return;
         if (ev.code === 'Space' && state.activeTab === 'tab-human') {
           ev.preventDefault();
           document.getElementById('btnPlayPause').click();

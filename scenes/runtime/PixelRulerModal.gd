@@ -190,7 +190,7 @@ func update_metrics(metrics: Dictionary) -> void:
 	var cam_z := float(metrics.get("camera_zoom", 1.0))
 	var vis: Array = metrics.get("visible_logic_size", [1920.0, 1080.0])
 	var cam_p: Array = metrics.get("camera_pos", [960.0, 540.0])
-	var screen_factor := eff_sc / maxf(0.01, cam_z)
+	var screen_factor := eff_sc * maxf(0.01, cam_z)
 
 	var lines := PackedStringArray()
 	if bool(metrics.get("has_a", false)) and bool(metrics.get("has_b", false)):

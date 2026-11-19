@@ -338,7 +338,7 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 		for k in (custom_saved as Dictionary).keys():
 			var sid := int(k)
 			var act := str((custom_saved as Dictionary)[k])
-			if sid >= 2 and sid <= 7 and (act == "empty" or avail.has(act)):
+			if sid >= 2 and sid <= 7 and (act == "empty" or act == "pickup_items" or avail.has(act)):
 				_slot_bindings[sid] = act
 	_rebuild_settings_rows()
 	_refresh_slot_buttons()

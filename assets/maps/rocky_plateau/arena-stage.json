@@ -100,7 +100,7 @@
       "monster_count_per_map": [5, 7],
       "monster_spacing_max_px": 500,
       "special_roles": {
-        "chilopoda": "burrow_far_laser_close",
+        "chilopoda": "power_up_close_burrow_far",
         "flight": "hover_no_chase_ranged_far_melee_close"
       }
     }

@@ -9,7 +9,7 @@ Tài liệu chuẩn hóa quy trình build & cài **DR7-Studio DragonBall 2D** l�
 ## Giai đoạn 1 — Test Native 60 FPS Trên iPhone (`0đ`, Không Cần Mac)
 
 ### Bước 1: Xuất file `unsigned.ipa` bằng GitHub Actions
-1. Vào tab **Actions** trên GitHub → chọn workflow **`Build iOS IPA (Unsigned Sideload & TestFlight)`** ([build-ios-ipa.yml](../../.github/workflows/build-ios-ipa.yml)).
+1. Vào tab **Actions** trên GitHub → chọn workflow **`Build iOS IPA (Flexible Sideload / Ad-Hoc OTA / Optional TestFlight)`** ([build-ios-ipa.yml](../../.github/workflows/build-ios-ipa.yml)).
 2. Bấm **Run workflow** với cấu hình:
    - `signing_mode`: **`unsigned_sideload`**
    - `publish_github_release`:
@@ -69,14 +69,14 @@ Không khóa cứng TestFlight: khi có tài khoản Apple Developer (`$99/năm`
 | :--- | :--- |
 | `IOS_DIST_CERT_P12_BASE64` | Chứng chỉ **Apple Distribution** xuất `.p12`, mã hóa Base64 (`base64 -w0 dist.p12`). |
 | `IOS_DIST_CERT_PASSWORD` | Mật khẩu file `.p12`. |
-| `IOS_PROVISION_PROFILE_BASE64` | App Store Distribution `.mobileprovision` cho Bundle ID `com.dr7studio.dragonball2d`, mã hóa Base64. |
+| `IOS_PROVISION_PROFILE_BASE64` | File `.mobileprovision` tương ứng chế độ ký (**Ad-Hoc** cho `signed_adhoc_ota` hoặc **App Store Distribution** cho `signed_appstore_testflight`) cho Bundle ID `com.dr7studio.dragonball2d`, mã hóa Base64. |
 | `ASC_API_KEY_ID` | Key ID tạo tại App Store Connect → Users & Access → Integrations → App Store Connect API (quyền `App Manager`). |
 | `ASC_API_ISSUER_ID` | Issuer ID trong trang App Store Connect API. |
 | `ASC_API_KEY_P8_BASE64` | Nội dung file `AuthKey_XXXXXX.p8` mã hóa Base64. |
 
-Sau đó chạy lại **`Build iOS IPA`** với:
-- `signing_mode`: **`signed_testflight`**
-- `upload_testflight`: **`true`**
+Sau đó chạy lại **`Build iOS IPA (Flexible Sideload / Ad-Hoc OTA / Optional TestFlight)`** với một trong hai cấu hình:
+- **Phân phối Ad-Hoc / OTA (không cần TestFlight):** `signing_mode`: **`signed_adhoc_ota`**, `upload_testflight`: **`false`**
+- **Phân phối App Store / TestFlight:** `signing_mode`: **`signed_appstore_testflight`**, `upload_testflight`: **`true`** *(hoặc `false` nếu chỉ lấy file `.ipa` đã ký)*
 
 Workflow sẽ tự động ký chuẩn **Apple Distribution** và đẩy thẳng lên **TestFlight**:
 - **Internal Testing** (tối đa **100 tester** trong team): **Không qua duyệt**, có trên app TestFlight sau ~5–10 phút, hạn 90 ngày.

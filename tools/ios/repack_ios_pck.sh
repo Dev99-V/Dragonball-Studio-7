@@ -12,7 +12,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BASE_IPA="${1:-}"
 APP_VER="$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")"
-OUT_IPA="${2:-$ROOT_DIR/build/ios/dr7-studio-v${APP_VER}-repacked-unsigned.ipa}"
+RAW_OUT_IPA="${2:-$ROOT_DIR/build/ios/dr7-studio-v${APP_VER}-repacked-unsigned.ipa}"
 
 if [ -z "$BASE_IPA" ] || [ ! -f "$BASE_IPA" ]; then
   echo "Cach dung: bash tools/ios/repack_ios_pck.sh <duong_dan_base.ipa> [output.ipa]" >&2
@@ -20,13 +20,17 @@ if [ -z "$BASE_IPA" ] || [ ! -f "$BASE_IPA" ]; then
   exit 1
 fi
 
+# Resolve output path to an absolute path before changing directories into TMP_DIR.
+mkdir -p "$(dirname "$RAW_OUT_IPA")" "$ROOT_DIR/build"
+OUT_IPA="$(cd "$(dirname "$RAW_OUT_IPA")" && pwd)/$(basename "$RAW_OUT_IPA")"
+
 GODOT_BIN="$ROOT_DIR/tools/godot/godot"
-if [ ! -x "$GODOT_BIN" ]; then
-  echo "[INFO] Khong thay Godot 4.7.2 local, dang tai..."
+TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+if [ ! -x "$GODOT_BIN" ] || [ ! -f "$TEMPLATE_DIR/ios.zip" ]; then
+  echo "[INFO] Khong thay Godot 4.7.2 local hoac iOS export template, dang tai..."
   bash "$ROOT_DIR/tools/godot/install_godot.sh" --with-templates
 fi
 
-mkdir -p "$(dirname "$OUT_IPA")"
 touch "$ROOT_DIR/build/.gdignore"
 
 TMP_DIR="$(mktemp -d)"

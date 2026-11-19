@@ -52,7 +52,7 @@ jobs:
         with:
           path: |
             ~/godot-bin
-            ~/Library/Application Support/Godot/export_templates/4.7.2.stable
+            ~/Library/Application Support/Godot/export_templates/${{ env.GODOT_VERSION }}.stable
           key: godot-macos-${{ env.GODOT_RELEASE_TAG }}-v1
 
       - name: Download & Install Godot 4.7.2 + Export Templates (macOS)
@@ -68,14 +68,63 @@ jobs:
           mv /tmp/godot-tpz/templates/* "$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.stable/"
           rm -rf /tmp/godot-macos.zip /tmp/godot-templates.tpz /tmp/godot-tpz
 
-      - name: Import Godot project & export iOS Xcode project
+      - name: Import Apple Signing Certificate & Provisioning Profile (Ad-Hoc OTA or Store/TestFlight)
+        if: ${{ inputs.signing_mode == 'signed_adhoc_ota' || inputs.signing_mode == 'signed_appstore_testflight' }}
+        env:
+          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          if [ -z "$IOS_DIST_CERT_P12_BASE64" ] || [ -z "$IOS_PROVISION_PROFILE_BASE64" ]; then
+            echo "::error::Thiếu GitHub Secrets (IOS_DIST_CERT_P12_BASE64 / IOS_PROVISION_PROFILE_BASE64) cho chế độ ký Apple."
+            exit 1
+          fi
+          KC_PASS="${KEYCHAIN_PASSWORD:-dr7-temp-ci-keychain}"
+          security create-keychain -p "$KC_PASS" build.keychain
+          security list-keychains -d user -s build.keychain $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KC_PASS" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
+
+          echo "$IOS_DIST_CERT_P12_BASE64" | base64 --decode > /tmp/dist.p12
+          security import /tmp/dist.p12 -k build.keychain -P "$IOS_DIST_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" build.keychain
+
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$IOS_PROVISION_PROFILE_BASE64" | base64 --decode > /tmp/profile.mobileprovision
+          PROFILE_UUID="$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< "$(security cms -D -i /tmp/profile.mobileprovision)")"
+          PROFILE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< "$(security cms -D -i /tmp/profile.mobileprovision)")"
+          TEAM_ID="$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' /dev/stdin <<< "$(security cms -D -i /tmp/profile.mobileprovision)")"
+          cp /tmp/profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/${PROFILE_UUID}.mobileprovision"
+          echo "PROFILE_UUID=${PROFILE_UUID}" >> "$GITHUB_ENV"
+          echo "PROFILE_NAME=${PROFILE_NAME}" >> "$GITHUB_ENV"
+          echo "TEAM_ID=${TEAM_ID}" >> "$GITHUB_ENV"
+
+      - name: Configure iOS Team ID & Import/Export Xcode Project
         run: |
           mkdir -p build/ios
           touch build/.gdignore
+          # Godot requires a Team ID to generate an Xcode project even for unsigned builds.
+          EFFECTIVE_TEAM_ID="${TEAM_ID:-0000000000}"
+          python3 - "$EFFECTIVE_TEAM_ID" <<'PY'
+          import pathlib, re, sys
+          team_id = sys.argv[1]
+          p = pathlib.Path("export_presets.cfg")
+          txt = p.read_text(encoding="utf-8")
+          updated, n = re.subn(
+              r'(?m)^application/app_store_team_id=".*"$',
+              f'application/app_store_team_id="{team_id}"',
+              txt,
+              count=1,
+          )
+          assert n == 1, "Missing application/app_store_team_id in export_presets.cfg"
+          p.write_text(updated, encoding="utf-8")
+          PY
           GODOT_BIN="$HOME/godot-bin/Godot.app/Contents/MacOS/Godot"
           "$GODOT_BIN" --headless --path . --editor --import
           "$GODOT_BIN" --headless --path . --export-release "iOS" "build/ios/${APP_NAME}.xcodeproj"
-          ls -la build/ios
+          test -f "build/ios/${APP_NAME}.xcodeproj/project.pbxproj"
 
       - name: Build Unsigned IPA (0d Sideload — Sideloadly / AltStore / SideStore / Base IPA for Linux Repack)
         if: ${{ inputs.signing_mode == 'unsigned_sideload' }}
@@ -86,6 +135,7 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -archivePath "build/ios/${APP_NAME}.xcarchive" \
+            DEVELOPMENT_TEAM="" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -108,38 +158,6 @@ jobs:
             --icon-url "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/assets/app_icon/icon_512.png" \
             --bundle-id "${APP_BUNDLE_ID}" \
             --output "build/ios/altstore-source.json"
-
-      - name: Import Apple Signing Certificate & Provisioning Profile (Ad-Hoc OTA or Store/TestFlight)
-        if: ${{ inputs.signing_mode == 'signed_adhoc_ota' || inputs.signing_mode == 'signed_appstore_testflight' }}
-        env:
-          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
-          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
-          IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
-        run: |
-          if [ -z "$IOS_DIST_CERT_P12_BASE64" ] || [ -z "$IOS_PROVISION_PROFILE_BASE64" ]; then
-            echo "::error::Thiếu GitHub Secrets (IOS_DIST_CERT_P12_BASE64 / IOS_PROVISION_PROFILE_BASE64) cho chế độ ký Apple."
-            exit 1
-          fi
-          KC_PASS="${KEYCHAIN_PASSWORD:-dr7-temp-ci-keychain}"
-          security create-keychain -p "$KC_PASS" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$KC_PASS" build.keychain
-          security set-keychain-settings -lut 21600 build.keychain
-
-          echo "$IOS_DIST_CERT_P12_BASE64" | base64 --decode > /tmp/dist.p12
-          security import /tmp/dist.p12 -k build.keychain -P "$IOS_DIST_CERT_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" build.keychain
-
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          echo "$IOS_PROVISION_PROFILE_BASE64" | base64 --decode > /tmp/profile.mobileprovision
-          PROFILE_UUID="$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< "$(security cms -D -i /tmp/profile.mobileprovision)")"
-          PROFILE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< "$(security cms -D -i /tmp/profile.mobileprovision)")"
-          TEAM_ID="$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' /dev/stdin <<< "$(security cms -D -i /tmp/profile.mobileprovision)")"
-          cp /tmp/profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/${PROFILE_UUID}.mobileprovision"
-          echo "PROFILE_UUID=${PROFILE_UUID}" >> "$GITHUB_ENV"
-          echo "PROFILE_NAME=${PROFILE_NAME}" >> "$GITHUB_ENV"
-          echo "TEAM_ID=${TEAM_ID}" >> "$GITHUB_ENV"
 
       - name: Archive & Export Signed IPA (Ad-Hoc OTA or App Store / TestFlight)
         if: ${{ inputs.signing_mode == 'signed_adhoc_ota' || inputs.signing_mode == 'signed_appstore_testflight' }}
@@ -219,7 +237,7 @@ jobs:
         run: |
           TAG_NAME="ios-sideload-v${{ steps.ver.outputs.version }}"
           IPA_FILE="build/ios/${APP_NAME}-v${{ steps.ver.outputs.version }}-unsigned.ipa"
-          gh release delete "$TAG_NAME" --yes 2>/dev/null || true
+          gh release delete "$TAG_NAME" --yes --cleanup-tag 2>/dev/null || true
           gh release create "$TAG_NAME" \
             "$IPA_FILE" \
             "build/ios/ipa-sha256.txt" \
@@ -232,6 +250,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dr7-studio-ios-${{ inputs.signing_mode }}-v${{ steps.ver.outputs.version }}
+          if-no-files-found: error
           path: |
             build/ios/*.ipa
             build/ios/ipa-sha256.txt
