@@ -388,12 +388,23 @@ static func evaluate_hero_auto(params: Dictionary) -> Dictionary:
 	var stamina: float = float(params.get("stamina", 0.0))
 	var mana: float = float(params.get("mana", 0.0))
 	var has_power_up: bool = bool(params.get("has_power_up", false))
+	var can_kamehameha: bool = bool(params.get("can_kamehameha", false))
+	var can_atomic: bool = bool(params.get("can_atomic", false))
+	var can_energy_recover: bool = bool(params.get("can_energy_recover", false))
 	var target_airborne: bool = bool(params.get("target_airborne", false)) or (t_pos.y < p_pos.y - 68.0)
 	var is_airborne_flight: bool = bool(params.get("is_airborne_flight", false))
+	var can_fly_now: bool = bool(params.get("can_fly", true))
 	var can_light: bool = bool(params.get("can_light_attack", true))
 	var to_vec := t_pos - p_pos
 	var dir_x := -1 if to_vec.x < -6.0 else (1 if to_vec.x > 6.0 else 0)
 	var norm_vec := to_vec.normalized() if to_vec.length() > 1.0 else Vector2(float(dir_x if dir_x != 0 else 1), 0.0)
+
+	# 0. Flying target: ALWAYS prioritize ranged Ki Blast skills (Kamehameha -> Atomic) when ready (Owner v10.2)!
+	if target_airborne and is_goku:
+		if can_kamehameha:
+			return {"intent": "kamehameha", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_air_ranged_kamehameha"}
+		if can_atomic:
+			return {"intent": "atomic_blast", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_air_ranged_atomic"}
 
 	# 1. Within melee strike range (< 30px) and vertical alignment: attack combo or skill!
 	if edge_dist <= melee_range and v_gap <= 68.0:
@@ -403,8 +414,12 @@ static func evaluate_hero_auto(params: Dictionary) -> Dictionary:
 			return {"intent": "attack_combo", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_melee_combo"}
 		return {"intent": "wait_cooldown", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_combo_cooldown"}
 
-	# 2. Target is high up / flying: Priority 1 = Teleport, Priority 2 = Jump + Fly up!
+	# 2. Target is high up / flying: ranged skills handled above -> if KI locked, recover/wait on ground -> else Teleport / Fly up!
 	if target_airborne:
+		if is_goku and (not is_airborne_flight) and (not can_fly_now):
+			if can_energy_recover:
+				return {"intent": "energy_recover", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_air_recover_ki"}
+			return {"intent": "chase", "move_dir": dir_x, "fly_vec": Vector2(float(dir_x), 0.0), "jump": false, "reason": "auto_air_wait_ki_regen"}
 		if is_goku and stamina >= 75.0 and to_vec.length() >= 95.0:
 			return {"intent": "teleport_static", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_air_teleport_static"}
 		if is_goku and stamina >= 25.0 and to_vec.length() >= 110.0 and is_airborne_flight:

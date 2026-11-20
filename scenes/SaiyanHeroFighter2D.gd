@@ -1,15 +1,19 @@
 class_name SaiyanHeroFighter2D
 extends CharacterFighter2D
-## First Playable Hero Controller — Son Goku (Phase 1 v4):
+## First Playable Hero Controller — Son Goku (Phase 1 v8):
 ## - Two Game States: "peace" (Hòa bình) vs "combat" (Chiến đấu) with explicit clip state filtering.
 ## - NO `idle_ssj`: SSJ1 Peace standing = `idle_ssj_aura` (always returns after moving in Peace);
-##   Peace -> Combat bridges via `combat_enter` (34 F0..F3) -> `idle_combat` (34 F4..F7).
+##   Peace -> Combat bridges via `combat_enter` (34 F0..F3) -> `idle_combat` (34 F4..F7, standing martial-arts knee bounce).
 ## - Invulnerable during `transform_ssj`.
-## - 7-Step Normal Combo (10->11->12->13->14->17->15), per-frame hit impacts & damage:
-##   Light = 10..20 (crit 20), Heavy = 50, attack_6 gold slash (#13) = 60, 100ms combo link gap!
-## - Combat Move (`16`, 200 px/s): Backward loops #0 (300ms) <-> #1 (80ms); Forward loops #3 (300ms) <-> #2 (80ms).
+## - 7-Step Normal Combo (10->11->12->13->14->17->15), ~60ms/frame + 20ms combo link, per-frame hit impacts & damage:
+##   Light = 10..20 (crit 20), Heavy = 50, attack_6 gold slash (#13) = 60.
+## - Combat Move (`16`) Continuous Dash + Analog Brake (NO aura, NO hop-and-land):
+##   Backward dash (`#0`): 400 px/s continuous retreat while analog pulled away past threshold (>= 0.55).
+##   Forward  dash (`#3`): 500 px/s continuous advance while analog pushed toward past threshold (>= 0.55).
+##   Brake cushions (`#1` back / `#2` fwd): triggered when pulling analog near center (0.08..0.55) or releasing to brake.
 ## - 360° Analog Jump (~100px height): F0..F2 up, F3..F5 fall/land, F4 universal high-fall.
-## - Flight (SSJ1 only, 200 px/s, NO fly_launch): Jump + Hold Analog UP -> `fly_aura` -> Stop -> 3s `fly_prep`
+## - Flight (SSJ1 only, 400 px/s, NO fly_launch): powered by Orange KI bar (50 max, -5 KI/s flying, +5 KI/s regen when grounded;
+##   exhausting KI forces immediate fall until KI recovers). Jump + Hold Analog UP -> `fly_aura` -> Stop -> 3s `fly_prep`
 ##   -> Analog DOWN cancels hover/flight for immediate fast descent (`jump` F4) without waiting 3s!
 ## - 3-Mode Stamina Teleport (100 max, +5/s, -75 static / -25 directional 100px).
 
@@ -39,14 +43,42 @@ const COMBO_HIT_FRAMES := {
 
 const STAMINA_MAX: float = 100.0
 const STAMINA_REGEN_PER_S: float = 5.0
+const KI_MAX: float = 50.0
+const KI_FLY_DRAIN_PER_S: float = 5.0
+const KI_REGEN_PER_S: float = 5.0
+const KI_MIN_TAKEOFF: float = 5.0
+const BARRIER_DURATION_S: float = 10.0
+const BARRIER_COOLDOWN_S: float = 16.0
+const RECOVER_DURATION_S: float = 3.0
+const RECOVER_COOLDOWN_S: float = 10.0
+const FLURRY_KICK_COOLDOWN_S: float = 6.0
+const FLURRY_KICK_STUN_S: float = 1.6
+const FLURRY_KICK_LUNGE_SPEED_PX_S: float = 260.0
+const FLURRY_KICK_RANGE_FWD_PX: float = 215.0
+const FLURRY_KICK_RANGE_V_PX: float = 160.0
+const FLURRY_KICK_SPEED_FACTOR: float = 0.70
+const ATOMIC_COOLDOWN_S: float = 12.0
+const ATOMIC_SPEED_PX_S: float = 1500.0
+const ATOMIC_BOLT_COUNT: int = 4
+const KAME_MANA_COST: float = 80.0
+const KAME_SPEED_PX_S: float = 1700.0
+const HERO_MAX_MANA: float = 100.0
 const TELEPORT_STATIC_COST: float = 75.0
 const TELEPORT_DASH_COST: float = 25.0
 const TELEPORT_DASH_DIST_PX: float = 100.0
 const HOVER_TIMEOUT_S: float = 3.0
 const COMBAT_TIMEOUT_S: float = 6.0
 const WALK_SPEED_PX_S: float = 200.0
-const COMBAT_MOVE_SPEED_PX_S: float = 400.0
-const COMBAT_MOVE_HOVER_Y_PX: float = 20.0
+const COMBAT_MOVE_BACK_SPEED_PX_S: float = 400.0
+const COMBAT_MOVE_FWD_SPEED_PX_S: float = 500.0
+const COMBAT_MOVE_BRAKE_SPEED_PX_S: float = 120.0
+const COMBAT_MOVE_ANALOG_DASH_THRESHOLD: float = 0.55
+const COMBAT_MOVE_ANALOG_BRAKE_MIN: float = 0.08
+const COMBAT_MOVE_BRAKE_HOLD_S: float = 0.12
+const COMBAT_MOVE_SPEED_PX_S: float = COMBAT_MOVE_FWD_SPEED_PX_S
+const COMBAT_MOVE_HOVER_Y_PX: float = 10.0
+const COMBAT_MOVE_BOB_AMP_PX: float = 2.5
+const COMBAT_MOVE_BOB_FREQ_RAD_S: float = 28.0
 const FLIGHT_SPEED_PX_S: float = 400.0
 const FAST_DROP_VY_PX_S: float = 520.0
 const COMBO_LINK_COOLDOWN_S: float = 0.02 # 20ms fluid combo link between attack_light..attack_7 (Owner tuning)!
@@ -57,10 +89,6 @@ const JUMP_TO_FLY_HOLD_S: float = 0.14
 const JUMP_TO_FLY_MIN_ALT_PX: float = 32.0
 const TRANSFORM_INVULN_DURATION_S: float = 0.85
 
-# Exact Owner Combat Move loop timings: Primary pose (#0 back / #3 fwd) = 90ms, Secondary bounce (#1 / #2) = 60ms
-const COMBAT_MOVE_PRIMARY_HOLD_S: float = 0.09
-const COMBAT_MOVE_LOOP_RETURN_S: float = 0.06
-
 var is_ssj: bool = false
 var game_state: String = "peace" # "peace" | "combat"
 var in_combat: bool = false
@@ -70,6 +98,9 @@ var combo_step: int = 0
 
 var stamina: float = STAMINA_MAX
 var max_stamina: float = STAMINA_MAX
+var ki: float = KI_MAX
+var max_ki: float = KI_MAX
+var ki_exhausted: bool = false
 
 # Flight state machine (NO fly_launch!): "ground" | "flying" | "hovering" | "falling"
 var flight_state: String = "ground"
@@ -78,16 +109,28 @@ var jump_hold_up_s: float = 0.0
 var jump_ascend_s: float = 0.0
 var jump_land_hold_s: float = 0.0
 
-# Combat Move (`16`) exact 300ms / 80ms loop state:
-# Backward (-1): #0 (300ms) -> #1 (80ms) -> #0
-# Forward  (+1): #3 (300ms) -> #2 (80ms) -> #3
+# Combat Move (`16`) Continuous Dash + Analog Brake state (NO aura, NO hop-and-land):
+# Backward (-1): Dash #0 (400 px/s) -> Brake #1 (analog near center / release)
+# Forward  (+1): Dash #3 (500 px/s) -> Brake #2 (analog near center / release)
 var combat_move_frame: int = 3
 var _combat_move_dir_last: int = 0
-var _combat_move_phase: int = 0       # 0 = primary (#0 or #3 for 300ms), 1 = secondary (#1 or #2 for 80ms)
-var _combat_move_phase_t: float = 0.0
+var _combat_move_braking: bool = false
+var _combat_move_brake_timer_s: float = 0.0
+var _combat_move_speed_cur: float = 0.0
+var _combat_move_just_braked: bool = false
+var _combat_move_dash_t: float = 0.0
 
 # Armor-break HIT reaction tracking
 var armor_hit_timer_s: float = 0.0
+
+# Phase 2 Active Skill Timers & Buffs (Owner 2026-11-20):
+var barrier_timer_s: float = 0.0        # Active LOOP 10S protective shield (moves/attacks freely!)
+var barrier_cooldown_s: float = 0.0
+var recover_timer_s: float = 0.0        # Active 3s energy recovery channel (HP + Armor + Flight KI)
+var recover_cooldown_s: float = 0.0
+var flurry_cooldown_s: float = 0.0      # Flurry kick cooldown (applies hard stun + yellow stars ring)
+var atomic_cooldown_s: float = 0.0      # Atomic blast 12s cooldown
+var kame_cooldown_s: float = 0.0        # Kamehameha brief recast lock (250 Mana gated)
 
 # Teleport mid-clip pending state
 var pending_teleport_mode: String = ""   # "static" | "dash_ground" | "dash_air"
@@ -134,7 +177,7 @@ func can_jump() -> bool:
 
 
 func can_fly() -> bool:
-	return is_ssj
+	return is_ssj and (not ki_exhausted) and ki > 0.001
 
 
 func is_airborne_flight() -> bool:
@@ -173,6 +216,8 @@ func reset_hero_state() -> void:
 	transform_invuln_s = 0.0
 	combo_step = 0
 	stamina = STAMINA_MAX
+	ki = KI_MAX
+	ki_exhausted = false
 	flight_state = "ground"
 	hover_timer_s = 0.0
 	jump_hold_up_s = 0.0
@@ -180,9 +225,18 @@ func reset_hero_state() -> void:
 	jump_land_hold_s = 0.0
 	combat_move_frame = 3
 	_combat_move_dir_last = 0
-	_combat_move_phase = 0
-	_combat_move_phase_t = 0.0
+	_combat_move_braking = false
+	_combat_move_brake_timer_s = 0.0
+	_combat_move_speed_cur = 0.0
+	_combat_move_just_braked = false
 	armor_hit_timer_s = 0.0
+	barrier_timer_s = 0.0
+	barrier_cooldown_s = 0.0
+	recover_timer_s = 0.0
+	recover_cooldown_s = 0.0
+	flurry_cooldown_s = 0.0
+	atomic_cooldown_s = 0.0
+	kame_cooldown_s = 0.0
 	pending_teleport_mode = ""
 	pending_teleport_relocated = false
 	hero_state_changed.emit()
@@ -259,7 +313,22 @@ func step_hero_timers(delta: float, has_move_input: bool, on_ground: bool, holdi
 		return
 	var prev_stam := stamina
 	stamina = minf(max_stamina, stamina + STAMINA_REGEN_PER_S * delta)
-	if absf(stamina - prev_stam) > 0.001:
+	var prev_ki := ki
+	var prev_ki_ex := ki_exhausted
+	if flight_state == "flying" or flight_state == "hovering":
+		# Orange KI flight resource: drains 5 KI/s while flying/hovering; hitting 0 forces immediate fall!
+		ki = maxf(0.0, ki - KI_FLY_DRAIN_PER_S * delta)
+		if ki <= 0.0:
+			ki = 0.0
+			ki_exhausted = true
+			flight_state = "falling"
+			hover_timer_s = 0.0
+	else:
+		# Not flying: regenerates +5 KI/s up to 50 KI; clears exhausted gate once >= 5 KI (1s recovery)
+		ki = minf(max_ki, ki + KI_REGEN_PER_S * delta)
+		if ki_exhausted and ki >= KI_MIN_TAKEOFF:
+			ki_exhausted = false
+	if absf(stamina - prev_stam) > 0.001 or absf(ki - prev_ki) > 0.001 or ki_exhausted != prev_ki_ex:
 		hero_state_changed.emit()
 
 	if transform_invuln_s > 0.0:
@@ -270,6 +339,21 @@ func step_hero_timers(delta: float, has_move_input: bool, on_ground: bool, holdi
 
 	if armor_hit_timer_s > 0.0:
 		armor_hit_timer_s = maxf(0.0, armor_hit_timer_s - delta)
+
+	if barrier_timer_s > 0.0:
+		barrier_timer_s = maxf(0.0, barrier_timer_s - delta)
+	if barrier_cooldown_s > 0.0:
+		barrier_cooldown_s = maxf(0.0, barrier_cooldown_s - delta)
+	if recover_timer_s > 0.0:
+		recover_timer_s = maxf(0.0, recover_timer_s - delta)
+	if recover_cooldown_s > 0.0:
+		recover_cooldown_s = maxf(0.0, recover_cooldown_s - delta)
+	if flurry_cooldown_s > 0.0:
+		flurry_cooldown_s = maxf(0.0, flurry_cooldown_s - delta)
+	if atomic_cooldown_s > 0.0:
+		atomic_cooldown_s = maxf(0.0, atomic_cooldown_s - delta)
+	if kame_cooldown_s > 0.0:
+		kame_cooldown_s = maxf(0.0, kame_cooldown_s - delta)
 
 	if jump_land_hold_s > 0.0:
 		jump_land_hold_s = maxf(0.0, jump_land_hold_s - delta)
@@ -288,7 +372,7 @@ func step_hero_timers(delta: float, has_move_input: bool, on_ground: bool, holdi
 			jump_ascend_s = 0.0
 		else:
 			jump_ascend_s += delta
-			if is_ssj and holding_up and altitude_px >= JUMP_TO_FLY_MIN_ALT_PX:
+			if can_fly() and holding_up and altitude_px >= JUMP_TO_FLY_MIN_ALT_PX:
 				jump_hold_up_s += delta
 				if jump_hold_up_s >= JUMP_TO_FLY_HOLD_S:
 					flight_state = "flying"
@@ -337,31 +421,110 @@ func step_hero_timers(delta: float, has_move_input: bool, on_ground: bool, holdi
 			hero_state_changed.emit()
 
 
-func step_combat_move_frame(delta: float, move_rel_dir: int) -> int:
-	## Exact Owner v4 loop timing for `combat_move` (`16`):
-	## - Backward (`move_rel_dir < 0`): #0 (300ms) -> #1 (80ms) -> #0 (300ms) -> #1 (80ms)
-	## - Forward  (`move_rel_dir > 0`): #3 (300ms) -> #2 (80ms) -> #3 (300ms) -> #2 (80ms)
-	if move_rel_dir == 0:
-		_combat_move_dir_last = 0
-		_combat_move_phase = 0
-		_combat_move_phase_t = 0.0
-		return combat_move_frame
-	var sgn := -1 if move_rel_dir < 0 else 1
-	if sgn != _combat_move_dir_last:
+func reset_combat_move() -> void:
+	_combat_move_dir_last = 0
+	_combat_move_braking = false
+	_combat_move_brake_timer_s = 0.0
+	_combat_move_speed_cur = 0.0
+	_combat_move_just_braked = false
+	_combat_move_dash_t = 0.0
+
+
+func step_combat_move_frame(delta: float, move_rel_dir: int, analog_mag: float = 1.0) -> int:
+	## Exact Owner v10 continuous dash + analog near-center brake for `combat_move` (`16`, NO aura):
+	## - Backward (`move_rel_dir < 0`):
+	##     Full Dash (`analog_mag >= 0.55`): holds Frame #0 continuously at 400 px/s with low dynamic glide hover (~10 +/- 2.5px) + wind streaks.
+	##     Brake (`0.08 <= analog_mag < 0.55` or release to center): drops to floor on Frame #1 (braking cushion).
+	## - Forward  (`move_rel_dir > 0`):
+	##     Full Dash (`analog_mag >= 0.55`): holds Frame #3 continuously at 500 px/s with low dynamic glide hover (~10 +/- 2.5px) + wind streaks.
+	##     Brake (`0.08 <= analog_mag < 0.55` or release to center): drops to floor on Frame #2 (braking cushion).
+	_combat_move_just_braked = false
+	var dt := maxf(0.0, delta)
+	var mag := clampf(analog_mag, 0.0, 1.0)
+	if move_rel_dir != 0 and mag >= COMBAT_MOVE_ANALOG_DASH_THRESHOLD:
+		var sgn := -1 if move_rel_dir < 0 else 1
+		if _combat_move_dir_last != sgn or _combat_move_braking:
+			_combat_move_dash_t = 0.0
 		_combat_move_dir_last = sgn
-		_combat_move_phase = 0
-		_combat_move_phase_t = 0.0
-	else:
-		_combat_move_phase_t += delta
-		var dur := COMBAT_MOVE_PRIMARY_HOLD_S if _combat_move_phase == 0 else COMBAT_MOVE_LOOP_RETURN_S
-		if _combat_move_phase_t >= dur:
-			_combat_move_phase_t -= dur
-			_combat_move_phase = 1 - _combat_move_phase
-	if sgn < 0:
-		combat_move_frame = 0 if _combat_move_phase == 0 else 1
-	else:
-		combat_move_frame = 3 if _combat_move_phase == 0 else 2
+		_combat_move_braking = false
+		_combat_move_brake_timer_s = 0.0
+		_combat_move_dash_t += dt
+		_combat_move_speed_cur = COMBAT_MOVE_BACK_SPEED_PX_S if sgn < 0 else COMBAT_MOVE_FWD_SPEED_PX_S
+		combat_move_frame = 0 if sgn < 0 else 3
+		return combat_move_frame
+
+	if move_rel_dir != 0 and mag >= COMBAT_MOVE_ANALOG_BRAKE_MIN:
+		var sgn := -1 if move_rel_dir < 0 else 1
+		if not _combat_move_braking and _combat_move_dir_last != 0:
+			_combat_move_just_braked = true
+		_combat_move_dir_last = sgn
+		_combat_move_braking = true
+		_combat_move_dash_t = 0.0
+		_combat_move_brake_timer_s = COMBAT_MOVE_BRAKE_HOLD_S
+		var frac := clampf((mag - COMBAT_MOVE_ANALOG_BRAKE_MIN) / maxf(0.01, COMBAT_MOVE_ANALOG_DASH_THRESHOLD - COMBAT_MOVE_ANALOG_BRAKE_MIN), 0.0, 1.0)
+		_combat_move_speed_cur = lerpf(25.0, COMBAT_MOVE_BRAKE_SPEED_PX_S, frac)
+		combat_move_frame = 1 if sgn < 0 else 2
+		return combat_move_frame
+
+	# Analog returned to deadzone / center: play crisp braking cushion (#1 back / #2 fwd) if we were dashing!
+	if _combat_move_dir_last != 0:
+		if dt <= 0.0 and not _combat_move_braking:
+			# Explicit reset_combat_move style call step_combat_move_frame(0.0, 0)
+			reset_combat_move()
+			return combat_move_frame
+		if not _combat_move_braking:
+			_combat_move_braking = true
+			_combat_move_dash_t = 0.0
+			_combat_move_brake_timer_s = COMBAT_MOVE_BRAKE_HOLD_S
+			_combat_move_just_braked = true
+		_combat_move_brake_timer_s = maxf(0.0, _combat_move_brake_timer_s - dt)
+		combat_move_frame = 1 if _combat_move_dir_last < 0 else 2
+		if _combat_move_brake_timer_s > 0.0:
+			var remain := _combat_move_brake_timer_s / maxf(0.001, COMBAT_MOVE_BRAKE_HOLD_S)
+			_combat_move_speed_cur = COMBAT_MOVE_BRAKE_SPEED_PX_S * remain
+			return combat_move_frame
+		reset_combat_move()
+		return combat_move_frame
+
+	_combat_move_speed_cur = 0.0
+	_combat_move_dash_t = 0.0
 	return combat_move_frame
+
+
+func is_combat_move_dashing() -> bool:
+	return _combat_move_dir_last != 0 and not _combat_move_braking
+
+
+func is_combat_move_braking() -> bool:
+	return _combat_move_braking and _combat_move_dir_last != 0
+
+
+func get_combat_move_brake_rel_dir() -> int:
+	return _combat_move_dir_last if _combat_move_braking else 0
+
+
+func get_combat_move_dash_rel_dir() -> int:
+	return _combat_move_dir_last if is_combat_move_dashing() else 0
+
+
+func get_combat_move_dash_time_s() -> float:
+	return _combat_move_dash_t
+
+
+func get_combat_move_hop_height_px() -> float:
+	if not is_combat_move_dashing():
+		return 0.0
+	return maxf(4.0, COMBAT_MOVE_HOVER_Y_PX + sin(_combat_move_dash_t * COMBAT_MOVE_BOB_FREQ_RAD_S) * COMBAT_MOVE_BOB_AMP_PX)
+
+
+func get_combat_move_speed_px_s() -> float:
+	return _combat_move_speed_cur
+
+
+func consume_combat_move_just_landed() -> bool:
+	var v := _combat_move_just_braked
+	_combat_move_just_braked = false
+	return v
 
 
 func resolve_jump_pose_frame(vy: float, on_ground: bool) -> int:
@@ -382,6 +545,62 @@ func resolve_jump_pose_frame(vy: float, on_ground: bool) -> int:
 	if vy < 130.0:
 		return 3
 	return 4
+
+
+func is_barrier_active() -> bool:
+	return barrier_timer_s > 0.0
+
+
+func trigger_barrier() -> bool:
+	if not is_ssj or barrier_cooldown_s > 0.0:
+		return false
+	barrier_timer_s = BARRIER_DURATION_S
+	barrier_cooldown_s = BARRIER_COOLDOWN_S
+	enter_combat()
+	hero_state_changed.emit()
+	return true
+
+
+func trigger_energy_recover() -> bool:
+	if not is_ssj or recover_cooldown_s > 0.0:
+		return false
+	recover_timer_s = RECOVER_DURATION_S
+	recover_cooldown_s = RECOVER_COOLDOWN_S
+	hero_state_changed.emit()
+	return true
+
+
+func trigger_flurry_kick() -> bool:
+	if not is_ssj or flurry_cooldown_s > 0.0:
+		return false
+	flurry_cooldown_s = FLURRY_KICK_COOLDOWN_S
+	enter_combat()
+	if is_airborne_flight():
+		hover_timer_s = HOVER_TIMEOUT_S
+	hero_state_changed.emit()
+	return true
+
+
+func trigger_atomic_blast() -> bool:
+	if not is_ssj or atomic_cooldown_s > 0.0:
+		return false
+	atomic_cooldown_s = ATOMIC_COOLDOWN_S
+	enter_combat()
+	if is_airborne_flight():
+		hover_timer_s = HOVER_TIMEOUT_S
+	hero_state_changed.emit()
+	return true
+
+
+func trigger_kamehameha(current_mana: float) -> bool:
+	if not is_ssj or kame_cooldown_s > 0.0 or current_mana + 0.001 < KAME_MANA_COST:
+		return false
+	kame_cooldown_s = 1.5
+	enter_combat()
+	if is_airborne_flight():
+		hover_timer_s = HOVER_TIMEOUT_S
+	hero_state_changed.emit()
+	return true
 
 
 func try_consume_stamina(cost: float) -> bool:

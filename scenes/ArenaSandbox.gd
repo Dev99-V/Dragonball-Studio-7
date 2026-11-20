@@ -178,6 +178,11 @@ var _t_key_was_down: bool = false
 var _tab_key_was_down: bool = false
 var _v_key_was_down: bool = false
 var _f_key_was_down: bool = false
+var _k1_was_down: bool = false
+var _k2_was_down: bool = false
+var _k3_was_down: bool = false
+var _k4_was_down: bool = false
+var _k5_was_down: bool = false
 var _last_touch_tap_msec: int = -10000
 var _flight_vel: Vector2 = Vector2.ZERO
 var combat_banner_label: Label = null
@@ -406,6 +411,8 @@ func set_hero_auto_battle(enabled: bool) -> void:
 	hero_auto_battle_enabled = enabled
 	if not enabled and field_manager != null:
 		field_manager.cancel_auto_approach()
+		if field_manager.has_method(&"reset_auto_battle_ki_lock"):
+			field_manager.call(&"reset_auto_battle_ki_lock")
 	if mobile_pad != null and is_instance_valid(mobile_pad) and mobile_pad.has_method(&"set_auto_battle_enabled"):
 		mobile_pad.call(&"set_auto_battle_enabled", enabled)
 
@@ -556,7 +563,12 @@ func _sync_field_pad_state() -> void:
 			bool(player_node.get("is_ssj")),
 			bool(player_node.call(&"can_attack")),
 			bool(player_node.call(&"is_airborne_flight")),
-			int(player_node.get("combo_step"))
+			int(player_node.get("combo_step")),
+			float(player_node.get("atomic_cooldown_s")),
+			float(player_node.get("barrier_timer_s")),
+			float(player_node.get("barrier_cooldown_s")),
+			float(player_node.get("recover_cooldown_s")),
+			float(player_node.get("flurry_cooldown_s"))
 		)
 
 
@@ -619,6 +631,37 @@ func _on_touch_action(action_name: String) -> void:
 			field_manager.request_player_power_up()
 		else:
 			_request_player_action("power_up")
+	elif action_name == "barrier":
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_barrier()
+		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_barrier")):
+			_request_player_action("barrier_cast")
+		_sync_field_pad_state()
+	elif action_name == "energy_recover":
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_energy_recover()
+		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_energy_recover")):
+			_request_player_action("energy_recover")
+		_sync_field_pad_state()
+	elif action_name == "flurry_kick":
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_flurry_kick()
+		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_flurry_kick")):
+			_request_player_action("flurry_kick")
+		_sync_field_pad_state()
+	elif action_name == "atomic_blast":
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_atomic_blast()
+		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_atomic_blast")):
+			var air_now := bool(player_node.call(&"is_airborne_flight")) or (player_node.position.y < get_nearest_support_y_below(player_node.position.x, player_node.position.y) - 18.0)
+			_request_player_action("atomic_air_down" if air_now else "atomic_ground")
+		_sync_field_pad_state()
+	elif action_name == "kamehameha":
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_kamehameha()
+		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_kamehameha", 100.0)):
+			_request_player_action("kame_ground_horiz")
+		_sync_field_pad_state()
 	elif action_name in ["attack_heavy"]:
 		if field_mode_enabled and field_manager != null and field_manager.active:
 			field_manager.request_player_heavy_action()
@@ -3266,34 +3309,65 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 
 	var sideways_locked := _is_sideways_locked(entry)
 	var walk_speed := _get_walk_speed_px_per_s(entry)
+	var goku_combat_rel_dir := 0
+	var goku_locked_facing := false
+	var goku_combat_move_active := false
+	var goku_cm_frame := 2
+	var goku_cm_hop_y := 0.0
 	if is_goku:
 		var g_fstate := str(player_node.get("flight_state"))
 		if g_fstate == "flying":
 			walk_speed = 400.0
 		elif bool(player_node.get("is_ssj")) and bool(player_node.call(&"is_in_combat")):
-			walk_speed = 400.0
+			# In Combat mode (`combat_move`), face nearby targeted enemy so:
+			# - Pulling analog AWAY >= 0.55 -> #0 continuous back dash (400 px/s, no aura, no hop)
+			# - Pushing analog TOWARD >= 0.55 -> #3 continuous forward dash (500 px/s, no aura, no hop)
+			# - Pulling analog near center (0.08..0.55) or releasing to center -> #1 (back) / #2 (fwd) brake cushion!
+			if (not is_flying) and (not action_playing):
+				if field_manager != null and field_manager.has_method(&"get_pointed_or_nearest_enemy_pos"):
+					var tinfo: Dictionary = field_manager.call(&"get_pointed_or_nearest_enemy_pos")
+					if bool(tinfo.get("valid", false)):
+						var tpos: Vector2 = tinfo.get("pos", player_node.position)
+						if absf(tpos.x - player_node.position.x) <= 520.0:
+							var face_left_t := tpos.x < player_node.position.x
+							player_facing_left = face_left_t
+							player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
+							goku_locked_facing = true
+				var face_sign := -1 if player_facing_left else 1
+				var goku_analog_mag_x := 0.0
+				var goku_eff_dir := dir
+				if analog_vec.length() > 0.08:
+					goku_analog_mag_x = absf(analog_vec.x)
+					if goku_eff_dir == 0 and goku_analog_mag_x >= 0.08:
+						goku_eff_dir = -1 if analog_vec.x < 0.0 else 1
+				elif dir != 0:
+					goku_analog_mag_x = 1.0
+				goku_combat_rel_dir = goku_eff_dir * face_sign if goku_eff_dir != 0 else 0
+				if pre_on_ground and (not jumped_now) and g_fstate == "ground":
+					goku_cm_frame = int(player_node.call(&"step_combat_move_frame", delta, goku_combat_rel_dir, goku_analog_mag_x))
+					var cm_braking := bool(player_node.call(&"is_combat_move_braking"))
+					if goku_eff_dir != 0 or cm_braking:
+						goku_combat_move_active = true
+						walk_speed = float(player_node.call(&"get_combat_move_speed_px_s"))
+						goku_cm_hop_y = float(player_node.call(&"get_combat_move_hop_height_px"))
+						if dir == 0 and goku_eff_dir != 0:
+							dir = goku_eff_dir
+						elif dir == 0 and cm_braking:
+							dir = int(player_node.call(&"get_combat_move_brake_rel_dir")) * face_sign
+					else:
+						walk_speed = 400.0
+				else:
+					player_node.call(&"reset_combat_move")
+					walk_speed = 400.0
+			else:
+				player_node.call(&"reset_combat_move")
+				walk_speed = 400.0
 		else:
+			player_node.call(&"reset_combat_move")
 			walk_speed = 200.0
 	var base_speed := walk_speed * 1.6 if is_run else walk_speed
 	_player_turn_boost_s = maxf(0.0, _player_turn_boost_s - delta)
 	var turning_now := _is_fighter_turning(player_node)
-
-	# In Combat mode (`combat_move`), if a targeted enemy is nearby, face the enemy so pulling analog AWAY = Frame 0 (retreat)
-	# and pushing analog TOWARD = Frame 3 (advance), with Frames 1 & 2 bridging smoothly!
-	var goku_combat_rel_dir := 0
-	var goku_locked_facing := false
-	if is_goku and (not is_flying) and (not action_playing) and bool(player_node.get("is_ssj")) and bool(player_node.call(&"is_in_combat")):
-		if field_manager != null and field_manager.has_method(&"get_pointed_or_nearest_enemy_pos"):
-			var tinfo: Dictionary = field_manager.call(&"get_pointed_or_nearest_enemy_pos")
-			if bool(tinfo.get("valid", false)):
-				var tpos: Vector2 = tinfo.get("pos", player_node.position)
-				if absf(tpos.x - player_node.position.x) <= 520.0:
-					var face_left_t := tpos.x < player_node.position.x
-					player_facing_left = face_left_t
-					player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
-					goku_locked_facing = true
-		var face_sign := -1 if player_facing_left else 1
-		goku_combat_rel_dir = dir * face_sign if dir != 0 else 0
 
 	if not sideways_locked and not turning_now and not action_playing and not goku_locked_facing and dir != 0:
 		var want_left := dir < 0
@@ -3367,7 +3441,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 			var target_clip := &"idle"
 			var moving_fly := is_flying and fly_input_vec.length() > 0.12
 			if is_goku:
-				var g_moving := (dir != 0 or eff_fly_dir_y != 0 or moving_fly)
+				var g_moving := (dir != 0 or eff_fly_dir_y != 0 or moving_fly or goku_combat_move_active)
 				var g_airborne := (not is_flying) and (player_node.position.y < sup_now - 3.0)
 				target_clip = player_node.call(&"resolve_locomotion_clip", g_moving, g_airborne)
 				if target_clip == &"jump" and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"jump"):
@@ -3379,14 +3453,16 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 					aspr.frame = clampi(jframe, 0, maxi(0, aspr.sprite_frames.get_frame_count(&"jump") - 1))
 					return
 				elif target_clip == &"combat_move" and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"combat_move"):
-					# Hover Goku's feet 20px above ground during combat_move glide (Owner v5)!
-					aspr.position.y = -20.0 / maxf(0.1, char_scale)
-					var rel_d := goku_combat_rel_dir if goku_combat_rel_dir != 0 else (1 if dir != 0 else 0)
-					var cm_frame: int = int(player_node.call(&"step_combat_move_frame", delta, rel_d))
+					# Exact Owner v10 combat_move continuous dash + analog brake (NO aura):
+					# #0 = back dash (400 px/s) / #3 = fwd dash (500 px/s) with low dynamic hover (~10 +/- 2.5px) + front/rear wind streaks!
+					# #1 = back brake / #2 = fwd brake drop smoothly to floor (0px).
+					aspr.position.y = -roundf(goku_cm_hop_y / maxf(0.1, char_scale))
+					if bool(player_node.call(&"consume_combat_move_just_landed")):
+						_spawn_ground_dust(player_node.position.x, sup_now, 0.58)
 					if aspr.animation != &"combat_move":
 						aspr.animation = &"combat_move"
 					aspr.pause()
-					aspr.frame = clampi(cm_frame, 0, maxi(0, aspr.sprite_frames.get_frame_count(&"combat_move") - 1))
+					aspr.frame = clampi(goku_cm_frame, 0, maxi(0, aspr.sprite_frames.get_frame_count(&"combat_move") - 1))
 					return
 				else:
 					aspr.position.y = 0.0
@@ -3427,14 +3503,29 @@ func _physics_process(delta: float) -> void:
 	var tab_down := Input.is_key_pressed(KEY_TAB)
 	var v_down := Input.is_key_pressed(KEY_V)
 	var f_down := Input.is_key_pressed(KEY_F)
+	var k1_down := Input.is_key_pressed(KEY_1)
+	var k2_down := Input.is_key_pressed(KEY_2)
+	var k3_down := Input.is_key_pressed(KEY_3)
+	var k4_down := Input.is_key_pressed(KEY_4) or Input.is_key_pressed(KEY_Q)
+	var k5_down := Input.is_key_pressed(KEY_5) or Input.is_key_pressed(KEY_E)
 	var t_just := t_down and not _t_key_was_down
 	var tab_just := tab_down and not _tab_key_was_down
 	var v_just := v_down and not _v_key_was_down
 	var f_just := f_down and not _f_key_was_down
+	var k1_just := k1_down and not _k1_was_down
+	var k2_just := k2_down and not _k2_was_down
+	var k3_just := k3_down and not _k3_was_down
+	var k4_just := k4_down and not _k4_was_down
+	var k5_just := k5_down and not _k5_was_down
 	_t_key_was_down = t_down
 	_tab_key_was_down = tab_down
 	_v_key_was_down = v_down
 	_f_key_was_down = f_down
+	_k1_was_down = k1_down
+	_k2_was_down = k2_down
+	_k3_was_down = k3_down
+	_k4_was_down = k4_down
+	_k5_was_down = k5_down
 
 	if player_node == null:
 		if field_mode_enabled and field_manager != null and field_manager.active:
@@ -3457,6 +3548,16 @@ func _physics_process(delta: float) -> void:
 			_on_touch_action("fly_toggle")
 		if t_just:
 			_on_touch_action("teleport")
+		if k1_just:
+			_on_touch_action("barrier")
+		if k2_just:
+			_on_touch_action("energy_recover")
+		if k3_just:
+			_on_touch_action("flurry_kick")
+		if k4_just:
+			_on_touch_action("atomic_blast")
+		if k5_just:
+			_on_touch_action("kamehameha")
 		for action_name in [&"attack_light", &"attack_heavy", &"power_up"]:
 			if Input.is_action_just_pressed(action_name):
 				var aname := String(action_name)
@@ -3505,7 +3606,16 @@ func _physics_process(delta: float) -> void:
 		elif not (field_mode_enabled and field_manager != null and field_manager.active and bool(field_manager.auto_approach_active)):
 			step_player_movement(delta, dir, fly_dir_y, jump_req, drop_req, is_run, pad_vec)
 	else:
-		player_vy = 0.0
+		# KO'd player MUST settle to the ground via gravity instead of freezing in mid-air or keeping combat_move hover!
+		var dspr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+		if dspr != null:
+			dspr.position.y = 0.0
+		var dead_sup_y := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+		if player_node.position.y < dead_sup_y - 0.5:
+			_integrate_player_vertical(delta, false)
+		else:
+			player_node.position.y = dead_sup_y
+			player_vy = 0.0
 
 	_update_follow_camera()
 
@@ -3749,7 +3859,17 @@ func _draw() -> void:
 	# Dynamic Pixel Contact Shadows on exact surface below each fighter/item (zero ellipse)
 	if player_node != null:
 		var p_dims := _get_body_dims(_find_character_entry_ro(active_character_id))
-		_draw_pixel_contact_shadow(player_node.position.x, player_node.position.y, float(p_dims.x), char_scale, _is_fighter_surface_visible(player_node, active_character_id))
+		var p_shadow_y := player_node.position.y
+		var p_cm_hover := 0.0
+		if _is_hero_songoku(player_node) and player_node.has_method(&"get_combat_move_hop_height_px"):
+			p_cm_hover = float(player_node.call(&"get_combat_move_hop_height_px"))
+			p_shadow_y -= p_cm_hover
+		_draw_pixel_contact_shadow(player_node.position.x, p_shadow_y, float(p_dims.x), char_scale, _is_fighter_surface_visible(player_node, active_character_id))
+		if _is_hero_songoku(player_node) and player_node.has_method(&"is_combat_move_dashing") and bool(player_node.call(&"is_combat_move_dashing")):
+			var face_s := -1 if player_facing_left else 1
+			var dash_world_dir := int(player_node.call(&"get_combat_move_dash_rel_dir")) * face_s
+			var dash_t := float(player_node.call(&"get_combat_move_dash_time_s"))
+			OverheadBarsDraw.draw_dash_wind_streaks(self, Vector2(player_node.position.x, player_node.position.y - p_cm_hover), float(p_dims.y) * char_scale, dash_world_dir, dash_t)
 	if dummy_node != null:
 		var e_dims := _get_body_dims(_find_character_entry_ro(enemy_character_id))
 		_draw_pixel_contact_shadow(dummy_node.position.x, dummy_node.position.y, float(e_dims.x), enemy_scale, _is_fighter_surface_visible(dummy_node, enemy_character_id))
@@ -3828,7 +3948,9 @@ func _update_hud() -> void:
 					var f_tag := "SSJ1" if bool(player_node.get("is_ssj")) else "BASE"
 					var fl_st := str(player_node.get("flight_state"))
 					var fl_tag := " | BAY:%s" % fl_st.to_upper() if fl_st != "ground" else ""
-					extra_goku = " [%s · Đòn %d/7 · TL %d/100%s]" % [f_tag, (int(player_node.get("combo_step")) % 7) + 1, int(floor(float(player_node.get("stamina")))), fl_tag]
+					var ki_v := int(floor(float(player_node.get("ki"))))
+					var ki_m := int(round(float(player_node.get("max_ki"))))
+					extra_goku = " [%s · Đòn %d/7 · TL %d/100 · KI %d/%d%s]" % [f_tag, (int(player_node.get("combo_step")) % 7) + 1, int(floor(float(player_node.get("stamina")))), ki_v, ki_m, fl_tag]
 				hero_txt = "%s%s %d/%d HP%s (%d,%d)" % [h_name, extra_goku, int(round(field_manager.player_hp)), int(round(field_manager.player_max_hp)), imm_tag, px, py]
 		var boss_txt := ""
 		var bslot: Dictionary = field_manager.boss_slot

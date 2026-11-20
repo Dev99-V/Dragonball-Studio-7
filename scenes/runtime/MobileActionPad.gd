@@ -19,6 +19,11 @@ const ACTION_LABELS := {
 	"pickup_items": "Nhặt",
 	"transform_ssj": "Biến SSJ",
 	"fly_toggle": "Bay",
+	"barrier": "Khiên 10s",
+	"energy_recover": "Gồng hồi",
+	"flurry_kick": "Đá liên hoàn",
+	"atomic_blast": "Atomic",
+	"kamehameha": "Kamehameha",
 	"empty": "Trống",
 }
 
@@ -31,10 +36,15 @@ const SHORT_LABELS := {
 	"pickup_items": "NHẶT",
 	"transform_ssj": "SSJ1",
 	"fly_toggle": "BAY",
+	"barrier": "KHIÊN",
+	"energy_recover": "HỒI 3S",
+	"flurry_kick": "ĐÁ LH",
+	"atomic_blast": "ATOMIC",
+	"kamehameha": "KAME",
 	"cycle_target": "TRỎ",
 }
 
-const ASSIGNABLE_ACTIONS := ["jump", "teleport", "transform_ssj", "fly_toggle", "power_up", "attack_heavy", "pickup_items", "empty"]
+const ASSIGNABLE_ACTIONS := ["jump", "teleport", "transform_ssj", "flurry_kick", "atomic_blast", "kamehameha", "barrier", "energy_recover", "fly_toggle", "power_up", "attack_heavy", "pickup_items", "empty"]
 
 var analog_dir_x: int = 0
 var analog_dir_y: int = 0
@@ -74,6 +84,11 @@ var _hero_is_ssj: bool = false
 var _hero_can_attack: bool = true
 var _hero_fly_active: bool = false
 var _hero_combo_step: int = 0
+var _hero_atomic_cd: float = 0.0
+var _hero_barrier_active_s: float = 0.0
+var _hero_barrier_cd: float = 0.0
+var _hero_recover_cd: float = 0.0
+var _hero_flurry_cd: float = 0.0
 
 # Analog drag tracking
 var _analog_touch_idx: int = -1
@@ -150,6 +165,7 @@ func _build_ui() -> void:
 	_anchor_ctrl.add_child(_buttons_root)
 
 	# Coordinates inside 374x282 cluster box (bottom-right)
+	# Slot 10 (80, 122, 62x62): Dedicated Energy Recovery (`HỒI 3S`) visible for Son Goku Hero!
 	var layout_specs := {
 		1: Rect2(236, 148, 112, 112),
 		2: Rect2(298, 72, 68, 68),
@@ -159,8 +175,9 @@ func _build_ui() -> void:
 		6: Rect2(146, 116, 66, 66),
 		7: Rect2(80, 196, 68, 68),
 		8: Rect2(12, 200, 62, 62),
+		10: Rect2(80, 122, 62, 62),
 	}
-	for sid in [1, 2, 3, 4, 5, 6, 7, 8]:
+	for sid in [1, 2, 3, 4, 5, 6, 7, 8, 10]:
 		var r: Rect2 = layout_specs[sid]
 		var btn := Button.new()
 		btn.name = "SkillCircle_%d" % sid
@@ -369,6 +386,16 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 		avail.append("teleport")
 	if available_clips.has("transform_ssj"):
 		avail.append("transform_ssj")
+	if available_clips.has("barrier_cast") or char_id == "songoku_hero_demo":
+		avail.append("barrier")
+	if available_clips.has("energy_recover") or char_id == "songoku_hero_demo":
+		avail.append("energy_recover")
+	if available_clips.has("flurry_kick") or char_id == "songoku_hero_demo":
+		avail.append("flurry_kick")
+	if available_clips.has("atomic_ground") or char_id == "songoku_hero_demo":
+		avail.append("atomic_blast")
+	if available_clips.has("kame_ground_horiz") or char_id == "songoku_hero_demo":
+		avail.append("kamehameha")
 	if available_clips.has("fly_aura") or available_clips.has("fly_launch"):
 		avail.append("fly_toggle")
 	if available_clips.has("power_up"):
@@ -387,11 +414,16 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 	_slot_bindings[6] = "empty"
 	_slot_bindings[7] = "empty"
 	_slot_bindings[8] = "cycle_target"
+	_slot_bindings[10] = "empty"
 	if char_id == "songoku_hero_demo":
-		_slot_bindings[2] = "jump"
+		# Full Phase 2 Hero Skill Arc (ALL skills directly visible on screen: 2..7 + dedicated slot 10 `energy_recover`!)
+		_slot_bindings[2] = "transform_ssj"
 		_slot_bindings[3] = "teleport"
-		_slot_bindings[4] = "transform_ssj"
-		_slot_bindings[5] = "empty"
+		_slot_bindings[4] = "flurry_kick"
+		_slot_bindings[5] = "atomic_blast"
+		_slot_bindings[6] = "kamehameha"
+		_slot_bindings[7] = "barrier"
+		_slot_bindings[10] = "energy_recover"
 	elif char_id == "drum":
 		_slot_bindings[2] = "jump"
 		_slot_bindings[3] = "teleport"
@@ -416,13 +448,18 @@ func set_mana_and_pointer_state(mana: float, max_mana: float, pointer_kind: Stri
 	_refresh_slot_buttons()
 
 
-func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool, can_attack_now: bool, fly_active: bool, combo_step: int) -> void:
+func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool, can_attack_now: bool, fly_active: bool, combo_step: int, atomic_cd: float = 0.0, barrier_s: float = 0.0, barrier_cd: float = 0.0, recover_cd: float = 0.0, flurry_cd: float = 0.0) -> void:
 	_hero_stamina = stamina
 	_hero_max_stamina = maxf(1.0, max_stamina)
 	_hero_is_ssj = is_ssj
 	_hero_can_attack = can_attack_now
 	_hero_fly_active = fly_active
 	_hero_combo_step = combo_step
+	_hero_atomic_cd = atomic_cd
+	_hero_barrier_active_s = barrier_s
+	_hero_barrier_cd = barrier_cd
+	_hero_recover_cd = recover_cd
+	_hero_flurry_cd = flurry_cd
 	_refresh_slot_buttons()
 
 
@@ -433,7 +470,7 @@ func set_jump_available(enabled: bool, flight: bool = false) -> void:
 
 
 func _refresh_slot_buttons() -> void:
-	for sid in [1, 2, 3, 4, 5, 6, 7, 8]:
+	for sid in [1, 2, 3, 4, 5, 6, 7, 8, 10]:
 		var btn := _slot_buttons.get(sid) as Button
 		if btn == null:
 			continue
@@ -488,6 +525,21 @@ func _refresh_slot_buttons() -> void:
 			else:
 				btn.tooltip_text = lbl
 				btn.disabled = false
+		elif act == "atomic_blast":
+			btn.tooltip_text = "Atomic Blast (Hồi 12s)" if _hero_atomic_cd <= 0.0 else "Atomic Blast (%.1fs)" % _hero_atomic_cd
+			btn.disabled = (not _hero_is_ssj) or _hero_atomic_cd > 0.0
+		elif act == "kamehameha":
+			btn.tooltip_text = "Kamehameha (80 MP · Hiện có %d)" % int(floor(_current_mana))
+			btn.disabled = (not _hero_is_ssj) or (_current_mana < 80.0)
+		elif act == "flurry_kick":
+			btn.tooltip_text = "Đá liên hoàn (Choáng Boss/Quái/Tướng)" if _hero_flurry_cd <= 0.0 else "Đá liên hoàn (%.1fs)" % _hero_flurry_cd
+			btn.disabled = (not _hero_is_ssj) or _hero_flurry_cd > 0.0
+		elif act == "barrier":
+			btn.tooltip_text = "Khiên 10s (Đang bật %.1fs)" % _hero_barrier_active_s if _hero_barrier_active_s > 0.0 else ("Khiên bảo vệ 10s" if _hero_barrier_cd <= 0.0 else "Khiên (%.1fs)" % _hero_barrier_cd)
+			btn.disabled = (not _hero_is_ssj) or _hero_barrier_cd > 0.0
+		elif act == "energy_recover":
+			btn.tooltip_text = "Gồng hồi 3s (Máu + Giáp + Khinh công)" if _hero_recover_cd <= 0.0 else "Gồng hồi (%.1fs)" % _hero_recover_cd
+			btn.disabled = (not _hero_is_ssj) or _hero_recover_cd > 0.0
 		else:
 			btn.tooltip_text = lbl
 			btn.disabled = false
@@ -726,6 +778,40 @@ class _SkillButtonVisual extends Control:
 			short_lbl = "%d/%d" % [int(floor(pad_owner._current_mana)), int(round(pad_owner._max_mana))]
 		elif act == "attack_heavy":
 			_draw_heavy_icon(center + Vector2(0.0, -6.0), r * 0.40, Color(1.0, 0.80, 0.34, 0.96 * alpha_mul))
+		elif act == "atomic_blast":
+			var cd_a: float = float(pad_owner._hero_atomic_cd)
+			var ready_a: float = clampf(1.0 - cd_a / 12.0, 0.0, 1.0)
+			var gold_a := Color(1.0, 0.84, 0.14, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * ready_a, 36, gold_a, 3.4, true)
+			_draw_ki_icon(center + Vector2(0.0, -8.0), r * 0.36, gold_a)
+			short_lbl = ("%ds" % int(ceilf(cd_a))) if cd_a > 0.05 else "ATOMIC"
+		elif act == "kamehameha":
+			var mp_ratio: float = clampf(pad_owner._current_mana / 80.0, 0.0, 1.0)
+			var cyan_k := Color(0.22, 0.90, 1.0, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * mp_ratio, 36, cyan_k if mp_ratio >= 1.0 else Color(0.22, 0.72, 0.95, 0.65), 3.4, true)
+			_draw_ki_icon(center + Vector2(0.0, -8.0), r * 0.38, cyan_k if mp_ratio >= 1.0 else icon_col)
+			short_lbl = "KAME" if mp_ratio >= 1.0 else "%d/80" % int(floor(pad_owner._current_mana))
+		elif act == "flurry_kick":
+			var cd_f: float = float(pad_owner._hero_flurry_cd)
+			var ready_f: float = clampf(1.0 - cd_f / 6.0, 0.0, 1.0)
+			var amber_f := Color(1.0, 0.68, 0.18, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * ready_f, 36, amber_f, 3.2, true)
+			_draw_heavy_icon(center + Vector2(0.0, -6.0), r * 0.38, amber_f)
+			short_lbl = ("%ds" % int(ceilf(cd_f))) if cd_f > 0.05 else "ĐÁ LH"
+		elif act == "barrier":
+			var act_b: float = float(pad_owner._hero_barrier_active_s)
+			var cd_b: float = float(pad_owner._hero_barrier_cd)
+			var col_b := Color(1.0, 0.92, 0.30, 0.98 * alpha_mul) if act_b > 0.0 else Color(0.45, 0.92, 1.0, 0.95 * alpha_mul)
+			var ring_r: float = clampf(act_b / 10.0, 0.0, 1.0) if act_b > 0.0 else clampf(1.0 - cd_b / 16.0, 0.0, 1.0)
+			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * ring_r, 36, col_b, 3.2, true)
+			draw_arc(center + Vector2(0.0, -6.0), r * 0.34, 0.0, TAU, 24, col_b, 2.4, true)
+			short_lbl = ("%.0fs" % ceilf(act_b)) if act_b > 0.05 else (("%ds" % int(ceilf(cd_b))) if cd_b > 0.05 else "KHIÊN")
+		elif act == "energy_recover":
+			var cd_r: float = float(pad_owner._hero_recover_cd)
+			var green_r := Color(0.28, 0.96, 0.52, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_r / 10.0, 0.0, 1.0), 36, green_r, 3.2, true)
+			_draw_ki_icon(center + Vector2(0.0, -7.0), r * 0.36, green_r)
+			short_lbl = ("%ds" % int(ceilf(cd_r))) if cd_r > 0.05 else "HỒI 3S"
 		elif act == "pickup_items":
 			_draw_pickup_icon(center + Vector2(0.0, -6.0), r * 0.40, accent_col)
 

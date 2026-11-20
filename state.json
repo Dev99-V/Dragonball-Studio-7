@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-20T12:41:37Z",
+  "updated_at": "2026-11-20T17:17:36Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.17.0",
@@ -162,9 +162,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "SONGOKU-HERO-PHASE1-V7-SSJ-SYNC",
-    "status": "DONE",
-    "summary": "Dong bo 1:1 toan bo 92 frame SSJ1 nhom 07..17, 20, 34 theo chuan walk_ssj bang Codex CLI (66 pose unique + 6 scanline dich chuyen + 7 pure VFX), giu khoa SHA-256 24/24 Base + fly_aura v3 + toan bo co che v6; QA Gate 0..3 PASS (0/24 Base, 0/141 pockets, 0 hair holes, aura <1.2px), atlas sha256=afc9cc3f4b1de231, web-export + test + check exit 0 + HTTP 200 SHA-256 Parity PASS; liet ke du 14 sheet skill chua vao bundle.",
+    "active_task_id": "SONGOKU-HERO-PHASE2-V10-3-RECOVER-KAME-ATOMIC4",
+    "status": "ready_for_owner_human_test",
+    "summary": "v10.3 Human Test (chưa chốt): HỒI 3S slot 10 + energy_recover chống giật loop #2..#5 đủ 3s; Kamehameha liền mạch 3 frame (fx_atlas sha=91dcf70c6b823d05, 80 MP, 1700px/s); Atomic 4 đạn xen kẽ 1500px/s khóa f1..f2 chống mất frame; khóa mục tiêu trỏ pointer_slot_id cho cả Atomic & Kamehameha trên quái bay lẫn quái bộ; đã kiểm thử & đồng bộ HTTP 200 SHA-256.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1325,6 +1325,42 @@
       "timestamp": "2026-11-20T12:41:37Z",
       "status": "DONE",
       "summary": "Dong bo 1:1 toan bo 92 frame SSJ1 nhom 07..17, 20, 34 theo chuan walk_ssj bang Codex CLI (66 pose unique + 6 scanline dich chuyen + 7 pure VFX), giu khoa SHA-256 24/24 Base + fly_aura v3 + toan bo co che v6; QA Gate 0..3 PASS (0/24 Base, 0/141 pockets, 0 hair holes, aura <1.2px), atlas sha256=afc9cc3f4b1de231, web-export + test + check exit 0 + HTTP 200 SHA-256 Parity PASS; liet ke du 14 sheet skill chua vao bundle."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V8-POLISH",
+      "timestamp": "2026-11-20T14:27:09Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien 4 muc sua Son Goku v8: (1) idle_combat dung tan nhun nhe khoa head_w 0-zoom (H=[115,111,111,113], headW=[66,64,66,67], 0 key/pocket, alpha 100%, filmstrip 3 nen OK); (2) combat_move lui #0 (100ms, 50px, bung cao 30px) -> dap dat #1 (90ms) va tien #2 (100ms, 50px, bung 30px) -> dap dat #3 (90ms); (3) thanh KI mau cam nam doc ben phai 3 thanh Mau/Mana/Giap (toi da 50 KI, bay -5 KI/s, het KI roi & hoi +5 KI/s); (4) sua KO lo lung (ha ko_02.png +8px sat san + tich phan trong luc & xoa Sprite.y khi KO). Giu khoa 24/24 Base SHA-256, them tools/pipeline/repack_songoku_hero_demo.py, atlas sha256=2676450c489f8d20, index.pck sha256=25c84b4e377a35b4, ./loop.sh web-export + test + check exit 0 + HTTP 200 SHA-256 Parity PASS."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V9-FIXES",
+      "timestamp": "2026-11-20T15:18:56Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien 3 task sua Son Goku v9: (1) khu nhap nhay vien idle_combat (border_dark=1.000, border_mean_lum=13.9, pink=0, 0-zoom); (2) combat_move dash lien tuc khong aura (#0 lui 400px/s -> phanh #1, #3 tien 500px/s -> phanh #2 khi keo analog gan giua, 0 hop, giu nguyen 4 anh goc); (3) tao cong QC tham chieu walk_ssj (tools/pipeline/qc_songoku_walk_gate.py) va ve lai 8 pose loi (11 slot: atk1_02/04/08/10, atk2_01/02, atk5_01/05/06/07, atk6_02) dat 15/15 WALK QC PASS (pal_med=2.0..14.1), khoa 24/24 Base SHA-256, duyet 5 filmstrip 3 nen, atlas sha256=ff0af8e25ef4169f, web-export + test + check exit 0 + HTTP 200 SHA-256 Parity PASS. Cho Owner test v9 va chot thong so nhom hoat anh con lai (05, 06, 19, 21-25, 26, 27-32, 33)."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE2-V10-FULL",
+      "timestamp": "2026-11-20T16:02:19Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien toan bo Son Goku v10 (Batch A polish + 4 Task Phase 2 full skill, bo 19): (A) dong mau idle_combat #0/#3 theo #1/#2 bang Joint-RGB Palette Snap (0 cham hong, border_dark=1.000), fix atk6_01 (pal_med=3.7), thanh KI mong -10% (9px), combat_move them luong gio truoc/sau + hoi lo lung dong (10+/-2.5px, phanh #1/#2 ve 0px); (B) 9 clip than moi (43 frame Codex CLI + Walk QC Gate + 9 filmstrip 3 nen) dong goi 1 trang PNG 4090x3798 (33 clip / 184 frame, khoa 24/24 Base SHA-256) + 1 trang FX doc lap 1822x1822 (12 clip / 48 frame: 05 Khien 10s di chuyen/danh tu do, 06 Gong hoi 3s HP/Giap/KI, 26 Da lien hoan choang toan bo Boss/Quai/Tuong giu hit + vong sao vang tren dau, 21/23/24/25 Atomic CD 12s, 27..32 Kamehameha 250 MP, 33 No lua). Atlas sha256=c81e2ef2f2cea89e, FX sha256=d3cefb5ab66de2d2, PCK sha256=1136ea7524782e97, web-export + test + check exit 0 + HTTP 200 SHA-256 Parity PASS."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE2-V10-1-TUNING",
+      "timestamp": "2026-11-20T16:23:38Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "v10.1: Kamehameha 80 MP (max_mana=100) @ 1700px/s 100% homing ignore_terrain; Atomic 2 homing bolts @ 1500px/s ignore_terrain (70ms stagger); Web exported & HTTP 200 SHA-256 verified at localhost:8080"
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE2-V10-2-AUTO-FLURRY",
+      "timestamp": "2026-11-20T16:33:50Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "v10.2: Auto-Battle KI hysteresis (empty KI -> switch ground until full 50/50 KI -> auto return to flying, zero yo-yo loop); flying target prioritizes Kamehameha/Atomic first; Flurry Kick auto-lunges forward, -30% speed (783ms), +50px range (215x160px) stunning ALL enemies in range; Web exported & HTTP 200 SHA-256 verified"
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE2-V10-3-RECOVER-KAME-ATOMIC4",
+      "timestamp": "2026-11-20T17:17:36Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "v10.3 Human Test (chưa chốt): HỒI 3S slot 10 + energy_recover chống giật loop #2..#5 đủ 3s; Kamehameha liền mạch 3 frame (fx_atlas sha=91dcf70c6b823d05, 80 MP, 1700px/s); Atomic 4 đạn xen kẽ 1500px/s khóa f1..f2 chống mất frame; khóa mục tiêu trỏ pointer_slot_id cho cả Atomic & Kamehameha trên quái bay lẫn quái bộ; đã kiểm thử & đồng bộ HTTP 200 SHA-256."
     }
   ],
   "quick_resume_commands": [
@@ -1657,5 +1693,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-20T12:41:37Z"
+  "last_updated_utc": "2026-11-20T17:17:36Z"
 }

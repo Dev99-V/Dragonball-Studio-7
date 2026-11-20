@@ -1900,25 +1900,37 @@ func run_test() -> void:
 	if bool(combat_flags.get("walk", true)) or not bool(combat_flags.get("combat_move", false)):
 		fail("Combat state flags must have walk=false, combat_move=true")
 		return
-	# Combat move exact 90ms / 60ms loop: backward #0 (90ms) <-> #1 (60ms); forward #3 (90ms) <-> #2 (60ms)!
-	if int(goku.call(&"step_combat_move_frame", 0.05, -1)) != 0:
-		fail("combat_move backward must start at Frame 0")
+	# Combat move exact v9 continuous dash + analog near-center brake (NO aura, NO hop-and-land):
+	# Backward: #0 (400 px/s continuous) -> analog near center / release -> #1 brake cushion
+	# Forward : #3 (500 px/s continuous) -> analog near center / release -> #2 brake cushion
+	goku.call(&"reset_combat_move")
+	if int(goku.call(&"step_combat_move_frame", 0.05, -1, 1.0)) != 0 or absf(float(goku.call(&"get_combat_move_speed_px_s")) - 400.0) > 0.1:
+		fail("combat_move backward dash must hold Frame 0 at 400 px/s")
 		return
-	if int(goku.call(&"step_combat_move_frame", 0.095, -1)) != 1:
-		fail("combat_move backward after 90ms must loop to Frame 1")
+	if int(goku.call(&"step_combat_move_frame", 0.25, -1, 1.0)) != 0 or float(goku.call(&"get_combat_move_hop_height_px")) < 4.0:
+		fail("combat_move backward dash must stay on Frame 0 continuously with gentle low hover (4..14px)")
 		return
-	if int(goku.call(&"step_combat_move_frame", 0.065, -1)) != 0:
-		fail("combat_move backward after 60ms on Frame 1 must loop back to Frame 0")
+	if int(goku.call(&"step_combat_move_frame", 0.05, -1, 0.30)) != 1 or not bool(goku.call(&"is_combat_move_braking")) or float(goku.call(&"get_combat_move_hop_height_px")) > 0.01:
+		fail("combat_move backward pulling analog near center (0.30) must switch to Frame 1 brake cushion at 0px hover")
 		return
-	if int(goku.call(&"step_combat_move_frame", 0.05, 1)) != 3:
-		fail("combat_move forward must start at Frame 3")
+	if int(goku.call(&"step_combat_move_frame", 0.05, 1, 1.0)) != 3 or absf(float(goku.call(&"get_combat_move_speed_px_s")) - 500.0) > 0.1:
+		fail("combat_move forward dash must hold Frame 3 at 500 px/s")
 		return
-	if int(goku.call(&"step_combat_move_frame", 0.095, 1)) != 2:
-		fail("combat_move forward after 90ms must loop to Frame 2")
+	if int(goku.call(&"step_combat_move_frame", 0.25, 1, 1.0)) != 3 or float(goku.call(&"get_combat_move_hop_height_px")) < 4.0:
+		fail("combat_move forward dash must stay on Frame 3 continuously with gentle low hover")
 		return
-	if int(goku.call(&"step_combat_move_frame", 0.065, 1)) != 3:
-		fail("combat_move forward after 60ms on Frame 2 must loop back to Frame 3")
+	if int(goku.call(&"step_combat_move_frame", 0.05, 1, 0.30)) != 2 or not bool(goku.call(&"is_combat_move_braking")):
+		fail("combat_move forward pulling analog near center (0.30) must switch to Frame 2 brake cushion")
 		return
+	# Releasing analog to center finishes braking cushion after 120ms
+	if int(goku.call(&"step_combat_move_frame", 0.04, 0, 0.0)) != 2 or not bool(goku.call(&"is_combat_move_braking")):
+		fail("combat_move releasing analog must briefly hold Frame 2 brake cushion")
+		return
+	goku.call(&"step_combat_move_frame", 0.15, 0, 0.0)
+	if bool(goku.call(&"is_combat_move_braking")):
+		fail("combat_move brake cushion must end after 120ms")
+		return
+	goku.call(&"reset_combat_move")
 	# Armor-break HIT reaction (08)
 	p1_fm.apply_damage_to_player(30.0, Vector2(-99999.0, -99999.0), false, "armor_break")
 	if String(g_spr.animation) != "hit":
@@ -2033,9 +2045,12 @@ func run_test() -> void:
 		fail("v6 T1: base_approved_lock.json must lock all 24 approved Base Goku frames")
 		return
 
-	# v6 Tuning: walk 200px/s, combat_move 400px/s + 20px hover, fly_aura 400px/s, attack_light..attack_7 ~60ms/frame (4 ticks = 66.7ms) & 20ms combo link!
-	if absf(float(goku.get("WALK_SPEED_PX_S")) - 200.0) > 0.1 or absf(float(goku.get("COMBAT_MOVE_SPEED_PX_S")) - 400.0) > 0.1 or absf(float(goku.get("FLIGHT_SPEED_PX_S")) - 400.0) > 0.1 or absf(float(goku.get("COMBO_LINK_COOLDOWN_S")) - 0.02) > 0.005:
-		fail("v6 Tuning: walk=200px/s, combat_move=400px/s, fly_aura=400px/s, combo link=20ms required")
+	# v9 Tuning: walk 200px/s, combat_move back=400px/s (#0->#1 brake) & fwd=500px/s (#3->#2 brake), fly_aura 400px/s, Orange KI 50 max (-5/s fly, +5/s regen), attack ~60ms/frame & 20ms combo link!
+	if absf(float(goku.get("WALK_SPEED_PX_S")) - 200.0) > 0.1 or absf(float(goku.get("COMBAT_MOVE_BACK_SPEED_PX_S")) - 400.0) > 0.1 or absf(float(goku.get("COMBAT_MOVE_FWD_SPEED_PX_S")) - 500.0) > 0.1 or absf(float(goku.get("FLIGHT_SPEED_PX_S")) - 400.0) > 0.1 or absf(float(goku.get("COMBO_LINK_COOLDOWN_S")) - 0.02) > 0.005:
+		fail("v9 Tuning: walk=200px/s, combat_move back=400px/s fwd=500px/s, fly_aura=400px/s, combo link=20ms required")
+		return
+	if absf(float(goku.get("KI_MAX")) - 50.0) > 0.1 or absf(float(goku.get("KI_FLY_DRAIN_PER_S")) - 5.0) > 0.1 or absf(float(goku.get("KI_REGEN_PER_S")) - 5.0) > 0.1:
+		fail("v8 KI bar: max=50, fly drain=5/s, regen=5/s required")
 		return
 	if g_spr.sprite_frames.get_frame_count(&"idle") < 12:
 		fail("v5 T7: idle_base must preserve full 01 warm-up animation sequence (>= 12 frames), got %d" % g_spr.sprite_frames.get_frame_count(&"idle"))
@@ -2046,24 +2061,315 @@ func run_test() -> void:
 		if fdur_ms < 58.0 or fdur_ms > 70.0:
 			fail("v6 Tuning: %s frame duration must be ~60ms (4 ticks @60Hz = 66.7ms), got %.1fms" % [atk_c, fdur_ms])
 			return
+	# v9 Combat Move runtime test: continuous forward dash (#3 @ 500px/s, 0 hop), brake near center (#2), continuous back dash (#0 @ 400px/s, 0 hop), brake near center (#1)!
 	goku.set("is_ssj", true)
 	goku.call(&"enter_combat")
 	goku.set("flight_state", "ground")
 	goku.set("jump_land_hold_s", 0.0)
+	goku.call(&"reset_combat_move")
 	goku.position = Vector2(1800.0, arena._ground_y_at(1800.0))
+	arena.player_facing_left = false
+	goku.scale = Vector2(arena.char_scale, arena.char_scale)
 	arena.player_vy = 0.0
 	g_spr.play(&"idle_combat")
 	var cm_start_x: float = goku.position.x
-	arena.step_player_movement(0.10, 1, 0, false, false, false, Vector2(1.0, 0.0))
-	var cm_moved_x: float = absf(goku.position.x - cm_start_x)
-	var cm_hover_world_px: float = -g_spr.position.y * arena.char_scale
-	if String(g_spr.animation) != "combat_move" or absf(cm_hover_world_px - 20.0) > 0.35 or cm_moved_x < 37.0 or cm_moved_x > 43.0:
-		fail("v6 Tuning: combat_move must glide at 400px/s (dx=%.2f) with 20px foot hover (hover=%.2f, anim=%s)" % [cm_moved_x, cm_hover_world_px, String(g_spr.animation)])
+	for _cm_i in range(12):
+		arena.step_player_movement(1.0 / 60.0, 1, 0, false, false, false, Vector2(1.0, 0.0))
+	var cm_fwd_dx: float = goku.position.x - cm_start_x
+	if String(g_spr.animation) != "combat_move" or g_spr.frame != 3 or (-g_spr.position.y * arena.char_scale) < 4.0 or absf(cm_fwd_dx - 100.0) > 12.0:
+		fail("v10 combat_move: 200ms forward dash must hold Frame 3 at ~500px/s (~100px) with low hover (~10px) (dx=%.2f, frame=%d, y=%.2f, anim=%s)" % [cm_fwd_dx, g_spr.frame, g_spr.position.y, String(g_spr.animation)])
 		return
+	# Pull analog near center (0.28) -> Frame #2 brake cushion drops to floor (y=0)!
+	arena.step_player_movement(1.0 / 60.0, 1, 0, false, false, false, Vector2(0.28, 0.0))
+	if String(g_spr.animation) != "combat_move" or g_spr.frame != 2 or absf(g_spr.position.y) > 0.01:
+		fail("v10 combat_move: pulling forward analog near center (0.28) must show Frame 2 brake at y=0, got anim=%s frame=%d y=%.2f" % [String(g_spr.animation), g_spr.frame, g_spr.position.y])
+		return
+	# Backward dash (facing right, moving left at -1.0 -> relative -1) -> Frame #0 @ 400px/s!
+	goku.call(&"reset_combat_move")
+	arena.player_facing_left = false
+	goku.scale = Vector2(arena.char_scale, arena.char_scale)
+	var cm_back_start: float = goku.position.x
+	for _cm_b in range(12):
+		# Simulate facing locked toward right enemy while retreating left
+		goku.call(&"step_combat_move_frame", 1.0 / 60.0, -1, 1.0)
+	if int(goku.get("combat_move_frame")) != 0 or absf(float(goku.call(&"get_combat_move_speed_px_s")) - 400.0) > 0.1:
+		fail("v9 combat_move: backward dash must stay Frame 0 at 400px/s, got frame=%d spd=%.1f" % [int(goku.get("combat_move_frame")), float(goku.call(&"get_combat_move_speed_px_s"))])
+		return
+	goku.call(&"step_combat_move_frame", 1.0 / 60.0, -1, 0.25)
+	if int(goku.get("combat_move_frame")) != 1:
+		fail("v9 combat_move: backward analog near center must brake on Frame 1, got %d" % int(goku.get("combat_move_frame")))
+		return
+	goku.call(&"reset_combat_move")
 	arena.step_player_movement(1.0 / 60.0, 0, 0, false, false, false, Vector2.ZERO)
 	if absf(g_spr.position.y) > 0.01:
-		fail("v5 T4: stopping combat_move must reset Sprite.position.y to 0.0, got %.2f" % g_spr.position.y)
+		fail("v9 combat_move: stopping combat_move must keep Sprite.position.y at 0.0, got %.2f" % g_spr.position.y)
 		return
+
+	# v8 Orange KI Flight Bar test: 50 max -> flying 2s drains 10 KI (40) -> flying 8.5s exhausts to 0 & forces falling -> cannot fly while exhausted -> grounded 1.2s regens +6 KI & unlocks flight!
+	goku.set("is_ssj", true)
+	goku.set("ki", 50.0)
+	goku.set("ki_exhausted", false)
+	goku.set("flight_state", "flying")
+	goku.call(&"step_hero_timers", 2.0, true, false, false, 120.0, false, false)
+	if absf(float(goku.get("ki")) - 40.0) > 0.15 or str(goku.get("flight_state")) != "flying":
+		fail("v8 KI: 2s flying must drain 10 KI (50->40), got ki=%.2f state=%s" % [float(goku.get("ki")), str(goku.get("flight_state"))])
+		return
+	goku.call(&"step_hero_timers", 8.5, true, false, false, 120.0, false, false)
+	if absf(float(goku.get("ki"))) > 0.01 or not bool(goku.get("ki_exhausted")) or str(goku.get("flight_state")) != "falling" or bool(goku.call(&"can_fly")):
+		fail("v8 KI: exhausting 50 KI must drop to 0, set ki_exhausted=true, force falling & lock flight (ki=%.2f ex=%s st=%s)" % [float(goku.get("ki")), str(goku.get("ki_exhausted")), str(goku.get("flight_state"))])
+		return
+	# Recover on ground at +5 KI/s
+	goku.set("flight_state", "ground")
+	goku.call(&"step_hero_timers", 1.2, false, true, false, 0.0, false, false)
+	if absf(float(goku.get("ki")) - 6.0) > 0.15 or bool(goku.get("ki_exhausted")) or not bool(goku.call(&"can_fly")):
+		fail("v8 KI: grounded 1.2s must regen +6 KI (+5/s) & unlock flight (ki=%.2f ex=%s)" % [float(goku.get("ki")), str(goku.get("ki_exhausted"))])
+		return
+
+	# v10 Phase 2 Skills verification (05 Barrier 10s, 06 Recover 3s HP/Armor/KI, 26 Flurry Kick universal Stun, Atomic 12s CD, Kamehameha 250 MP)
+	for req_p2 in ["barrier_cast", "energy_recover", "flurry_kick", "atomic_ground", "atomic_air_down", "kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"]:
+		if not g_spr.sprite_frames.has_animation(StringName(req_p2)):
+			fail("v10 Phase 2: Songoku bundle missing required clip '%s'" % req_p2)
+			return
+	goku.set("is_ssj", true)
+	goku.set("barrier_cooldown_s", 0.0)
+	goku.set("barrier_timer_s", 0.0)
+	goku.set("recover_cooldown_s", 0.0)
+	goku.set("atomic_cooldown_s", 0.0)
+	goku.set("kame_cooldown_s", 0.0)
+	goku.set("flurry_cooldown_s", 0.0)
+	# 1) Barrier 10s blocks damage while Goku moves freely
+	p1_fm.player_hp = 1000.0
+	if not p1_fm.request_player_barrier() or not bool(goku.call(&"is_barrier_active")):
+		fail("v10 Barrier: request_player_barrier must activate 10s shield")
+		return
+	p1_fm.apply_damage_to_player(200.0, goku.position, false, "player_hit")
+	if absf(p1_fm.player_hp - 1000.0) > 0.1:
+		fail("v10 Barrier: active 10s shield must block 100% incoming damage, got hp=%.1f" % p1_fm.player_hp)
+		return
+	goku.set("barrier_timer_s", 0.0)
+	# 2) Energy Recover 3s: dedicated visible button (slot 10) + loops #2..#5 cleanly (wraps at #6 -> #2) + heals HP/Armor/Flight KI!
+	if arena.mobile_pad != null:
+		if str(arena.mobile_pad.get_slot_binding(10)) != "energy_recover":
+			fail("v10.3 Energy Recover: dedicated MobileActionPad slot 10 must be bound to energy_recover, got '%s'" % str(arena.mobile_pad.get_slot_binding(10)))
+			return
+		var rec_btn: Button = arena.mobile_pad._slot_buttons.get(10) as Button
+		if rec_btn == null or not rec_btn.visible:
+			fail("v10.3 Energy Recover: dedicated button slot 10 must be visible for Son Goku")
+			return
+	p1_fm.player_hp = 600.0
+	p1_fm.player_armor = 20.0
+	goku.set("ki", 10.0)
+	var rec_spr: AnimatedSprite2D = goku.get_node_or_null("Sprite") as AnimatedSprite2D
+	if rec_spr != null:
+		rec_spr.play(&"idle_combat")
+	if not p1_fm.request_player_energy_recover():
+		fail("v10 Recover: request_player_energy_recover failed")
+		return
+	if rec_spr != null:
+		rec_spr.set_frame_and_progress(5, 0.0)
+		p1_fm.step(0.02)
+		if rec_spr.frame != 5:
+			fail("v10.3 Recover Loop: frame #5 must play full duration without premature jump, got anim=%s frame=%d" % [String(rec_spr.animation), rec_spr.frame])
+			return
+		rec_spr.set_frame_and_progress(6, 0.0)
+		p1_fm.step(0.02)
+		if rec_spr.frame != 2:
+			fail("v10.3 Recover Loop: entering #6 while recover_timer_s > 0.22 must wrap back to #2, got %d" % rec_spr.frame)
+			return
+	p1_fm.step(0.5)
+	if p1_fm.player_hp <= 650.0 or p1_fm.player_armor <= 30.0 or float(goku.get("ki")) <= 15.0:
+		fail("v10 Recover: 3s channel must restore HP, Armor & Flight KI (hp=%.1f arm=%.1f ki=%.1f)" % [p1_fm.player_hp, p1_fm.player_armor, float(goku.get("ki"))])
+		return
+	goku.set("recover_timer_s", 0.0)
+	# 3) Universal Hard Stun (Flurry Kick applies to Boss & Monsters & Hero)
+	var stun_slot: Dictionary = p1_fm.slots[0]
+	p1_fm.apply_hard_stun_to_slot(stun_slot, 1.6)
+	if float(stun_slot.get("hard_stun_timer_s", 0.0)) < 1.5:
+		fail("v10 Flurry Stun: apply_hard_stun_to_slot must lock slot for >= 1.5s")
+		return
+	# 4) Atomic 12s CD (4 alternating homing bolts @ 1500px/s ignoring terrain) & Kamehameha 80 MP gate (1700px/s seamless homing beam ignoring terrain) targeting BOTH pointed ground & flying enemies!
+	if absf(float(goku.get("ATOMIC_SPEED_PX_S")) - 1500.0) > 0.1 or int(goku.get("ATOMIC_BOLT_COUNT")) != 4 or absf(float(goku.get("KAME_MANA_COST")) - 80.0) > 0.1 or absf(float(goku.get("KAME_SPEED_PX_S")) - 1700.0) > 0.1:
+		fail("v10.3 Tuning: Atomic=4 bolts@1500px/s, Kamehameha=80MP@1700px/s required")
+		return
+	var atomic_spr: AnimatedSprite2D = goku.get_node_or_null("Sprite") as AnimatedSprite2D
+	if atomic_spr != null:
+		atomic_spr.play(&"idle_combat")
+	if is_instance_valid(stun_slot.get("node")):
+		var snode: Node2D = stun_slot.get("node") as Node2D
+		snode.position = Vector2(goku.position.x + 880.0, arena._ground_y_at(goku.position.x + 880.0))
+	p1_fm.pointer_kind = "enemy"
+	p1_fm.pointer_slot_id = str(stun_slot.get("id", ""))
+	if not p1_fm.request_player_atomic_blast() or absf(float(goku.get("atomic_cooldown_s")) - 12.0) > 0.2:
+		fail("v10 Atomic: must trigger & set 12s cooldown, got %.2f" % float(goku.get("atomic_cooldown_s")))
+		return
+	if p1_fm.request_player_atomic_blast():
+		fail("v10 Atomic: must reject recast while on 12s cooldown")
+		return
+	# Verify Atomic fires 4 alternating bolts @ 1500px/s with ignore_terrain=true locked to pointed target!
+	if atomic_spr != null:
+		atomic_spr.frame = 4
+		p1_fm.step(0.02)
+		var bolts_after_1: int = int(p1_fm._hero_skill_projectiles.size())
+		var first_bolt_ok: bool = bolts_after_1 >= 1 and absf(float(p1_fm._hero_skill_projectiles[0].get("speed", 0.0)) - 1500.0) <= 0.1 and bool(p1_fm._hero_skill_projectiles[0].get("ignore_terrain", false)) and str(p1_fm._hero_skill_projectiles[0].get("target", {}).get("id", "")) == p1_fm.pointer_slot_id
+		p1_fm.step(0.08)
+		p1_fm.step(0.08)
+		p1_fm.step(0.08)
+		var bolts_after_4: int = int(p1_fm._hero_skill_projectiles.size())
+		if not first_bolt_ok or bolts_after_4 < 4 or not p1_fm._hero_atomic_pending_bolts.is_empty():
+			fail("v10.3 Atomic: must launch 4 alternating homing bolts (@1500px/s ignore_terrain) to pointed target (anim=%s b1=%d b4=%d pend=%d)" % [String(atomic_spr.animation), bolts_after_1, bolts_after_4, p1_fm._hero_atomic_pending_bolts.size()])
+			return
+		atomic_spr.play(&"idle_combat")
+	# Point specifically at a FLYING monster and verify Kamehameha locks onto that flying target!
+	var fly_kame_slot: Dictionary = {}
+	for fsl_v in p1_fm.slots:
+		var fsl: Dictionary = fsl_v as Dictionary
+		if bool(fsl.get("alive", false)) and bool(fsl.get("is_flying", false)) and is_instance_valid(fsl.get("node")):
+			fly_kame_slot = fsl
+			break
+	if not fly_kame_slot.is_empty():
+		p1_fm.pointer_kind = "enemy"
+		p1_fm.pointer_slot_id = str(fly_kame_slot.get("id", ""))
+	p1_fm.player_mana = 70.0
+	if p1_fm.request_player_kamehameha():
+		fail("v10.1 Kamehameha: must require >= 80 Mana (rejected at 70 MP)")
+		return
+	p1_fm.player_mana = 100.0
+	if not p1_fm.request_player_kamehameha() or absf(p1_fm.player_mana - 20.0) > 0.1:
+		fail("v10.1 Kamehameha: must cast at 100 MP and consume exact 80 MP -> 20 MP, got %.1f" % p1_fm.player_mana)
+		return
+	if atomic_spr != null:
+		atomic_spr.frame = 3
+		p1_fm.step(0.02)
+		if p1_fm._hero_kame_beams.is_empty() or absf(float(p1_fm._hero_kame_beams[0].get("speed", 0.0)) - 1700.0) > 0.1 or not bool(p1_fm._hero_kame_beams[0].get("ignore_terrain", false)):
+			fail("v10.1 Kamehameha: beam must travel at 1700px/s ignoring terrain (anim=%s beams=%d)" % [String(atomic_spr.animation), p1_fm._hero_kame_beams.size()])
+			return
+		if not fly_kame_slot.is_empty() and str(p1_fm._hero_kame_beams[0].get("target", {}).get("id", "")) != str(fly_kame_slot.get("id", "")):
+			fail("v10.3 Kamehameha Pointer Lock: must aim directly at pointed flying target")
+			return
+		atomic_spr.play(&"idle_combat")
+
+	# 5) v10.2 Auto-Battle: KI exhaustion switches to ground target until KI full -> returns to flying + ranged skill priority on flying!
+	var dec_air_kame: Dictionary = UtilityAIController.evaluate_hero_auto({
+		"has_target": true, "is_songoku": true, "is_ssj": true, "is_busy": false,
+		"player_pos": Vector2(1200.0, 700.0), "target_pos": Vector2(1400.0, 480.0),
+		"edge_dist": 180.0, "v_gap": 180.0, "melee_range_px": 20.0,
+		"stamina": 100.0, "mana": 100.0, "target_airborne": true,
+		"is_airborne_flight": false, "can_fly": true, "can_light_attack": true,
+		"can_kamehameha": true, "can_atomic": true,
+	})
+	var dec_air_atom: Dictionary = UtilityAIController.evaluate_hero_auto({
+		"has_target": true, "is_songoku": true, "is_ssj": true, "is_busy": false,
+		"player_pos": Vector2(1200.0, 700.0), "target_pos": Vector2(1400.0, 480.0),
+		"edge_dist": 180.0, "v_gap": 180.0, "melee_range_px": 20.0,
+		"stamina": 100.0, "mana": 30.0, "target_airborne": true,
+		"is_airborne_flight": false, "can_fly": true, "can_light_attack": true,
+		"can_kamehameha": false, "can_atomic": true,
+	})
+	if str(dec_air_kame.get("intent", "")) != "kamehameha" or str(dec_air_atom.get("intent", "")) != "atomic_blast":
+		fail("v10.2 Auto Air Priority: expected kamehameha then atomic_blast on flying target, got %s / %s" % [str(dec_air_kame.get("intent", "")), str(dec_air_atom.get("intent", ""))])
+		return
+	var fly_slot_id: String = ""
+	var gnd_slot_a: Dictionary = {}
+	var gnd_slot_b: Dictionary = {}
+	for sl_v in p1_fm.slots:
+		var sl: Dictionary = sl_v as Dictionary
+		if not bool(sl.get("alive", false)) or not is_instance_valid(sl.get("node")):
+			continue
+		if bool(sl.get("is_flying", false)) and fly_slot_id.is_empty():
+			fly_slot_id = str(sl.get("id", ""))
+		elif not bool(sl.get("is_flying", false)):
+			if gnd_slot_a.is_empty():
+				gnd_slot_a = sl
+			elif gnd_slot_b.is_empty():
+				gnd_slot_b = sl
+	if not fly_slot_id.is_empty() and not gnd_slot_a.is_empty():
+		p1_fm.reset_auto_battle_ki_lock()
+		p1_fm.pointer_kind = "enemy"
+		p1_fm.pointer_slot_id = fly_slot_id
+		goku.set("is_ssj", true)
+		goku.set("flight_state", "ground")
+		goku.set("ki", 0.0)
+		goku.set("ki_exhausted", true)
+		p1_fm.player_mana = 0.0
+		goku.set("atomic_cooldown_s", 12.0)
+		p1_fm.step_hero_auto_battle(0.016)
+		var sel_after_empty: Dictionary = p1_fm._find_slot_by_id(p1_fm.pointer_slot_id)
+		if not bool(p1_fm._auto_ki_ground_lock) or bool(sel_after_empty.get("is_flying", true)):
+			fail("v10.2 Auto KI Lock: exhausting KI must lock & switch immediately to ground target (lock=%s fly=%s)" % [str(p1_fm._auto_ki_ground_lock), str(sel_after_empty.get("is_flying", true))])
+			return
+		# Partial KI recovery (15/50 and 35/50) must STAY on ground target (zero yo-yo loop!)
+		goku.set("ki_exhausted", false)
+		goku.set("ki", 15.0)
+		p1_fm.step_hero_auto_battle(0.016)
+		goku.set("ki", 35.0)
+		p1_fm.step_hero_auto_battle(0.016)
+		var sel_mid_ki: Dictionary = p1_fm._find_slot_by_id(p1_fm.pointer_slot_id)
+		if not bool(p1_fm._auto_ki_ground_lock) or bool(sel_mid_ki.get("is_flying", true)):
+			fail("v10.2 Auto KI Hysteresis: partial KI (15..35/50) must NOT switch back to flying target (prevents yo-yo loop)")
+			return
+		# Full KI recovery (50/50) must unlock & automatically switch BACK to flying target!
+		goku.set("ki", 50.0)
+		p1_fm.step_hero_auto_battle(0.016)
+		var sel_full_ki: Dictionary = p1_fm._find_slot_by_id(p1_fm.pointer_slot_id)
+		if bool(p1_fm._auto_ki_ground_lock) or not bool(sel_full_ki.get("is_flying", false)):
+			fail("v10.2 Auto KI Full Resume: full KI (50/50) must unlock & auto-return to flying target (lock=%s fly=%s)" % [str(p1_fm._auto_ki_ground_lock), str(sel_full_ki.get("is_flying", false))])
+			return
+		p1_fm.reset_auto_battle_ki_lock()
+
+	# 6) v10.2 Flurry Kick (`26`): 30% slower (~0.783s), auto-lunges forward, +50px range (<=215px) stuns ALL enemies in range!
+	if atomic_spr != null and not gnd_slot_a.is_empty() and not gnd_slot_b.is_empty():
+		var flk_dur_s: float = arena._get_clip_duration_s(goku, "flurry_kick")
+		if flk_dur_s < 0.74 or flk_dur_s > 0.84:
+			fail("v10.2 Flurry Kick Speed: expected ~0.783s (-30%% speed), got %.3fs" % flk_dur_s)
+			return
+		atomic_spr.play(&"idle_combat")
+		goku.set("flurry_cooldown_s", 0.0)
+		goku.set("flight_state", "ground")
+		var flk_start_x: float = 1200.0
+		var flk_gy: float = arena._ground_y_at(flk_start_x)
+		goku.position = Vector2(flk_start_x, flk_gy)
+		goku.scale = Vector2(absf(goku.scale.x), goku.scale.y)
+		var na: Node2D = gnd_slot_a.get("node") as Node2D
+		var nb: Node2D = gnd_slot_b.get("node") as Node2D
+		na.position = Vector2(flk_start_x + 120.0, arena._ground_y_at(flk_start_x + 120.0))
+		nb.position = Vector2(flk_start_x + 200.0, arena._ground_y_at(flk_start_x + 200.0))
+		gnd_slot_a["hard_stun_timer_s"] = 0.0
+		gnd_slot_b["hard_stun_timer_s"] = 0.0
+		p1_fm.pointer_slot_id = str(gnd_slot_a.get("id", ""))
+		if not p1_fm.request_player_flurry_kick():
+			fail("v10.2 Flurry Kick: request_player_flurry_kick failed")
+			return
+		for _fk_i in range(1, 6):
+			atomic_spr.frame = _fk_i
+			p1_fm.step(0.06)
+		if goku.position.x <= flk_start_x + 40.0:
+			fail("v10.2 Flurry Kick Lunge: Goku must lunge forward during kicks (start=%.1f end=%.1f)" % [flk_start_x, goku.position.x])
+			return
+		if float(gnd_slot_a.get("hard_stun_timer_s", 0.0)) < 1.2 or float(gnd_slot_b.get("hard_stun_timer_s", 0.0)) < 1.2:
+			fail("v10.2 Flurry Kick AoE Stun: BOTH enemies within expanded +50px range must be stunned (a=%.2f b=%.2f)" % [float(gnd_slot_a.get("hard_stun_timer_s", 0.0)), float(gnd_slot_b.get("hard_stun_timer_s", 0.0))])
+			return
+		atomic_spr.play(&"idle_combat")
+	goku.set("ki", 50.0)
+
+	# v8 KO Ground Settle test: KO'd mid-air/hovering must clear Sprite.position.y & drop to ground via gravity!
+	goku.position = Vector2(1800.0, arena._ground_y_at(1800.0) - 120.0)
+	goku.set("flight_state", "flying")
+	g_spr.position.y = -20.0
+	p1_fm.set_player_immortal(false)
+	p1_fm.player_dead = false
+	p1_fm.player_hp = 10.0
+	p1_fm.apply_damage_to_player(999.0)
+	if not p1_fm.player_dead or absf(g_spr.position.y) > 0.01:
+		fail("v8 KO: dying mid-air/combat_move must clear Sprite.position.y to 0.0 immediately")
+		return
+	for _ko_f in range(35):
+		var sup_ko: float = arena.get_nearest_support_y_below(goku.position.x, goku.position.y)
+		if goku.position.y < sup_ko - 0.5:
+			arena._integrate_player_vertical(1.0 / 60.0, false)
+	if absf(goku.position.y - arena._ground_y_at(1800.0)) > 1.5:
+		fail("v8 KO: KO'd player must settle cleanly onto ground floor (y=%.1f vs ground=%.1f)" % [goku.position.y, arena._ground_y_at(1800.0)])
+		return
+	p1_fm.respawn_player_at_left()
 
 	# v6 T3: Base Goku takes incoming hit -> AUTOMATICALLY activates SSJ1 (`transform_ssj`) + enters combat!
 	p1_fm.start_field(true)

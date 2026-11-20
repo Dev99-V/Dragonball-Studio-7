@@ -30,7 +30,25 @@ static func draw_pill_bar(canvas: CanvasItem, rect: Rect2, ratio: float, fill_co
 		canvas.draw_style_box(_cached_sb_fill, Rect2(rect.position, Vector2(fill_w, rect.size.y)))
 
 
-static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, hp: float, max_hp: float, mana: float, max_mana: float, display_name: String = "", is_remote: bool = false, armor: float = -1.0, max_armor: float = 100.0, armor_broken: bool = false) -> void:
+static func draw_vertical_pill_bar(canvas: CanvasItem, rect: Rect2, ratio: float, fill_color: Color, track_color: Color) -> void:
+	var r := clampf(ratio, 0.0, 1.0)
+	var radius_i := int(ceilf(rect.size.x * 0.5))
+	if _cached_sb_track == null:
+		_cached_sb_track = StyleBoxFlat.new()
+	_cached_sb_track.bg_color = track_color
+	_cached_sb_track.set_corner_radius_all(radius_i)
+	canvas.draw_style_box(_cached_sb_track, rect)
+	if r > 0.005:
+		var fill_h := minf(rect.size.y, maxf(rect.size.x * 0.7, rect.size.y * r))
+		var fill_y := rect.position.y + (rect.size.y - fill_h)
+		if _cached_sb_fill == null:
+			_cached_sb_fill = StyleBoxFlat.new()
+		_cached_sb_fill.bg_color = fill_color
+		_cached_sb_fill.set_corner_radius_all(radius_i)
+		canvas.draw_style_box(_cached_sb_fill, Rect2(rect.position.x, fill_y, rect.size.x, fill_h))
+
+
+static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, hp: float, max_hp: float, mana: float, max_mana: float, display_name: String = "", is_remote: bool = false, armor: float = -1.0, max_armor: float = 100.0, armor_broken: bool = false, ki: float = -1.0, max_ki: float = 50.0, ki_exhausted: bool = false) -> void:
 	var bar_w := 124.0
 	var hp_h := 16.0
 	var mana_h := 9.0
@@ -51,6 +69,17 @@ static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, 
 		var armor_fill := Color(0.98, 0.72, 0.18, 1.0) if armor_broken else Color(0.95, 0.96, 0.99, 0.98)
 		var armor_track := Color(0.18, 0.22, 0.30, 0.85)
 		draw_pill_bar(canvas, armor_rect, armor / maxf(1.0, max_armor), armor_fill, armor_track)
+	if ki >= 0.0:
+		# Orange vertical Flight KI bar directly to the right of HP / Mana / Armor bars (10% slimmer per Owner v10)!
+		var ki_w := 9.0
+		var ki_gap := 5.0
+		var ki_top := hp_rect.position.y
+		var ki_h := maxf(24.0, top_y - ki_top)
+		var ki_rect := Rect2(x0 + bar_w + ki_gap, ki_top, ki_w, ki_h)
+		var ki_fill := Color(0.95, 0.32, 0.08, 0.92) if ki_exhausted else Color(1.0, 0.56, 0.06, 1.0)
+		var ki_track := Color(0.16, 0.20, 0.28, 0.88)
+		draw_vertical_pill_bar(canvas, ki_rect, ki / maxf(1.0, max_ki), ki_fill, ki_track)
+		canvas.draw_rect(ki_rect.grow(0.5), Color(0.04, 0.06, 0.10, 0.75), false, 1.0)
 	var font := ThemeDB.fallback_font
 	if font != null:
 		var txt := "%d/%d" % [int(ceilf(maxf(0.0, hp))), int(round(max_hp))]
@@ -268,3 +297,63 @@ static func draw_floating_damage(canvas: CanvasItem, pos: Vector2, text_str: Str
 	var draw_pos := Vector2(pos.x - 72.0, pos.y)
 	canvas.draw_string_outline(font, draw_pos, text_str, HORIZONTAL_ALIGNMENT_CENTER, 144.0, FLOATING_DAMAGE_FONT_SIZE, FLOATING_DAMAGE_OUTLINE_SIZE, outline)
 	canvas.draw_string(font, draw_pos, text_str, HORIZONTAL_ALIGNMENT_CENTER, 144.0, FLOATING_DAMAGE_FONT_SIZE, col)
+
+
+static func draw_dash_wind_streaks(canvas: CanvasItem, foot_pos: Vector2, body_h_px: float, move_dir_x: int, dash_time_s: float) -> void:
+	## Crisp pixel-art wind slipstream streaks in FRONT of and TRAILING BEHIND Goku during `combat_move` dash (NO aura!).
+	## Gives lively high-speed air-cut motion so dashing never feels like a frozen static image.
+	if move_dir_x == 0:
+		return
+	var dir_f := 1.0 if move_dir_x > 0 else -1.0
+	var cy := foot_pos.y - body_h_px * 0.50
+	var streak_col_hi := Color(0.96, 0.99, 1.0, 0.88)
+	var streak_col_mid := Color(0.80, 0.93, 1.0, 0.65)
+	var streak_col_soft := Color(0.72, 0.88, 0.98, 0.42)
+
+	# 4 trailing wind lines behind the dash direction (continuous 60Hz phase scroll!)
+	for i in range(4):
+		var phase := fposmod(dash_time_s * (7.2 + float(i) * 1.4) + float(i) * 0.31, 1.0)
+		var y_off := (-0.36 + float(i) * 0.24) * body_h_px
+		var tail_dist := 18.0 + phase * 62.0
+		var seg_len := lerpf(44.0, 14.0, phase)
+		var x_start := foot_pos.x - dir_f * tail_dist
+		var x_end := x_start - dir_f * seg_len
+		var rx := minf(x_start, x_end)
+		var rw := absf(x_end - x_start)
+		var alpha := (1.0 - phase) * 0.90
+		var col := streak_col_hi if (i % 2 == 0) else streak_col_mid
+		col.a *= alpha
+		var thickness := 3.0 if (i % 2 == 0) else 2.0
+		canvas.draw_rect(Rect2(roundf(rx), roundf(cy + y_off), roundf(rw), thickness), col, true)
+
+	# 3 leading air-cut streaks in FRONT of the dash direction (cutting through the air ahead!)
+	for j in range(3):
+		var phase_f := fposmod(dash_time_s * (8.5 + float(j) * 1.6) + float(j) * 0.37, 1.0)
+		var y_off_f := (-0.28 + float(j) * 0.26) * body_h_px
+		var lead_dist := 24.0 + (1.0 - phase_f) * 36.0
+		var seg_len_f := lerpf(28.0, 10.0, phase_f)
+		var x_front := foot_pos.x + dir_f * lead_dist
+		var x_back := x_front - dir_f * seg_len_f
+		var rx_f := minf(x_front, x_back)
+		var rw_f := absf(x_front - x_back)
+		var col_f := streak_col_mid if j == 1 else streak_col_soft
+		col_f.a *= maxf(0.15, 1.0 - absf(phase_f - 0.5) * 1.4)
+		canvas.draw_rect(Rect2(roundf(rx_f), roundf(cy + y_off_f), roundf(rw_f), 2.0), col_f, true)
+
+
+static func draw_stun_stars_ring(canvas: CanvasItem, head_top_pos: Vector2, time_s: float) -> void:
+	## Golden rotating stun ring + 3 pixel stars hovering above any stunned Hero, Monster, or Boss (skills.md & Owner #4)!
+	var c := head_top_pos + Vector2(0.0, -14.0)
+	var rx := 22.0
+	var ry := 7.0
+	canvas.draw_arc(c, rx * 0.86, 0.0, TAU, 24, Color(1.0, 0.86, 0.22, 0.45), 1.5, false)
+	for i in range(3):
+		var ang := time_s * 5.8 + float(i) * (TAU / 3.0)
+		var sx := c.x + cos(ang) * rx
+		var sy := c.y + sin(ang) * ry
+		var depth_sc := lerpf(0.72, 1.15, (sin(ang) + 1.0) * 0.5)
+		var sz := roundf(5.0 * depth_sc)
+		canvas.draw_rect(Rect2(roundf(sx - sz * 0.5) - 1.0, roundf(sy - sz * 0.5) - 1.0, sz + 2.0, sz + 2.0), Color(0.10, 0.06, 0.02, 0.92), true)
+		canvas.draw_rect(Rect2(roundf(sx - sz * 0.5), roundf(sy - sz * 0.5), sz, sz), Color(1.0, 0.90, 0.22, 1.0), true)
+		canvas.draw_rect(Rect2(roundf(sx - 1.0), roundf(sy - sz * 0.85), 2.0, sz * 1.7), Color(1.0, 0.98, 0.70, 0.95), true)
+		canvas.draw_rect(Rect2(roundf(sx - sz * 0.85), roundf(sy - 1.0), sz * 1.7, 2.0), Color(1.0, 0.98, 0.70, 0.95), true)

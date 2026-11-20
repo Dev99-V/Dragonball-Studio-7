@@ -1,13 +1,13 @@
 {
   "schema": "dr7-studio.review_roster.v1",
-  "note": "Son Goku Tướng Đợt 1 v7 (Đồng bộ 1:1 toàn bộ 92 frame nhóm đánh/nhảy/thế chiến đấu/dịch chuyển SSJ1 07..17, 20, 34 theo chuẩn walk_ssj qua Codex CLI + giữ nguyên khóa SHA-256 24 frame Base + fly_aura v3 + toàn bộ cơ chế v6).",
+  "note": "Son Goku Tướng Đợt 2 v10.3 (33 clip thân 1 trang PNG <=4096 + 12 clip FX songoku_skills_fx: nút HỒI 3S (slot 10) hiện trực tiếp trên pad, energy_recover đồng bộ #0/#1/#6/#7 & khóa tâm thân chống giật 100% loop #2..#5 đủ 3s; Kamehameha nối liền mạch không hở xoay vòng 3 frame chuẩn mẫu 31 + 80 MP 1700px/s homing mục tiêu trỏ quái bay/bộ xuyên địa hình; Atomic 4 đạn xen kẽ 1500px/s không mất frame homing mục tiêu trỏ; Auto chống vòng lặp KI & ưu tiên chưởng quái bay; Đá LH lao tới -30% tốc độ +50px choáng AoE).",
   "characters": [
     {
       "character_id": "songoku_hero_demo",
-      "display_name": "Son Goku (Đợt 1 v7 · Đồng bộ 1:1 SSJ1 · Base Locked) [Human Test]",
+      "display_name": "Son Goku (Đợt 2 v10.3 · 33 Clip Full Skill + 12 FX) [Human Test]",
       "role": "hero",
       "faction": "review_demo",
-      "role_label": "Human Test — Tướng Son Goku Đợt 1 v7 (SSJ1 1:1 walk_ssj · Base Locked · Walk 200 · Fly/CMove 400 · 60/20ms · <20px)",
+      "role_label": "Human Test — Tướng Son Goku Full Skill (Khiên 10s · Hồi 3s Slot10 · Đá LH · Atomic 4×1500 · Kame Nối Liền 80MP)",
       "tags": [
         "human_test",
         "hero_first",
@@ -24,7 +24,7 @@
       "bundle_dir": "res://review/songoku_hero_demo/godot_bundle",
       "scene_2d": "res://review/songoku_hero_demo/SongokuHero.tscn",
       "avatar_path": "res://review/songoku_hero_demo/avatar_son-goku-ssj1.png",
-      "review_atlas_sha256": "afc9cc3f4b1de2316e091c6e285c93978622043b19f493757c98a391872fd2e5",
+      "review_atlas_sha256": "0d311b65f4a84195283242c0860a94bbb7f6ead17ccf6f5dcc236c5a68a769eb",
       "canvas_size_px": [
         288,
         288
@@ -35,18 +35,18 @@
       ],
       "default_scale": 1.0,
       "atlas_path": "review/songoku_hero_demo/godot_bundle/godot/songoku_hero_demo-atlas-00.png",
-      "atlas_sha256": "afc9cc3f4b1de2316e091c6e285c93978622043b19f493757c98a391872fd2e5",
+      "atlas_sha256": "0d311b65f4a84195283242c0860a94bbb7f6ead17ccf6f5dcc236c5a68a769eb",
       "atlas_size_px": [
-        3506,
-        3214
+        4090,
+        3798
       ],
       "atlas_pages": 1,
       "tres_path": "review/songoku_hero_demo/godot_bundle/godot/songoku_hero_demo.tres",
-      "tres_sha256": "e60332d1dbfc471085b066202d90ae446082827a099479e9f178dd78b3f8345c",
+      "tres_sha256": "4b1a421b731c02564b505f417d03b6ed0c4ab142707f961ab4e28f42d4d05601",
       "engine_export_path": "review/songoku_hero_demo/godot_bundle/engine-export.json",
       "prefab_path": "review/songoku_hero_demo/SongokuHero.tscn",
-      "frame_count": 141,
-      "clip_count": 24,
+      "frame_count": 184,
+      "clip_count": 33,
       "clips": [
         "idle",
         "walk",
@@ -71,7 +71,16 @@
         "teleport_dash_ground",
         "teleport_dash_air",
         "fly_prep",
-        "fly_aura"
+        "fly_aura",
+        "barrier_cast",
+        "energy_recover",
+        "flurry_kick",
+        "atomic_ground",
+        "atomic_air_down",
+        "kame_ground_horiz",
+        "kame_ground_up",
+        "kame_air_horiz",
+        "kame_air_down"
       ],
       "present_clips": [
         "idle",
@@ -97,7 +106,16 @@
         "teleport_dash_ground",
         "teleport_dash_air",
         "fly_prep",
-        "fly_aura"
+        "fly_aura",
+        "barrier_cast",
+        "energy_recover",
+        "flurry_kick",
+        "atomic_ground",
+        "atomic_air_down",
+        "kame_ground_horiz",
+        "kame_ground_up",
+        "kame_air_horiz",
+        "kame_air_down"
       ],
       "effect_clips": [],
       "map_sync_metrics": {
@@ -125,7 +143,7 @@
       },
       "modes": {
         "combined_1layer": {
-          "label": "Son Goku Hero Đợt 1 v4 (Combined 1-Layer · 125px · 24 clips)",
+          "label": "Son Goku Hero Full v10.3 (Combined 1-Layer · 125px · 33 clips)",
           "godot_prefab": "res://review/songoku_hero_demo/SongokuHero.tscn",
           "bundle_id": "songoku_hero_demo_review"
         }
@@ -155,7 +173,16 @@
           "teleport_dash_ground",
           "teleport_dash_air",
           "fly_prep",
-          "fly_aura"
+          "fly_aura",
+          "barrier_cast",
+          "energy_recover",
+          "flurry_kick",
+          "atomic_ground",
+          "atomic_air_down",
+          "kame_ground_horiz",
+          "kame_ground_up",
+          "kame_air_horiz",
+          "kame_air_down"
         ],
         "effect_clips": [],
         "locomotion": {
@@ -174,10 +201,13 @@
           "default_scale": 1.0,
           "screen_speed_px_per_second": 200,
           "speed_px_per_second": 200.0,
-          "combat_speed_px_per_second": 400.0,
-          "combat_move_hover_y_px": 20.0,
+          "combat_speed_px_per_second": 500.0,
+          "combat_move_hover_y_px": 0.0,
           "flight_speed_px_per_second": 400.0,
-          "jump_height_px": 100.0
+          "jump_height_px": 100.0,
+          "combat_move_hop_distance_px": 0.0,
+          "combat_back_speed_px_per_second": 400.0,
+          "combat_fwd_speed_px_per_second": 500.0
         },
         "game_states": {
           "peace": {
@@ -258,20 +288,20 @@
           "flight_speed_px_per_sec": 400.0,
           "flight_hover_timeout_sec": 3.0,
           "flight_fast_drop_on_analog_down": true,
-          "combat_move_speed_px_per_sec": 400.0,
-          "combat_move_hover_y_px": 20.0,
+          "combat_move_speed_px_per_sec": 500.0,
+          "combat_move_hover_y_px": 10.0,
           "combat_move_loop_ms": {
             "backward": [
               0,
-              90,
+              100,
               1,
-              60
+              120
             ],
             "forward": [
               3,
-              90,
+              100,
               2,
-              60
+              120
             ]
           },
           "jump_frame_map": {
@@ -286,9 +316,59 @@
               5
             ],
             "universal_fall": 4
-          }
+          },
+          "combat_move_hop_distance_px": 0.0,
+          "flight_ki_max": 50.0,
+          "flight_ki_drain_per_sec": 5.0,
+          "flight_ki_regen_per_sec": 5.0,
+          "flight_ki_bar_color": "orange",
+          "flight_ki_bar_layout": "vertical_right_of_hp_mana_armor",
+          "combat_move_back_speed_px_per_sec": 400.0,
+          "combat_move_fwd_speed_px_per_sec": 500.0,
+          "combat_move_dash_no_aura": true,
+          "combat_move_mode": "continuous_dash_with_analog_brake",
+          "combat_move_frame_roles": {
+            "back_dash": 0,
+            "back_brake": 1,
+            "fwd_brake": 2,
+            "fwd_dash": 3
+          },
+          "combat_move_wind_streaks": true,
+          "flight_ki_bar_width_px": 9.0,
+          "barrier_duration_sec": 10.0,
+          "barrier_free_movement": true,
+          "energy_recover_duration_sec": 3.0,
+          "energy_recover_restores": [
+            "hp",
+            "armor",
+            "flight_ki"
+          ],
+          "flurry_kick_universal_stun": true,
+          "atomic_cooldown_sec": 12.0,
+          "atomic_speed_px_per_sec": 1500.0,
+          "atomic_bolt_count": 4,
+          "atomic_homing_ignore_terrain": true,
+          "kamehameha_mana_cost": 80.0,
+          "kamehameha_speed_px_per_sec": 1700.0,
+          "kamehameha_homing_ignore_terrain": true,
+          "hero_max_mana": 100.0,
+          "flurry_kick_speed_scale": 0.7,
+          "flurry_kick_lunge_speed_px_per_sec": 260.0,
+          "flurry_kick_range_fwd_px": 215.0,
+          "flurry_kick_range_v_px": 160.0,
+          "auto_ki_ground_switch_until_full": true,
+          "auto_flying_ranged_skill_priority": true,
+          "energy_recover_loop_frames": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "energy_recover_pad_slot": 10,
+          "kamehameha_seamless_tiled_beam": true
         },
-        "facing_default": "right"
+        "facing_default": "right",
+        "skills_fx_tres": "res://review/songoku_hero_demo/fx/godot/songoku_skills_fx.tres"
       },
       "sharpness_metrics": {
         "idle_base_sobel": 107.304,

@@ -94,6 +94,7 @@ var player_max_mana: float = PLAYER_MAX_MANA
 var player_armor: float = PLAYER_MAX_ARMOR
 var player_max_armor: float = PLAYER_MAX_ARMOR
 var player_armor_broken_timer_s: float = 0.0
+var player_hard_stun_timer_s: float = 0.0
 var player_dead: bool = false
 var player_immortal: bool = false
 var show_monster_ranges: bool = false
@@ -105,6 +106,20 @@ var _player_combo_attack_info: Dictionary = {}
 var _player_hit_frames_fired: Array[int] = []
 var _player_gold_slash_pending: bool = false
 var _base_lock_notice_cd_s: float = 0.0
+
+# Phase 2 Son Goku Active Skills & Independent FX Runtime (Owner 2026-11-20)
+var _songoku_fx_frames: SpriteFrames = null
+var _hero_skill_projectiles: Array[Dictionary] = []   # Atomic bolts (23/25)
+var _hero_kame_beams: Array[Dictionary] = []          # Kamehameha beams (31/32)
+var _hero_flurry_hits_fired: Array[int] = []
+var _hero_atomic_fired: bool = false
+var _hero_atomic_air_down: bool = false
+var _hero_atomic_target: Dictionary = {}
+var _hero_atomic_pending_bolts: Array[Dictionary] = []
+var _hero_kame_fired: bool = false
+var _hero_kame_mode: String = "ground_horiz"
+var _hero_kame_target: Dictionary = {}
+var _hero_barrier_burst_s: float = 0.0
 
 var slots: Array[Dictionary] = []
 var boss_slot: Dictionary = {}
@@ -142,6 +157,16 @@ var _auto_approach_kind: String = ""
 var _auto_approach_slot_id: String = ""
 var _auto_approach_item: Node2D = null
 var _auto_approach_timeout_s: float = 0.0
+
+# Auto-Battle Flight KI hysteresis (Owner v10.2):
+# When Flight KI hits 0 -> lock onto ground targets until KI recovers to full -> auto switch back to flying!
+var _auto_ki_ground_lock: bool = false
+var _auto_return_to_air_on_ki_full: bool = false
+
+const FLURRY_KICK_LUNGE_SPEED_PX_S: float = 260.0
+const FLURRY_KICK_RANGE_FWD_PX: float = 215.0
+const FLURRY_KICK_RANGE_BACK_PX: float = 55.0
+const FLURRY_KICK_RANGE_V_PX: float = 160.0
 
 var player_hit_flash_s: float = 0.0
 var player_hit_shake_s: float = 0.0
@@ -226,8 +251,14 @@ func cancel_auto_approach() -> void:
 	_auto_approach_timeout_s = 0.0
 
 
+func reset_auto_battle_ki_lock() -> void:
+	_auto_ki_ground_lock = false
+	_auto_return_to_air_on_ki_full = false
+
+
 func start_field(spawn_player_immediately: bool = false) -> void:
 	clear_all()
+	reset_auto_battle_ki_lock()
 	active = true
 	player_spawned = spawn_player_immediately
 	player_hp = PLAYER_MAX_HP
@@ -237,6 +268,19 @@ func start_field(spawn_player_immediately: bool = false) -> void:
 	player_armor = PLAYER_MAX_ARMOR
 	player_max_armor = PLAYER_MAX_ARMOR
 	player_armor_broken_timer_s = 0.0
+	player_hard_stun_timer_s = 0.0
+	_hero_skill_projectiles.clear()
+	_hero_kame_beams.clear()
+	_hero_flurry_hits_fired.clear()
+	_hero_atomic_fired = false
+	_hero_atomic_target = {}
+	_hero_atomic_pending_bolts.clear()
+	_hero_kame_fired = false
+	_hero_kame_target = {}
+	_hero_barrier_burst_s = 0.0
+	if arena != null and arena.player_node != null and _is_hero_songoku_node(arena.player_node):
+		player_max_mana = 100.0
+		player_mana = 100.0
 	player_dead = false
 	player_respawn_timer_s = 0.0
 	_flying_rotation_idx = 0
@@ -292,6 +336,7 @@ func _create_and_spawn_slot(spec: Dictionary, is_flying: bool) -> void:
 		"stamina": 100.0,
 		"max_stamina": 100.0,
 		"stun_timer_s": 0.0,
+		"hard_stun_timer_s": 0.0,
 		"hit_anim_timer_s": 0.0,
 		"respawn_timer_s": 0.0,
 		"ko_hide_timer_s": 0.0,
@@ -448,6 +493,13 @@ func step(delta: float) -> void:
 			if player_armor_broken_timer_s <= 0.0:
 				player_armor = player_max_armor
 				player_state_changed.emit()
+		if player_hard_stun_timer_s > 0.0:
+			player_hard_stun_timer_s = maxf(0.0, player_hard_stun_timer_s - delta)
+			var pspr_st := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+			if pspr_st != null and pspr_st.sprite_frames != null and pspr_st.sprite_frames.has_animation(&"hit"):
+				if String(pspr_st.animation) != "hit" or not pspr_st.is_playing():
+					pspr_st.play(&"hit")
+		_step_hero_phase2_skills(delta)
 		_step_auto_approach(delta)
 		_step_player_combat_hooks()
 
@@ -458,8 +510,9 @@ func step(delta: float) -> void:
 	if not boss_slot.is_empty():
 		_step_slot(boss_slot, delta)
 
-	# 3. Step homing projectiles (silhouette collision + skill-vs-skill clash + terrain stop)
+	# 3. Step homing projectiles + Son Goku Phase 2 Atomic bolts & Kamehameha beams
 	_step_homing_projectiles(delta)
+	_step_hero_skill_projectiles_and_beams(delta)
 
 	# 4. Apply hit flashes, shakes, pointer fade & impact/text timers immediately after combat updates
 	_step_hit_visuals(delta)
@@ -565,6 +618,7 @@ func spawn_boss_drum(forced_spawn_x: float = -999999.0) -> Dictionary:
 		"stamina": float(BOSS_DRUM_STATS["stamina"]),
 		"max_stamina": float(BOSS_DRUM_STATS["stamina"]),
 		"stun_timer_s": 0.0,
+		"hard_stun_timer_s": 0.0,
 		"hit_anim_timer_s": 0.0,
 		"respawn_timer_s": 0.0,
 		"ko_hide_timer_s": 0.0,
@@ -763,7 +817,13 @@ func respawn_player_at_left() -> void:
 		var pspr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
 		if pspr != null:
 			pspr.modulate = Color.WHITE
-			pspr.position.x = 0.0
+			pspr.position = Vector2.ZERO
+		if _is_hero_songoku_node(arena.player_node):
+			arena.player_node.set("flight_state", "ground")
+			arena.player_node.set("hover_timer_s", 0.0)
+			arena.player_node.set("ki", float(arena.player_node.get("max_ki")))
+			arena.player_node.set("ki_exhausted", false)
+			arena.player_node.call(&"step_combat_move_frame", 0.0, 0)
 		arena.call("_play_fighter_clip", arena.player_node, "idle")
 	player_state_changed.emit()
 
@@ -787,31 +847,86 @@ func _get_player_melee_strike_edge_px() -> float:
 	return MELEE_STRIKE_EDGE_PX
 
 
-func _select_auto_battle_target() -> Dictionary:
-	refresh_pointer_valid()
-	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
-		var ps := _find_slot_by_id(pointer_slot_id)
-		if not ps.is_empty() and bool(ps.get("alive", false)) and not bool(ps.get("is_remote_player", false)) and is_instance_valid(ps.get("node")):
-			return ps
+func _is_slot_airborne_for_auto(s: Dictionary, p_core: Vector2) -> bool:
+	if bool(s.get("is_flying", false)):
+		return true
+	return _get_slot_core_pos(s).y < p_core.y - 68.0
+
+
+func _find_best_auto_target_filtered(require_flying: bool, require_ground: bool) -> Dictionary:
 	if arena == null or arena.player_node == null:
 		return {}
-	var p_core := _get_player_core_pos()
+	var p_core: Vector2 = _get_player_core_pos()
 	var best: Dictionary = {}
-	var best_score := 9999999.0
+	var best_score: float = 9999999.0
 	for s in _get_combat_slots():
 		if not bool(s.get("alive", false)) or bool(s.get("is_remote_player", false)) or not is_instance_valid(s.get("node")):
 			continue
-		var d := p_core.distance_to(_get_slot_core_pos(s))
-		# Utility priority: prefer already-combat monsters & Boss slightly over peaceful monsters
-		var prio_bonus := 0.0
+		var is_air: bool = _is_slot_airborne_for_auto(s, p_core)
+		if require_flying and not is_air:
+			continue
+		if require_ground and is_air:
+			continue
+		var d: float = p_core.distance_to(_get_slot_core_pos(s))
+		var prio_bonus: float = 0.0
 		if bool(s.get("is_boss", false)):
 			prio_bonus = -180.0
 		elif str(s.get("combat_state", "peace")) == "combat":
 			prio_bonus = -120.0
-		var score := d + prio_bonus
+		var score: float = d + prio_bonus
 		if score < best_score:
 			best_score = score
 			best = s
+	return best
+
+
+func _update_auto_ki_lock(p_node: Node2D) -> void:
+	if p_node == null or not _is_hero_songoku_node(p_node):
+		return
+	var cur_ki: float = float(p_node.get("ki"))
+	var max_ki: float = maxf(1.0, float(p_node.get("max_ki")))
+	var ki_ex: bool = bool(p_node.get("ki_exhausted"))
+	var in_flight: bool = bool(p_node.call(&"is_airborne_flight"))
+	if ki_ex or cur_ki <= 0.5:
+		if not _auto_ki_ground_lock:
+			_auto_ki_ground_lock = true
+			if in_flight:
+				_auto_return_to_air_on_ki_full = true
+			elif pointer_kind == "enemy" and not pointer_slot_id.is_empty():
+				var cur_ps: Dictionary = _find_slot_by_id(pointer_slot_id)
+				if not cur_ps.is_empty() and _is_slot_airborne_for_auto(cur_ps, _get_player_core_pos()):
+					_auto_return_to_air_on_ki_full = true
+	elif _auto_ki_ground_lock and (not ki_ex) and cur_ki >= max_ki - 0.5:
+		# Flight KI fully recovered: unlock air engagement & automatically return to flying target!
+		_auto_ki_ground_lock = false
+		if _auto_return_to_air_on_ki_full:
+			_auto_return_to_air_on_ki_full = false
+			var air_tgt: Dictionary = _find_best_auto_target_filtered(true, false)
+			if not air_tgt.is_empty():
+				pointer_kind = "enemy"
+				pointer_slot_id = str(air_tgt.get("id", ""))
+				pointer_item_node = null
+				pointer_changed.emit(pointer_kind)
+
+
+func _select_auto_battle_target() -> Dictionary:
+	refresh_pointer_valid()
+	if arena == null or arena.player_node == null:
+		return {}
+	var p_core: Vector2 = _get_player_core_pos()
+	var best_ground: Dictionary = _find_best_auto_target_filtered(false, true)
+	var force_ground: bool = _auto_ki_ground_lock and not best_ground.is_empty()
+
+	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
+		var ps: Dictionary = _find_slot_by_id(pointer_slot_id)
+		if not ps.is_empty() and bool(ps.get("alive", false)) and not bool(ps.get("is_remote_player", false)) and is_instance_valid(ps.get("node")):
+			var ps_air: bool = _is_slot_airborne_for_auto(ps, p_core)
+			if not (force_ground and ps_air):
+				return ps
+			# KI exhausted while targeting flying enemy: remember to return to air once KI is full!
+			_auto_return_to_air_on_ki_full = true
+
+	var best: Dictionary = best_ground if force_ground else _find_best_auto_target_filtered(false, false)
 	if not best.is_empty():
 		pointer_kind = "enemy"
 		pointer_slot_id = str(best.get("id", ""))
@@ -821,27 +936,35 @@ func _select_auto_battle_target() -> Dictionary:
 
 
 func step_hero_auto_battle(delta: float) -> Dictionary:
-	## v6 T7: Utility AI Auto-Battle controller for playable Hero (Son Goku / Heroes).
+	## v10.2: Utility AI Auto-Battle controller for playable Hero (Son Goku / Heroes):
+	## - Flight KI hysteresis: out of KI -> switch to ground targets until KI recovers to full -> auto switch back to flying!
+	## - Flying monsters: prioritize ranged Ki blasts (Kamehameha -> Atomic) before flying/teleporting!
 	if not active or not player_spawned or player_dead or arena == null or arena.player_node == null:
 		return {"intent": "idle"}
-	var tgt := _select_auto_battle_target()
+	var p_node: Node2D = arena.player_node as Node2D
+	_update_auto_ki_lock(p_node)
+	var tgt: Dictionary = _select_auto_battle_target()
 	if tgt.is_empty():
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 		return {"intent": "idle"}
-	var p_node := arena.player_node as Node2D
-	var is_goku := _is_hero_songoku_node(p_node)
-	var p_rect := _get_player_body_rect()
-	var m_rect := _get_slot_body_rect(tgt)
-	var p_core := _get_player_core_pos()
-	var m_core := _get_slot_core_pos(tgt)
-	var edge_gap := _compute_slot_edge_gap(tgt)
-	var v_gap := maxf(0.0, maxf(p_rect.position.y - m_rect.end.y, m_rect.position.y - p_rect.end.y))
-	var melee_r := _get_player_melee_strike_edge_px()
-	var is_busy := bool(arena.call("_is_player_action_playing"))
-	var dec := UtilityAIControllerScript.evaluate_hero_auto({
+	var is_goku: bool = _is_hero_songoku_node(p_node)
+	var p_rect: Rect2 = _get_player_body_rect()
+	var m_rect: Rect2 = _get_slot_body_rect(tgt)
+	var p_core: Vector2 = _get_player_core_pos()
+	var m_core: Vector2 = _get_slot_core_pos(tgt)
+	var edge_gap: float = _compute_slot_edge_gap(tgt)
+	var v_gap: float = maxf(0.0, maxf(p_rect.position.y - m_rect.end.y, m_rect.position.y - p_rect.end.y))
+	var melee_r: float = _get_player_melee_strike_edge_px()
+	var is_busy: bool = bool(arena.call("_is_player_action_playing"))
+	var goku_is_ssj: bool = bool(p_node.get("is_ssj")) if is_goku else true
+	var can_kame: bool = is_goku and goku_is_ssj and player_mana + 0.001 >= 80.0 and float(p_node.get("kame_cooldown_s")) <= 0.0
+	var can_atomic: bool = is_goku and goku_is_ssj and float(p_node.get("atomic_cooldown_s")) <= 0.0
+	var can_recover: bool = is_goku and goku_is_ssj and float(p_node.get("recover_cooldown_s")) <= 0.0 and float(p_node.get("ki")) < float(p_node.get("max_ki")) - 5.0
+	var can_fly_auto: bool = (bool(p_node.call(&"can_fly")) and (not _auto_ki_ground_lock)) if is_goku else false
+	var dec: Dictionary = UtilityAIControllerScript.evaluate_hero_auto({
 		"has_target": true,
 		"is_songoku": is_goku,
-		"is_ssj": bool(p_node.get("is_ssj")) if is_goku else true,
+		"is_ssj": goku_is_ssj,
 		"is_busy": is_busy,
 		"player_pos": p_core,
 		"target_pos": m_core,
@@ -851,15 +974,28 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 		"stamina": float(p_node.get("stamina")) if is_goku else 0.0,
 		"mana": player_mana,
 		"has_power_up": bool(arena.call("_has_clip_name", p_node, &"power_up")),
-		"target_airborne": bool(tgt.get("is_flying", false)) or (m_core.y < p_core.y - 68.0),
+		"can_kamehameha": can_kame,
+		"can_atomic": can_atomic,
+		"can_energy_recover": can_recover,
+		"target_airborne": _is_slot_airborne_for_auto(tgt, p_core),
 		"is_airborne_flight": bool(p_node.call(&"is_airborne_flight")) if is_goku else false,
+		"can_fly": can_fly_auto,
 		"can_light_attack": bool(arena.call("can_player_light_attack")),
 	})
-	var intent := str(dec.get("intent", "idle"))
+	var intent: String = str(dec.get("intent", "idle"))
 	_face_player_toward_x(m_core.x)
 	if intent == "transform_ssj":
 		arena.call("_trigger_songoku_auto_transform_on_hit")
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+	elif intent == "kamehameha":
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+		request_player_kamehameha()
+	elif intent == "atomic_blast":
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+		request_player_atomic_blast()
+	elif intent == "energy_recover":
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+		request_player_energy_recover()
 	elif intent == "teleport_static":
 		arena.call("_trigger_songoku_teleport", Vector2.ZERO)
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
@@ -875,16 +1011,16 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 		request_player_primary_action()
 	elif intent == "fly_chase":
 		var fvec2: Vector2 = dec.get("fly_vec", Vector2(0.0, -1.0))
-		var mdir := int(dec.get("move_dir", 0))
-		var need_jump := bool(dec.get("jump", false))
-		var fly_y := -1 if fvec2.y < -0.15 else (1 if fvec2.y > 0.15 else 0)
+		var mdir: int = int(dec.get("move_dir", 0))
+		var need_jump: bool = bool(dec.get("jump", false))
+		var fly_y: int = -1 if fvec2.y < -0.15 else (1 if fvec2.y > 0.15 else 0)
 		arena.call("step_player_movement", delta, mdir, fly_y, need_jump, false, false, fvec2)
 	elif intent == "chase":
-		var cdir := int(dec.get("move_dir", 0))
-		var jreq := false
+		var cdir: int = int(dec.get("move_dir", 0))
+		var jreq: bool = false
 		if cdir != 0 and not bool(arena.call("_can_cross_terrain_step", p_node.position.x, p_node.position.x + float(cdir) * 28.0, p_node.position.y, false)):
 			jreq = true
-		elif m_rect.end.y < p_rect.end.y - 24.0 and absf(m_core.x - p_core.x) < 160.0:
+		elif m_rect.end.y < p_rect.end.y - 24.0 and absf(m_core.x - p_core.x) < 160.0 and not _is_slot_airborne_for_auto(tgt, p_core):
 			jreq = true
 		arena.call("step_player_movement", delta, cdir, 0, jreq, false, false, Vector2(float(cdir), 0.0))
 	else:
@@ -973,7 +1109,12 @@ func _step_auto_approach(delta: float) -> void:
 			var air_vec := to_air.normalized() if to_air.length() > 1.0 else Vector2(0.0, -1.0)
 			var air_dir := -1 if to_air.x < -8.0 else (1 if to_air.x > 8.0 else 0)
 			var in_flight := bool(p_node.call(&"is_airborne_flight"))
+			var goku_can_fly := bool(p_node.call(&"can_fly"))
 			if not in_flight:
+				if not goku_can_fly:
+					# Out of KI: approach underneath and wait for KI regeneration
+					arena.call("step_player_movement", delta, air_dir, 0, false, false, false, Vector2(float(air_dir), 0.0))
+					return
 				var launch_vec := Vector2(clampf(to_air.x / 140.0, -0.45, 0.45), -0.92).normalized()
 				arena.call("step_player_movement", delta, air_dir, -1, true, false, false, launch_vec)
 			else:
@@ -1484,6 +1625,17 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 	# Invulnerable during `transform_ssj` animation through completion (Owner rule 2026-11-20)!
 	if arena != null and arena.player_node != null and arena.player_node.has_method(&"is_transform_invulnerable") and bool(arena.player_node.call(&"is_transform_invulnerable")):
 		return
+	# Protective Barrier `LOOP 10S` (05): blocks 100% incoming damage while Goku moves/attacks freely!
+	if arena != null and arena.player_node != null and arena.player_node.has_method(&"is_barrier_active") and bool(arena.player_node.call(&"is_barrier_active")):
+		var b_pos := hit_pos if hit_pos.x > -90000.0 else _get_player_core_pos()
+		floating_texts.append({
+			"pos": b_pos + Vector2(0.0, -24.0),
+			"text": "KHIÊN CHẶN!",
+			"color": Color(1.0, 0.92, 0.24, 1.0),
+			"elapsed_s": 0.0,
+			"duration_s": 0.55,
+		})
+		return
 	if player_immortal:
 		return
 	var fx_pos := hit_pos if hit_pos.x > -90000.0 else _get_player_core_pos()
@@ -1530,6 +1682,13 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 		if arena.player_node != null:
 			if arena.player_node.has_method(&"reset_combo"):
 				arena.player_node.call(&"reset_combo")
+			if _is_hero_songoku_node(arena.player_node):
+				arena.player_node.set("flight_state", "falling")
+				arena.player_node.set("hover_timer_s", 0.0)
+				arena.player_node.call(&"step_combat_move_frame", 0.0, 0)
+			var kspr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+			if kspr != null:
+				kspr.position.y = 0.0
 			if arena.player_node.has_meta(&"_arena_queued_action"):
 				arena.player_node.remove_meta(&"_arena_queued_action")
 			arena.call("_play_fighter_clip", arena.player_node, "ko")
@@ -1664,6 +1823,21 @@ func _step_slot(slot: Dictionary, delta: float) -> void:
 		return
 
 	if mnode == null or not is_instance_valid(mnode):
+		return
+
+	# Hard Stun (e.g. Flurry Kick `26`): applies to ALL bosses, monsters, and heroes!
+	# Locks AI/movement/attacks, holds continuous `hit` pose, and renders golden rotating stun stars ring overhead.
+	if float(slot.get("hard_stun_timer_s", 0.0)) > 0.0:
+		slot["hard_stun_timer_s"] = maxf(0.0, float(slot.get("hard_stun_timer_s", 0.0)) - delta)
+		slot["action_clip"] = ""
+		slot["action_timer_s"] = 0.0
+		var st_spr := mnode.get_node_or_null("Sprite") as AnimatedSprite2D
+		if st_spr != null and st_spr.sprite_frames != null and st_spr.sprite_frames.has_animation(&"hit"):
+			if String(st_spr.animation) != "hit" or not st_spr.is_playing():
+				st_spr.play(&"hit")
+		_step_slot_vertical(slot, delta)
+		if float(slot.get("hard_stun_timer_s", 0.0)) <= 0.0:
+			arena.call("_ensure_fighter_locomotion", mnode, "idle", bool(slot["preserve_phase"]))
 		return
 
 	# Broken-stamina attack-lock (3.0s) + single HIT clip per incoming damage (1 hit = 1 hit anim, normal movement when unattacked)
@@ -2512,12 +2686,22 @@ func draw_overlays(canvas: CanvasItem) -> void:
 		return
 	if show_monster_ranges:
 		_draw_monster_range_overlays(canvas)
-	# 1. Player overhead Green HP + Blue Mana + White Armor bars (+ display name in Alpha session)
+	# 1. Player overhead Green HP + Blue Mana + White Armor bars + Orange vertical Flight KI bar (+ display name in Alpha session)
 	if player_spawned and not player_dead and arena.player_node != null:
 		var p_rect := _get_player_body_rect()
 		var p_top: float = p_rect.position.y - 18.0
 		var p_cx: float = _get_player_core_pos().x
-		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0)
+		var p_ki := -1.0
+		var p_max_ki := 50.0
+		var p_ki_ex := false
+		if _is_hero_songoku_node(arena.player_node):
+			p_ki = float(arena.player_node.get("ki"))
+			p_max_ki = float(arena.player_node.get("max_ki"))
+			p_ki_ex = bool(arena.player_node.get("ki_exhausted"))
+		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0, p_ki, p_max_ki, p_ki_ex)
+		if player_hard_stun_timer_s > 0.0:
+			OverheadBarsDrawScript.draw_stun_stars_ring(canvas, Vector2(p_cx, p_rect.position.y), _sim_time_s)
+		_draw_hero_phase2_fx_overlays(canvas)
 
 	# 2. All alive monsters + Boss Drum + Remote Players (Vinh / Thái)
 	for s in _get_combat_slots():
@@ -2539,11 +2723,13 @@ func draw_overlays(canvas: CanvasItem) -> void:
 				true
 			)
 			continue
-		var stunned := float(s["stun_timer_s"]) > 0.0
+		var stunned := float(s["stun_timer_s"]) > 0.0 or float(s.get("hard_stun_timer_s", 0.0)) > 0.0
 		var is_boss := bool(s.get("is_boss", false))
 		var lbl := "Drum" if is_boss else str(s["character_id"])
 		var m_cstate := "combat" if is_boss else str(s.get("combat_state", "peace"))
 		OverheadBarsDrawScript.draw_enemy_bars(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, lbl, is_boss, m_cstate)
+		if float(s.get("hard_stun_timer_s", 0.0)) > 0.0:
+			OverheadBarsDrawScript.draw_stun_stars_ring(canvas, Vector2(e_cx, m_rect.position.y), _sim_time_s)
 
 	# 3. Persistent Target Pointer UI (touch selection + TRỎ/Tab button) + brief Calligraphic Red "X" flash on enemy lock!
 	var x_prog := clampf(pointer_x_anim_s / maxf(0.01, pointer_x_anim_dur_s), 0.0, 1.0)
@@ -2663,6 +2849,13 @@ func sync_from_zone_snapshot(players_by_id: Dictionary, monsters_by_id: Dictiona
 					player_dead = true
 					player_respawn_timer_s = RESPAWN_PLAYER_DELAY_S
 					if arena.player_node != null:
+						if _is_hero_songoku_node(arena.player_node):
+							arena.player_node.set("flight_state", "falling")
+							arena.player_node.set("hover_timer_s", 0.0)
+							arena.player_node.call(&"step_combat_move_frame", 0.0, 0)
+						var kspr2 := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+						if kspr2 != null:
+							kspr2.position.y = 0.0
 						arena.call("_play_fighter_clip", arena.player_node, "ko")
 				elif alive_srv and player_dead and _last_srv_local_hp >= player_max_hp - 0.1:
 					player_dead = false
@@ -2844,7 +3037,15 @@ func apply_network_combat_event(ev: Dictionary, local_uid: String) -> void:
 			if player_hp <= 0.0 and not player_dead:
 				player_dead = true
 				player_respawn_timer_s = RESPAWN_PLAYER_DELAY_S
-				arena.call("_play_fighter_clip", arena.player_node, "ko")
+				if arena.player_node != null:
+					if _is_hero_songoku_node(arena.player_node):
+						arena.player_node.set("flight_state", "falling")
+						arena.player_node.set("hover_timer_s", 0.0)
+						arena.player_node.call(&"step_combat_move_frame", 0.0, 0)
+					var kspr3 := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+					if kspr3 != null:
+						kspr3.position.y = 0.0
+					arena.call("_play_fighter_clip", arena.player_node, "ko")
 		player_state_changed.emit()
 		return
 
@@ -2870,3 +3071,501 @@ func apply_network_combat_event(ev: Dictionary, local_uid: String) -> void:
 		if float(tgt_slot.get("hp", 1.0)) <= 0.0 and not bool(tgt_slot.get("is_remote_player", false)) and bool(tgt_slot.get("alive", false)):
 			tgt_slot["_last_srv_alive"] = false
 			_kill_slot_monster(tgt_slot)
+
+
+# ==============================================================================
+# PHASE 2 SON GOKU SKILLS (05 Barrier, 06 Energy Recover, 26 Flurry Kick Stun,
+# 21/23/24/25 Atomic Blast 12s CD, 27..32 Kamehameha 250 MP, 33 Explosion FX)
+# ==============================================================================
+
+func _get_songoku_fx_frames() -> SpriteFrames:
+	if _songoku_fx_frames != null:
+		return _songoku_fx_frames
+	var fx_path := "res://review/songoku_hero_demo/fx/godot/songoku_skills_fx.tres"
+	if ResourceLoader.exists(fx_path):
+		_songoku_fx_frames = load(fx_path) as SpriteFrames
+	return _songoku_fx_frames
+
+
+func _spawn_skill_explosion_33(world_pos: Vector2, scale_val: float = 1.0) -> void:
+	if arena == null:
+		return
+	var fx_sf := _get_songoku_fx_frames()
+	if fx_sf == null or not fx_sf.has_animation(&"skill_explosion_fx"):
+		_spawn_powerup_explosion(world_pos, scale_val * 0.75)
+		return
+	var ex := AnimatedSprite2D.new()
+	ex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ex.sprite_frames = fx_sf
+	ex.centered = true
+	ex.scale = Vector2(scale_val, scale_val)
+	ex.position = world_pos
+	ex.z_index = Z_LAYER_FX + 2
+	var parent_layer: Node = arena.fighters_layer if arena.fighters_layer != null else arena
+	parent_layer.add_child(ex)
+	ex.play(&"skill_explosion_fx")
+	_explosion_nodes.append(ex)
+	ex.animation_finished.connect(func() -> void:
+		_explosion_nodes.erase(ex)
+		if is_instance_valid(ex):
+			ex.queue_free()
+	)
+
+
+func apply_hard_stun_to_slot(slot: Dictionary, duration_s: float) -> void:
+	if slot.is_empty() or not bool(slot.get("alive", false)):
+		return
+	slot["hard_stun_timer_s"] = maxf(float(slot.get("hard_stun_timer_s", 0.0)), duration_s)
+	slot["action_clip"] = ""
+	slot["action_timer_s"] = 0.0
+	var mnode := slot.get("node") as Node2D
+	if mnode != null and is_instance_valid(mnode):
+		if mnode.get("_turn_pending") != null:
+			mnode.set("_turn_pending", false)
+			mnode.set("_turn_clip", &"")
+		var spr := mnode.get_node_or_null("Sprite") as AnimatedSprite2D
+		if spr != null and spr.sprite_frames != null and spr.sprite_frames.has_animation(&"hit"):
+			spr.play(&"hit")
+
+
+func apply_hard_stun_to_player(duration_s: float) -> void:
+	if not player_spawned or player_dead:
+		return
+	if arena != null and arena.player_node != null and arena.player_node.has_method(&"is_barrier_active") and bool(arena.player_node.call(&"is_barrier_active")):
+		return
+	player_hard_stun_timer_s = maxf(player_hard_stun_timer_s, duration_s)
+	if arena != null and arena.player_node != null:
+		var pspr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+		if pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"hit"):
+			pspr.play(&"hit")
+
+
+func request_player_barrier() -> bool:
+	if not player_spawned or player_dead or arena == null or arena.player_node == null:
+		return false
+	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	if not bool(arena.player_node.call(&"trigger_barrier")):
+		return false
+	_hero_barrier_burst_s = 0.34
+	arena.call("_request_player_action", "barrier_cast")
+	player_state_changed.emit()
+	return true
+
+
+func request_player_energy_recover() -> bool:
+	if not player_spawned or player_dead or arena == null or arena.player_node == null:
+		return false
+	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	if not bool(arena.player_node.call(&"trigger_energy_recover")):
+		return false
+	arena.call("_request_player_action", "energy_recover")
+	player_state_changed.emit()
+	return true
+
+
+func request_player_flurry_kick() -> bool:
+	if not player_spawned or player_dead or arena == null or arena.player_node == null:
+		return false
+	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	if not bool(arena.player_node.call(&"trigger_flurry_kick")):
+		return false
+	_hero_flurry_hits_fired.clear()
+	var tgt := _resolve_player_attack_target(false)
+	if not tgt.is_empty():
+		_face_player_toward_x(_get_slot_core_pos(tgt).x)
+	arena.call("_request_player_action", "flurry_kick")
+	player_state_changed.emit()
+	return true
+
+
+func request_player_atomic_blast() -> bool:
+	if not player_spawned or player_dead or arena == null or arena.player_node == null:
+		return false
+	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	if not bool(arena.player_node.call(&"trigger_atomic_blast")):
+		return false
+	_hero_atomic_fired = false
+	_hero_atomic_pending_bolts.clear()
+	refresh_pointer_valid()
+	var tgt: Dictionary = _resolve_player_attack_target(true)
+	_hero_atomic_target = tgt
+	if not tgt.is_empty():
+		_face_player_toward_x(_get_slot_core_pos(tgt).x)
+	var sup_y: float = float(arena.call("get_nearest_support_y_below", arena.player_node.position.x, arena.player_node.position.y))
+	var pnode_a: Node2D = arena.player_node as Node2D
+	var airborne: bool = bool(pnode_a.call(&"is_airborne_flight")) or (pnode_a.position.y < sup_y - 18.0)
+	_hero_atomic_air_down = airborne
+	arena.call("_request_player_action", "atomic_air_down" if airborne else "atomic_ground")
+	player_state_changed.emit()
+	return true
+
+
+func request_player_kamehameha() -> bool:
+	if not player_spawned or player_dead or arena == null or arena.player_node == null:
+		return false
+	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	if player_mana + 0.001 < 80.0:
+		return false
+	if not bool(arena.player_node.call(&"trigger_kamehameha", player_mana)):
+		return false
+	player_mana = maxf(0.0, player_mana - 80.0)
+	_local_mana_grace_s = 0.85
+	_hero_kame_fired = false
+	refresh_pointer_valid()
+	var tgt: Dictionary = _resolve_player_attack_target(true)
+	_hero_kame_target = tgt
+	var dy_tgt := 0.0
+	if not tgt.is_empty():
+		var tcore := _get_slot_core_pos(tgt)
+		_face_player_toward_x(tcore.x)
+		dy_tgt = tcore.y - _get_player_core_pos().y
+	var pnode_k: Node2D = arena.player_node as Node2D
+	var sup_y: float = float(arena.call("get_nearest_support_y_below", pnode_k.position.x, pnode_k.position.y))
+	var airborne: bool = bool(pnode_k.call(&"is_airborne_flight")) or (pnode_k.position.y < sup_y - 18.0)
+	var clip := "kame_ground_horiz"
+	if airborne:
+		if dy_tgt > 65.0:
+			_hero_kame_mode = "air_down"
+			clip = "kame_air_down"
+		else:
+			_hero_kame_mode = "air_horiz"
+			clip = "kame_air_horiz"
+	else:
+		if dy_tgt < -65.0:
+			_hero_kame_mode = "ground_up"
+			clip = "kame_ground_up"
+		else:
+			_hero_kame_mode = "ground_horiz"
+			clip = "kame_ground_horiz"
+	arena.call("_request_player_action", clip)
+	player_state_changed.emit()
+	return true
+
+
+func _spawn_atomic_bolt(goku: Node2D, c_sc: float, air_down: bool, hand_offset_y: float) -> void:
+	var face_x: float = -1.0 if goku.scale.x < 0.0 else 1.0
+	var hand_pos: Vector2 = goku.position + Vector2(38.0 * face_x * c_sc, (-62.0 + hand_offset_y) * c_sc)
+	# Always honor LIVE pointed target (flying OR ground enemy!) first; fallback to locked cast target.
+	var tgt: Dictionary = _resolve_player_attack_target(true)
+	if tgt.is_empty() or not bool(tgt.get("alive", false)) or not is_instance_valid(tgt.get("node")):
+		tgt = _hero_atomic_target
+	if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
+		_face_player_toward_x(_get_slot_core_pos(tgt).x)
+		face_x = -1.0 if goku.scale.x < 0.0 else 1.0
+		hand_pos = goku.position + Vector2(38.0 * face_x * c_sc, (-62.0 + hand_offset_y) * c_sc)
+	var dir_vec: Vector2 = Vector2(face_x * 0.72, 0.69).normalized() if air_down else Vector2(face_x, 0.0)
+	if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
+		var dv: Vector2 = _get_slot_core_pos(tgt) - hand_pos
+		if dv.length() > 4.0:
+			dir_vec = dv.normalized()
+	_hero_skill_projectiles.append({
+		"pos": hand_pos,
+		"dir": dir_vec,
+		"speed": 1500.0,
+		"life_s": 1.6,
+		"age_s": 0.0,
+		"air_down": air_down,
+		"damage": 55.0,
+		"target": tgt,
+		"ignore_terrain": true,
+	})
+
+
+func _step_hero_phase2_skills(delta: float) -> void:
+	if arena == null or arena.player_node == null or not _is_hero_songoku_node(arena.player_node):
+		return
+	if _hero_barrier_burst_s > 0.0:
+		_hero_barrier_burst_s = maxf(0.0, _hero_barrier_burst_s - delta)
+	var goku: Node2D = arena.player_node as Node2D
+	var c_sc: float = float(arena.char_scale)
+	var pspr := goku.get_node_or_null("Sprite") as AnimatedSprite2D
+	if pspr == null:
+		return
+	var anim := String(pspr.animation)
+	var frame := pspr.frame
+
+	# 1. Energy Recovery (`06`, 3.0s): loops #2 -> #3 -> #4 -> #5 -> #2... cleanly for full 3s while restoring HP + Armor + Flight KI!
+	var rec_rem := float(goku.get("recover_timer_s"))
+	if rec_rem > 0.0:
+		player_hp = minf(player_max_hp, player_hp + 350.0 * delta)
+		player_armor = minf(player_max_armor, player_armor + 40.0 * delta)
+		player_armor_broken_timer_s = 0.0
+		var cur_ki := float(goku.get("ki"))
+		var max_ki := float(goku.get("max_ki"))
+		goku.set("ki", minf(max_ki, cur_ki + 20.0 * delta))
+		goku.set("ki_exhausted", false)
+		# Loop middle golden-charge frames #2 -> #3 -> #4 -> #5 (wrap when entering #6 so #5 plays its FULL duration!)
+		if anim == "energy_recover" and frame >= 6 and rec_rem > 0.22:
+			pspr.set_frame_and_progress(2, 0.0)
+		player_state_changed.emit()
+
+	# 2. Flurry Kick (`26`, v10.2): auto-lunges forward, 30% slower kicks, +50px expanded AoE range (215x160px), stuns ALL enemies in range!
+	if anim == "flurry_kick" and pspr.is_playing():
+		var face_x: float = -1.0 if goku.scale.x < 0.0 else 1.0
+		var is_air_f: bool = bool(goku.call(&"is_airborne_flight"))
+		var lunge_spd: float = FLURRY_KICK_LUNGE_SPEED_PX_S if frame <= 6 else 80.0
+		arena.call("_move_player_horizontal", face_x * lunge_spd * delta, is_air_f)
+		var hit_frames: Array[int] = [1, 2, 3, 4, 5, 6, 7]
+		for hf in hit_frames:
+			if frame >= hf and not _hero_flurry_hits_fired.has(hf):
+				_hero_flurry_hits_fired.append(hf)
+				var p_core: Vector2 = _get_player_core_pos()
+				for s in _get_combat_slots():
+					if not bool(s.get("alive", false)) or not is_instance_valid(s.get("node")):
+						continue
+					var s_core: Vector2 = _get_slot_core_pos(s)
+					var dx: float = (s_core.x - p_core.x) * face_x
+					var dy: float = absf(s_core.y - p_core.y)
+					if dx >= -FLURRY_KICK_RANGE_BACK_PX and dx <= FLURRY_KICK_RANGE_FWD_PX and dy <= FLURRY_KICK_RANGE_V_PX:
+						apply_damage_to_slot(s, 30.0, 14.0, s_core, "melee", false, Vector2(face_x, 0.0))
+						apply_hard_stun_to_slot(s, 1.6)
+						player_mana = minf(player_max_mana, player_mana + 8.0)
+
+	# 3. Atomic Blast (`21` ground / `24` air_down): fires 4 alternating homing bolts @ 1500 px/s to pointed target (flying OR ground), ZERO terrain collision!
+	for bi in range(_hero_atomic_pending_bolts.size() - 1, -1, -1):
+		var pb: Dictionary = _hero_atomic_pending_bolts[bi]
+		pb["delay_s"] = float(pb.get("delay_s", 0.0)) - delta
+		if float(pb["delay_s"]) <= 0.0:
+			var oy: float = float(pb.get("offset_y", 0.0))
+			var ad: bool = bool(pb.get("air_down", _hero_atomic_air_down))
+			_hero_atomic_pending_bolts.remove_at(bi)
+			_spawn_atomic_bolt(goku, c_sc, ad, oy)
+
+	if (anim == "atomic_ground" or anim == "atomic_air_down") and pspr.is_playing() and not _hero_atomic_fired:
+		var release_f: int = 2 if anim == "atomic_air_down" else 4
+		if frame >= release_f:
+			_hero_atomic_fired = true
+			var ad_now: bool = (anim == "atomic_air_down")
+			# 4 alternating staggered bolts (upper/lower/upper/lower @ 0ms, 70ms, 140ms, 210ms)!
+			_spawn_atomic_bolt(goku, c_sc, ad_now, -10.0)
+			_hero_atomic_pending_bolts.append({"delay_s": 0.07, "offset_y": 12.0, "air_down": ad_now})
+			_hero_atomic_pending_bolts.append({"delay_s": 0.14, "offset_y": -10.0, "air_down": ad_now})
+			_hero_atomic_pending_bolts.append({"delay_s": 0.21, "offset_y": 12.0, "air_down": ad_now})
+
+	# 4. Kamehameha (`28/29/30/27`): 100% accurate homing beam to pointed target (flying OR ground) expanding at 1700 px/s, ignoring terrain!
+	if anim in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"] and pspr.is_playing() and not _hero_kame_fired:
+		if frame >= 3:
+			_hero_kame_fired = true
+			var tgt: Dictionary = _resolve_player_attack_target(true)
+			if tgt.is_empty() or not bool(tgt.get("alive", false)) or not is_instance_valid(tgt.get("node")):
+				tgt = _hero_kame_target
+			if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
+				_face_player_toward_x(_get_slot_core_pos(tgt).x)
+			var face_x: float = -1.0 if goku.scale.x < 0.0 else 1.0
+			var hand_pos: Vector2 = goku.position + Vector2(44.0 * face_x * c_sc, -64.0 * c_sc)
+			var dir_vec: Vector2 = Vector2(face_x, 0.0)
+			if _hero_kame_mode == "ground_up":
+				dir_vec = Vector2(face_x * 0.75, -0.66).normalized()
+			elif _hero_kame_mode == "air_down":
+				dir_vec = Vector2(face_x * 0.75, 0.66).normalized()
+			var max_len: float = 950.0
+			if not tgt.is_empty():
+				var dv_k: Vector2 = _get_slot_core_pos(tgt) - hand_pos
+				if dv_k.length() > 8.0:
+					dir_vec = dv_k.normalized()
+					max_len = maxf(dv_k.length() + 48.0, 220.0)
+			_hero_kame_beams.append({
+				"start": hand_pos,
+				"dir": dir_vec,
+				"speed": 1700.0,
+				"cur_len": 40.0,
+				"max_len": max_len,
+				"mode": _hero_kame_mode,
+				"age_s": 0.0,
+				"duration_s": 0.78,
+				"target": tgt,
+				"hit_ids": [],
+				"damage": 360.0,
+				"ignore_terrain": true,
+			})
+
+
+func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
+	# Atomic Blast dual bolts: 1500 px/s, 100% homing accuracy, ZERO terrain collision!
+	for i in range(_hero_skill_projectiles.size() - 1, -1, -1):
+		var pr: Dictionary = _hero_skill_projectiles[i]
+		pr["age_s"] = float(pr["age_s"]) + delta
+		var old_p: Vector2 = pr["pos"] as Vector2
+		var dir_v: Vector2 = pr["dir"] as Vector2
+		var tgt: Dictionary = pr.get("target", {})
+		var spd: float = float(pr["speed"])
+		var step_dist: float = spd * delta
+		var hit_done := false
+		if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
+			var t_core: Vector2 = _get_slot_core_pos(tgt)
+			var to_t: Vector2 = t_core - old_p
+			var dist_t: float = to_t.length()
+			if dist_t > 1.0:
+				dir_v = to_t / dist_t
+				pr["dir"] = dir_v
+			if dist_t <= maxf(58.0, step_dist + 24.0):
+				pr["pos"] = t_core
+				apply_damage_to_slot(tgt, float(pr["damage"]), 24.0, t_core, "heavy", false, dir_v)
+				_spawn_skill_explosion_33(t_core, 1.05)
+				hit_done = true
+			else:
+				pr["pos"] = old_p + dir_v * step_dist
+		else:
+			var new_p: Vector2 = old_p + dir_v * step_dist
+			pr["pos"] = new_p
+			for s in _get_combat_slots():
+				if not bool(s.get("alive", false)) or not is_instance_valid(s.get("node")):
+					continue
+				var sc: Vector2 = _get_slot_core_pos(s)
+				if new_p.distance_to(sc) <= 72.0:
+					apply_damage_to_slot(s, float(pr["damage"]), 24.0, sc, "heavy", false, dir_v)
+					_spawn_skill_explosion_33(sc, 1.05)
+					hit_done = true
+					break
+		if hit_done or float(pr["age_s"]) >= float(pr["life_s"]):
+			_hero_skill_projectiles.remove_at(i)
+
+	# Kamehameha beams: 1700 px/s beam-head flight, 100% live target aim, ZERO terrain collision!
+	for j in range(_hero_kame_beams.size() - 1, -1, -1):
+		var bm: Dictionary = _hero_kame_beams[j]
+		bm["age_s"] = float(bm["age_s"]) + delta
+		var start_p: Vector2 = bm["start"] as Vector2
+		var dir_v: Vector2 = bm["dir"] as Vector2
+		var max_len: float = float(bm.get("max_len", 950.0))
+		var tgt_k: Dictionary = bm.get("target", {})
+		if not tgt_k.is_empty() and bool(tgt_k.get("alive", false)) and is_instance_valid(tgt_k.get("node")):
+			var tc: Vector2 = _get_slot_core_pos(tgt_k)
+			var dv: Vector2 = tc - start_p
+			if dv.length() > 8.0:
+				dir_v = dv.normalized()
+				bm["dir"] = dir_v
+				max_len = maxf(dv.length() + 48.0, 220.0)
+				bm["max_len"] = max_len
+		var cur_len: float = minf(max_len, float(bm.get("cur_len", 40.0)) + float(bm.get("speed", 1700.0)) * delta)
+		bm["cur_len"] = cur_len
+		var hit_ids: Array = bm.get("hit_ids", [])
+		for s in _get_combat_slots():
+			if not bool(s.get("alive", false)) or not is_instance_valid(s.get("node")):
+				continue
+			var sid := str(s.get("id", ""))
+			if hit_ids.has(sid):
+				continue
+			var sc: Vector2 = _get_slot_core_pos(s)
+			var rel: Vector2 = sc - start_p
+			var proj: float = rel.dot(dir_v)
+			var perp: float = absf(rel.x * (-dir_v.y) + rel.y * dir_v.x)
+			var is_locked_tgt: bool = (not tgt_k.is_empty()) and str(tgt_k.get("id", "")) == sid
+			if proj >= -20.0 and proj <= cur_len + 32.0 and (is_locked_tgt or perp <= 95.0):
+				hit_ids.append(sid)
+				apply_damage_to_slot(s, float(bm["damage"]), 60.0, sc, "heavy", false, dir_v)
+				_spawn_skill_explosion_33(sc, 1.2)
+		bm["hit_ids"] = hit_ids
+		if float(bm["age_s"]) >= float(bm["duration_s"]):
+			_hero_kame_beams.remove_at(j)
+
+
+func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
+	if arena == null or arena.player_node == null or not _is_hero_songoku_node(arena.player_node):
+		return
+	var fx_sf := _get_songoku_fx_frames()
+	if fx_sf == null:
+		return
+	var goku: Node2D = arena.player_node as Node2D
+	var c_sc: float = float(arena.char_scale)
+	var p_core: Vector2 = _get_player_core_pos()
+
+	# 1. Protective Barrier FX (05): burst sphere -> LOOP 10S rotating golden shield while Goku moves/fights freely!
+	var b_rem := float(goku.get("barrier_timer_s"))
+	if b_rem > 0.0:
+		var b_clip := &"barrier_burst_fx" if _hero_barrier_burst_s > 0.0 else &"barrier_loop_fx"
+		if fx_sf.has_animation(b_clip):
+			var fc := fx_sf.get_frame_count(b_clip)
+			if fc > 0:
+				var fi := int(floor(_sim_time_s * (15.0 if _hero_barrier_burst_s > 0.0 else 8.0))) % fc
+				var tex := fx_sf.get_frame_texture(b_clip, fi)
+				if tex != null:
+					var sz: float = 178.0 * c_sc
+					canvas.draw_texture_rect(tex, Rect2(p_core - Vector2(sz * 0.5, sz * 0.5), Vector2(sz, sz)), false, Color.WHITE)
+
+	# 2. Kamehameha independent cyan charge ring (`kame_charge_fx`) around hands during charge frames #1..#2!
+	var pspr := goku.get_node_or_null("Sprite") as AnimatedSprite2D
+	if pspr != null and pspr.is_playing():
+		var an := String(pspr.animation)
+		if an in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"] and pspr.frame >= 1 and pspr.frame <= 2:
+			if fx_sf.has_animation(&"kame_charge_fx"):
+				var cfc := fx_sf.get_frame_count(&"kame_charge_fx")
+				if cfc > 0:
+					var ctex := fx_sf.get_frame_texture(&"kame_charge_fx", int(floor(_sim_time_s * 14.0)) % cfc)
+					if ctex != null:
+						var csz: float = 164.0 * c_sc
+						canvas.draw_texture_rect(ctex, Rect2(p_core - Vector2(csz * 0.5, csz * 0.5), Vector2(csz, csz)), false, Color.WHITE)
+
+	# 3. Active Atomic Blast 4x alternating homing bolts (1500 px/s, rotated along live flight direction, ZERO missing/spark blink frames!)
+	for pr in _hero_skill_projectiles:
+		if fx_sf.has_animation(&"atomic_fx_horiz"):
+			var pfc: int = fx_sf.get_frame_count(&"atomic_fx_horiz")
+			if pfc > 0:
+				# Skip tiny muzzle spark frame #0 (`atomic_horiz_00` = 831px) so in-flight bolts ONLY cycle full blazing frames #1..#2 (`5500px`) with ZERO blink!
+				var pfi: int = (1 + int(floor(float(pr["age_s"]) * 18.0)) % maxi(1, pfc - 1)) if pfc > 1 else 0
+				var ptex := fx_sf.get_frame_texture(&"atomic_fx_horiz", clampi(pfi, 0, pfc - 1))
+				if ptex != null:
+					var ppos: Vector2 = pr["pos"] as Vector2
+					var dvec: Vector2 = pr["dir"] as Vector2
+					var psz: float = 128.0 * c_sc
+					canvas.draw_set_transform(ppos, dvec.angle(), Vector2.ONE)
+					canvas.draw_texture_rect(ptex, Rect2(-psz * 0.5, -psz * 0.5, psz, psz), false, Color.WHITE)
+					canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+	# 4. Active Kamehameha seamless multi-segment beam (1700 px/s expanding head, 3-frame rotating cycle, ZERO seam gaps!)
+	for bm in _hero_kame_beams:
+		var age: float = float(bm["age_s"])
+		var dur: float = float(bm["duration_s"])
+		var prog: float = clampf(age / maxf(0.01, dur), 0.0, 1.0)
+		var start_p: Vector2 = bm["start"] as Vector2
+		var dir_v: Vector2 = bm["dir"] as Vector2
+		var b_len: float = maxf(64.0, float(bm.get("cur_len", 64.0)))
+		var ang: float = dir_v.angle()
+		canvas.draw_set_transform(start_p, ang, Vector2.ONE)
+		if prog < 0.76 and fx_sf.has_animation(&"kame_h_orig") and fx_sf.has_animation(&"kame_h_mid") and fx_sf.has_animation(&"kame_h_head"):
+			# 3-frame rotating energy surge cycle (matching Sheet 31 & reference GIF!)
+			var fi: int = int(floor(age * 18.0)) % 3
+			var t_orig := fx_sf.get_frame_texture(&"kame_h_orig", fi)
+			var t_mid := fx_sf.get_frame_texture(&"kame_h_mid", fi)
+			var t_head := fx_sf.get_frame_texture(&"kame_h_head", fi)
+			# Exact seam geometry from Sheet 31 packed into 256x256 cells:
+			# - kame_h_orig: opaque [76..256] (180px flush-right seam at x=256)
+			# - kame_h_mid:  opaque [0..256]  (256px seamless 3-tile shaft, 0px edge gap!)
+			# - kame_h_head: opaque [0..180]  (180px flush-left seam at x=0)
+			var bh: float = 128.0 * c_sc
+			var cell_sc: float = bh / 256.0
+			var cap_w: float = 180.0 * cell_sc
+			var pad_l: float = 76.0 * cell_sc
+			var tile_w: float = 256.0 * cell_sc
+			var orig_end: float = cap_w
+			var head_x: float = maxf(orig_end - 2.0, b_len - cap_w)
+			# 4a) Seamless tiled middle shaft connecting orig_end .. head_x with ZERO gap!
+			if t_mid != null and head_x > orig_end - 1.0:
+				var span: float = head_x - orig_end + 4.0
+				if span <= tile_w:
+					canvas.draw_texture_rect(t_mid, Rect2(orig_end - 2.0, -bh * 0.5, span, bh), false, Color.WHITE)
+				else:
+					var cx: float = orig_end - 2.0
+					var limit_x: float = head_x + 2.0
+					while cx + tile_w < limit_x:
+						canvas.draw_texture_rect(t_mid, Rect2(cx, -bh * 0.5, tile_w, bh), false, Color.WHITE)
+						cx += tile_w - 1.0
+					# Final seamless tile aligned flush to head_x (no stretch, no gap!)
+					canvas.draw_texture_rect(t_mid, Rect2(limit_x - tile_w, -bh * 0.5, tile_w, bh), false, Color.WHITE)
+			# 4b) Origin sphere flush at start_p (drawn over seam so right edge meets mid seamlessly)
+			if t_orig != null:
+				canvas.draw_texture_rect(t_orig, Rect2(-pad_l, -bh * 0.5, tile_w, bh), false, Color.WHITE)
+			# 4c) Front impact head flush at head_x (left edge meets mid seamlessly)
+			if t_head != null:
+				canvas.draw_texture_rect(t_head, Rect2(head_x, -bh * 0.5, tile_w, bh), false, Color.WHITE)
+		elif fx_sf.has_animation(&"kame_h_fade"):
+			var f_idx: int = clampi(int(floor(((prog - 0.76) / 0.24) * 3.0)), 0, 2)
+			var t_fade := fx_sf.get_frame_texture(&"kame_h_fade", f_idx)
+			if t_fade != null:
+				var fh: float = 112.0 * c_sc
+				canvas.draw_texture_rect(t_fade, Rect2(0.0, -fh * 0.5, b_len, fh), false, Color.WHITE)
+		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
