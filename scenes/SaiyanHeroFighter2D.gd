@@ -61,7 +61,10 @@ const ATOMIC_COOLDOWN_S: float = 12.0
 const ATOMIC_SPEED_PX_S: float = 1500.0
 const ATOMIC_BOLT_COUNT: int = 4
 const KAME_MANA_COST: float = 80.0
-const KAME_SPEED_PX_S: float = 1700.0
+const KAME_SPEED_PX_S: float = 1800.0
+const KAME_HOLD_S: float = 1.0
+const KAME_FADE_S: float = 0.36
+const KAME_CHARGE_SPEED_SCALE: float = 0.70
 const HERO_MAX_MANA: float = 100.0
 const TELEPORT_STATIC_COST: float = 75.0
 const TELEPORT_DASH_COST: float = 25.0
@@ -566,6 +569,8 @@ func trigger_energy_recover() -> bool:
 		return false
 	recover_timer_s = RECOVER_DURATION_S
 	recover_cooldown_s = RECOVER_COOLDOWN_S
+	flight_state = "ground"
+	hover_timer_s = 0.0
 	hero_state_changed.emit()
 	return true
 

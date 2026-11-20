@@ -265,9 +265,12 @@ def main() -> int:
             return 1
         print(f"[OK] Live download verified {label}: {got_bytes} B | SHA-256={got_sha}")
 
-    # Verify live /api/alpha/login for both users + wrong password
+    # Verify live /api/alpha/login for both users (when USER_1/USER_2 present in .env) + wrong password
     for uname, env_key, expect_name in (("vinhadmin", "USER_1", "Vinh"), ("thaiadmin", "USER_2", "Thái")):
-        raw_v = env[env_key]
+        raw_v = env.get(env_key, "")
+        if not raw_v:
+            print(f"[INFO] Skipping live password login verify for {uname} ({env_key} not set in .env)")
+            continue
         prefix = f"{uname}_"
         pwd = raw_v[len(prefix):] if raw_v.lower().startswith(prefix.lower()) else raw_v
         req = urllib.request.Request(

@@ -3258,9 +3258,22 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 
 	var entry := _find_character_entry(active_character_id)
 	var is_goku := _is_hero_songoku(player_node)
+	var goku_recovering := is_goku and float(player_node.get("recover_timer_s")) > 0.0
+	if goku_recovering:
+		player_node.set("flight_state", "ground")
+		player_node.set("hover_timer_s", 0.0)
+		player_vy = 0.0
+		var rec_gy := _ground_y_at(player_node.position.x)
+		if player_node.position.y < rec_gy:
+			player_node.position.y = rec_gy
+		move_dir = 0
+		fly_dir_y = 0
+		jump_req = false
+		drop_req = false
+		analog_vec = Vector2.ZERO
 	var goku_air_flight := is_goku and bool(player_node.call(&"is_airborne_flight"))
 	var is_flying := _is_flying_entry(entry) or goku_air_flight
-	var is_stationary := _is_stationary_entry(entry)
+	var is_stationary := _is_stationary_entry(entry) or goku_recovering
 	var action_playing := _is_player_action_playing()
 	var dir := 0 if (is_stationary or action_playing) else clampi(move_dir, -1, 1)
 	var eff_fly_dir_y := 0 if action_playing else clampi(fly_dir_y, -1, 1)

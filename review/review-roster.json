@@ -1,13 +1,13 @@
 {
   "schema": "dr7-studio.review_roster.v1",
-  "note": "Son Goku Tướng Đợt 2 v10.3 (33 clip thân 1 trang PNG <=4096 + 12 clip FX songoku_skills_fx: nút HỒI 3S (slot 10) hiện trực tiếp trên pad, energy_recover đồng bộ #0/#1/#6/#7 & khóa tâm thân chống giật 100% loop #2..#5 đủ 3s; Kamehameha nối liền mạch không hở xoay vòng 3 frame chuẩn mẫu 31 + 80 MP 1700px/s homing mục tiêu trỏ quái bay/bộ xuyên địa hình; Atomic 4 đạn xen kẽ 1500px/s không mất frame homing mục tiêu trỏ; Auto chống vòng lặp KI & ưu tiên chưởng quái bay; Đá LH lao tới -30% tốc độ +50px choáng AoE).",
+  "note": "Son Goku Tướng Đợt 2 v10.4 (33 clip thân 1 trang PNG <=4096 + 12 clip FX songoku_skills_fx: energy_recover khóa cứng thân 0px đứng mặt đất chỉ tỏa aura + nút HỒI 3S slot 10; Kamehameha 1800px/s duy trì 1.0s rồi biến mất nhánh 2 từ trên xuống nhỏ dần, giảm 30% tốc độ vận công [7,9,17] ticks, 80 MP khóa mục tiêu trỏ quái bay/bộ xuyên địa hình; Atomic 4 đạn xen kẽ 1500px/s khóa f1..f2 chống mất frame + khóa mục tiêu trỏ).",
   "characters": [
     {
       "character_id": "songoku_hero_demo",
-      "display_name": "Son Goku (Đợt 2 v10.3 · 33 Clip Full Skill + 12 FX) [Human Test]",
+      "display_name": "Son Goku (Đợt 2 v10.4 · 33 Clip Full Skill + 12 FX) [Human Test]",
       "role": "hero",
       "faction": "review_demo",
-      "role_label": "Human Test — Tướng Son Goku Full Skill (Khiên 10s · Hồi 3s Slot10 · Đá LH · Atomic 4×1500 · Kame Nối Liền 80MP)",
+      "role_label": "Human Test — Tướng Son Goku Full Skill (Khiên 10s · Hồi 3s Cố Định Thân · Đá LH · Atomic 4×1500 · Kame 1800×1s Nhánh2 -30% Vận Công)",
       "tags": [
         "human_test",
         "hero_first",
@@ -24,7 +24,7 @@
       "bundle_dir": "res://review/songoku_hero_demo/godot_bundle",
       "scene_2d": "res://review/songoku_hero_demo/SongokuHero.tscn",
       "avatar_path": "res://review/songoku_hero_demo/avatar_son-goku-ssj1.png",
-      "review_atlas_sha256": "0d311b65f4a84195283242c0860a94bbb7f6ead17ccf6f5dcc236c5a68a769eb",
+      "review_atlas_sha256": "dbaeb1719f9cd035e63f6f0b41f4e4aa8d52c4a978d2250d1d2e3402e8d12dd5",
       "canvas_size_px": [
         288,
         288
@@ -35,14 +35,14 @@
       ],
       "default_scale": 1.0,
       "atlas_path": "review/songoku_hero_demo/godot_bundle/godot/songoku_hero_demo-atlas-00.png",
-      "atlas_sha256": "0d311b65f4a84195283242c0860a94bbb7f6ead17ccf6f5dcc236c5a68a769eb",
+      "atlas_sha256": "dbaeb1719f9cd035e63f6f0b41f4e4aa8d52c4a978d2250d1d2e3402e8d12dd5",
       "atlas_size_px": [
         4090,
         3798
       ],
       "atlas_pages": 1,
       "tres_path": "review/songoku_hero_demo/godot_bundle/godot/songoku_hero_demo.tres",
-      "tres_sha256": "4b1a421b731c02564b505f417d03b6ed0c4ab142707f961ab4e28f42d4d05601",
+      "tres_sha256": "dd84e3e088e7adbf219643e8d9a6106078c589725de9eb323a0ad8d5ad0324a7",
       "engine_export_path": "review/songoku_hero_demo/godot_bundle/engine-export.json",
       "prefab_path": "review/songoku_hero_demo/SongokuHero.tscn",
       "frame_count": 184,
@@ -143,7 +143,7 @@
       },
       "modes": {
         "combined_1layer": {
-          "label": "Son Goku Hero Full v10.3 (Combined 1-Layer · 125px · 33 clips)",
+          "label": "Son Goku Hero Full v10.4 (Combined 1-Layer · 125px · 33 clips)",
           "godot_prefab": "res://review/songoku_hero_demo/SongokuHero.tscn",
           "bundle_id": "songoku_hero_demo_review"
         }
@@ -349,7 +349,7 @@
           "atomic_bolt_count": 4,
           "atomic_homing_ignore_terrain": true,
           "kamehameha_mana_cost": 80.0,
-          "kamehameha_speed_px_per_sec": 1700.0,
+          "kamehameha_speed_px_per_sec": 1800.0,
           "kamehameha_homing_ignore_terrain": true,
           "hero_max_mana": 100.0,
           "flurry_kick_speed_scale": 0.7,
@@ -365,7 +365,11 @@
             5
           ],
           "energy_recover_pad_slot": 10,
-          "kamehameha_seamless_tiled_beam": true
+          "kamehameha_seamless_tiled_beam": true,
+          "kamehameha_hold_sec": 1.0,
+          "kamehameha_fade_sec": 0.36,
+          "kamehameha_charge_speed_scale": 0.7,
+          "energy_recover_body_locked_ground": true
         },
         "facing_default": "right",
         "skills_fx_tres": "res://review/songoku_hero_demo/fx/godot/songoku_skills_fx.tres"

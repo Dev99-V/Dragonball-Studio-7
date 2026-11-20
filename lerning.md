@@ -859,4 +859,13 @@
   - Khóa vòng bay Atomic ở `f1..f2` (`1 + floor(age_s * 18) % (pfc - 1)`), bắn `4` đạn nối tiếp xen kẽ (`0/70/140/210ms`, `offset_y = -10/+12/-10/+12`, `1500 px/s`), khóa mục tiêu trỏ `pointer_slot_id` cho cả Atomic 4 đạn lẫn Kamehameha (`1700 px/s`, `80 MP`, xuyên địa hình) trên cả quái bay lẫn quái bộ.
   - Cập nhật SHA-256 trong `_tmp_fx_clips/animation-clips.json` và tái đóng gói `songoku_skills_fx` (`sha256=91dcf70c6b823d05`, `kame_h_mid` kín `0..255` trên cả 3 frame), đưa nút `HỒI 3S` ra slot 10, pass `./loop.sh web-export && ./loop.sh test && ./loop.sh check` (`exit 0`) và đối chiếu HTTP 200 SHA-256 Parity tại `http://localhost:8080`.
 
+### [LRN-121] Cố định thân `energy_recover` `0.0 px` chống lắc lư trên mặt đất & tinh chỉnh Kamehameha `1800 px/s`, duy trì `1.0s`, fade nhánh 2 và giảm `30%` tốc độ vận công (`v10.4`, 2026-11-20)
+- **Nguyên nhân gốc đã đo đạc**:
+  1. Đo `dark_cx` của `rec_01..rec_05` bản v3 cho thấy tâm thân nhân vật dao động luân phiên `131 → 162 → 131 → 160.5 → 132` (±30 px trái-phải) mỗi frame khi lặp `#2..#5`, khiến nhân vật lắc lư không ngừng thay vì đứng cố định trên mặt đất như mẫu `06.Gồng phục hồi nặng lượng.png`.
+  2. Khi đóng lớp thân khóa cứng lên trên aura, xóa trực tiếp vùng thân cũ để lại hốc đen trên nền tối nếu không lấp đầy phần lõi hào quang phía sau thân cố định.
+  3. Kamehameha cũ bay `1700 px/s`, giữ tia `0.59s` và vận công `23 ticks` (`[5, 6, 12]`) quá nhanh so với yêu cầu cảm giác gồng tụ lực và nhìn rõ 3 frame nhỏ dần nhánh 2 của Sheet `31`.
+- **Cách khắc phục & Kiểm chứng (`v10.4`)**:
+  - Bóc tách thân đứng tấn chuẩn của `rec_01` căn chính giữa `mid_x=143.5`, `y1=247` (`anchor_y=248`), lấp kín lõi hào quang phía sau (`empty_2px_ring_around_body=0`) và ghép pixel-identical (`body_diff_px=0`) lên toàn bộ `rec_01..rec_05`; đồng thời khóa cứng Goku đứng mặt đất (`flight_state="ground"`, `player_vy=0`, vô hiệu hóa di chuyển/nhảy) trong `ArenaSandbox.gd` & `FieldCombatManager.gd` suốt `recover_timer_s > 0`.
+  - Cập nhật Kamehameha: tốc độ bay tia `1800 px/s`, duy trì tia chính `1.0s` (`hold_s=1.0`) rồi phát nhánh 2 nhỏ dần từ trên xuống (`kame_h_fade` `f0→f1→f2` trong `0.36s`, `duration_s=1.36s`, cao `128*c_sc` khớp tia chính); giảm `30%` tốc độ vận công 4 clip Kame (`[5, 6, 12] → [7, 9, 17]` ticks @ 60Hz, vòng tụ lực `kame_charge_fx` giảm `14.0 → 9.8 Hz`).
+
 <!-- LERNING_ENTRIES_END -->

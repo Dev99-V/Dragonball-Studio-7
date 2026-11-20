@@ -2,7 +2,7 @@
   "schema": "generate2dsprite.animation_clips.v2",
   "source_manifest": {
     "path": "../source/clips-manifest.json",
-    "file_sha256": "ada1431d2bd951d167000c2b874c61a290bb5fb88d46cc3b2a08b4e97071fbe0",
+    "file_sha256": "35077f8e49a5e109a0c3982667f7d9de38c42a0179a18aaab418dd603ac32478",
     "copy": "source-manifest.json"
   },
   "frame_size": [
@@ -2963,15 +2963,15 @@
       "name": "rec_00",
       "source": {
         "path": "../source/raw_frames/rec_00.png",
-        "file_sha256": "8d2ca855049ede3427b0fdd1778158ade12450c577d14ec2364e2c6754758335",
-        "bytes": 13316,
+        "file_sha256": "49e1c31aff0dd3efe14a4be1fe622d75c842ef68d075a62f007a4f77ac206e3a",
+        "bytes": 13317,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "fa0aaaef15221ad5fd9de3e412ca6d4ab6ad0c3c93ff7612a06f7ccb38a711cc",
+      "rgba_pixel_sha256": "22ce5b6fc831268fc0c5c15c07da688d4b035a44c890272a2a5b716f19d349cd",
       "transparent_pixel_count": 78704,
       "visible_pixel_count": 4240,
       "near_duplicates": [],
@@ -2983,15 +2983,15 @@
       "name": "rec_01",
       "source": {
         "path": "../source/raw_frames/rec_01.png",
-        "file_sha256": "22cbf747c8b1105aa863a14a8cffe254ea0ab81081cbad76828bafec9fe9b48d",
-        "bytes": 20860,
+        "file_sha256": "351c49f51cede816545e981a1bb2572de0893c781db1f307eaefc1b7d39e8079",
+        "bytes": 20853,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "d4c380c395b1e98ff33e5ce7a0c1212b4760edc99e2dcb4ce23f4af41072f1df",
+      "rgba_pixel_sha256": "46ff311e1163cf7a5b46b7c4436db459ec2096842b1b433f4f1b94d0131a3d1f",
       "transparent_pixel_count": 75811,
       "visible_pixel_count": 7133,
       "near_duplicates": [],
@@ -3003,17 +3003,17 @@
       "name": "rec_02",
       "source": {
         "path": "../source/raw_frames/rec_02.png",
-        "file_sha256": "2955f4ba78c14feab3efaa63cad9090941cb7333222cdffafe22231c6c06f796",
-        "bytes": 34300,
+        "file_sha256": "bd5bb98feb881c9969c4595f69c79a982ccc391d216a56343b6f0b59a82a0bcf",
+        "bytes": 33345,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "f80e2f1a00e4f6d753961197b04fac78139c5006319bfc2d45b29af896d8b077",
-      "transparent_pixel_count": 68920,
-      "visible_pixel_count": 14024,
+      "rgba_pixel_sha256": "24074f4c42ee3688f51da8f55ef74baf356921b56b8f576cb997b6ea472ca0aa",
+      "transparent_pixel_count": 68056,
+      "visible_pixel_count": 14888,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-146.png"
@@ -3023,17 +3023,17 @@
       "name": "rec_03",
       "source": {
         "path": "../source/raw_frames/rec_03.png",
-        "file_sha256": "da302f10458c378de52032f3efa72d9423d0bc24a97db74d4e9d58db08f01bcf",
-        "bytes": 39659,
+        "file_sha256": "f6fb1805c4b32bdb5ba1f84fb974fdf944cbc041d3c247b64e456fca855a6c4a",
+        "bytes": 37791,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "39f36ae6301d7b089414c57306ac7a54453032f424966fe541dba24e1e247989",
-      "transparent_pixel_count": 65523,
-      "visible_pixel_count": 17421,
+      "rgba_pixel_sha256": "f55e0b7e18060c154272339cb266119149caa2c0d717593a2b446aac0a0ae582",
+      "transparent_pixel_count": 64961,
+      "visible_pixel_count": 17983,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-147.png"
@@ -3043,17 +3043,17 @@
       "name": "rec_04",
       "source": {
         "path": "../source/raw_frames/rec_04.png",
-        "file_sha256": "0ad63c5d9e8488bf85be12079de53c370b4fef5176b93026f2366bc621279889",
-        "bytes": 36463,
+        "file_sha256": "abf824d2af7843a97d077dda824ee651a57931cba506f59d23e0fa098a6d4db6",
+        "bytes": 36011,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "c287ad71dcf741766a27c4a5ec139e7a008ea8a9ac1f754742caf6771a284d0e",
-      "transparent_pixel_count": 65771,
-      "visible_pixel_count": 17173,
+      "rgba_pixel_sha256": "78581b5f24f34d914da46f59eb03919d5ef19532ac51a24a46e04c23eaad57e8",
+      "transparent_pixel_count": 65111,
+      "visible_pixel_count": 17833,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-148.png"
@@ -3063,17 +3063,17 @@
       "name": "rec_05",
       "source": {
         "path": "../source/raw_frames/rec_05.png",
-        "file_sha256": "f4cb28bae4c51303d58e022950c70fa89b89c7e0db53f112e0c28ca23ab5090f",
-        "bytes": 44339,
+        "file_sha256": "ca80c627df2bc98ff9d1fb0baf7d3c20ca7723d70076ddc260eac2e7b7dacec4",
+        "bytes": 42936,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "5ad1e99774598e715d44a78b507eae0e825f6d1dac2f82506304e1c2405c0cc2",
-      "transparent_pixel_count": 60678,
-      "visible_pixel_count": 22266,
+      "rgba_pixel_sha256": "371240c346f3b16bbce3280c504ba0323a56f40db76ccd220c503454961cdc39",
+      "transparent_pixel_count": 59996,
+      "visible_pixel_count": 22948,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-149.png"
@@ -8173,57 +8173,57 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "fac4e6ddfdcf225fefe884f6ef23bbc4f9244ac63ce66e7c12ebedfc8a04f477"
+        "file_sha256": "f7ea87b0f532157ce45d8eeaeb3814085016bb8ac3f1a96a12af7866be4cdcea"
       },
       "transitions": [
         {
           "from_position": 0,
           "to_position": 1,
-          "premultiplied_rgb_mae": 10.671791,
-          "alpha_mae": 13.880751,
-          "changed_visible_pixels": 7942
+          "premultiplied_rgb_mae": 9.55195,
+          "alpha_mae": 11.23065,
+          "changed_visible_pixels": 7511
         },
         {
           "from_position": 1,
           "to_position": 2,
-          "premultiplied_rgb_mae": 26.14761,
-          "alpha_mae": 28.262623,
-          "changed_visible_pixels": 15169
+          "premultiplied_rgb_mae": 19.896063,
+          "alpha_mae": 23.952365,
+          "changed_visible_pixels": 9785
         },
         {
           "from_position": 2,
           "to_position": 3,
-          "premultiplied_rgb_mae": 35.141495,
-          "alpha_mae": 31.564489,
-          "changed_visible_pixels": 20814
+          "premultiplied_rgb_mae": 15.736915,
+          "alpha_mae": 16.487811,
+          "changed_visible_pixels": 13652
         },
         {
           "from_position": 3,
           "to_position": 4,
-          "premultiplied_rgb_mae": 38.64185,
-          "alpha_mae": 36.923105,
-          "changed_visible_pixels": 23253
+          "premultiplied_rgb_mae": 10.685912,
+          "alpha_mae": 9.684245,
+          "changed_visible_pixels": 13103
         },
         {
           "from_position": 4,
           "to_position": 5,
-          "premultiplied_rgb_mae": 40.557568,
-          "alpha_mae": 37.436523,
-          "changed_visible_pixels": 25697
+          "premultiplied_rgb_mae": 20.895592,
+          "alpha_mae": 22.279912,
+          "changed_visible_pixels": 18326
         },
         {
           "from_position": 5,
           "to_position": 6,
-          "premultiplied_rgb_mae": 41.289906,
-          "alpha_mae": 46.524342,
-          "changed_visible_pixels": 22248
+          "premultiplied_rgb_mae": 39.313217,
+          "alpha_mae": 48.651801,
+          "changed_visible_pixels": 17833
         },
         {
           "from_position": 6,
           "to_position": 7,
-          "premultiplied_rgb_mae": 10.671791,
-          "alpha_mae": 13.880751,
-          "changed_visible_pixels": 7942
+          "premultiplied_rgb_mae": 9.55195,
+          "alpha_mae": 11.23065,
+          "changed_visible_pixels": 7511
         }
       ],
       "last_to_first": {
@@ -8779,22 +8779,22 @@
         171
       ],
       "duration_ms": [
-        83,
-        100,
-        200,
+        117,
+        150,
+        283,
         100,
         267
       ],
       "loop": false,
-      "total_duration_ms": 750,
+      "total_duration_ms": 917,
       "nominal_fps": null,
-      "average_fps": 6.666666666666667,
+      "average_fps": 5.452562704471101,
       "loop_policy": "oneshot",
       "timing_source": "ticks",
       "ticks": [
-        5,
-        6,
-        12,
+        7,
+        9,
+        17,
         6,
         16
       ],
@@ -8802,10 +8802,10 @@
       "events_ms": [
         {
           "name": "custom:kame_fire",
-          "at_ms": 383,
+          "at_ms": 550,
           "at": 3,
           "position": 3,
-          "at_tick": 23
+          "at_tick": 33
         }
       ],
       "role": "player",
@@ -8813,16 +8813,16 @@
         "hz": 60,
         "max_drift_ms": 0.333,
         "frame_ticks": [
-          5,
-          6,
-          12,
+          7,
+          9,
+          17,
           6,
           16
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 45.0,
-        "cycle_aligned": true,
+        "cycle_ticks": 55.02,
+        "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
       "holds": [],
@@ -8832,30 +8832,30 @@
           {
             "index": 0,
             "start_ms": 0,
-            "duration_ms": 83,
+            "duration_ms": 117,
             "clip_positions": [
               0
             ]
           },
           {
             "index": 1,
-            "start_ms": 83,
-            "duration_ms": 100,
+            "start_ms": 117,
+            "duration_ms": 150,
             "clip_positions": [
               1
             ]
           },
           {
             "index": 2,
-            "start_ms": 183,
-            "duration_ms": 200,
+            "start_ms": 267,
+            "duration_ms": 283,
             "clip_positions": [
               2
             ]
           },
           {
             "index": 3,
-            "start_ms": 383,
+            "start_ms": 550,
             "duration_ms": 100,
             "clip_positions": [
               3
@@ -8863,7 +8863,7 @@
           },
           {
             "index": 4,
-            "start_ms": 483,
+            "start_ms": 650,
             "duration_ms": 267,
             "clip_positions": [
               4
@@ -8871,13 +8871,13 @@
           }
         ],
         "decoded_frame_count": 5,
-        "total_duration_ms": 750,
+        "total_duration_ms": 917,
         "native_loop_count": 1,
         "timeline_verified": true,
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "f1e2b4301c6f7bf1f7d4e41e7f11e5ccde03f9e11820df2096259dde64e68a53"
+        "file_sha256": "5ddfdd7d1bfa53e2960000c7d710655c221ee48d89f0513045dd67555335cb7f"
       },
       "transitions": [
         {
@@ -8924,31 +8924,31 @@
         175
       ],
       "duration_ms": [
-        83,
-        100,
-        200,
-        334
+        117,
+        150,
+        283,
+        333
       ],
       "loop": false,
-      "total_duration_ms": 717,
+      "total_duration_ms": 883,
       "nominal_fps": null,
-      "average_fps": 5.578800557880056,
+      "average_fps": 4.530011325028313,
       "loop_policy": "oneshot",
       "timing_source": "ticks",
       "ticks": [
-        5,
-        6,
-        12,
+        7,
+        9,
+        17,
         20
       ],
       "tick_hz": 60,
       "events_ms": [
         {
           "name": "custom:kame_fire",
-          "at_ms": 383,
+          "at_ms": 550,
           "at": 3,
           "position": 3,
-          "at_tick": 23
+          "at_tick": 33
         }
       ],
       "role": "player",
@@ -8956,14 +8956,14 @@
         "hz": 60,
         "max_drift_ms": 0.333,
         "frame_ticks": [
-          5,
-          6,
-          12,
+          7,
+          9,
+          17,
           20
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 43.02,
+        "cycle_ticks": 52.98,
         "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
@@ -8974,44 +8974,44 @@
           {
             "index": 0,
             "start_ms": 0,
-            "duration_ms": 83,
+            "duration_ms": 117,
             "clip_positions": [
               0
             ]
           },
           {
             "index": 1,
-            "start_ms": 83,
-            "duration_ms": 100,
+            "start_ms": 117,
+            "duration_ms": 150,
             "clip_positions": [
               1
             ]
           },
           {
             "index": 2,
-            "start_ms": 183,
-            "duration_ms": 200,
+            "start_ms": 267,
+            "duration_ms": 283,
             "clip_positions": [
               2
             ]
           },
           {
             "index": 3,
-            "start_ms": 383,
-            "duration_ms": 334,
+            "start_ms": 550,
+            "duration_ms": 333,
             "clip_positions": [
               3
             ]
           }
         ],
         "decoded_frame_count": 4,
-        "total_duration_ms": 717,
+        "total_duration_ms": 883,
         "native_loop_count": 1,
         "timeline_verified": true,
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "650d1b97cadf69ce3acb0156c8d29b39af08abe25f05e4c53c4c948fcfdc2dc3"
+        "file_sha256": "1835a354cc3588683344e110266051d2bccc38d499d9a7756ab30f05dd5c9751"
       },
       "transitions": [
         {
@@ -9051,31 +9051,31 @@
         179
       ],
       "duration_ms": [
-        83,
-        100,
-        200,
-        334
+        117,
+        150,
+        283,
+        333
       ],
       "loop": false,
-      "total_duration_ms": 717,
+      "total_duration_ms": 883,
       "nominal_fps": null,
-      "average_fps": 5.578800557880056,
+      "average_fps": 4.530011325028313,
       "loop_policy": "oneshot",
       "timing_source": "ticks",
       "ticks": [
-        5,
-        6,
-        12,
+        7,
+        9,
+        17,
         20
       ],
       "tick_hz": 60,
       "events_ms": [
         {
           "name": "custom:kame_fire",
-          "at_ms": 383,
+          "at_ms": 550,
           "at": 3,
           "position": 3,
-          "at_tick": 23
+          "at_tick": 33
         }
       ],
       "role": "player",
@@ -9083,14 +9083,14 @@
         "hz": 60,
         "max_drift_ms": 0.333,
         "frame_ticks": [
-          5,
-          6,
-          12,
+          7,
+          9,
+          17,
           20
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 43.02,
+        "cycle_ticks": 52.98,
         "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
@@ -9101,44 +9101,44 @@
           {
             "index": 0,
             "start_ms": 0,
-            "duration_ms": 83,
+            "duration_ms": 117,
             "clip_positions": [
               0
             ]
           },
           {
             "index": 1,
-            "start_ms": 83,
-            "duration_ms": 100,
+            "start_ms": 117,
+            "duration_ms": 150,
             "clip_positions": [
               1
             ]
           },
           {
             "index": 2,
-            "start_ms": 183,
-            "duration_ms": 200,
+            "start_ms": 267,
+            "duration_ms": 283,
             "clip_positions": [
               2
             ]
           },
           {
             "index": 3,
-            "start_ms": 383,
-            "duration_ms": 334,
+            "start_ms": 550,
+            "duration_ms": 333,
             "clip_positions": [
               3
             ]
           }
         ],
         "decoded_frame_count": 4,
-        "total_duration_ms": 717,
+        "total_duration_ms": 883,
         "native_loop_count": 1,
         "timeline_verified": true,
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "f738807e520ba842322444e09bbcb15ec66e0e91bf57e51b0d33c84d739ed946"
+        "file_sha256": "5bdeee9fbea486d0d11ecd40da537818116df25e4e7a9cc3efcde429eebc9e1a"
       },
       "transitions": [
         {
@@ -9178,31 +9178,31 @@
         183
       ],
       "duration_ms": [
-        83,
-        100,
-        200,
-        334
+        117,
+        150,
+        283,
+        333
       ],
       "loop": false,
-      "total_duration_ms": 717,
+      "total_duration_ms": 883,
       "nominal_fps": null,
-      "average_fps": 5.578800557880056,
+      "average_fps": 4.530011325028313,
       "loop_policy": "oneshot",
       "timing_source": "ticks",
       "ticks": [
-        5,
-        6,
-        12,
+        7,
+        9,
+        17,
         20
       ],
       "tick_hz": 60,
       "events_ms": [
         {
           "name": "custom:kame_fire",
-          "at_ms": 383,
+          "at_ms": 550,
           "at": 3,
           "position": 3,
-          "at_tick": 23
+          "at_tick": 33
         }
       ],
       "role": "player",
@@ -9210,14 +9210,14 @@
         "hz": 60,
         "max_drift_ms": 0.333,
         "frame_ticks": [
-          5,
-          6,
-          12,
+          7,
+          9,
+          17,
           20
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 43.02,
+        "cycle_ticks": 52.98,
         "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
@@ -9228,44 +9228,44 @@
           {
             "index": 0,
             "start_ms": 0,
-            "duration_ms": 83,
+            "duration_ms": 117,
             "clip_positions": [
               0
             ]
           },
           {
             "index": 1,
-            "start_ms": 83,
-            "duration_ms": 100,
+            "start_ms": 117,
+            "duration_ms": 150,
             "clip_positions": [
               1
             ]
           },
           {
             "index": 2,
-            "start_ms": 183,
-            "duration_ms": 200,
+            "start_ms": 267,
+            "duration_ms": 283,
             "clip_positions": [
               2
             ]
           },
           {
             "index": 3,
-            "start_ms": 383,
-            "duration_ms": 334,
+            "start_ms": 550,
+            "duration_ms": 333,
             "clip_positions": [
               3
             ]
           }
         ],
         "decoded_frame_count": 4,
-        "total_duration_ms": 717,
+        "total_duration_ms": 883,
         "native_loop_count": 1,
         "timeline_verified": true,
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "58e3cff1cf4f4566e44754a645b4ad093028dcb593b982b25c5cb14fa9d3081e"
+        "file_sha256": "1192d398f6ca5c18102d427d6f6fa6f51363bfec0ce9789f12592d444e3fed8b"
       },
       "transitions": [
         {
@@ -9442,7 +9442,7 @@
     "requested_scale": 1,
     "annotated_with_shared_root": true,
     "not_a_runtime_atlas": true,
-    "file_sha256": "3ae9c20d81166e9ad227e189fc22f64d65993332eb33500e576e19ef221b66eb"
+    "file_sha256": "e6e0db610b804ad5b2f497477ed3a0436e14a3150144d9cb4c3c0de586d7e69a"
   },
   "review": {
     "scale": 1,
@@ -10434,7 +10434,7 @@
             ]
           ],
           "mirrored_offset_px": 0,
-          "turn_slide_px": 5.0
+          "turn_slide_px": 1.0
         },
         {
           "clip": "flurry_kick",
@@ -10624,7 +10624,7 @@
     "inputs": [
       {
         "path": "../source/clips-manifest.json",
-        "sha256": "ada1431d2bd951d167000c2b874c61a290bb5fb88d46cc3b2a08b4e97071fbe0",
+        "sha256": "35077f8e49a5e109a0c3982667f7d9de38c42a0179a18aaab418dd603ac32478",
         "bytes": 29359
       },
       {
@@ -11349,33 +11349,33 @@
       },
       {
         "path": "../source/raw_frames/rec_00.png",
-        "sha256": "8d2ca855049ede3427b0fdd1778158ade12450c577d14ec2364e2c6754758335",
-        "bytes": 13316
+        "sha256": "49e1c31aff0dd3efe14a4be1fe622d75c842ef68d075a62f007a4f77ac206e3a",
+        "bytes": 13317
       },
       {
         "path": "../source/raw_frames/rec_01.png",
-        "sha256": "22cbf747c8b1105aa863a14a8cffe254ea0ab81081cbad76828bafec9fe9b48d",
-        "bytes": 20860
+        "sha256": "351c49f51cede816545e981a1bb2572de0893c781db1f307eaefc1b7d39e8079",
+        "bytes": 20853
       },
       {
         "path": "../source/raw_frames/rec_02.png",
-        "sha256": "2955f4ba78c14feab3efaa63cad9090941cb7333222cdffafe22231c6c06f796",
-        "bytes": 34300
+        "sha256": "bd5bb98feb881c9969c4595f69c79a982ccc391d216a56343b6f0b59a82a0bcf",
+        "bytes": 33345
       },
       {
         "path": "../source/raw_frames/rec_03.png",
-        "sha256": "da302f10458c378de52032f3efa72d9423d0bc24a97db74d4e9d58db08f01bcf",
-        "bytes": 39659
+        "sha256": "f6fb1805c4b32bdb5ba1f84fb974fdf944cbc041d3c247b64e456fca855a6c4a",
+        "bytes": 37791
       },
       {
         "path": "../source/raw_frames/rec_04.png",
-        "sha256": "0ad63c5d9e8488bf85be12079de53c370b4fef5176b93026f2366bc621279889",
-        "bytes": 36463
+        "sha256": "abf824d2af7843a97d077dda824ee651a57931cba506f59d23e0fa098a6d4db6",
+        "bytes": 36011
       },
       {
         "path": "../source/raw_frames/rec_05.png",
-        "sha256": "f4cb28bae4c51303d58e022950c70fa89b89c7e0db53f112e0c28ca23ab5090f",
-        "bytes": 44339
+        "sha256": "ca80c627df2bc98ff9d1fb0baf7d3c20ca7723d70076ddc260eac2e7b7dacec4",
+        "bytes": 42936
       },
       {
         "path": "../source/raw_frames/flk_00.png",
@@ -12271,33 +12271,33 @@
       },
       {
         "path": "frames/frame-144.png",
-        "sha256": "8d2ca855049ede3427b0fdd1778158ade12450c577d14ec2364e2c6754758335",
-        "bytes": 13316
+        "sha256": "49e1c31aff0dd3efe14a4be1fe622d75c842ef68d075a62f007a4f77ac206e3a",
+        "bytes": 13317
       },
       {
         "path": "frames/frame-145.png",
-        "sha256": "22cbf747c8b1105aa863a14a8cffe254ea0ab81081cbad76828bafec9fe9b48d",
-        "bytes": 20860
+        "sha256": "351c49f51cede816545e981a1bb2572de0893c781db1f307eaefc1b7d39e8079",
+        "bytes": 20853
       },
       {
         "path": "frames/frame-146.png",
-        "sha256": "2955f4ba78c14feab3efaa63cad9090941cb7333222cdffafe22231c6c06f796",
-        "bytes": 34300
+        "sha256": "bd5bb98feb881c9969c4595f69c79a982ccc391d216a56343b6f0b59a82a0bcf",
+        "bytes": 33345
       },
       {
         "path": "frames/frame-147.png",
-        "sha256": "da302f10458c378de52032f3efa72d9423d0bc24a97db74d4e9d58db08f01bcf",
-        "bytes": 39659
+        "sha256": "f6fb1805c4b32bdb5ba1f84fb974fdf944cbc041d3c247b64e456fca855a6c4a",
+        "bytes": 37791
       },
       {
         "path": "frames/frame-148.png",
-        "sha256": "0ad63c5d9e8488bf85be12079de53c370b4fef5176b93026f2366bc621279889",
-        "bytes": 36463
+        "sha256": "abf824d2af7843a97d077dda824ee651a57931cba506f59d23e0fa098a6d4db6",
+        "bytes": 36011
       },
       {
         "path": "frames/frame-149.png",
-        "sha256": "f4cb28bae4c51303d58e022950c70fa89b89c7e0db53f112e0c28ca23ab5090f",
-        "bytes": 44339
+        "sha256": "ca80c627df2bc98ff9d1fb0baf7d3c20ca7723d70076ddc260eac2e7b7dacec4",
+        "bytes": 42936
       },
       {
         "path": "frames/frame-150.png",
@@ -12596,8 +12596,8 @@
       },
       {
         "path": "clips/clip-25.webp",
-        "sha256": "fac4e6ddfdcf225fefe884f6ef23bbc4f9244ac63ce66e7c12ebedfc8a04f477",
-        "bytes": 172424
+        "sha256": "f7ea87b0f532157ce45d8eeaeb3814085016bb8ac3f1a96a12af7866be4cdcea",
+        "bytes": 169578
       },
       {
         "path": "clips/clip-26.webp",
@@ -12616,28 +12616,28 @@
       },
       {
         "path": "clips/clip-29.webp",
-        "sha256": "f1e2b4301c6f7bf1f7d4e41e7f11e5ccde03f9e11820df2096259dde64e68a53",
+        "sha256": "5ddfdd7d1bfa53e2960000c7d710655c221ee48d89f0513045dd67555335cb7f",
         "bytes": 58620
       },
       {
         "path": "clips/clip-30.webp",
-        "sha256": "650d1b97cadf69ce3acb0156c8d29b39af08abe25f05e4c53c4c948fcfdc2dc3",
+        "sha256": "1835a354cc3588683344e110266051d2bccc38d499d9a7756ab30f05dd5c9751",
         "bytes": 49024
       },
       {
         "path": "clips/clip-31.webp",
-        "sha256": "f738807e520ba842322444e09bbcb15ec66e0e91bf57e51b0d33c84d739ed946",
+        "sha256": "5bdeee9fbea486d0d11ecd40da537818116df25e4e7a9cc3efcde429eebc9e1a",
         "bytes": 41956
       },
       {
         "path": "clips/clip-32.webp",
-        "sha256": "58e3cff1cf4f4566e44754a645b4ad093028dcb593b982b25c5cb14fa9d3081e",
+        "sha256": "1192d398f6ca5c18102d427d6f6fa6f51363bfec0ce9789f12592d444e3fed8b",
         "bytes": 40462
       },
       {
         "path": "contact-sheet.png",
-        "sha256": "3ae9c20d81166e9ad227e189fc22f64d65993332eb33500e576e19ef221b66eb",
-        "bytes": 2737131
+        "sha256": "e6e0db610b804ad5b2f497477ed3a0436e14a3150144d9cb4c3c0de586d7e69a",
+        "bytes": 2701918
       },
       {
         "path": "review/filmstrip-00.png",
@@ -12891,13 +12891,13 @@
       },
       {
         "path": "review/filmstrip-25.png",
-        "sha256": "b2e6d80bd5cfd707da90049b0247bcbb05cfd21e41e1686ff0d3139e6b0ef5bc",
-        "bytes": 544750
+        "sha256": "16807b5bb3534c635f6d6953949fb9af25140cf637ff405026420dba26a2caaa",
+        "bytes": 404428
       },
       {
         "path": "review/onion-25.png",
-        "sha256": "ee5f8dfc916c4331efd7dc58248fd87ebf1814910b0962df28d0eb0c6c36c112",
-        "bytes": 209665
+        "sha256": "b655afef86a6b2ea7dc2c5b15c6ada4d0a340c8bb3743c93d52c0af8be194137",
+        "bytes": 158111
       },
       {
         "path": "review/filmstrip-26.png",
@@ -12931,8 +12931,8 @@
       },
       {
         "path": "review/filmstrip-29.png",
-        "sha256": "7379f3cb03edbf250f20231d6e9c62063b9ba29ef0a97b0ded479b0632217357",
-        "bytes": 226995
+        "sha256": "663b53afc5698806cbfb7f285b6757f0a2266e6356efcfd2bac802c7563ced5e",
+        "bytes": 227416
       },
       {
         "path": "review/onion-29.png",
@@ -12941,8 +12941,8 @@
       },
       {
         "path": "review/filmstrip-30.png",
-        "sha256": "c23fb8d22a1f482360e392471b21aacb8a5d0e95fa696a0553da4ef6480296d6",
-        "bytes": 190452
+        "sha256": "bb34adfad445bde833bb7443ade8378b065b58f62542e4960b87450e4383e455",
+        "bytes": 190802
       },
       {
         "path": "review/onion-30.png",
@@ -12951,8 +12951,8 @@
       },
       {
         "path": "review/filmstrip-31.png",
-        "sha256": "7bbe8da355511192c38528dc1836dc8510686aff3c81f08801c7507196575f05",
-        "bytes": 169015
+        "sha256": "e9d5da49e1ee184ac4eb955fff3cc2ef4cc7990774b2831e3abf24ddfccbde6f",
+        "bytes": 169133
       },
       {
         "path": "review/onion-31.png",
@@ -12961,8 +12961,8 @@
       },
       {
         "path": "review/filmstrip-32.png",
-        "sha256": "1309d7f192a793b52925f0ff48a61b56fd5e71ecaeaef3600bf780983e5dcbe6",
-        "bytes": 161946
+        "sha256": "340502f92911ff0471fb1eef3cb476def00873046715b67a52807051bab2cd05",
+        "bytes": 162390
       },
       {
         "path": "review/onion-32.png",
@@ -12971,8 +12971,8 @@
       },
       {
         "path": "review/turn-test.png",
-        "sha256": "393e21ecf823b9fd75115f821d57284d3f2bda8841cb0a2be002a66cf5a9582f",
-        "bytes": 1025806
+        "sha256": "6023719b99546b1e2614216c93b74426ab8699fce2aa0a4260cbdae98be73a25",
+        "bytes": 1025812
       }
     ],
     "tool": {
