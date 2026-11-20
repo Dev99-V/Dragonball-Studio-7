@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-20T17:36:45Z",
+  "updated_at": "2026-11-20T18:21:05Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.17.0",
@@ -162,9 +162,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "SONGOKU-HERO-PHASE2-V10-4-STATIC-RECOVER-KAME1800",
+    "active_task_id": "SONGOKU-HERO-PHASE2-V10-5-KAME7F-2500-RECOVER-FLUTTER",
     "status": "ready_for_owner_human_test",
-    "summary": "v10.4 Human Test (chưa chốt): energy_recover khóa cứng thân 0px đứng mặt đất chỉ tỏa aura (body_diff_px=0, atlas sha=dbaeb1719f9cd035); Kamehameha 1800px/s duy trì 1.0s rồi biến mất nhánh 2 nhỏ dần từ trên xuống (0.36s), giảm 30% tốc độ vận công ([7,9,17] ticks + 9.8Hz ring); Atomic 4 đạn 1500px/s không mất frame + khóa mục tiêu trỏ quái bay/bộ; đã build đồng bộ 1:1 Web/APK/IPA & pass ./loop.sh test.",
+    "summary": "v10.5 Human Test (chưa chốt): energy_recover phấp phới tóc/áo/đai xanh + aura vàng-cam & vòng đất trắng chuẩn Sheet 06 (khóa boot_cx<=0.5px, y1=247, f2b=86..87, atlas sha=4051e08c649526c7); Kamehameha đủ 7 frame chuẩn Sheet 28 (5 frame vận công kèm cầu xanh 6 tia xoay tròn không hốc fx sha=efebd842267306f9 + bắn 1 tia 2500px/s bỏ duy trì 1s, biến mất ngay theo nhánh 2 khi chạm mục tiêu giữ nguyên cấu trúc); thêm job build-android-apk vào CI/CD.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1367,6 +1367,12 @@
       "timestamp": "2026-11-20T17:36:45Z",
       "status": "ready_for_owner_human_test",
       "summary": "v10.4 Human Test (chưa chốt): energy_recover khóa cứng thân 0px đứng mặt đất chỉ tỏa aura (body_diff_px=0, atlas sha=dbaeb1719f9cd035); Kamehameha 1800px/s duy trì 1.0s rồi biến mất nhánh 2 nhỏ dần từ trên xuống (0.36s), giảm 30% tốc độ vận công ([7,9,17] ticks + 9.8Hz ring); Atomic 4 đạn 1500px/s không mất frame + khóa mục tiêu trỏ quái bay/bộ; đã build đồng bộ 1:1 Web/APK/IPA & pass ./loop.sh test."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE2-V10-5-KAME7F-2500-RECOVER-FLUTTER",
+      "timestamp": "2026-11-20T18:21:05Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "v10.5 Human Test (chưa chốt): energy_recover phấp phới tóc/áo/đai xanh + aura vàng-cam & vòng đất trắng chuẩn Sheet 06 (khóa boot_cx<=0.5px, y1=247, f2b=86..87, atlas sha=4051e08c649526c7); Kamehameha đủ 7 frame chuẩn Sheet 28 (5 frame vận công kèm cầu xanh 6 tia xoay tròn không hốc fx sha=efebd842267306f9 + bắn 1 tia 2500px/s bỏ duy trì 1s, biến mất ngay theo nhánh 2 khi chạm mục tiêu giữ nguyên cấu trúc); thêm job build-android-apk vào CI/CD."
     }
   ],
   "quick_resume_commands": [
@@ -1699,5 +1705,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-20T17:36:45Z"
+  "last_updated_utc": "2026-11-20T18:21:05Z"
 }

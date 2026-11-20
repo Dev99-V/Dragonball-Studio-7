@@ -64,3 +64,53 @@ jobs:
             timeout 60s xvfb-run -a ./tools/godot/godot --rendering-driver opengl3 --path . --script res://tests/test_compatibility_shaders.gd
             timeout 60s xvfb-run -a ./tools/godot/godot --rendering-driver opengl3 --path . --script res://tests/test_shenron_dissolve_render.gd
           fi
+
+  build-android-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17 for Android APK signing
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Godot 4.7.2 & Export Templates
+        run: bash tools/godot/install_godot.sh --with-templates
+
+      - name: Configure Android SDK & Debug Keystore for Godot 4.7
+        run: |
+          mkdir -p "$HOME/.local/share/godot/keystores" "$HOME/.config/godot"
+          if [ ! -f "$HOME/.local/share/godot/keystores/debug.keystore" ]; then
+            keytool -genkeypair -v \
+              -keystore "$HOME/.local/share/godot/keystores/debug.keystore" \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          cat > "$HOME/.config/godot/editor_settings-4.7.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/debug_keystore = "$HOME/.local/share/godot/keystores/debug.keystore"
+          export/android/debug_keystore_pass = "android"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/android_sdk_path = "$SDK_DIR"
+          EOF
+
+      - name: Export & Sign Android Debug APK (./loop.sh apk-debug)
+        run: |
+          ./loop.sh apk-debug
+          APKSIGNER="$(find "${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}/build-tools" -name apksigner | sort -V | tail -n 1)"
+          "$APKSIGNER" verify --verbose build/android/dr7-studio-debug.apk
+          sha256sum build/android/dr7-studio-debug.apk
+
+      - name: Upload Android Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dr7-studio-debug-apk
+          path: build/android/dr7-studio-debug.apk
+          retention-days: 7

@@ -2187,9 +2187,9 @@ func run_test() -> void:
 	if float(stun_slot.get("hard_stun_timer_s", 0.0)) < 1.5:
 		fail("v10 Flurry Stun: apply_hard_stun_to_slot must lock slot for >= 1.5s")
 		return
-	# 4) Atomic 12s CD (4 alternating homing bolts @ 1500px/s ignoring terrain) & Kamehameha 80 MP gate (1800px/s held 1.0s + 0.36s Branch 2 shrink fade ignoring terrain) targeting BOTH pointed ground & flying enemies!
-	if absf(float(goku.get("ATOMIC_SPEED_PX_S")) - 1500.0) > 0.1 or int(goku.get("ATOMIC_BOLT_COUNT")) != 4 or absf(float(goku.get("KAME_MANA_COST")) - 80.0) > 0.1 or absf(float(goku.get("KAME_SPEED_PX_S")) - 1800.0) > 0.1 or absf(float(goku.get("KAME_HOLD_S")) - 1.0) > 0.01:
-		fail("v10.4 Tuning: Atomic=4 bolts@1500px/s, Kamehameha=80MP@1800px/s hold=1.0s required")
+	# 4) Atomic 12s CD (4 alternating homing bolts @ 1500px/s ignoring terrain) & Kamehameha 80 MP gate (Sheet 28 7-frame charge + 2500px/s NO 1s hold, immediate Branch 2 vanish on hit, ignoring terrain) targeting BOTH pointed ground & flying enemies!
+	if absf(float(goku.get("ATOMIC_SPEED_PX_S")) - 1500.0) > 0.1 or int(goku.get("ATOMIC_BOLT_COUNT")) != 4 or absf(float(goku.get("KAME_MANA_COST")) - 80.0) > 0.1 or absf(float(goku.get("KAME_SPEED_PX_S")) - 2500.0) > 0.1 or absf(float(goku.get("KAME_HOLD_S")) - 0.0) > 0.01:
+		fail("v10.5 Tuning: Atomic=4 bolts@1500px/s, Kamehameha=80MP@2500px/s hold=0.0s required")
 		return
 	var atomic_spr: AnimatedSprite2D = goku.get_node_or_null("Sprite") as AnimatedSprite2D
 	if atomic_spr != null:
@@ -2238,13 +2238,22 @@ func run_test() -> void:
 		fail("v10.1 Kamehameha: must cast at 100 MP and consume exact 80 MP -> 20 MP, got %.1f" % p1_fm.player_mana)
 		return
 	if atomic_spr != null:
-		atomic_spr.frame = 3
+		if atomic_spr.sprite_frames.get_frame_count(&"kame_ground_horiz") != 7:
+			fail("v10.5 Kamehameha: Sheet 28 kame_ground_horiz must have exact 7 frames, got %d" % atomic_spr.sprite_frames.get_frame_count(&"kame_ground_horiz"))
+			return
+		atomic_spr.frame = 5
 		p1_fm.step(0.02)
-		if p1_fm._hero_kame_beams.is_empty() or absf(float(p1_fm._hero_kame_beams[0].get("speed", 0.0)) - 1800.0) > 0.1 or absf(float(p1_fm._hero_kame_beams[0].get("hold_s", 0.0)) - 1.0) > 0.01 or absf(float(p1_fm._hero_kame_beams[0].get("duration_s", 0.0)) - 1.36) > 0.01 or not bool(p1_fm._hero_kame_beams[0].get("ignore_terrain", false)):
-			fail("v10.4 Kamehameha: beam must travel at 1800px/s, hold 1.0s + 0.36s fade ignoring terrain (anim=%s beams=%d)" % [String(atomic_spr.animation), p1_fm._hero_kame_beams.size()])
+		if p1_fm._hero_kame_beams.is_empty() or absf(float(p1_fm._hero_kame_beams[0].get("speed", 0.0)) - 2500.0) > 0.1 or absf(float(p1_fm._hero_kame_beams[0].get("hold_s", 99.0)) - 0.0) > 0.01 or absf(float(p1_fm._hero_kame_beams[0].get("fade_s", 0.0)) - 0.18) > 0.01 or not bool(p1_fm._hero_kame_beams[0].get("ignore_terrain", false)):
+			fail("v10.5 Kamehameha: beam must fire at frame #5, travel at 2500px/s with NO 1s hold (hold_s=0.0, fade_s=0.18) ignoring terrain (anim=%s beams=%d)" % [String(atomic_spr.animation), p1_fm._hero_kame_beams.size()])
 			return
 		if not fly_kame_slot.is_empty() and str(p1_fm._hero_kame_beams[0].get("target", {}).get("id", "")) != str(fly_kame_slot.get("id", "")):
 			fail("v10.3 Kamehameha Pointer Lock: must aim directly at pointed flying target")
+			return
+		# Verify beam hits target and vanishes rapidly without any 1.0s hold!
+		for _step_k in range(30):
+			p1_fm.step(0.03)
+		if not p1_fm._hero_kame_beams.is_empty():
+			fail("v10.5 Kamehameha: beam must vanish immediately after target impact + 0.18s fade (no 1.0s hold), still active after 0.90s!")
 			return
 		atomic_spr.play(&"idle_combat")
 

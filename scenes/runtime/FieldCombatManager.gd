@@ -3355,9 +3355,10 @@ func _step_hero_phase2_skills(delta: float) -> void:
 			_hero_atomic_pending_bolts.append({"delay_s": 0.14, "offset_y": -10.0, "air_down": ad_now})
 			_hero_atomic_pending_bolts.append({"delay_s": 0.21, "offset_y": 12.0, "air_down": ad_now})
 
-	# 4. Kamehameha (`28/29/30/27`): 100% accurate homing beam to pointed target (flying OR ground) expanding at 1800 px/s, held 1.0s then Branch 2 shrink fade, ignoring terrain!
+	# 4. Kamehameha (`28` 7-frame / `29/30/27` 6-frame): 5 charge frames (0..1 gather + 2..4 rotating cyan sphere) -> fire at frame #5!
+	# Single seamless beam @ 2500 px/s (NO 1.0s hold!), vanishes immediately via Branch 2 shrink fade upon hitting target, ignoring terrain!
 	if anim in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"] and pspr.is_playing() and not _hero_kame_fired:
-		if frame >= 3:
+		if frame >= 5:
 			_hero_kame_fired = true
 			var tgt: Dictionary = _resolve_player_attack_target(true)
 			if tgt.is_empty() or not bool(tgt.get("alive", false)) or not is_instance_valid(tgt.get("node")):
@@ -3376,18 +3377,20 @@ func _step_hero_phase2_skills(delta: float) -> void:
 				var dv_k: Vector2 = _get_slot_core_pos(tgt) - hand_pos
 				if dv_k.length() > 8.0:
 					dir_vec = dv_k.normalized()
-					max_len = maxf(dv_k.length() + 48.0, 220.0)
+					max_len = maxf(dv_k.length() + 36.0, 180.0)
 			_hero_kame_beams.append({
 				"start": hand_pos,
 				"dir": dir_vec,
-				"speed": 1800.0,
-				"cur_len": 40.0,
+				"speed": 2500.0,
+				"cur_len": 48.0,
 				"max_len": max_len,
 				"mode": _hero_kame_mode,
 				"age_s": 0.0,
-				"hold_s": 1.0,
-				"fade_s": 0.36,
-				"duration_s": 1.36,
+				"hold_s": 0.0,
+				"fade_s": 0.18,
+				"fade_age_s": 0.0,
+				"fading": false,
+				"duration_s": 0.18,
 				"target": tgt,
 				"hit_ids": [],
 				"damage": 360.0,
@@ -3435,27 +3438,28 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 		if hit_done or float(pr["age_s"]) >= float(pr["life_s"]):
 			_hero_skill_projectiles.remove_at(i)
 
-	# Kamehameha beams: 1800 px/s beam-head flight, held 1.0s then Branch 2 shrink fade, 100% live target aim, ZERO terrain collision!
+	# Kamehameha beams: single 2500 px/s beam-head flight (NO 1.0s hold!), immediately enters Branch 2 shrink fade upon hitting target / max_len, ZERO terrain collision!
 	for j in range(_hero_kame_beams.size() - 1, -1, -1):
 		var bm: Dictionary = _hero_kame_beams[j]
 		bm["age_s"] = float(bm["age_s"]) + delta
 		var start_p: Vector2 = bm["start"] as Vector2
 		var dir_v: Vector2 = bm["dir"] as Vector2
 		var max_len: float = float(bm.get("max_len", 950.0))
-		var hold_s: float = float(bm.get("hold_s", 1.0))
 		var tgt_k: Dictionary = bm.get("target", {})
-		if float(bm["age_s"]) <= hold_s:
+		var is_fading: bool = bool(bm.get("fading", false))
+		if not is_fading:
 			if not tgt_k.is_empty() and bool(tgt_k.get("alive", false)) and is_instance_valid(tgt_k.get("node")):
 				var tc: Vector2 = _get_slot_core_pos(tgt_k)
 				var dv: Vector2 = tc - start_p
 				if dv.length() > 8.0:
 					dir_v = dv.normalized()
 					bm["dir"] = dir_v
-					max_len = maxf(dv.length() + 48.0, 220.0)
+					max_len = maxf(dv.length() + 36.0, 180.0)
 					bm["max_len"] = max_len
-			var cur_len: float = minf(max_len, float(bm.get("cur_len", 40.0)) + float(bm.get("speed", 1800.0)) * delta)
+			var cur_len: float = minf(max_len, float(bm.get("cur_len", 48.0)) + float(bm.get("speed", 2500.0)) * delta)
 			bm["cur_len"] = cur_len
 			var hit_ids: Array = bm.get("hit_ids", [])
+			var target_impacted: bool = false
 			for s in _get_combat_slots():
 				if not bool(s.get("alive", false)) or not is_instance_valid(s.get("node")):
 					continue
@@ -3471,9 +3475,16 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 					hit_ids.append(sid)
 					apply_damage_to_slot(s, float(bm["damage"]), 60.0, sc, "heavy", false, dir_v)
 					_spawn_skill_explosion_33(sc, 1.2)
+					if is_locked_tgt or tgt_k.is_empty():
+						target_impacted = true
 			bm["hit_ids"] = hit_ids
-		if float(bm["age_s"]) >= float(bm["duration_s"]):
-			_hero_kame_beams.remove_at(j)
+			if target_impacted or cur_len >= max_len - 1.0:
+				bm["fading"] = true
+				bm["fade_age_s"] = 0.0
+		else:
+			bm["fade_age_s"] = float(bm.get("fade_age_s", 0.0)) + delta
+			if float(bm["fade_age_s"]) >= float(bm.get("fade_s", 0.18)):
+				_hero_kame_beams.remove_at(j)
 
 
 func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
@@ -3499,18 +3510,37 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 					var sz: float = 178.0 * c_sc
 					canvas.draw_texture_rect(tex, Rect2(p_core - Vector2(sz * 0.5, sz * 0.5), Vector2(sz, sz)), false, Color.WHITE)
 
-	# 2. Kamehameha independent cyan charge ring (`kame_charge_fx`, -30% charge speed = 9.8Hz) around hands during charge frames #1..#2!
+	# 2. Kamehameha independent cyan charge VFX (Sheet 28 exact 5-frame charge: #0..#1 converging streaks, #2..#4 rotating 6-ray cyan sphere around cupped hands!)
 	var pspr := goku.get_node_or_null("Sprite") as AnimatedSprite2D
 	if pspr != null and pspr.is_playing():
 		var an := String(pspr.animation)
-		if an in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"] and pspr.frame >= 1 and pspr.frame <= 2:
-			if fx_sf.has_animation(&"kame_charge_fx"):
-				var cfc := fx_sf.get_frame_count(&"kame_charge_fx")
-				if cfc > 0:
-					var ctex := fx_sf.get_frame_texture(&"kame_charge_fx", int(floor(_sim_time_s * 9.8)) % cfc)
-					if ctex != null:
-						var csz: float = 164.0 * c_sc
-						canvas.draw_texture_rect(ctex, Rect2(p_core - Vector2(csz * 0.5, csz * 0.5), Vector2(csz, csz)), false, Color.WHITE)
+		if an in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"]:
+			var f_k: int = pspr.frame
+			var face_kx: float = -1.0 if goku.scale.x < 0.0 else 1.0
+			var hand_c: Vector2 = goku.position + Vector2(-10.0 * face_kx * c_sc, -56.0 * c_sc)
+			if f_k >= 0 and f_k <= 1:
+				# Subtle converging cyan energy gather streaks pulling into cupped hands (Sheet 28 frames 0..1)
+				var r_in: float = (18.0 if f_k == 0 else 12.0) * c_sc
+				var r_out: float = (44.0 if f_k == 0 else 56.0) * c_sc
+				var base_a: float = _sim_time_s * 5.2 * face_kx
+				for si in range(4):
+					var ang_s: float = base_a + float(si) * (PI * 0.5) + (0.35 if f_k == 1 else 0.0)
+					var dir_s: Vector2 = Vector2(cos(ang_s), sin(ang_s))
+					canvas.draw_line(hand_c + dir_s * r_out, hand_c + dir_s * r_in, Color(0.35, 0.94, 1.0, 0.92), maxf(2.0, 2.5 * c_sc))
+				canvas.draw_circle(hand_c, (7.0 if f_k == 0 else 11.0) * c_sc, Color(0.55, 0.96, 1.0, 0.85))
+				canvas.draw_circle(hand_c, (4.0 if f_k == 0 else 6.5) * c_sc, Color(0.95, 1.0, 1.0, 0.95))
+			elif f_k >= 2 and f_k <= 4:
+				if fx_sf.has_animation(&"kame_charge_fx"):
+					var cfc := fx_sf.get_frame_count(&"kame_charge_fx")
+					if cfc > 0:
+						var stage_i: int = clampi(f_k - 2, 0, cfc - 1)
+						var ctex := fx_sf.get_frame_texture(&"kame_charge_fx", stage_i)
+						if ctex != null:
+							var csz: float = (206.0 if stage_i == 0 else (196.0 if stage_i == 1 else 224.0)) * c_sc
+							var rot_a: float = _sim_time_s * 6.5 * face_kx
+							canvas.draw_set_transform(hand_c, rot_a, Vector2.ONE)
+							canvas.draw_texture_rect(ctex, Rect2(-csz * 0.5, -csz * 0.5, csz, csz), false, Color.WHITE)
+							canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	# 3. Active Atomic Blast 4x alternating homing bolts (1500 px/s, rotated along live flight direction, ZERO missing/spark blink frames!)
 	for pr in _hero_skill_projectiles:
@@ -3528,19 +3558,20 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 					canvas.draw_texture_rect(ptex, Rect2(-psz * 0.5, -psz * 0.5, psz, psz), false, Color.WHITE)
 					canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	# 4. Active Kamehameha seamless multi-segment beam (1800 px/s expanding head, held 1.0s rotating 3 frames, then Branch 2 top->bottom shrink fade!)
+	# 4. Active Kamehameha seamless multi-segment beam (UNCHANGED 3-part structure: orig+mid+head @ 2500 px/s, NO 1.0s hold -> immediate Branch 2 top->bottom shrink fade on target impact!)
 	for bm in _hero_kame_beams:
 		var age: float = float(bm["age_s"])
-		var hold_s: float = float(bm.get("hold_s", 1.0))
-		var fade_s: float = float(bm.get("fade_s", 0.36))
+		var is_fading: bool = bool(bm.get("fading", false))
+		var fade_s: float = float(bm.get("fade_s", 0.18))
+		var fade_age: float = float(bm.get("fade_age_s", 0.0))
 		var start_p: Vector2 = bm["start"] as Vector2
 		var dir_v: Vector2 = bm["dir"] as Vector2
 		var b_len: float = maxf(64.0, float(bm.get("cur_len", 64.0)))
 		var ang: float = dir_v.angle()
 		canvas.draw_set_transform(start_p, ang, Vector2.ONE)
-		if age < hold_s and fx_sf.has_animation(&"kame_h_orig") and fx_sf.has_animation(&"kame_h_mid") and fx_sf.has_animation(&"kame_h_head"):
+		if (not is_fading) and fx_sf.has_animation(&"kame_h_orig") and fx_sf.has_animation(&"kame_h_mid") and fx_sf.has_animation(&"kame_h_head"):
 			# 3-frame rotating energy surge cycle (matching Sheet 31 & reference GIF!)
-			var fi: int = int(floor(age * 18.0)) % 3
+			var fi: int = int(floor(age * 20.0)) % 3
 			var t_orig := fx_sf.get_frame_texture(&"kame_h_orig", fi)
 			var t_mid := fx_sf.get_frame_texture(&"kame_h_mid", fi)
 			var t_head := fx_sf.get_frame_texture(&"kame_h_head", fi)
@@ -3576,7 +3607,7 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 				canvas.draw_texture_rect(t_head, Rect2(head_x, -bh * 0.5, tile_w, bh), false, Color.WHITE)
 		elif fx_sf.has_animation(&"kame_h_fade"):
 			# Sheet 31 Branch 2 (top -> middle -> bottom shrinking beam: frames 0 -> 1 -> 2)
-			var fade_prog: float = clampf((age - hold_s) / maxf(0.01, fade_s), 0.0, 0.999)
+			var fade_prog: float = clampf(fade_age / maxf(0.01, fade_s), 0.0, 0.999)
 			var f_idx: int = clampi(int(floor(fade_prog * 3.0)), 0, 2)
 			var t_fade := fx_sf.get_frame_texture(&"kame_h_fade", f_idx)
 			if t_fade != null:

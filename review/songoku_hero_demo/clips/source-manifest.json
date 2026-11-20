@@ -749,6 +749,38 @@
     {
       "name": "kad_03",
       "file": "raw_frames/kad_03.png"
+    },
+    {
+      "name": "kgh_02b",
+      "file": "raw_frames/kgh_02b.png"
+    },
+    {
+      "name": "kgh_02c",
+      "file": "raw_frames/kgh_02c.png"
+    },
+    {
+      "name": "kgu_02b",
+      "file": "raw_frames/kgu_02b.png"
+    },
+    {
+      "name": "kgu_02c",
+      "file": "raw_frames/kgu_02c.png"
+    },
+    {
+      "name": "kah_02b",
+      "file": "raw_frames/kah_02b.png"
+    },
+    {
+      "name": "kah_02c",
+      "file": "raw_frames/kah_02c.png"
+    },
+    {
+      "name": "kad_02b",
+      "file": "raw_frames/kad_02b.png"
+    },
+    {
+      "name": "kad_02c",
+      "file": "raw_frames/kad_02c.png"
     }
   ],
   "clips": {
@@ -1535,20 +1567,24 @@
         "kgh_00",
         "kgh_01",
         "kgh_02",
+        "kgh_02b",
+        "kgh_02c",
         "kgh_03",
         "kgh_04"
       ],
       "ticks": [
-        7,
+        5,
+        5,
+        8,
+        8,
         9,
-        17,
-        6,
-        16
+        5,
+        11
       ],
       "events": [
         {
           "name": "custom:kame_fire",
-          "at": 3
+          "at": 5
         }
       ]
     },
@@ -1559,18 +1595,22 @@
         "kgu_00",
         "kgu_01",
         "kgu_02",
+        "kgu_02b",
+        "kgu_02c",
         "kgu_03"
       ],
       "ticks": [
-        7,
+        5,
+        5,
+        8,
+        8,
         9,
-        17,
-        20
+        16
       ],
       "events": [
         {
           "name": "custom:kame_fire",
-          "at": 3
+          "at": 5
         }
       ]
     },
@@ -1581,18 +1621,22 @@
         "kah_00",
         "kah_01",
         "kah_02",
+        "kah_02b",
+        "kah_02c",
         "kah_03"
       ],
       "ticks": [
-        7,
+        5,
+        5,
+        8,
+        8,
         9,
-        17,
-        20
+        16
       ],
       "events": [
         {
           "name": "custom:kame_fire",
-          "at": 3
+          "at": 5
         }
       ]
     },
@@ -1603,18 +1647,22 @@
         "kad_00",
         "kad_01",
         "kad_02",
+        "kad_02b",
+        "kad_02c",
         "kad_03"
       ],
       "ticks": [
-        7,
+        5,
+        5,
+        8,
+        8,
         9,
-        17,
-        20
+        16
       ],
       "events": [
         {
           "name": "custom:kame_fire",
-          "at": 3
+          "at": 5
         }
       ]
     }

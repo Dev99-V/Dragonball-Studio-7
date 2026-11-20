@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../../characters/songoku_ssj1/phase2_skills/_tmp_fx_clips/animation-clips.json",
-    "sha256": "4d2960964413343be285a6f49b8a7433dd4481a7f9362f9b4975d87932b99011",
-    "bytes": 100737,
+    "sha256": "e40aecb25c71f1b7ae1858cb73bb5e25a7fda72026179e59a50bfefe7620b05f",
+    "bytes": 101004,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -110,13 +110,13 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
-          4.02,
-          3.96,
-          4.02,
-          4.02,
-          3.96
+          4.0,
+          4.0,
+          4.0,
+          4.0,
+          4.0
         ]
       }
     },
@@ -163,7 +163,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           6.0,
           6.0,
@@ -211,7 +211,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           3.0,
           3.0,
@@ -258,7 +258,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           3.0,
           3.0,
@@ -313,7 +313,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           3.0,
           3.0,
@@ -362,11 +362,11 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
-          4.02,
-          3.96,
-          4.02
+          4.0,
+          4.0,
+          4.0
         ]
       }
     },
@@ -409,7 +409,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           3.0,
           3.0,
@@ -456,7 +456,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           3.0,
           3.0,
@@ -503,7 +503,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           3.0,
           3.0,
@@ -550,11 +550,11 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
-          4.02,
-          3.96,
-          4.02
+          4.0,
+          4.0,
+          4.0
         ]
       }
     },
@@ -605,7 +605,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           3.0,
           3.0,
@@ -674,7 +674,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "fixed fps",
+        "basis": "ticks at 60 Hz",
         "relative_durations": [
           3.0,
           3.0,
@@ -753,13 +753,13 @@
   "files": [
     {
       "path": "godot/songoku_skills_fx-atlas-00.png",
-      "sha256": "91dcf70c6b823d05afcf2c38580988bfff8a66f5b8136abefd97448d6151c497",
-      "bytes": 1323156
+      "sha256": "efebd842267306f95fac2271cb12a830353277d22cb75ef522fe24d573fe1023",
+      "bytes": 1362133
     },
     {
       "path": "godot/songoku_skills_fx.tres",
-      "sha256": "87619f1fff2cbaf034d074bf68201f418f56849e7661a94444405f2c169bdb1d",
-      "bytes": 11308
+      "sha256": "fdde88ceafa1647d7470851ff15a1ece4aa2043e9a09964e5117929dd806646b",
+      "bytes": 11297
     },
     {
       "path": "godot/songoku_skills_fx.tscn",
@@ -787,8 +787,8 @@
       {
         "id": "godot_spriteframes_duration_error_ms",
         "status": "pass",
-        "value": 1.4210854715202004e-14,
-        "threshold": 1e-06
+        "value": 0.6666666666666714,
+        "threshold": 1.0
       },
       {
         "id": "atlas_max_side_px",
@@ -809,8 +809,8 @@
     "inputs": [
       {
         "path": "../../characters/songoku_ssj1/phase2_skills/_tmp_fx_clips/animation-clips.json",
-        "sha256": "4d2960964413343be285a6f49b8a7433dd4481a7f9362f9b4975d87932b99011",
-        "bytes": 100737
+        "sha256": "e40aecb25c71f1b7ae1858cb73bb5e25a7fda72026179e59a50bfefe7620b05f",
+        "bytes": 101004
       },
       {
         "path": "../../characters/songoku_ssj1/phase2_skills/_tmp_fx_clips/frames/frame-00.png",
@@ -914,18 +914,18 @@
       },
       {
         "path": "../../characters/songoku_ssj1/phase2_skills/_tmp_fx_clips/frames/frame-20.png",
-        "sha256": "9532a7590ea75052b2381d613b2094027f3e631a72de7aad294de6a606d66e5c",
-        "bytes": 28030
+        "sha256": "84d6dc5b91e08338d077beec2c56afb13092a5d1290344f29741ee606e8513b5",
+        "bytes": 44310
       },
       {
         "path": "../../characters/songoku_ssj1/phase2_skills/_tmp_fx_clips/frames/frame-21.png",
-        "sha256": "dbc4a0ac412afcf4ac46684e5fc65f3501fa39a5c42a1effb1c81d85cb0cfaa9",
-        "bytes": 25981
+        "sha256": "eb645c90d3562a1e8c399aed78ce19fc63e1fb81d9e627ffd3a56881ef4b5640",
+        "bytes": 27848
       },
       {
         "path": "../../characters/songoku_ssj1/phase2_skills/_tmp_fx_clips/frames/frame-22.png",
-        "sha256": "ca785bab658dc121af1dd1550eeb18aef5a53eb6452d5af030accf9af29e8834",
-        "bytes": 20799
+        "sha256": "a0bff5ba51a3bb1dea85cbde4e7abf38d97f8cc1de36cd8d1394573e2830517c",
+        "bytes": 39564
       },
       {
         "path": "../../characters/songoku_ssj1/phase2_skills/_tmp_fx_clips/frames/frame-23.png",
@@ -1056,11 +1056,11 @@
     "outputs": [
       {
         "path": "godot/songoku_skills_fx-atlas-00.png",
-        "sha256": "91dcf70c6b823d05afcf2c38580988bfff8a66f5b8136abefd97448d6151c497"
+        "sha256": "efebd842267306f95fac2271cb12a830353277d22cb75ef522fe24d573fe1023"
       },
       {
         "path": "godot/songoku_skills_fx.tres",
-        "sha256": "87619f1fff2cbaf034d074bf68201f418f56849e7661a94444405f2c169bdb1d"
+        "sha256": "fdde88ceafa1647d7470851ff15a1ece4aa2043e9a09964e5117929dd806646b"
       },
       {
         "path": "godot/songoku_skills_fx.tscn",

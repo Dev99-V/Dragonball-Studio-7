@@ -245,19 +245,19 @@ filter_clip = true
 [resource]
 animations = [{
 "frames": [{
-"duration": 4.02,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c0")
 }, {
-"duration": 3.96,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c1")
 }, {
-"duration": 4.02,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c2")
 }, {
-"duration": 4.02,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c3")
 }, {
-"duration": 3.96,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c4")
 }],
 "loop": false,
@@ -330,13 +330,13 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 4.02,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c20")
 }, {
-"duration": 3.96,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c21")
 }, {
-"duration": 4.02,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c22")
 }],
 "loop": true,
@@ -386,13 +386,13 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 4.02,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c32")
 }, {
-"duration": 3.96,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c33")
 }, {
-"duration": 4.02,
+"duration": 4.0,
 "texture": SubResource("AtlasTexture_p0c34")
 }],
 "loop": false,
