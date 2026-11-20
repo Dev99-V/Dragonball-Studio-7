@@ -1,0 +1,105 @@
+{
+  "schema": "generate2dsprite.animation_clips.v2",
+  "art_source": "host_image",
+  "pixel_art": true,
+  "sampling": "nearest",
+  "body_height_px": 125,
+  "anchor_px": [
+    96,
+    144
+  ],
+  "shadow": {
+    "rx": 28,
+    "ry": 6,
+    "opacity": 0.32
+  },
+  "frames": [
+    {
+      "name": "idle_00",
+      "file": "raw_frames/idle_00.png"
+    },
+    {
+      "name": "walk_00",
+      "file": "raw_frames/walk_00.png"
+    },
+    {
+      "name": "walk_01",
+      "file": "raw_frames/walk_01.png"
+    },
+    {
+      "name": "walk_02",
+      "file": "raw_frames/walk_02.png"
+    },
+    {
+      "name": "walk_03",
+      "file": "raw_frames/walk_03.png"
+    },
+    {
+      "name": "walk_04",
+      "file": "raw_frames/walk_04.png"
+    },
+    {
+      "name": "walk_05",
+      "file": "raw_frames/walk_05.png"
+    },
+    {
+      "name": "walk_06",
+      "file": "raw_frames/walk_06.png"
+    },
+    {
+      "name": "walk_07",
+      "file": "raw_frames/walk_07.png"
+    }
+  ],
+  "clips": {
+    "walk": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "walk_00",
+        "walk_01",
+        "walk_02",
+        "walk_03",
+        "walk_04",
+        "walk_05",
+        "walk_06",
+        "walk_07"
+      ],
+      "ticks": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "events": [
+        {
+          "at": 0,
+          "name": "step_l"
+        },
+        {
+          "at": 4,
+          "name": "step_r"
+        }
+      ]
+    },
+    "idle": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "idle_00"
+      ],
+      "ticks": [
+        12
+      ]
+    }
+  },
+  "states": {
+    "idle": "idle",
+    "walk": "walk",
+    "moving": "walk"
+  }
+}

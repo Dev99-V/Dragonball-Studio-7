@@ -14,6 +14,8 @@
 
 > **Trạng thái bất lợi theo Owner**: không thêm clip thân riêng cho choáng/khống chế vào bộ atlas. Khi choáng, giữ một pose phù hợp của `hit`, dừng đồng hồ hoạt ảnh thân và chạy VFX choáng độc lập trên đầu; kết thúc theo thời lượng trạng thái, không theo độ dài clip `hit`. VFX theo điểm neo đầu và hướng nhìn, không gộp vào thân. `turn` hiện là chuyển tiếp đổi hướng trái/phải, không phải trạng thái bất lợi; không đổi tên hoặc xóa nó do nhầm với `stun`.
 
+> **Kỹ thuật dựng Walk 2 chân góc 3/4 tái sử dụng (Owner duyệt SSJ1 `walk_v6` ngày 2026-11-20)**: xem chi tiết quy trình đầy đủ tại `.agents/skills/create_atlas/references/bipedal-walk-synthesis.md` (khóa góc 3/4 `Pose 0`, Dual-Anchor Identity + Pose Guide, sinh từng frame đơn `1024×1024` qua `Codex CLI`, kiểm giải phẫu tay xa `F0`–`F1`, chuẩn hóa 1-pass `Nearest` `1px gameplay` khớp `125 px`, `head_w spread <= 3px`, `bob` đối xứng `[0, 4, 0, -2, 0, 4, 0, -2]`; mẫu nghiệm thu review `7e460affb575121f`). Sẽ ghi chính thức vào danh mục workflow nhân vật hoàn thiện sau khi chốt đủ bộ tướng `Songoku`.
+
 <!-- SKILLS_ENTRIES_START -->
 ### [PIPE-001] T-rex — quy trình đã nghiệm thu v0.6.0
 - **Nghiệm thu**: Owner chốt cả 3 nhân vật ngày `2026-11-12T07:38:36.605057+00:00`. Receipt `assets/t_rex/owner_approval.json`; atlas SHA-256 `d78b3b750c51793de4eafe3532c2350fff52bce9d54ecd40b879fc6e44c1d1b7`. Receipt này thay nghiệm thu revision cũ; lịch sử JSON tại docs/releases/.

@@ -21,6 +21,10 @@ const MINI_STUN_DURATION_S := 3.0
 const STAMINA_PER_HIT := 20.0
 const PLAYER_MAX_HP := 1500.0
 const PLAYER_MAX_MANA := 100.0
+const PLAYER_MAX_ARMOR := 100.0
+const PLAYER_ARMOR_DMG_PER_HIT := 20.0
+const PLAYER_ARMOR_BREAK_STUN_S := 3.0
+const MONSTER_PROVOKED_DURATION_S := 5.0
 const PLAYER_LIGHT_DMG := 200.0
 const PLAYER_HEAVY_DMG := 320.0
 const PLAYER_POWER_DMG := 400.0
@@ -28,6 +32,7 @@ const PLAYER_MANA_GAIN := 20.0
 const ITEM_PICKUP_UNLOCK_S := 1.0
 const ITEM_PICKUP_RANGE_PX := 140.0
 const MELEE_STRIKE_EDGE_PX := 85.0
+const HERO_MELEE_STRIKE_EDGE_PX := 20.0
 const DRAGON_BALL_TOTAL_DROP_PCT := 30.0
 const DOUBLE_TAP_WINDOW_S := 0.42
 const Z_LAYER_FX := 38
@@ -86,6 +91,9 @@ var player_hp: float = PLAYER_MAX_HP
 var player_max_hp: float = PLAYER_MAX_HP
 var player_mana: float = 0.0
 var player_max_mana: float = PLAYER_MAX_MANA
+var player_armor: float = PLAYER_MAX_ARMOR
+var player_max_armor: float = PLAYER_MAX_ARMOR
+var player_armor_broken_timer_s: float = 0.0
 var player_dead: bool = false
 var player_immortal: bool = false
 var show_monster_ranges: bool = false
@@ -93,6 +101,10 @@ var player_respawn_timer_s: float = 0.0
 var _player_melee_pending: bool = false
 var _player_power_pending: bool = false
 var _player_power_target: Dictionary = {}
+var _player_combo_attack_info: Dictionary = {}
+var _player_hit_frames_fired: Array[int] = []
+var _player_gold_slash_pending: bool = false
+var _base_lock_notice_cd_s: float = 0.0
 
 var slots: Array[Dictionary] = []
 var boss_slot: Dictionary = {}
@@ -222,6 +234,9 @@ func start_field(spawn_player_immediately: bool = false) -> void:
 	player_max_hp = PLAYER_MAX_HP
 	player_mana = 0.0
 	player_max_mana = PLAYER_MAX_MANA
+	player_armor = PLAYER_MAX_ARMOR
+	player_max_armor = PLAYER_MAX_ARMOR
+	player_armor_broken_timer_s = 0.0
 	player_dead = false
 	player_respawn_timer_s = 0.0
 	_flying_rotation_idx = 0
@@ -308,6 +323,10 @@ func _create_and_spawn_slot(spec: Dictionary, is_flying: bool) -> void:
 		"orbit_dir": 1.0 if (slots.size() % 2 == 0) else -1.0,
 		"hit_flash_s": 0.0,
 		"hit_shake_s": 0.0,
+		"combat_state": "peace",
+		"aggro_target_id": "",
+		"committed_target_id": "",
+		"fled_attackers": [],
 	}
 	slots.append(slot)
 	_spawn_slot_monster(slot, cid)
@@ -369,6 +388,11 @@ func _spawn_slot_monster(slot: Dictionary, cid: String) -> void:
 	slot["has_heavy"] = bool(caps.get("has_heavy", false))
 	slot["has_power_up"] = bool(caps.get("has_power_up", false))
 	slot["light_clip"] = str(caps.get("light_clip", "attack_light"))
+	slot["combat_state"] = "combat" if is_boss else "peace"
+	slot["aggro_target_id"] = ""
+	slot["committed_target_id"] = ""
+	slot["fled_attackers"] = []
+	slot["provoked_timer_s"] = 0.0
 	slot["locomotion_clip"] = str(caps.get("locomotion_clip", "walk"))
 	slot["preserve_phase"] = bool(caps.get("preserve_idle_walk_phase", false))
 	slot["sideways_locked"] = bool(caps.get("sideways_locked", false))
@@ -419,6 +443,11 @@ func step(delta: float) -> void:
 		if player_respawn_timer_s <= 0.0:
 			respawn_player_at_left()
 	elif player_spawned and arena.player_node != null:
+		if player_armor_broken_timer_s > 0.0:
+			player_armor_broken_timer_s = maxf(0.0, player_armor_broken_timer_s - delta)
+			if player_armor_broken_timer_s <= 0.0:
+				player_armor = player_max_armor
+				player_state_changed.emit()
 		_step_auto_approach(delta)
 		_step_player_combat_hooks()
 
@@ -568,6 +597,10 @@ func spawn_boss_drum(forced_spawn_x: float = -999999.0) -> Dictionary:
 		"orbit_dir": -1.0,
 		"hit_flash_s": 0.0,
 		"hit_shake_s": 0.0,
+		"combat_state": "peace",
+		"aggro_target_id": "",
+		"committed_target_id": "",
+		"fled_attackers": [],
 	}
 	_spawn_slot_monster(boss_slot, "drum")
 	boss_has_spawned_once = true
@@ -710,6 +743,8 @@ func respawn_player_at_left() -> void:
 	player_dead = false
 	player_hp = player_max_hp
 	player_mana = 0.0
+	player_armor = player_max_armor
+	player_armor_broken_timer_s = 0.0
 	player_respawn_timer_s = 0.0
 	_local_hp_grace_s = 0.45
 	_local_mana_grace_s = 0.45
@@ -744,6 +779,117 @@ func _face_player_toward_x(target_x: float) -> void:
 	arena.player_facing_left = want_left
 	var sc := float(arena.char_scale)
 	pnode.scale = Vector2(-sc if want_left else sc, sc)
+
+
+func _get_player_melee_strike_edge_px() -> float:
+	if arena != null and _is_hero_songoku_node(arena.player_node):
+		return HERO_MELEE_STRIKE_EDGE_PX
+	return MELEE_STRIKE_EDGE_PX
+
+
+func _select_auto_battle_target() -> Dictionary:
+	refresh_pointer_valid()
+	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
+		var ps := _find_slot_by_id(pointer_slot_id)
+		if not ps.is_empty() and bool(ps.get("alive", false)) and not bool(ps.get("is_remote_player", false)) and is_instance_valid(ps.get("node")):
+			return ps
+	if arena == null or arena.player_node == null:
+		return {}
+	var p_core := _get_player_core_pos()
+	var best: Dictionary = {}
+	var best_score := 9999999.0
+	for s in _get_combat_slots():
+		if not bool(s.get("alive", false)) or bool(s.get("is_remote_player", false)) or not is_instance_valid(s.get("node")):
+			continue
+		var d := p_core.distance_to(_get_slot_core_pos(s))
+		# Utility priority: prefer already-combat monsters & Boss slightly over peaceful monsters
+		var prio_bonus := 0.0
+		if bool(s.get("is_boss", false)):
+			prio_bonus = -180.0
+		elif str(s.get("combat_state", "peace")) == "combat":
+			prio_bonus = -120.0
+		var score := d + prio_bonus
+		if score < best_score:
+			best_score = score
+			best = s
+	if not best.is_empty():
+		pointer_kind = "enemy"
+		pointer_slot_id = str(best.get("id", ""))
+		pointer_item_node = null
+		pointer_changed.emit(pointer_kind)
+	return best
+
+
+func step_hero_auto_battle(delta: float) -> Dictionary:
+	## v6 T7: Utility AI Auto-Battle controller for playable Hero (Son Goku / Heroes).
+	if not active or not player_spawned or player_dead or arena == null or arena.player_node == null:
+		return {"intent": "idle"}
+	var tgt := _select_auto_battle_target()
+	if tgt.is_empty():
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+		return {"intent": "idle"}
+	var p_node := arena.player_node as Node2D
+	var is_goku := _is_hero_songoku_node(p_node)
+	var p_rect := _get_player_body_rect()
+	var m_rect := _get_slot_body_rect(tgt)
+	var p_core := _get_player_core_pos()
+	var m_core := _get_slot_core_pos(tgt)
+	var edge_gap := _compute_slot_edge_gap(tgt)
+	var v_gap := maxf(0.0, maxf(p_rect.position.y - m_rect.end.y, m_rect.position.y - p_rect.end.y))
+	var melee_r := _get_player_melee_strike_edge_px()
+	var is_busy := bool(arena.call("_is_player_action_playing"))
+	var dec := UtilityAIControllerScript.evaluate_hero_auto({
+		"has_target": true,
+		"is_songoku": is_goku,
+		"is_ssj": bool(p_node.get("is_ssj")) if is_goku else true,
+		"is_busy": is_busy,
+		"player_pos": p_core,
+		"target_pos": m_core,
+		"edge_dist": edge_gap,
+		"v_gap": v_gap,
+		"melee_range_px": melee_r,
+		"stamina": float(p_node.get("stamina")) if is_goku else 0.0,
+		"mana": player_mana,
+		"has_power_up": bool(arena.call("_has_clip_name", p_node, &"power_up")),
+		"target_airborne": bool(tgt.get("is_flying", false)) or (m_core.y < p_core.y - 68.0),
+		"is_airborne_flight": bool(p_node.call(&"is_airborne_flight")) if is_goku else false,
+		"can_light_attack": bool(arena.call("can_player_light_attack")),
+	})
+	var intent := str(dec.get("intent", "idle"))
+	_face_player_toward_x(m_core.x)
+	if intent == "transform_ssj":
+		arena.call("_trigger_songoku_auto_transform_on_hit")
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+	elif intent == "teleport_static":
+		arena.call("_trigger_songoku_teleport", Vector2.ZERO)
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+	elif intent == "teleport_dash":
+		var fvec: Vector2 = dec.get("fly_vec", Vector2.RIGHT)
+		arena.call("_trigger_songoku_teleport", fvec)
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+	elif intent == "power_up":
+		request_player_power_up()
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+	elif intent == "attack_combo":
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+		request_player_primary_action()
+	elif intent == "fly_chase":
+		var fvec2: Vector2 = dec.get("fly_vec", Vector2(0.0, -1.0))
+		var mdir := int(dec.get("move_dir", 0))
+		var need_jump := bool(dec.get("jump", false))
+		var fly_y := -1 if fvec2.y < -0.15 else (1 if fvec2.y > 0.15 else 0)
+		arena.call("step_player_movement", delta, mdir, fly_y, need_jump, false, false, fvec2)
+	elif intent == "chase":
+		var cdir := int(dec.get("move_dir", 0))
+		var jreq := false
+		if cdir != 0 and not bool(arena.call("_can_cross_terrain_step", p_node.position.x, p_node.position.x + float(cdir) * 28.0, p_node.position.y, false)):
+			jreq = true
+		elif m_rect.end.y < p_rect.end.y - 24.0 and absf(m_core.x - p_core.x) < 160.0:
+			jreq = true
+		arena.call("step_player_movement", delta, cdir, 0, jreq, false, false, Vector2(float(cdir), 0.0))
+	else:
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+	return dec
 
 
 func _step_auto_approach(delta: float) -> void:
@@ -792,17 +938,48 @@ func _step_auto_approach(delta: float) -> void:
 		var p_core := _get_player_core_pos()
 		var edge_gap := _compute_slot_edge_gap(tgt)
 		var v_gap := maxf(0.0, maxf(p_rect.position.y - m_rect.end.y, m_rect.position.y - p_rect.end.y))
-		if edge_gap <= MELEE_STRIKE_EDGE_PX * 0.72 and v_gap <= 85.0:
+		var melee_r := _get_player_melee_strike_edge_px()
+		var approach_stop := minf(melee_r - 2.0, melee_r * 0.90) if _is_hero_songoku_node(p_node) else (melee_r * 0.72)
+		var v_stop := 68.0 if _is_hero_songoku_node(p_node) else 85.0
+		if edge_gap <= approach_stop and v_gap <= v_stop:
 			_face_player_toward_x(m_core.x)
 			arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 			if bool(arena.call("can_player_light_attack")):
 				cancel_auto_approach()
-				if bool(arena.call("_request_player_action", "attack_light")):
+				if _is_hero_songoku_node(arena.player_node):
+					if bool(arena.player_node.call(&"can_attack")):
+						var ci: Dictionary = arena.player_node.call(&"pop_next_combo_attack")
+						var cname := str(ci.get("clip", "attack_light"))
+						if bool(arena.call("_request_player_action", cname)):
+							_player_combo_attack_info = ci
+							_player_hit_frames_fired.clear()
+							_player_melee_pending = true
+							_player_gold_slash_pending = bool(ci.get("has_gold_slash_60", false))
+				elif bool(arena.call("_request_player_action", "attack_light")):
 					_player_melee_pending = true
 			return
 
 		var p_entry: Dictionary = arena.call("_find_character_entry_ro", arena.active_character_id)
 		var is_flying := bool(arena.call("_is_flying_entry", p_entry))
+		var is_goku := _is_hero_songoku_node(p_node)
+		var target_airborne := bool(tgt.get("is_flying", false)) or (m_core.y < p_core.y - 60.0)
+		if is_goku and target_airborne:
+			# v6 T6: Touch/normal attack on airborne monster automatically transforms (if Base), jumps & flies up (`fly_aura`)!
+			if not bool(p_node.get("is_ssj")):
+				arena.call("_trigger_songoku_auto_transform_on_hit")
+				arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+				return
+			var to_air := m_core - p_core
+			var air_vec := to_air.normalized() if to_air.length() > 1.0 else Vector2(0.0, -1.0)
+			var air_dir := -1 if to_air.x < -8.0 else (1 if to_air.x > 8.0 else 0)
+			var in_flight := bool(p_node.call(&"is_airborne_flight"))
+			if not in_flight:
+				var launch_vec := Vector2(clampf(to_air.x / 140.0, -0.45, 0.45), -0.92).normalized()
+				arena.call("step_player_movement", delta, air_dir, -1, true, false, false, launch_vec)
+			else:
+				var fly_y := -1 if air_vec.y < -0.15 else (1 if air_vec.y > 0.15 else 0)
+				arena.call("step_player_movement", delta, air_dir, fly_y, false, false, false, air_vec)
+			return
 		if is_flying:
 			var to_vec := m_core - p_core
 			var avec := to_vec.normalized() if to_vec.length() > 1.0 else Vector2.ZERO
@@ -813,7 +990,7 @@ func _step_auto_approach(delta: float) -> void:
 		var dx: float = m_core.x - p_core.x
 		var move_dir := -1 if dx < -8.0 else (1 if dx > 8.0 else 0)
 		var jump_req := false
-		if absf(dx) <= 36.0 and v_gap > 85.0:
+		if absf(dx) <= 36.0 and v_gap > v_stop:
 			if v_gap <= 190.0:
 				jump_req = true
 			else:
@@ -829,20 +1006,68 @@ func _step_auto_approach(delta: float) -> void:
 		arena.call("step_player_movement", delta, move_dir, 0, jump_req, false, false, Vector2.ZERO)
 
 
+func _is_hero_songoku_node(node: Node) -> bool:
+	return node != null and node.has_method(&"is_hero_songoku") and bool(node.call(&"is_hero_songoku"))
+
+
+func get_pointed_or_nearest_enemy_pos() -> Dictionary:
+	refresh_pointer_valid()
+	var tgt := _resolve_player_attack_target(true)
+	if tgt.is_empty() or not bool(tgt.get("alive", false)):
+		return {"valid": false}
+	var mnode := tgt.get("node") as Node2D
+	if mnode == null or not is_instance_valid(mnode):
+		return {"valid": false}
+	return {
+		"valid": true,
+		"pos": mnode.position,
+		"core": _get_slot_core_pos(tgt),
+		"slot_id": str(tgt.get("id", "")),
+	}
+
+
 func _step_player_combat_hooks() -> void:
 	var pspr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
 	if pspr == null:
 		return
 	var queued_act := String(arena.player_node.get_meta(&"_arena_queued_action", ""))
+	var is_goku := _is_hero_songoku_node(arena.player_node)
 	if _player_melee_pending:
 		var anim_str := String(pspr.animation)
-		var is_melee_anim := (anim_str == "attack_light" or anim_str == "attack_heavy" or anim_str == "attack_nomal")
-		var melee_queued := (queued_act == "attack_light" or queued_act == "attack_heavy" or queued_act == "attack_nomal")
-		if is_melee_anim and pspr.frame >= 2:
-			_player_melee_pending = false
-			_execute_player_melee_hit("heavy" if anim_str == "attack_heavy" else "melee")
-		elif not is_melee_anim and not melee_queued:
-			_player_melee_pending = false
+		var is_melee_anim := (anim_str == "attack_light" or anim_str == "attack_heavy" or anim_str == "attack_nomal" or anim_str.begins_with("attack_"))
+		var melee_queued := (queued_act == "attack_light" or queued_act == "attack_heavy" or queued_act == "attack_nomal" or queued_act.begins_with("attack_"))
+		if is_goku and not _player_combo_attack_info.is_empty():
+			var expected_clip := str(_player_combo_attack_info.get("clip", ""))
+			if anim_str == expected_clip and pspr.is_playing():
+				var hit_frames: Array = _player_combo_attack_info.get("hit_frames", [2])
+				var is_heavy := bool(_player_combo_attack_info.get("is_heavy", false))
+				var hk := "heavy" if is_heavy else "melee"
+				var stamina_per_frame_hit := STAMINA_PER_HIT / maxf(1.0, float(hit_frames.size()))
+				for hf_v in hit_frames:
+					var hf := int(hf_v)
+					if pspr.frame >= hf and not _player_hit_frames_fired.has(hf):
+						_player_hit_frames_fired.append(hf)
+						var rolled: Dictionary = arena.player_node.call(&"roll_strike_damage", is_heavy, false)
+						_execute_player_melee_hit(hk, float(rolled.get("damage", 10.0)), bool(rolled.get("is_crit", false)), stamina_per_frame_hit)
+				if _player_hit_frames_fired.size() >= hit_frames.size():
+					_player_melee_pending = false
+			elif anim_str != expected_clip and queued_act != expected_clip:
+				_player_melee_pending = false
+				_player_hit_frames_fired.clear()
+		else:
+			if is_melee_anim and pspr.frame >= 2:
+				_player_melee_pending = false
+				_execute_player_melee_hit("heavy" if anim_str == "attack_heavy" else "melee")
+			elif not is_melee_anim and not melee_queued:
+				_player_melee_pending = false
+	# Special penultimate golden streak frame (#13) of attack_6 (file 17) -> 60 damage!
+	if _player_gold_slash_pending:
+		var anim_g := String(pspr.animation)
+		if anim_g == "attack_6" and pspr.frame >= 13:
+			_player_gold_slash_pending = false
+			_execute_player_melee_hit("heavy", 60.0, true)
+		elif anim_g != "attack_6" and queued_act != "attack_6":
+			_player_gold_slash_pending = false
 	if _player_power_pending:
 		if String(pspr.animation) == "power_up" and pspr.frame >= 10:
 			_player_power_pending = false
@@ -871,6 +1096,24 @@ func request_player_primary_action() -> bool:
 		if arena.wish_panel != null:
 			arena.wish_panel.visible = true
 		return true
+
+	# Base form of Son Goku: interactive movement only, cannot attack until transformed to SSJ1!
+	var is_goku := _is_hero_songoku_node(arena.player_node)
+	if is_goku and not bool(arena.player_node.call(&"can_attack")):
+		# Still allow picking up nearby dropped items
+		for item_n in arena._dropped_item_nodes:
+			if is_instance_valid(item_n) and _can_pickup_item(item_n) and arena.player_node.position.distance_to(item_n.position) <= ITEM_PICKUP_RANGE_PX:
+				cancel_auto_approach()
+				return _collect_single_item(item_n)
+		floating_texts.append({
+			"pos": arena.player_node.position + Vector2(0.0, -138.0),
+			"text": "Biến SSJ1 để tấn công!",
+			"color": Color(1.0, 0.88, 0.30, 1.0),
+			"elapsed_s": 0.0,
+			"duration_s": 1.0,
+		})
+		return false
+
 	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
 		var pointed_tgt := _find_slot_by_id(pointer_slot_id)
 		if not pointed_tgt.is_empty() and bool(pointed_tgt.get("alive", false)) and is_instance_valid(pointed_tgt.get("node")):
@@ -879,13 +1122,15 @@ func request_player_primary_action() -> bool:
 			var m_core := _get_slot_core_pos(pointed_tgt)
 			var edge_gap := _compute_slot_edge_gap(pointed_tgt)
 			var v_gap := maxf(0.0, maxf(p_rect.position.y - m_rect.end.y, m_rect.position.y - p_rect.end.y))
-			if edge_gap > MELEE_STRIKE_EDGE_PX or v_gap > 90.0:
-				# Must move closer to pointed target before normal melee attack!
+			var melee_r := _get_player_melee_strike_edge_px()
+			var max_v := 68.0 if is_goku else 90.0
+			if edge_gap >= melee_r or v_gap > max_v:
+				# Must move closer (or jump & fly up for airborne targets!) before normal melee attack!
 				auto_approach_active = true
 				_auto_approach_kind = "enemy"
 				_auto_approach_slot_id = pointer_slot_id
 				_auto_approach_item = null
-				_auto_approach_timeout_s = 6.0
+				_auto_approach_timeout_s = 8.0
 				return true
 			cancel_auto_approach()
 			_face_player_toward_x(m_core.x)
@@ -896,6 +1141,23 @@ func request_player_primary_action() -> bool:
 			if is_instance_valid(item_n) and _can_pickup_item(item_n) and arena.player_node.position.distance_to(item_n.position) <= ITEM_PICKUP_RANGE_PX:
 				cancel_auto_approach()
 				return _collect_single_item(item_n)
+
+	if is_goku:
+		if not bool(arena.call("can_player_light_attack")):
+			return false
+		var was_peace := not bool(arena.player_node.call(&"is_in_combat"))
+		var combo_info: Dictionary = arena.player_node.call(&"pop_next_combo_attack")
+		if was_peace and arena.has_method(&"trigger_combat_state_banner"):
+			arena.call(&"trigger_combat_state_banner")
+		var clip_name := str(combo_info.get("clip", "attack_light"))
+		if bool(arena.call("_request_player_action", clip_name)):
+			_player_combo_attack_info = combo_info
+			_player_hit_frames_fired.clear()
+			_player_melee_pending = true
+			_player_gold_slash_pending = bool(combo_info.get("has_gold_slash_60", false))
+			return true
+		return false
+
 	if bool(arena.call("_request_player_action", "attack_light")):
 		_player_melee_pending = true
 		return true
@@ -950,7 +1212,7 @@ func _compute_contact_edge_point(rect_a: Rect2, rect_b: Rect2) -> Vector2:
 	return Vector2(hx, hy)
 
 
-func _execute_player_melee_hit(hit_kind: String = "melee") -> void:
+func _execute_player_melee_hit(hit_kind: String = "melee", damage_override: float = -1.0, is_crit_gold: bool = false, stamina_dmg_override: float = -1.0) -> void:
 	var tgt := _resolve_player_attack_target(false)
 	if tgt.is_empty():
 		return
@@ -958,12 +1220,14 @@ func _execute_player_melee_hit(hit_kind: String = "melee") -> void:
 	var m_rect := _get_slot_body_rect(tgt)
 	var edge := _compute_slot_edge_gap(tgt)
 	var v_gap := maxf(0.0, maxf(p_rect.position.y - m_rect.end.y, m_rect.position.y - p_rect.end.y))
-	if edge > MELEE_STRIKE_EDGE_PX or v_gap > 90.0:
+	var melee_r := _get_player_melee_strike_edge_px()
+	if edge >= melee_r or v_gap > 90.0:
 		return
 	var p_core := _get_player_core_pos()
 	var hit_pt: Vector2 = arena.call("compute_nearest_silhouette_point", tgt["node"], str(tgt["character_id"]), float(tgt["scale_val"]), p_core)
 	var hit_dir := (hit_pt - p_core).normalized() if hit_pt.distance_to(p_core) > 1.0 else Vector2(-1.0 if arena.player_node.scale.x < 0.0 else 1.0, 0.0)
-	var dmg := PLAYER_HEAVY_DMG if hit_kind == "heavy" else PLAYER_LIGHT_DMG
+	var dmg := damage_override if damage_override > 0.0 else (PLAYER_HEAVY_DMG if hit_kind == "heavy" else PLAYER_LIGHT_DMG)
+	var stam_dmg := stamina_dmg_override if stamina_dmg_override >= 0.0 else STAMINA_PER_HIT
 	var is_remote_p := bool(tgt.get("is_remote_player", false))
 	var tgt_id := str(tgt.get("user_id", tgt.get("id", ""))) if is_remote_p else str(tgt.get("id", ""))
 	_local_mana_grace_s = 0.45
@@ -975,7 +1239,15 @@ func _execute_player_melee_hit(hit_kind: String = "melee") -> void:
 		player_mana = minf(player_max_mana, player_mana + PLAYER_MANA_GAIN)
 		player_state_changed.emit()
 		return
-	apply_damage_to_slot(tgt, dmg, STAMINA_PER_HIT, hit_pt, hit_kind, false, hit_dir)
+	apply_damage_to_slot(tgt, dmg, stam_dmg, hit_pt, hit_kind, false, hit_dir)
+	if is_crit_gold:
+		floating_texts.append({
+			"pos": hit_pt + Vector2(0.0, -34.0),
+			"text": "CRIT %d!" % int(round(dmg)),
+			"color": Color(1.0, 0.90, 0.18, 1.0),
+			"elapsed_s": 0.0,
+			"duration_s": 0.85,
+		})
 	player_mana = minf(player_max_mana, player_mana + PLAYER_MANA_GAIN)
 	player_state_changed.emit()
 
@@ -1130,6 +1402,11 @@ func _trigger_slot_single_hit_anim(slot: Dictionary) -> void:
 	var mnode := slot.get("node") as Node2D
 	if mnode == null or not is_instance_valid(mnode):
 		return
+	if mnode.get("_turn_pending") != null:
+		mnode.set("_turn_pending", false)
+		mnode.set("_turn_clip", &"")
+		if mnode.has_meta("_arena_turn_resume_clip"):
+			mnode.set_meta("_arena_turn_resume_clip", "")
 	var spr := mnode.get_node_or_null("Sprite") as AnimatedSprite2D
 	if spr == null or spr.sprite_frames == null or not spr.sprite_frames.has_animation(&"hit"):
 		return
@@ -1141,7 +1418,7 @@ func _trigger_slot_single_hit_anim(slot: Dictionary) -> void:
 	slot["hit_anim_timer_s"] = maxf(0.18, hit_dur)
 
 
-func apply_damage_to_slot(slot: Dictionary, dmg: float, stamina_dmg: float = STAMINA_PER_HIT, hit_pos: Vector2 = Vector2(-99999.0, -99999.0), hit_kind: String = "melee", spawn_power_explosion: bool = false, impact_dir: Vector2 = Vector2.RIGHT) -> void:
+func apply_damage_to_slot(slot: Dictionary, dmg: float, stamina_dmg: float = STAMINA_PER_HIT, hit_pos: Vector2 = Vector2(-99999.0, -99999.0), hit_kind: String = "melee", spawn_power_explosion: bool = false, impact_dir: Vector2 = Vector2.RIGHT, attacker_id: String = "local") -> void:
 	if slot.is_empty() or not bool(slot.get("alive", false)):
 		return
 	if network_authoritative and bool(slot.get("is_remote_player", false)):
@@ -1157,6 +1434,11 @@ func apply_damage_to_slot(slot: Dictionary, dmg: float, stamina_dmg: float = STA
 	var dmg_col := Color(0.40, 0.94, 1.0, 1.0) if hit_kind == "skill" else (Color(1.0, 0.56, 0.22, 1.0) if hit_kind == "heavy" else Color(1.0, 0.92, 0.28, 1.0))
 	slot["hit_flash_s"] = 0.16
 	slot["hit_shake_s"] = 0.14 * HIT_SHAKE_SCALE_MUL
+	slot["provoked_timer_s"] = MONSTER_PROVOKED_DURATION_S
+	# v6 T8: Attacking a monster activates its Combat state (stays Combat until KO; Boss is always Combat)
+	slot["combat_state"] = "combat"
+	if not attacker_id.is_empty():
+		slot["aggro_target_id"] = attacker_id
 	if spawn_power_explosion:
 		_spawn_powerup_explosion(fx_pos, DEFAULT_EXPLOSION_SCALE)
 
@@ -1199,27 +1481,63 @@ func set_player_immortal(enabled: bool) -> void:
 func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99999.0), spawn_power_explosion: bool = false, hit_kind: String = "player_hit", impact_dir: Vector2 = Vector2.RIGHT, attacker_cid: String = "") -> void:
 	if not player_spawned or player_dead:
 		return
+	# Invulnerable during `transform_ssj` animation through completion (Owner rule 2026-11-20)!
+	if arena != null and arena.player_node != null and arena.player_node.has_method(&"is_transform_invulnerable") and bool(arena.player_node.call(&"is_transform_invulnerable")):
+		return
 	if player_immortal:
 		return
 	var fx_pos := hit_pos if hit_pos.x > -90000.0 else _get_player_core_pos()
 	player_hit_flash_s = 0.19
 	player_hit_shake_s = 0.09 * HIT_SHAKE_SCALE_MUL
-	_spawn_hit_impact_fx(fx_pos, hit_kind, "-%d" % int(round(dmg)), Color(1.0, 0.28, 0.28, 1.0), impact_dir, attacker_cid)
+	var armor_broke_now := false
+	if player_armor_broken_timer_s <= 0.0 and player_armor > 0.0:
+		var armor_dmg := PLAYER_ARMOR_DMG_PER_HIT
+		if hit_kind == "heavy" or hit_kind == "skill":
+			armor_dmg = 35.0
+		elif hit_kind == "armor_break" or hit_kind == "stun":
+			armor_dmg = player_armor
+		player_armor = maxf(0.0, player_armor - armor_dmg)
+		if player_armor <= 0.0:
+			armor_broke_now = true
+			player_armor_broken_timer_s = PLAYER_ARMOR_BREAK_STUN_S
+	var dmg_txt := "-%d VỠ GIÁP!" % int(round(dmg)) if armor_broke_now else "-%d" % int(round(dmg))
+	var dmg_col := Color(1.0, 0.68, 0.15, 1.0) if armor_broke_now else Color(1.0, 0.28, 0.28, 1.0)
+	_spawn_hit_impact_fx(fx_pos, hit_kind, dmg_txt, dmg_col, impact_dir, attacker_cid)
 	if spawn_power_explosion:
 		_spawn_powerup_explosion(fx_pos, DEFAULT_EXPLOSION_SCALE)
+	# Any incoming attack transitions Son Goku Peace -> Combat AND auto-activates SSJ1 if currently Base (Owner v6 T3)!
+	var auto_transformed_now := false
+	if arena != null and arena.player_node != null and _is_hero_songoku_node(arena.player_node):
+		var entered_combat := bool(arena.player_node.call(&"enter_combat"))
+		if entered_combat:
+			if arena.has_method(&"trigger_combat_state_banner"):
+				arena.call(&"trigger_combat_state_banner")
+		if not bool(arena.player_node.get("is_ssj")):
+			if arena.has_method(&"_trigger_songoku_auto_transform_on_hit"):
+				arena.call(&"_trigger_songoku_auto_transform_on_hit")
+				auto_transformed_now = true
+		elif entered_combat and not armor_broke_now and not bool(arena.call("_is_player_action_playing")):
+			arena.call("_play_fighter_clip", arena.player_node, "combat_enter")
 	player_hp = maxf(0.0, player_hp - dmg)
 	_local_hp_grace_s = 0.45
-	# Owner rule: Player does NOT suffer HIT animation/interrupt
 	if player_hp <= 0.0:
 		player_dead = true
 		player_respawn_timer_s = RESPAWN_PLAYER_DELAY_S
 		_player_melee_pending = false
+		_player_gold_slash_pending = false
 		_player_power_pending = false
 		cancel_auto_approach()
 		if arena.player_node != null:
+			if arena.player_node.has_method(&"reset_combo"):
+				arena.player_node.call(&"reset_combo")
 			if arena.player_node.has_meta(&"_arena_queued_action"):
 				arena.player_node.remove_meta(&"_arena_queued_action")
 			arena.call("_play_fighter_clip", arena.player_node, "ko")
+	elif armor_broke_now and not auto_transformed_now:
+		# v6 T5: Armor-break HIT reaction (`08`) triggers STRICTLY ONCE when armor transitions >0 -> 0!
+		if arena != null and arena.player_node != null and _is_hero_songoku_node(arena.player_node):
+			arena.player_node.set("armor_hit_timer_s", 0.42)
+			arena.call("_play_fighter_clip", arena.player_node, "hit")
 	player_pve_damage_emitted.emit(dmg, player_hp, not player_dead)
 	player_state_changed.emit()
 
@@ -1240,6 +1558,11 @@ func _kill_slot_monster(slot: Dictionary) -> void:
 	var mnode := slot.get("node") as Node2D
 	var drop_pos := Vector2(float(slot["x_home"]), float(arena.call("_ground_y_at", float(slot["x_home"]))))
 	if mnode != null and is_instance_valid(mnode):
+		if mnode.get("_turn_pending") != null:
+			mnode.set("_turn_pending", false)
+			mnode.set("_turn_clip", &"")
+			if mnode.has_meta("_arena_turn_resume_clip"):
+				mnode.set_meta("_arena_turn_resume_clip", "")
 		drop_pos = mnode.position
 		arena.call("_play_fighter_clip", mnode, "ko")
 	roll_and_spawn_dragon_ball(drop_pos, -1.0, -1.0, is_boss)
@@ -1361,6 +1684,8 @@ func _step_slot(slot: Dictionary, delta: float) -> void:
 	slot["cooldown_s"] = maxf(0.0, float(slot["cooldown_s"]) - delta)
 	slot["turn_boost_s"] = maxf(0.0, float(slot["turn_boost_s"]) - delta)
 	slot["turn_lock_s"] = maxf(0.0, float(slot["turn_lock_s"]) - delta)
+	if float(slot.get("provoked_timer_s", 0.0)) > 0.0:
+		slot["provoked_timer_s"] = maxf(0.0, float(slot.get("provoked_timer_s", 0.0)) - delta)
 	if float(slot["action_timer_s"]) > 0.0:
 		slot["action_timer_s"] = maxf(0.0, float(slot["action_timer_s"]) - delta)
 	var spr := mnode.get_node_or_null("Sprite") as AnimatedSprite2D
@@ -1372,6 +1697,13 @@ func _step_slot(slot: Dictionary, delta: float) -> void:
 		if expired:
 			slot["action_clip"] = ""
 			slot["action_timer_s"] = 0.0
+			var comm_id := str(slot.get("committed_target_id", ""))
+			slot["committed_target_id"] = ""
+			var fled_arr: Array = slot.get("fled_attackers", [])
+			if not comm_id.is_empty() and fled_arr.has(comm_id):
+				fled_arr.erase(comm_id)
+				if str(slot.get("aggro_target_id", "")) == comm_id:
+					slot["aggro_target_id"] = ""
 
 	if turn_pending or not str(slot["action_clip"]).is_empty():
 		_step_slot_vertical(slot, delta)
@@ -1429,8 +1761,8 @@ func _step_slot(slot: Dictionary, delta: float) -> void:
 			_step_flying_orbit(slot, delta, true)
 		return
 	else:
-		# Ground monster: outer aggro >= 200px uses power_up (100 dmg); mid-range 50..200px chases player!
-		if can_counter_attack and edge_gap >= 200.0 and bool(slot["has_power_up"]):
+		# Ground monster: outer aggro >= 200px OR player hovering directly overhead uses power_up anti-air!
+		if can_counter_attack and (edge_gap >= 200.0 or dy_to_player > 110.0) and bool(slot["has_power_up"]):
 			if float(slot["cooldown_s"]) <= 0.0:
 				_start_slot_attack(slot, "power_up", 1.45)
 			else:
@@ -1554,6 +1886,7 @@ func _start_slot_attack(slot: Dictionary, clip: String, cd_s: float) -> void:
 		slot["power_released"] = false
 		slot["melee_hit_done"] = false
 		slot["teleport_relocated"] = false
+		slot["committed_target_id"] = str(slot.get("aggro_target_id", "local"))
 
 
 func _step_slot_action_effects(slot: Dictionary, spr: AnimatedSprite2D, force_resolve: bool = false) -> void:
@@ -1873,16 +2206,52 @@ func _step_slot_vertical(slot: Dictionary, delta: float) -> void:
 		slot["vy"] = 0.0
 
 
+func notify_attacker_fled(attacker_id: String) -> void:
+	## v6 T8 Handoff Rule:
+	## If another player (`attacker_id`) provoked a monster and fled/switched scenes:
+	## - If the monster already committed an attack turn against `attacker_id`, it finishes that 1 turn first.
+	## - Once finished (or immediately if idle), `aggro_target_id` clears while `combat_state` stays "combat",
+	##   so any Hero walking past that already-provoked monster is automatically attacked!
+	if attacker_id.is_empty():
+		return
+	for s in slots:
+		if not bool(s.get("alive", false)) or str(s.get("combat_state", "peace")) != "combat":
+			continue
+		if str(s.get("aggro_target_id", "")) != attacker_id and str(s.get("committed_target_id", "")) != attacker_id:
+			continue
+		var in_committed_turn := (not str(s.get("action_clip", "")).is_empty()) and (str(s.get("committed_target_id", "")) == attacker_id)
+		if in_committed_turn:
+			var fled_arr: Array = s.get("fled_attackers", [])
+			if not fled_arr.has(attacker_id):
+				fled_arr.append(attacker_id)
+				s["fled_attackers"] = fled_arr
+		else:
+			if str(s.get("aggro_target_id", "")) == attacker_id:
+				s["aggro_target_id"] = ""
+
+
 func _is_player_in_slot_aggro(slot: Dictionary) -> bool:
 	if not player_spawned or player_dead or arena.player_node == null:
 		return false
+	# v6 T8: Normal monsters start in "peace" and NEVER attack unless provoked into "combat" (Boss is always "combat")!
+	var is_boss := bool(slot.get("is_boss", false))
+	if not is_boss and str(slot.get("combat_state", "peace")) != "combat":
+		return false
+	# If monster is currently locked onto a different active attacker (who hasn't finished fleeing yet), hold off on local hero
+	var aggro_id := str(slot.get("aggro_target_id", ""))
+	if not is_boss and not aggro_id.is_empty() and aggro_id != "local":
+		return false
 	var px: float = arena.player_node.position.x
 	var py: float = arena.player_node.position.y
+	var mnode := slot.get("node") as Node2D
+	if mnode != null and is_instance_valid(mnode) and float(slot.get("provoked_timer_s", 0.0)) > 0.0:
+		if absf(px - mnode.position.x) <= 920.0:
+			return true
 	if px < float(slot["zone_min_x"]) or px > float(slot["zone_max_x"]):
 		return false
 	if bool(slot["is_flying"]):
 		return py <= float(arena.call("_ground_y_at", px)) + 40.0
-	var my := (slot["node"] as Node2D).position.y
+	var my := mnode.position.y if (mnode != null and is_instance_valid(mnode)) else float(slot.get("y_home", 840.0))
 	return absf(py - my) <= 220.0
 
 
@@ -2104,17 +2473,51 @@ func select_target_at_world_pos(world_pos: Vector2) -> Dictionary:
 	return {"selected": true, "kind": pointer_kind, "slot_id": pointer_slot_id, "double_tap_attack": auto_attacked}
 
 
+func get_active_target_pointer_info() -> Dictionary:
+	refresh_pointer_valid()
+	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
+		var ps := _find_slot_by_id(pointer_slot_id)
+		if not ps.is_empty() and bool(ps["alive"]) and is_instance_valid(ps["node"]):
+			var m_rect := _get_slot_body_rect(ps)
+			var e_cx := _get_slot_core_pos(ps).x
+			var e_top := m_rect.position.y - 14.0
+			return {
+				"visible": true,
+				"persistent": true,
+				"kind": "enemy",
+				"slot_id": pointer_slot_id,
+				"tip_pos": Vector2(e_cx, e_top - 48.0),
+			}
+	elif pointer_kind == "item" and pointer_item_node != null and is_instance_valid(pointer_item_node):
+		return {
+			"visible": true,
+			"persistent": true,
+			"kind": "item",
+			"slot_id": "",
+			"tip_pos": pointer_item_node.position + Vector2(0.0, -44.0),
+		}
+	elif pointer_kind == "npc" and arena != null and arena.shenron_summon != null and arena.shenron_summon.active:
+		return {
+			"visible": true,
+			"persistent": true,
+			"kind": "npc",
+			"slot_id": "shenron",
+			"tip_pos": arena.shenron_summon.position + Vector2(960.0, 260.0),
+		}
+	return {"visible": false, "persistent": false, "kind": "", "slot_id": "", "tip_pos": Vector2.ZERO}
+
+
 func draw_overlays(canvas: CanvasItem) -> void:
 	if not active:
 		return
 	if show_monster_ranges:
 		_draw_monster_range_overlays(canvas)
-	# 1. Player overhead Green HP + Blue Mana bars (+ display name in Alpha session)
+	# 1. Player overhead Green HP + Blue Mana + White Armor bars (+ display name in Alpha session)
 	if player_spawned and not player_dead and arena.player_node != null:
 		var p_rect := _get_player_body_rect()
 		var p_top: float = p_rect.position.y - 18.0
 		var p_cx: float = _get_player_core_pos().x
-		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false)
+		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0)
 
 	# 2. All alive monsters + Boss Drum + Remote Players (Vinh / Thái)
 	for s in _get_combat_slots():
@@ -2139,16 +2542,20 @@ func draw_overlays(canvas: CanvasItem) -> void:
 		var stunned := float(s["stun_timer_s"]) > 0.0
 		var is_boss := bool(s.get("is_boss", false))
 		var lbl := "Drum" if is_boss else str(s["character_id"])
-		OverheadBarsDrawScript.draw_enemy_bars(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, lbl, is_boss)
+		var m_cstate := "combat" if is_boss else str(s.get("combat_state", "peace"))
+		OverheadBarsDrawScript.draw_enemy_bars(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, lbl, is_boss, m_cstate)
 
-	# 3. Target Pointer UI: transient Calligraphic Red "X" (only shown during touch/select interaction, then disappears)
+	# 3. Persistent Target Pointer UI (touch selection + TRỎ/Tab button) + brief Calligraphic Red "X" flash on enemy lock!
 	var x_prog := clampf(pointer_x_anim_s / maxf(0.01, pointer_x_anim_dur_s), 0.0, 1.0)
 	var x_boost := 1.0 + (pointer_x_double_tap_pulse_s / 0.35) * 0.35
 	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
-		if pointer_x_visible_s > 0.0:
-			var ps := _find_slot_by_id(pointer_slot_id)
-			if not ps.is_empty() and bool(ps["alive"]) and is_instance_valid(ps["node"]):
-				var s_core := _get_slot_core_pos(ps)
+		var ps := _find_slot_by_id(pointer_slot_id)
+		if not ps.is_empty() and bool(ps["alive"]) and is_instance_valid(ps["node"]):
+			var m_rect := _get_slot_body_rect(ps)
+			var s_core := _get_slot_core_pos(ps)
+			var tip_pos := Vector2(s_core.x, m_rect.position.y - 62.0)
+			OverheadBarsDrawScript.draw_target_pointer(canvas, tip_pos, _sim_time_s, "enemy")
+			if pointer_x_visible_s > 0.0:
 				var boost := x_boost * (1.15 if pointer_x_double_tap_pulse_s > 0.0 else 1.0)
 				var x_fade := clampf(pointer_x_visible_s / 0.22, 0.0, 1.0)
 				OverheadBarsDrawScript.draw_calligraphic_red_x(canvas, s_core, x_prog, _sim_time_s, boost, x_fade)

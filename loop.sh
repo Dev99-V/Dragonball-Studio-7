@@ -307,7 +307,18 @@ shell = Path(sys.argv[1])
 html = shell.read_text(encoding="utf-8")
 needle = "#canvas {\n\tdisplay: block;\n}"
 assert needle in html, "Godot Web canvas CSS marker missing"
-shell.write_text(html.replace(needle, "#canvas {\n\tdisplay: block;\n\timage-rendering: pixelated;\n}", 1), encoding="utf-8")
+html = html.replace(needle, "#canvas {\n\tdisplay: block;\n\timage-rendering: pixelated;\n}", 1)
+# Disable stale PWA Service Worker caching on localhost/127.0.0.1 so F5 always loads the newest index.pck immediately!
+sw_guard = """<script>
+if ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
+  if (window.caches && caches.keys) { caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(() => {}); }
+}
+</script>
+</head>"""
+if "navigator.serviceWorker.getRegistrations()" not in html and "</head>" in html:
+    html = html.replace("</head>", sw_guard, 1)
+shell.write_text(html, encoding="utf-8")
 PY
     echo "[OK] Godot Web export sẵn sàng tại build/web/index.html"
     ;;

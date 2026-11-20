@@ -153,10 +153,15 @@ func _should_enter_dev_sandbox_bypass() -> bool:
 			return true
 	if OS.get_name() == "Web":
 		var host_v: Variant = JavaScriptBridge.eval("window.location.hostname || ''")
+		var path_v: Variant = JavaScriptBridge.eval("window.location.pathname || ''")
 		var search_v: Variant = JavaScriptBridge.eval("window.location.search || ''")
+		var embedded_v: Variant = JavaScriptBridge.eval("window.self !== window.top")
 		var host := str(host_v) if host_v != null else ""
+		var path := str(path_v) if path_v != null else ""
 		var search := str(search_v) if search_v != null else ""
-		if (host == "localhost" or host == "127.0.0.1") and search.contains("dev_sandbox=1"):
+		var embedded := bool(embedded_v) if embedded_v != null else false
+		var is_local_preview_host := (host == "localhost" or host == "127.0.0.1" or host.ends_with(".app.github.dev"))
+		if is_local_preview_host and (search.contains("dev_sandbox=1") or (embedded and path.begins_with("/godot-web/"))):
 			return true
 	return false
 

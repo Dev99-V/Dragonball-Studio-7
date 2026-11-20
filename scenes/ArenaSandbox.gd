@@ -122,6 +122,7 @@ var enemy_vy: float = 0.0
 var player_facing_left: bool = false
 var enemy_facing_left: bool = true
 var utility_ai_enabled: bool = false
+var hero_auto_battle_enabled: bool = false
 var ai_controller = UtilityAIControllerScript.new()
 var ai_last_decision: Dictionary = {}
 var _ai_action_clip: String = ""
@@ -175,8 +176,15 @@ var _ruler_drag_start_screen: Vector2 = Vector2.ZERO
 var _ruler_awaiting_b: bool = false
 var _t_key_was_down: bool = false
 var _tab_key_was_down: bool = false
+var _v_key_was_down: bool = false
+var _f_key_was_down: bool = false
 var _last_touch_tap_msec: int = -10000
 var _flight_vel: Vector2 = Vector2.ZERO
+var combat_banner_label: Label = null
+var _combat_banner_timer_s: float = 0.0
+const COMBAT_BANNER_DURATION_S: float = 0.55
+
+const DEFAULT_HERO_ID: String = "songoku_hero_demo"
 
 var field_mode_enabled: bool = false
 var hud_ui_hidden: bool = false
@@ -185,6 +193,8 @@ var show_monster_ranges_enabled: bool = false
 var field_manager = null
 var _field_overlay_node: Node2D = null
 var mobile_pad = null
+var hero_avatar_panel: PanelContainer = null
+var hero_avatar_rect: TextureRect = null
 var pixel_perfect_button: Button = null
 var toggle_hero_button: Button = null
 var pad_settings_button: Button = null
@@ -213,7 +223,7 @@ func _ready() -> void:
 	_setup_field_hud_controls()
 	_ensure_field_manager()
 	if DisplayServer.get_name() != "headless":
-		enable_field_mode(true, false)
+		enable_field_mode(true, true)
 	else:
 		_refresh_dropped_items()
 		if not roster_characters.is_empty():
@@ -355,6 +365,8 @@ func _setup_touch_hud() -> void:
 	hud_layer.add_child(mobile_pad)
 	mobile_pad.action_triggered.connect(_on_mobile_pad_action)
 	mobile_pad.target_cycle_requested.connect(_on_target_cycle_requested)
+	if mobile_pad.has_signal(&"auto_battle_toggled"):
+		mobile_pad.connect(&"auto_battle_toggled", _on_auto_battle_toggled)
 	mobile_pad.apply_safe_area(display_layout_info)
 
 
@@ -385,7 +397,32 @@ func _align_player_facing_to_active_move_dir() -> void:
 
 
 func _on_mobile_pad_action(_slot_id: int, action_id: String) -> void:
+	if hero_auto_battle_enabled:
+		set_hero_auto_battle(false)
 	_on_touch_action(action_id)
+
+
+func set_hero_auto_battle(enabled: bool) -> void:
+	hero_auto_battle_enabled = enabled
+	if not enabled and field_manager != null:
+		field_manager.cancel_auto_approach()
+	if mobile_pad != null and is_instance_valid(mobile_pad) and mobile_pad.has_method(&"set_auto_battle_enabled"):
+		mobile_pad.call(&"set_auto_battle_enabled", enabled)
+
+
+func _on_auto_battle_toggled(enabled: bool) -> void:
+	set_hero_auto_battle(enabled)
+
+
+func _trigger_songoku_auto_transform_on_hit() -> void:
+	if not _is_hero_songoku(player_node):
+		return
+	if bool(player_node.get("is_ssj")):
+		return
+	var tclip: String = str(player_node.call(&"trigger_transform_toggle"))
+	_play_fighter_clip(player_node, tclip)
+	_spawn_ground_dust(player_node.position.x, _ground_y_at(player_node.position.x), 1.05)
+	_sync_field_pad_state()
 
 
 func _on_target_cycle_requested() -> void:
@@ -394,10 +431,133 @@ func _on_target_cycle_requested() -> void:
 		_sync_field_pad_state()
 
 
+func _is_hero_songoku(node: Node) -> bool:
+	return node != null and node.has_method(&"is_hero_songoku") and bool(node.call(&"is_hero_songoku"))
+
+
+func _get_active_move_input_vector() -> Vector2:
+	var vec := Vector2.ZERO
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT) or Input.is_action_pressed(&"move_right"):
+		vec.x += 1.0
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT) or Input.is_action_pressed(&"move_left"):
+		vec.x -= 1.0
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP) or Input.is_action_pressed(&"move_up"):
+		vec.y -= 1.0
+	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.is_action_pressed(&"move_down"):
+		vec.y += 1.0
+	if mobile_pad != null and is_instance_valid(mobile_pad) and mobile_pad.analog_vector.length() > 0.12:
+		vec = mobile_pad.analog_vector
+	if vec.length() > 1.0:
+		vec = vec.normalized()
+	return vec
+
+
+func _trigger_songoku_teleport(move_vec_override: Vector2 = Vector2(999.0, 999.0)) -> bool:
+	if not _is_hero_songoku(player_node):
+		return false
+	if not bool(player_node.call(&"can_attack")):
+		return false
+	var mv: Vector2 = _get_active_move_input_vector() if move_vec_override.x > 500.0 else move_vec_override
+	var is_moving := mv.length() > 0.12
+	var sup_y := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+	var is_air := bool(player_node.call(&"is_airborne_flight")) or (player_node.position.y < sup_y - 6.0)
+	if is_moving:
+		# Case (b): Moving + Teleport -> -25 stamina, 100px directional dash (ground row vs air row)
+		if not bool(player_node.call(&"try_consume_stamina", 25.0)):
+			return false
+		var dash_dir := mv.normalized()
+		if absf(dash_dir.x) > 0.15:
+			player_facing_left = dash_dir.x < 0.0
+			player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
+		player_node.set("pending_teleport_mode", "dash_air" if is_air else "dash_ground")
+		player_node.set("pending_teleport_dir", dash_dir)
+		player_node.set("pending_teleport_relocated", false)
+		player_node.call(&"mark_combat_engaged")
+		var clip_b := "teleport_dash_air" if is_air else "teleport_dash_ground"
+		return _play_fighter_clip(player_node, clip_b)
+	else:
+		# Case (a): Standing static + Teleport -> -75 stamina, 20 left 3 frames, blink beside targeted enemy!
+		if not bool(player_node.call(&"try_consume_stamina", 75.0)):
+			return false
+		player_node.set("pending_teleport_mode", "static")
+		player_node.set("pending_teleport_dir", Vector2(-1.0 if player_facing_left else 1.0, 0.0))
+		player_node.set("pending_teleport_relocated", false)
+		player_node.call(&"mark_combat_engaged")
+		return _play_fighter_clip(player_node, "teleport")
+
+
+func _step_songoku_teleport_midclip() -> void:
+	if not _is_hero_songoku(player_node):
+		return
+	if bool(player_node.get("pending_teleport_relocated")):
+		return
+	var mode := str(player_node.get("pending_teleport_mode"))
+	if mode.is_empty():
+		return
+	var spr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+	if spr == null:
+		return
+	var anim := String(spr.animation)
+	if mode == "static" and anim == "teleport" and spr.frame >= 1:
+		player_node.set("pending_teleport_relocated", true)
+		player_node.set("pending_teleport_mode", "")
+		var relocated := false
+		if field_manager != null and field_manager.has_method(&"get_pointed_or_nearest_enemy_pos"):
+			var tinfo: Dictionary = field_manager.call(&"get_pointed_or_nearest_enemy_pos")
+			if bool(tinfo.get("valid", false)):
+				var tpos: Vector2 = tinfo.get("pos", player_node.position)
+				var side := -1.0 if player_node.position.x <= tpos.x else 1.0
+				var dest_x := clampf(tpos.x + side * 62.0, walkable_min_x, walkable_max_x)
+				var dest_y := _ground_y_at(dest_x)
+				if tpos.y < dest_y - 36.0 and bool(player_node.call(&"can_fly")):
+					dest_y = clampf(tpos.y, fly_min_y, dest_y)
+					player_node.set("flight_state", "hovering")
+					player_node.set("hover_timer_s", 3.0)
+				player_node.position = Vector2(dest_x, dest_y)
+				player_facing_left = tpos.x < dest_x
+				player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
+				_spawn_ground_dust(dest_x, _ground_y_at(dest_x), 0.85)
+				relocated = true
+		if not relocated:
+			var fallback_dir := -1.0 if player_facing_left else 1.0
+			_move_player_horizontal(fallback_dir * 160.0, false)
+	elif (mode == "dash_ground" or mode == "dash_air") and (anim == "teleport_dash_ground" or anim == "teleport_dash_air") and spr.frame >= 1:
+		player_node.set("pending_teleport_relocated", true)
+		player_node.set("pending_teleport_mode", "")
+		var dvec: Vector2 = player_node.get("pending_teleport_dir")
+		if dvec.length() < 0.05:
+			dvec = Vector2(-1.0 if player_facing_left else 1.0, 0.0)
+		else:
+			dvec = dvec.normalized()
+		var dash_px := 100.0
+		var is_air_dash := (mode == "dash_air") or (dvec.y < -0.25)
+		_move_player_horizontal(dvec.x * dash_px, is_air_dash)
+		var max_y := _ground_y_at(player_node.position.x)
+		if is_air_dash or absf(dvec.y) > 0.2:
+			var ny := clampf(player_node.position.y + dvec.y * dash_px, fly_min_y, max_y)
+			player_node.position.y = ny
+			if ny < max_y - 8.0 and bool(player_node.call(&"can_fly")):
+				player_node.set("flight_state", "hovering")
+				player_node.set("hover_timer_s", 3.0)
+				player_vy = 0.0
+		else:
+			_spawn_ground_dust(player_node.position.x, max_y, 0.78)
+
+
 func _sync_field_pad_state() -> void:
 	if mobile_pad == null or not is_instance_valid(mobile_pad) or field_manager == null:
 		return
 	mobile_pad.set_mana_and_pointer_state(field_manager.player_mana, field_manager.player_max_mana, field_manager.pointer_kind)
+	if _is_hero_songoku(player_node) and mobile_pad.has_method(&"set_hero_stamina_and_state"):
+		mobile_pad.call(
+			&"set_hero_stamina_and_state",
+			float(player_node.get("stamina")),
+			float(player_node.get("max_stamina")),
+			bool(player_node.get("is_ssj")),
+			bool(player_node.call(&"can_attack")),
+			bool(player_node.call(&"is_airborne_flight")),
+			int(player_node.get("combo_step"))
+		)
 
 
 func _on_touch_action(action_name: String) -> void:
@@ -407,7 +567,23 @@ func _on_touch_action(action_name: String) -> void:
 		return
 	if action_name != "attack_light" and field_manager != null:
 		field_manager.cancel_auto_approach()
+	if action_name == "transform_ssj":
+		if _is_hero_songoku(player_node):
+			var tclip: String = str(player_node.call(&"trigger_transform_toggle"))
+			_play_fighter_clip(player_node, tclip)
+			_spawn_ground_dust(player_node.position.x, _ground_y_at(player_node.position.x), 1.05)
+			_sync_field_pad_state()
+		return
+	if action_name == "fly_toggle":
+		# Legacy toggle removed for Son Goku: flight enters via Jump + Hold Analog UP (SSJ1 only).
+		if _is_hero_songoku(player_node) and bool(player_node.call(&"is_airborne_flight")):
+			player_node.set("flight_state", "falling")
+			player_node.set("hover_timer_s", 0.0)
+			_sync_field_pad_state()
+		return
 	if action_name == "jump":
+		if _is_hero_songoku(player_node) and not bool(player_node.call(&"can_jump")):
+			return
 		if _is_flying_entry(_find_character_entry(active_character_id)):
 			step_flight_vertical(-1.0, 1.0 / 60.0)
 			return
@@ -415,16 +591,27 @@ func _on_touch_action(action_name: String) -> void:
 			return
 		var sup_y := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
 		if not _is_flying_entry(_find_character_entry(active_character_id)) and player_node.position.y >= sup_y - 2.0 and player_vy >= 0.0:
-			player_vy = jump_velocity_px_per_s
+			player_vy = -632.4555 if _is_hero_songoku(player_node) else jump_velocity_px_per_s
+			if _is_hero_songoku(player_node):
+				player_node.set("jump_ascend_s", 0.0)
+				player_node.call(&"on_player_moved")
 			_spawn_ground_dust(player_node.position.x, sup_y, 0.9)
 	elif action_name == "teleport":
-		_align_player_facing_to_active_move_dir()
-		_request_player_action("teleport")
+		if _is_hero_songoku(player_node):
+			_trigger_songoku_teleport()
+			_sync_field_pad_state()
+		else:
+			_align_player_facing_to_active_move_dir()
+			_request_player_action("teleport")
 	elif action_name == "pickup_items":
 		pickup_dropped_items()
 	elif action_name == "attack_light":
 		if field_mode_enabled and field_manager != null and field_manager.active:
 			field_manager.request_player_primary_action()
+		elif _is_hero_songoku(player_node):
+			if bool(player_node.call(&"can_attack")) and can_player_light_attack():
+				var cinfo: Dictionary = player_node.call(&"pop_next_combo_attack")
+				_request_player_action(str(cinfo.get("clip", "attack_light")))
 		else:
 			_request_player_action("attack_light")
 	elif action_name == "power_up":
@@ -443,11 +630,20 @@ func _is_fighter_turning(fighter: Node) -> bool:
 	if fighter == null:
 		return false
 	var pending: Variant = fighter.get("_turn_pending")
-	return bool(pending) if pending != null else false
+	if pending == null or not bool(pending):
+		return false
+	var spr := fighter.get_node_or_null("Sprite") as AnimatedSprite2D
+	var tclip: Variant = fighter.get("_turn_clip")
+	var tclip_sn := StringName(tclip) if tclip != null else &""
+	if spr == null or not spr.is_playing() or tclip_sn == &"" or spr.animation != tclip_sn:
+		fighter.set("_turn_pending", false)
+		fighter.set("_turn_clip", &"")
+		return false
+	return true
 
 
 func _is_light_attack_clip(clip_name: String) -> bool:
-	return clip_name == "attack_light" or clip_name == "attack_nomal"
+	return clip_name == "attack_light" or clip_name == "attack_nomal" or (clip_name.begins_with("attack_") and clip_name != "attack_heavy")
 
 
 func can_player_light_attack() -> bool:
@@ -467,7 +663,7 @@ func _step_player_light_cooldown(delta: float) -> void:
 	var light_playing_now := spr != null and spr.is_playing() and _is_light_attack_clip(String(spr.animation))
 	if _player_light_clip_active and not light_playing_now:
 		_player_light_clip_active = false
-		player_light_cooldown_s = PLAYER_LIGHT_ATTACK_COOLDOWN_S
+		player_light_cooldown_s = 0.02 if _is_hero_songoku(player_node) else PLAYER_LIGHT_ATTACK_COOLDOWN_S
 	elif not light_playing_now and player_light_cooldown_s > 0.0:
 		player_light_cooldown_s = maxf(0.0, player_light_cooldown_s - delta)
 
@@ -543,6 +739,36 @@ func _setup_summon_control() -> void:
 	wish_notice_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.35))
 	wish_notice_label.visible = false
 	hud_layer.add_child(wish_notice_label)
+
+	# Crisp Red Center-Screen "CHIẾN ĐẤU" Banner (pop-in on Peace -> Combat transition, hides immediately after 0.55s)
+	combat_banner_label = Label.new()
+	combat_banner_label.name = "CombatStateBanner"
+	combat_banner_label.anchor_left = 0.5
+	combat_banner_label.anchor_right = 0.5
+	combat_banner_label.anchor_top = 0.5
+	combat_banner_label.anchor_bottom = 0.5
+	combat_banner_label.offset_left = -260.0
+	combat_banner_label.offset_right = 260.0
+	combat_banner_label.offset_top = -52.0
+	combat_banner_label.offset_bottom = 52.0
+	combat_banner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	combat_banner_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	combat_banner_label.text = "CHIẾN ĐẤU"
+	combat_banner_label.add_theme_font_size_override("font_size", 58)
+	combat_banner_label.add_theme_color_override("font_color", Color(1.0, 0.14, 0.14, 1.0))
+	combat_banner_label.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02, 0.98))
+	combat_banner_label.add_theme_constant_override("outline_size", 8)
+	combat_banner_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	combat_banner_label.visible = false
+	hud_layer.add_child(combat_banner_label)
+
+
+func trigger_combat_state_banner() -> void:
+	_combat_banner_timer_s = COMBAT_BANNER_DURATION_S
+	if combat_banner_label != null and is_instance_valid(combat_banner_label):
+		combat_banner_label.visible = true
+		combat_banner_label.scale = Vector2(1.12, 1.12)
+		combat_banner_label.pivot_offset = combat_banner_label.size * 0.5
 
 
 func _setup_item_controls() -> void:
@@ -752,12 +978,29 @@ func _setup_field_hud_controls() -> void:
 
 		toggle_hero_button = Button.new()
 		toggle_hero_button.name = "ToggleHeroButton"
-		toggle_hero_button.text = "👤 Hiện Tướng (Drum)"
+		toggle_hero_button.text = "👤 Hiện Tướng (Son Goku)"
 		toggle_hero_button.pressed.connect(func() -> void:
 			var spawned_now: bool = field_manager != null and bool(field_manager.player_spawned)
 			set_field_hero_visible(not spawned_now)
 		)
 		hud_layer.add_child(toggle_hero_button)
+
+		hero_avatar_panel = PanelContainer.new()
+		hero_avatar_panel.name = "HeroAvatarPanel"
+		hero_avatar_panel.anchor_left = 0.0
+		hero_avatar_panel.anchor_top = 0.0
+		hero_avatar_panel.offset_left = 18.0
+		hero_avatar_panel.offset_top = 104.0
+		hero_avatar_panel.offset_right = 86.0
+		hero_avatar_panel.offset_bottom = 196.0
+		hero_avatar_panel.visible = false
+		hero_avatar_rect = TextureRect.new()
+		hero_avatar_rect.name = "HeroAvatarRect"
+		hero_avatar_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		hero_avatar_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hero_avatar_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		hero_avatar_panel.add_child(hero_avatar_rect)
+		hud_layer.add_child(hero_avatar_panel)
 
 		pad_settings_button = Button.new()
 		pad_settings_button.name = "PadSettingsButton"
@@ -939,9 +1182,12 @@ func _spawn_field_hero(char_id: String) -> bool:
 	return true
 
 
-func set_field_hero_visible(visible_flag: bool, hero_char_id: String = "drum", custom_spawn_x: float = -999999.0) -> void:
+func set_field_hero_visible(visible_flag: bool, hero_char_id: String = "", custom_spawn_x: float = -999999.0) -> void:
 	_ensure_field_manager()
-	var resolved_cid := hero_char_id if not _find_character_entry(hero_char_id).is_empty() else "drum"
+	var wanted_cid := hero_char_id.strip_edges()
+	if wanted_cid.is_empty():
+		wanted_cid = DEFAULT_HERO_ID
+	var resolved_cid := wanted_cid if not _find_character_entry(wanted_cid).is_empty() else "drum"
 	active_character_id = resolved_cid
 	if visible_flag:
 		if _spawn_field_hero(resolved_cid):
@@ -960,6 +1206,14 @@ func set_field_hero_visible(visible_flag: bool, hero_char_id: String = "drum", c
 				mobile_pad.visible = true
 				mobile_pad.configure_for_character(resolved_cid, _collect_clip_names(player_node), false)
 				_sync_field_pad_state()
+			if hero_avatar_panel != null and is_instance_valid(hero_avatar_panel):
+				var hentry := _find_character_entry_ro(resolved_cid)
+				var av_path := str(hentry.get("avatar_path", ""))
+				if not av_path.is_empty() and ResourceLoader.exists(av_path):
+					hero_avatar_rect.texture = _load_texture_2d(av_path)
+					hero_avatar_panel.visible = not hud_ui_hidden
+				else:
+					hero_avatar_panel.visible = false
 	else:
 		_clear_fighter(player_node)
 		player_node = null
@@ -967,11 +1221,14 @@ func set_field_hero_visible(visible_flag: bool, hero_char_id: String = "drum", c
 		field_manager.player_dead = false
 		field_manager.pointer_slot_id = ""
 		field_manager.pointer_item_node = null
+		if hero_avatar_panel != null and is_instance_valid(hero_avatar_panel):
+			hero_avatar_panel.visible = false
 		if mobile_pad != null and is_instance_valid(mobile_pad):
 			mobile_pad.configure_for_character("", PackedStringArray(), false)
 			mobile_pad.visible = false
 	if toggle_hero_button != null:
-		toggle_hero_button.text = "👤 Ẩn Tướng (%s)" % resolved_cid.capitalize() if (field_manager != null and field_manager.player_spawned) else "👤 Hiện Tướng (%s)" % resolved_cid.capitalize()
+		var hero_disp := "Son Goku" if resolved_cid == DEFAULT_HERO_ID else resolved_cid.capitalize()
+		toggle_hero_button.text = "👤 Ẩn Tướng (%s)" % hero_disp if (field_manager != null and field_manager.player_spawned) else "👤 Hiện Tướng (%s)" % hero_disp
 	_update_follow_camera()
 	_update_hud()
 	queue_redraw()
@@ -993,9 +1250,12 @@ func configure_alpha_session(session: Dictionary, transport: NetworkTransport, s
 		if not zone_sync.zone_switched.is_connected(_on_zone_switched):
 			zone_sync.zone_switched.connect(_on_zone_switched)
 
-	var req_cid := str(session.get("character_id", "drum")).strip_edges()
+	var req_cid := str(session.get("character_id", DEFAULT_HERO_ID)).strip_edges()
+	# Upgrade legacy "drum" hero to Son Goku on live runtime (keep headless legacy alpha sync tests intact).
+	if DisplayServer.get_name() != "headless" and (req_cid.is_empty() or req_cid == "drum") and not _find_character_entry(DEFAULT_HERO_ID).is_empty():
+		req_cid = DEFAULT_HERO_ID
 	if req_cid.is_empty() or _find_character_entry(req_cid).is_empty():
-		req_cid = "drum"
+		req_cid = DEFAULT_HERO_ID if not _find_character_entry(DEFAULT_HERO_ID).is_empty() else "drum"
 	var spawn_x := float(session.get("spawn_x", 560.0))
 	var display_name := str(session.get("display_name", "Player"))
 
@@ -1925,7 +2185,10 @@ func _try_start_player_jump(jump_pressed: bool, drop_pressed: bool) -> bool:
 		return false
 	var pre_sup_y := get_nearest_support_y_below(px, prev_y)
 	if jump_pressed and prev_y >= pre_sup_y - 2.0 and player_vy >= 0.0:
-		player_vy = jump_velocity_px_per_s
+		player_vy = -632.4555 if _is_hero_songoku(player_node) else jump_velocity_px_per_s
+		if _is_hero_songoku(player_node):
+			player_node.set("jump_ascend_s", 0.0)
+			player_node.call(&"on_player_moved")
 		_spawn_ground_dust(px, pre_sup_y, 0.9)
 		return true
 	return false
@@ -2716,7 +2979,7 @@ func _is_player_action_playing() -> bool:
 	if player_node == null:
 		return false
 	var spr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
-	return spr != null and spr.is_playing() and String(spr.animation) not in ["idle", "walk", "run", "fly", "jump", "turn"]
+	return spr != null and spr.is_playing() and String(spr.animation) not in ["idle", "walk", "run", "fly", "jump", "turn", "idle_ssj_aura", "idle_combat", "walk_ssj", "combat_move", "fly_prep", "fly_aura"]
 
 
 func _is_sideways_locked(entry: Dictionary) -> bool:
@@ -2951,11 +3214,35 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 	_flush_player_queued_action()
 
 	var entry := _find_character_entry(active_character_id)
-	var is_flying := _is_flying_entry(entry)
+	var is_goku := _is_hero_songoku(player_node)
+	var goku_air_flight := is_goku and bool(player_node.call(&"is_airborne_flight"))
+	var is_flying := _is_flying_entry(entry) or goku_air_flight
 	var is_stationary := _is_stationary_entry(entry)
 	var action_playing := _is_player_action_playing()
 	var dir := 0 if (is_stationary or action_playing) else clampi(move_dir, -1, 1)
 	var eff_fly_dir_y := 0 if action_playing else clampi(fly_dir_y, -1, 1)
+	var has_move_inp := (dir != 0) or (eff_fly_dir_y != 0) or (analog_vec.length() > 0.12)
+	var sup_pre := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+	var pre_on_ground := player_node.position.y >= sup_pre - 2.5
+	var pre_alt_px := maxf(0.0, sup_pre - player_node.position.y)
+	var holding_up := (eff_fly_dir_y < 0) or (analog_vec.y < -0.45) or jump_req
+	var holding_down := (eff_fly_dir_y > 0) or (analog_vec.y > 0.45) or drop_req
+	if is_goku:
+		# 360° Analog UP (including diagonal up-left / up-right!) triggers jump on ground in SSJ1!
+		if (not goku_air_flight) and pre_on_ground and analog_vec.y < -0.45 and bool(player_node.call(&"can_jump")):
+			jump_req = true
+		var prev_goku_fstate := str(player_node.get("flight_state"))
+		# Pulling straight DOWN during active flying also triggers immediate fast descent!
+		var strong_down_cancel := (prev_goku_fstate == "flying") and (not action_playing) and ((analog_vec.y > 0.72 and absf(analog_vec.x) < 0.35) or (drop_req and dir == 0))
+		if strong_down_cancel:
+			player_node.call(&"trigger_fast_drop_from_flight")
+		player_node.call(&"step_hero_timers", delta, has_move_inp, pre_on_ground, holding_up, pre_alt_px, holding_down, action_playing)
+		var new_goku_fstate := str(player_node.get("flight_state"))
+		if (prev_goku_fstate == "hovering" or prev_goku_fstate == "flying") and new_goku_fstate == "falling" and holding_down:
+			# Immediate fast drop without waiting 3s!
+			player_vy = maxf(player_vy, 520.0)
+		goku_air_flight = bool(player_node.call(&"is_airborne_flight"))
+		is_flying = _is_flying_entry(entry) or goku_air_flight
 	var fly_input_vec := Vector2.ZERO
 	if is_flying and not is_stationary and not action_playing:
 		if analog_vec.length() > 0.12:
@@ -2970,18 +3257,45 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 	var jumped_now := false
 	if not is_flying and not is_stationary:
 		_flight_vel = Vector2.ZERO
-		jumped_now = _try_start_player_jump(jump_req, drop_req)
+		var allow_jump := (not is_goku) or bool(player_node.call(&"can_jump"))
+		jumped_now = _try_start_player_jump(jump_req and allow_jump, drop_req)
 
 	var prev_px := player_node.position.x
 	_step_player_drum_midclip()
+	_step_songoku_teleport_midclip()
 
 	var sideways_locked := _is_sideways_locked(entry)
 	var walk_speed := _get_walk_speed_px_per_s(entry)
+	if is_goku:
+		var g_fstate := str(player_node.get("flight_state"))
+		if g_fstate == "flying":
+			walk_speed = 400.0
+		elif bool(player_node.get("is_ssj")) and bool(player_node.call(&"is_in_combat")):
+			walk_speed = 400.0
+		else:
+			walk_speed = 200.0
 	var base_speed := walk_speed * 1.6 if is_run else walk_speed
 	_player_turn_boost_s = maxf(0.0, _player_turn_boost_s - delta)
 	var turning_now := _is_fighter_turning(player_node)
 
-	if not sideways_locked and not turning_now and not action_playing and dir != 0:
+	# In Combat mode (`combat_move`), if a targeted enemy is nearby, face the enemy so pulling analog AWAY = Frame 0 (retreat)
+	# and pushing analog TOWARD = Frame 3 (advance), with Frames 1 & 2 bridging smoothly!
+	var goku_combat_rel_dir := 0
+	var goku_locked_facing := false
+	if is_goku and (not is_flying) and (not action_playing) and bool(player_node.get("is_ssj")) and bool(player_node.call(&"is_in_combat")):
+		if field_manager != null and field_manager.has_method(&"get_pointed_or_nearest_enemy_pos"):
+			var tinfo: Dictionary = field_manager.call(&"get_pointed_or_nearest_enemy_pos")
+			if bool(tinfo.get("valid", false)):
+				var tpos: Vector2 = tinfo.get("pos", player_node.position)
+				if absf(tpos.x - player_node.position.x) <= 520.0:
+					var face_left_t := tpos.x < player_node.position.x
+					player_facing_left = face_left_t
+					player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
+					goku_locked_facing = true
+		var face_sign := -1 if player_facing_left else 1
+		goku_combat_rel_dir = dir * face_sign if dir != 0 else 0
+
+	if not sideways_locked and not turning_now and not action_playing and not goku_locked_facing and dir != 0:
 		var want_left := dir < 0
 		if want_left != player_facing_left:
 			if _has_turn_clip(entry) and player_node.has_method(&"set_facing_left"):
@@ -3022,12 +3336,18 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 
 	if is_flying:
 		var max_fly_y := _ground_y_at(player_node.position.x)
-		player_node.position.y = clampf(player_node.position.y + _flight_vel.y * delta, fly_min_y, max_fly_y)
+		if is_goku and str(player_node.get("flight_state")) == "hovering":
+			# Hold altitude cleanly during 3s hover window (`fly_prep`)
+			pass
+		else:
+			player_node.position.y = clampf(player_node.position.y + _flight_vel.y * delta, fly_min_y, max_fly_y)
 		player_vy = 0.0
 	elif is_stationary:
 		player_vy = 0.0
 	else:
-		_integrate_player_vertical(delta, jumped_now)
+		var vres := _integrate_player_vertical(delta, jumped_now)
+		if is_goku and bool(vres.get("landed", false)):
+			player_node.set("jump_land_hold_s", 0.09)
 
 	var sup_now := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
 	if not is_flying and not is_stationary and player_node.position.y >= sup_now - 2.0 and dir != 0 and not turning_now:
@@ -3040,11 +3360,37 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 
 	if not turning_now:
 		var spr := player_node.get_node_or_null("Sprite")
+		if spr is AnimatedSprite2D and action_playing:
+			(spr as AnimatedSprite2D).position.y = 0.0
 		if spr is AnimatedSprite2D and not action_playing:
 			var aspr := spr as AnimatedSprite2D
 			var target_clip := &"idle"
 			var moving_fly := is_flying and fly_input_vec.length() > 0.12
-			if not is_flying and player_node.position.y < sup_now - 3.0 and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"jump"):
+			if is_goku:
+				var g_moving := (dir != 0 or eff_fly_dir_y != 0 or moving_fly)
+				var g_airborne := (not is_flying) and (player_node.position.y < sup_now - 3.0)
+				target_clip = player_node.call(&"resolve_locomotion_clip", g_moving, g_airborne)
+				if target_clip == &"jump" and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"jump"):
+					aspr.position.y = 0.0
+					var jframe: int = int(player_node.call(&"resolve_jump_pose_frame", player_vy, not g_airborne))
+					if aspr.animation != &"jump":
+						aspr.animation = &"jump"
+					aspr.pause()
+					aspr.frame = clampi(jframe, 0, maxi(0, aspr.sprite_frames.get_frame_count(&"jump") - 1))
+					return
+				elif target_clip == &"combat_move" and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"combat_move"):
+					# Hover Goku's feet 20px above ground during combat_move glide (Owner v5)!
+					aspr.position.y = -20.0 / maxf(0.1, char_scale)
+					var rel_d := goku_combat_rel_dir if goku_combat_rel_dir != 0 else (1 if dir != 0 else 0)
+					var cm_frame: int = int(player_node.call(&"step_combat_move_frame", delta, rel_d))
+					if aspr.animation != &"combat_move":
+						aspr.animation = &"combat_move"
+					aspr.pause()
+					aspr.frame = clampi(cm_frame, 0, maxi(0, aspr.sprite_frames.get_frame_count(&"combat_move") - 1))
+					return
+				else:
+					aspr.position.y = 0.0
+			elif not is_flying and player_node.position.y < sup_now - 3.0 and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"jump"):
 				target_clip = &"jump"
 			elif (dir != 0 or eff_fly_dir_y != 0 or moving_fly) and aspr.sprite_frames != null:
 				if is_run and aspr.sprite_frames.has_animation(&"run"):
@@ -3065,16 +3411,30 @@ func _physics_process(delta: float) -> void:
 		_wish_notice_timer_s = maxf(0.0, _wish_notice_timer_s - delta)
 		if _wish_notice_timer_s == 0.0 and wish_notice_label != null:
 			wish_notice_label.visible = false
+	if _combat_banner_timer_s > 0.0:
+		_combat_banner_timer_s = maxf(0.0, _combat_banner_timer_s - delta)
+		if combat_banner_label != null and is_instance_valid(combat_banner_label):
+			if _combat_banner_timer_s <= 0.0:
+				combat_banner_label.visible = false
+			else:
+				# Crisp 2-phase pop-in (frame 0..1 scale 1.12 -> 1.0, holds vivid red, then instant hide!)
+				combat_banner_label.scale = Vector2(1.0, 1.0)
 	if shenron_summon != null and shenron_summon.is_casting():
 		player_vy = 0.0
 		return
 
 	var t_down := Input.is_key_pressed(KEY_T)
 	var tab_down := Input.is_key_pressed(KEY_TAB)
+	var v_down := Input.is_key_pressed(KEY_V)
+	var f_down := Input.is_key_pressed(KEY_F)
 	var t_just := t_down and not _t_key_was_down
 	var tab_just := tab_down and not _tab_key_was_down
+	var v_just := v_down and not _v_key_was_down
+	var f_just := f_down and not _f_key_was_down
 	_t_key_was_down = t_down
 	_tab_key_was_down = tab_down
+	_v_key_was_down = v_down
+	_f_key_was_down = f_down
 
 	if player_node == null:
 		if field_mode_enabled and field_manager != null and field_manager.active:
@@ -3091,11 +3451,12 @@ func _physics_process(delta: float) -> void:
 		if tab_just and field_mode_enabled and field_manager != null and field_manager.active:
 			field_manager.cycle_target_pointer()
 			_sync_field_pad_state()
+		if v_just:
+			_on_touch_action("transform_ssj")
+		if f_just:
+			_on_touch_action("fly_toggle")
 		if t_just:
-			if field_manager != null:
-				field_manager.cancel_auto_approach()
-			_align_player_facing_to_active_move_dir()
-			_request_player_action("teleport")
+			_on_touch_action("teleport")
 		for action_name in [&"attack_light", &"attack_heavy", &"power_up"]:
 			if Input.is_action_just_pressed(action_name):
 				var aname := String(action_name)
@@ -3127,16 +3488,21 @@ func _physics_process(delta: float) -> void:
 			fly_dir_y -= 1
 		if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.is_action_pressed(&"move_down"):
 			fly_dir_y += 1
-		if mobile_pad != null and is_instance_valid(mobile_pad) and _is_flying_entry(_find_character_entry_ro(active_character_id)) and mobile_pad.analog_dir_y != 0:
+		if mobile_pad != null and is_instance_valid(mobile_pad) and (_is_flying_entry(_find_character_entry_ro(active_character_id)) or (_is_hero_songoku(player_node) and bool(player_node.call(&"is_airborne_flight")))) and mobile_pad.analog_dir_y != 0:
 			fly_dir_y = clampi(mobile_pad.analog_dir_y, -1, 1)
 
 		var jump_req := Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_UP) or Input.is_action_pressed(&"jump")
 		var drop_req := Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.is_action_pressed(&"move_down")
 		var pad_vec: Vector2 = mobile_pad.analog_vector if (mobile_pad != null and is_instance_valid(mobile_pad)) else Vector2.ZERO
 		var has_manual_move := dir != 0 or fly_dir_y != 0 or jump_req or drop_req or pad_vec.length() > 0.12
-		if has_manual_move and field_manager != null:
-			field_manager.cancel_auto_approach()
-		if not (field_mode_enabled and field_manager != null and field_manager.active and bool(field_manager.auto_approach_active)):
+		if has_manual_move:
+			if hero_auto_battle_enabled:
+				set_hero_auto_battle(false)
+			if field_manager != null:
+				field_manager.cancel_auto_approach()
+		if hero_auto_battle_enabled and field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.step_hero_auto_battle(delta)
+		elif not (field_mode_enabled and field_manager != null and field_manager.active and bool(field_manager.auto_approach_active)):
 			step_player_movement(delta, dir, fly_dir_y, jump_req, drop_req, is_run, pad_vec)
 	else:
 		player_vy = 0.0
@@ -3452,11 +3818,18 @@ func _update_hud() -> void:
 				alive_cnt += 1
 		var hero_txt := "Ẩn (bấm Hiện Tướng)"
 		if field_manager.player_spawned and player_node != null:
+			var h_name := "Son Goku" if _is_hero_songoku(player_node) else active_character_id.capitalize()
 			if field_manager.player_dead:
-				hero_txt = "Drum KO (%.1fs)" % field_manager.player_respawn_timer_s
+				hero_txt = "%s KO (%.1fs)" % [h_name, field_manager.player_respawn_timer_s]
 			else:
 				var imm_tag := " [BẤT TỬ]" if field_manager.player_immortal else ""
-				hero_txt = "Drum %d/%d HP%s | %d/%d MP (%d,%d)" % [int(round(field_manager.player_hp)), int(round(field_manager.player_max_hp)), imm_tag, int(round(field_manager.player_mana)), int(round(field_manager.player_max_mana)), px, py]
+				var extra_goku := ""
+				if _is_hero_songoku(player_node):
+					var f_tag := "SSJ1" if bool(player_node.get("is_ssj")) else "BASE"
+					var fl_st := str(player_node.get("flight_state"))
+					var fl_tag := " | BAY:%s" % fl_st.to_upper() if fl_st != "ground" else ""
+					extra_goku = " [%s · Đòn %d/7 · TL %d/100%s]" % [f_tag, (int(player_node.get("combo_step")) % 7) + 1, int(floor(float(player_node.get("stamina")))), fl_tag]
+				hero_txt = "%s%s %d/%d HP%s (%d,%d)" % [h_name, extra_goku, int(round(field_manager.player_hp)), int(round(field_manager.player_max_hp)), imm_tag, px, py]
 		var boss_txt := ""
 		var bslot: Dictionary = field_manager.boss_slot
 		if not bslot.is_empty() and bool(bslot.get("alive", false)):

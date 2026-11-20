@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-19T13:58:02Z",
+  "updated_at": "2026-11-20T10:55:51Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.17.0",
@@ -162,9 +162,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "RELEASE-V0.17.0",
-    "status": "completed",
-    "summary": "Chốt chính thức v0.17.0: đồng bộ SemVer (VERSION/state.json/project.godot/Cargo.toml/export_presets.cfg), triệt lỗi PWA SW cache-first trên Cloudflare staging (/play/v/<pck_hash12>/ + SW tự xóa cache + no-store), kiểm thử full ./loop.sh test & build-all 1:1 Web/APK/IPA, commit + tag v0.17.0 và deploy Cloudflare R2 staging",
+    "active_task_id": "SONGOKU-HERO-PHASE1-V6-TUNE60",
+    "status": "DONE",
+    "summary": "Chốt tinh chỉnh v6: attack ~60ms/frame (4 ticks=66.7ms) + nối đòn 20ms; walk Base/SSJ 200px/s; bay & combat_move 400px/s; combat_move 90ms/60ms (lùi & tiến); tầm đánh thường <20px. Full Web Export + test + HTTP 200 SHA-256 parity PASS.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1235,6 +1235,90 @@
       "timestamp": "2026-11-19T13:58:02Z",
       "status": "completed",
       "summary": "Chốt chính thức v0.17.0: đồng bộ SemVer (VERSION/state.json/project.godot/Cargo.toml/export_presets.cfg), triệt lỗi PWA SW cache-first trên Cloudflare staging (/play/v/<pck_hash12>/ + SW tự xóa cache + no-store), kiểm thử full ./loop.sh test & build-all 1:1 Web/APK/IPA, commit + tag v0.17.0 và deploy Cloudflare R2 staging"
+    },
+    {
+      "id": "WALK-TEMPLATE-SSJ-DEMO-V1",
+      "timestamp": "2026-11-20T01:39:11Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Đã học mẫu walk chuẩn 8 pha (image.png: xám=trái/FAR, trắng=phải/NEAR), đọc đầy đủ Hiến pháp AGENTS.md + skills.md + lerning.md + .agents/skills/*, bóc tách giải phẫu trái/phải của mô phỏng cơ thể gốc.png (lưới logic 1x 29x55 từ 1464x387 pitch 5.05x), khóa cứng đầu/tóc/mặt/kích thước/bảng màu Pose 7 và tái tạo 8 frame walk_00..07 (code-drawn do route_media=no-route & image-generator 429 QUOTA_EXHAUSTED). Đóng gói demo review/ssj_blond_walk_demo/ (1 atlas 128x96 Nearest 60Hz, SHA 1775febd..., tách khỏi roster chính thức), ./loop.sh test Governance+82 Python/WASM E2E exit 0 (SKIP Godot4/Shaders/Rust do container chưa có binary), sẵn sàng chờ Owner duyệt frame tại localhost:8080."
+    },
+    {
+      "id": "WALK-SONGOKU-34-BOTH-V1",
+      "timestamp": "2026-11-20T02:26:03Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Đã xác định lỗi lệch góc/thân walk_v2 (khóa nhầm Pose 7 90° + capsule) so với bản tĩnh 3/4 Pose 0, lập Character Identity Lock 8 góc từ Songoku/mô phỏng cơ thể nhiều gốc độ.png (IoU 99.68% với ảnh chuẩn hướng gốc nhìn.png). Xác minh Codex (local CLI) codex-cli 0.171.0 VERIFIED và sinh hoàn chỉnh 2 bộ walk 8 pha góc 3/4 Pose 0 (đảo tay–chân đối xứng 2 nửa chu kỳ khớp image.png) kèm idle_00 nguyên bản: review/songoku_ssj1_walk_demo (SSJ1 tóc vàng, atlas SHA 3278978e...) và review/songoku_base_walk_demo (Base tóc đen, atlas SHA d1827ae5...), 128x96 Nearest 60Hz, alpha cứng 100%, 0 opaque_key_px, 0 pockets, 0 spill. Đã xem filmstrip 3 nền; ./loop.sh test Governance+82 Python/WASM+Godot 4.7.2 Headless (gồm 11 char chính + 2 demo review) exit 0 (SKIP Shaders no-xvfb-run, Rust no-cargo); localhost:8080 HTTP SHA-256 parity khớp 100%, sẵn sàng chờ Owner Human Test."
+    },
+    {
+      "id": "WALK-SONGOKU-34-DUAL-ANCHOR-V4",
+      "timestamp": "2026-11-20T02:45:57Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoàn tất walk_v4 Dual-Anchor cho cả Son Goku SSJ1 (SHA 01cf7b2ee9f239a5, 28951B) và Base tóc đen (SHA d5a3f9ae06b9b0af, 24677B) qua Codex (local CLI) codex-cli 0.171.0 sinh từng frame đơn F0..F7 khóa cứng Model 3/4 Pose 0 + Hoạt ảnh walk_v2/image.png. Dual-Anchor QA PASS 100% cả 2 bản: bob=[0,+2,0,-1,0,+2,0,-1] (lệch đối xứng 0px), passing legW=(12,11) SSJ1 / (11,10) Base (khớp walk_v2 12/13), đảo đủ 4 cặp tay-chân đối xứng F0<->F4, F1<->F5, F2<->F6, F3<->F7, 0 opaque_key_px, 0 pockets, 0.0 spill, 100% alpha cứng. Đã duyệt ảnh đối chiếu verify_v4_vs_v2_and_orig.png + 2 filmstrip 3 nền; ./loop.sh test Governance+Python/WASM+Godot 4.7.2 Headless exit 0 (SKIP Shaders/Rust); localhost:8080 HTTP 200 SHA-256 parity khớp 100%, chờ Owner Human Test."
+    },
+    {
+      "id": "WALK-SONGOKU-V5-DRUM-125PX",
+      "timestamp": "2026-11-20T03:12:49Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoàn tất walk_v5 chuẩn hóa chiều cao đúng bằng Drum (125px @ default_scale=1.0, 1px gameplay native trên canvas 192x160 anchor [96,144], Nearest, 60Hz) cho cả 2 bản: (1) SSJ1 (SHA 38db011ca1fd9347, 112376B): khóa đầu/thân toàn bộ F0..F7 về đúng chuẩn Frame #3 (head_w=[58,59,59,59,60,59,59,59] khớp idle_00 61x125, triệt tiêu hoàn toàn lỗi phình Frame #3), Sobel idle 214.2 / walk 198.3..251.0 (sát mốc T-rex 245.516), single_px_run>=0.9763, alpha 100%, key=0, spill=0.0; (2) Base tóc đen (SHA 70aa54cfe2088c16, 115778B): chỉnh lại dáng tóc đen xòe rộng thấp & thân mập chuẩn qua Codex CLI (base_v5_take1) khớp 1:1 với 01.trạng thái tĩnh idle_00 (73x125, walk head_w=[73,72,73,73,73,73,73,73] lệch tối đa 1px, không còn bị bóp nhỏ hay cao hơn idle), Sobel idle 106.7 / walk 107.1..151.6, single_px_run>=0.9533, alpha 100%, key=0, spill=0.0011. Đã xem verify_v5_drum_height_both.png + 2 filmstrip 3 nền; ./loop.sh test Governance+Python/WASM+Godot 4.7.2 Headless exit 0 (SKIP Shaders/Rust); localhost:8080 HTTP 200 SHA-256 parity khớp 100%, chờ Owner Human Test."
+    },
+    {
+      "id": "WALK-SONGOKU-V6-ARM-AND-BASE-PIXEL-LOCK",
+      "timestamp": "2026-11-20T03:36:34Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien walk_v6 cho ca Son Goku SSJ1 (atlas sha256=7e460affb575121f, idle=61x125, walk_hw=[59,58,59,59,60,59,59,59] spread=2px, idle_Sobel=214.23, walk_Sobel=198.3-257.6, single_px_run>=0.9776) va Son Goku Base (atlas sha256=a2c2b5aa71450d1b, idle=73x125, walk_hw=[67,66,66,66,66,66,66,66] spread=1px, idle_Sobel=106.68, walk_Sobel=84.1-157.5, single_px_run>=0.9533) qua Codex (local CLI 0.171.0). Sua logic canh tay trai danh sau F0-F1 thu gon dung truc cau vai 3/4, giu nguyen 100% hoat anh chan & F2..F7 SSJ1 v5, tai dung Base tung frame don bao toan 100% cau truc pixel 16-bit goc. ./loop.sh test (Governance + Python + Godot 4.7.2) exit 0 [SKIP: Shaders(no-xvfb-run), Rust(no-cargo)]; HTTP 200 parity OK tai localhost:8080 review/."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-SETUP",
+      "timestamp": "2026-11-20T04:55:54Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien setup Tuong dau tien Son Goku Dot 1 (review/songoku_hero_demo/, 24 clips, 138 unique frames, 1 trang PNG 3314x3314 sha256=214e24367d36cfc1, .tres sha256=338285cce38ecb23) thay the Drum lam Tuong mac dinh (giu Drum lam Boss/Quai AI & giu bui di chuyen/dap dat). Bao gom: (1) Base<->SSJ1 transform 02+03, khoa danh/nhay/bay o Base; (2) Chuoi danh thuong 7 don 10->11->12->13->14->17->15 (nhe 20-40 roll crit 40, nang 80, frame vet vang #13 cua 17 = 90), luu combo khi dung skill chi reset khi KO/doi map; (3) Di chuyen walk_v6 (khong chien dau) <-> 16 (chien dau analog), Dich chuyen 20 (3 cum) + the luc 100/+5s xoay quanh nut (-75 tinh ap sat dich / -25 di chuyen 100px dat&khong), va Bay 18/19 + Fly_Aura 4 frame moi tu 19#3 (Codex CLI) + lo lung 3s. Luu ky thuat walk 3/4 vao create_atlas/references/bipedal-walk-synthesis.md & docs/characters/songoku-roadmap-todo.md. ./loop.sh test (82 Python + Godot 4.7.2 Headless gom suite Son Goku Phase 1) exit 0 [SKIP: Shaders(no-xvfb-run), Rust(no-cargo)]; Godot Web export build/web/index.pck + HTTP 200 SHA-256 parity OK."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V2-SYNC",
+      "timestamp": "2026-11-20T05:47:43Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien Son Goku Dot 1 v2 (review/songoku_hero_demo/, 24 clips, 138 frames, 1 trang PNG 3314x3314 sha256=9c26bd6cc64023bd, .tres sha256=66c68a7ff848ebd3): dong bo truc tiep Songoku len San Tap (bo Drum tuong, tu go SW cache cu), khoa 0-jitter idle/transform/detransform/idle_ssj_aura, chuan hoa do net 1px dong bo walk_v6 cho toan bo 24 clip, toc do 170 px/s walk / 190 px/s combat_move, chinh nhip attack_1..7 5-9 ticks @60Hz, sua cat dinh toc jump F1/F2/F4, va dung lai Fly_Aura v2 4 frame bam dung goc do va du 2 chan cua fly_launch#3 (image copy.png, 94px 1:1, Sobel 840-868). ./loop.sh web-export (index.pck sha256=c86b4730870e7207), ./loop.sh test (82 Python + Godot 4.7.2) exit 0 [SKIP: Shaders(no-xvfb-run), Rust(no-cargo)], HTTP 200 parity OK."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V3-SYNC",
+      "timestamp": "2026-11-20T07:08:14Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien Son Goku Dot 1 v3 (review/songoku_hero_demo/, 25 clips, 142 frames, 1 trang PNG 3506x3506 sha256=d8a1133987eb07f3, .tres sha256=b9877be213f1929f, da bo fly_launch): Gate 1 (01 Base idle 0 lo toc trang tren nen trang + 125px), Gate 2 (02+03 0 hoc nen kin F3-F5 + 125px + row_ground_y), Gate 3 (04 idle_ssj_aura 125px 1:1 + 0.0px boot lock), Gate 4 (34 combat_enter + idle_combat 4f + idle_ssj 4f tho), Gate 5 (jump 100px 360deg F0-2/F3-5/F4 roi, combat_move F0 lui / F1-2 chuyen tiep / F3 tien, HIT/KO), Gate 6 (fly_prep 4f lo lung + toc phap phoi + hao quang Codex CLI), Gate 7 (fly_aura 4f bay song song + du 2 chan + toc phap phoi Codex CLI), va co che 2 trang thai Hoa binh <-> Chien dau (bat tu luc transform, chu do CHIEN DAU 0.55s giua man hinh). ./loop.sh web-export, ./loop.sh test (82 Python + Godot 4.7.2) exit 0 [SKIP: Shaders(no-xvfb-run), Rust(no-cargo)], HTTP 200 parity OK."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V4-SYNC",
+      "timestamp": "2026-11-20T08:14:04Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoan thien Son Goku Dot 1 v4 theo TODO chia nho T1-T7 (review/songoku_hero_demo/, 24 clips, 132 frames, 1 trang PNG 3506x3214 sha256=560f001bd57de870, .tres sha256=23b6f2d247b4feaa, da bo ca fly_launch lan idle_ssj): T1 0/132 hoc nen den kin (sua triet de image copy 5.png tren toan bo frame), T2 dung idle_base 4f Codex CLI dong bo 1:1 walk_base + bo UnsharpMask nhoc mau & can bang bang mau Walk cho toan bo SSJ1, T3 SSJ1 Hoa binh luon ve idle_ssj_aura va noi qua combat_enter -> idle_combat, T4 bo Drum spawn dau map (ho tro ca Codespaces *.app.github.dev + upgrade legacy drum session -> Son Goku), T5 bay & combat_move 200px/s (loop #0/#1 & #3/#2 300ms/80ms + keo analog xuong ha nhanh khong cho 3s), T6 hit impact + tru sat thuong tung frame danh trung (10-20 / 50 / 60) + noi don 100ms. ./loop.sh web-export, ./loop.sh test (82 Python + Godot 4.7.2) exit 0 [SKIP: Shaders(no-xvfb-run), Rust(no-cargo)], HTTP 200 parity OK."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V5-SYNC",
+      "timestamp": "2026-11-20T09:06:29Z",
+      "status": "DONE",
+      "summary": "Son Goku Phase 1 v5: T1 fix quái đơ phản công, T2 con trỏ mục tiêu liên tục, T3 thanh Giáp 100 dưới Mana, T4 combat_move/fly_aura 250px/s + lướt +20px + đòn đánh ~120ms, T5 idle_ssj_aura khóa <1.2px, T6 transform Base/fly_aura 1:1 walk, T7 khôi phục đủ 13 pose idle_base 01, full test & HTTP 200 SHA-256 parity PASS."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V6-SYNC",
+      "timestamp": "2026-11-20T10:16:55Z",
+      "status": "DONE",
+      "summary": "Son Goku Phase 1 v6: T1 khóa SHA-256 24 frame Base, T2 khôi phục duy nhất fly_aura v3 + đòn đánh 150ms, T3 Base bị đánh tự biến SSJ1, T4 combat_move 300px/s + nối 170ms + tầm đánh <30px, T5 vỡ giáp hit 1 lần, T6 chạm quái bay tự nhảy & bay lên đánh, T7 nút AUTO Utility AI (thao tác tay tự tắt), T8 quái Hòa bình/Chiến đấu + miễn trừ Boss + bàn giao lượt + icon dưới thanh giáp quái, full test & HTTP 200 SHA-256 parity PASS."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V6-ATK80",
+      "timestamp": "2026-11-20T10:22:37Z",
+      "status": "DONE",
+      "summary": "Điều chỉnh toàn bộ attack_light..attack_7 về 5 ticks @60Hz = 83.3ms (~80ms/frame), giữ nguyên nối đòn 170ms, Base 24f SHA-256 Lock + Web Export + full test + HTTP 200 parity PASS."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V6-CMOVE70",
+      "timestamp": "2026-11-20T10:33:10Z",
+      "status": "DONE",
+      "summary": "Giảm thời lượng giữ pose chính combat_move từ 300ms xuống 70ms (70ms <-> 80ms, ticks [4,5,5,4] @60Hz), giữ tốc độ lướt 300px/s, full Web Export + test + HTTP 200 SHA-256 parity PASS."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V6-TUNE60",
+      "timestamp": "2026-11-20T10:55:51Z",
+      "status": "DONE",
+      "summary": "Chốt tinh chỉnh v6: attack ~60ms/frame (4 ticks=66.7ms) + nối đòn 20ms; walk Base/SSJ 200px/s; bay & combat_move 400px/s; combat_move 90ms/60ms (lùi & tiến); tầm đánh thường <20px. Full Web Export + test + HTTP 200 SHA-256 parity PASS."
     }
   ],
   "quick_resume_commands": [
@@ -1567,5 +1651,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-19T13:58:02Z"
+  "last_updated_utc": "2026-11-20T10:55:51Z"
 }

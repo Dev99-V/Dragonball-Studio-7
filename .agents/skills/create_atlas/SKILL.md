@@ -112,7 +112,8 @@ Trước khi tạo chuyển động, lập bảng: `clip ID | chức năng | cơ
 
 Bản chuẩn là `.agents/skills/create_atlas/SKILL.md`; `.agent` là symlink tới `.agents`, không tạo bản độc lập hoặc đổi tên thư mục Owner chọn. `SKILL.md` là entrypoint của skill, khác `skills.md` gốc. Nội dung dùng được cho Codex/Antigravity; dùng khả năng xem ảnh thật của host, không nhận đã kiểm tra trực quan nếu chưa mở ảnh. Không tự sửa hooks/cài plugin hoặc nhận đã discovery trên cả hai CLI khi chưa kiểm chứng.
 
-### Chu kỳ walk/run theo Owner (2026-11-12)
+### Chu kỳ walk/run theo Owner (2026-11-12) & Kỹ thuật dựng Walk 2 chân 3/4 (2026-11-20)
+- **Tái sử dụng quy trình dựng Walk 2 chân góc 3/4 đã nghiệm thu (`walk_v6`)**: Khi nhân vật đứng 2 chân thiếu clip `walk` trong sheet gốc, đọc và áp dụng trực tiếp [bipedal-walk-synthesis.md](references/bipedal-walk-synthesis.md) (khóa góc 3/4 `Pose 0`, Dual-Anchor Identity + Pose Guide, sinh từng frame đơn `1024×1024` qua `route_media.py`, kiểm giải phẫu tay xa `F0`–`F1`, chuẩn hóa 1-pass `Nearest` `1px gameplay` khớp mốc chiều cao và `head_w spread <= 3px` + `bob` đối xứng `[0, 4, 0, -2, 0, 4, 0, -2]`).
 - Thiết kế một vòng tiến pha đầy đủ 0..N−1 rồi về0; không ping-pong hay đảo7..1 để vá loop. Không trùng pose đầu/cuối; lấy mẫu pha trong [0,360°). Review cả cuối→đầu, hai chân đổi vai trò trụ/vung, không chỉ xem pixel/hash khác nhau. Gần trùng pose hoặc lò cò = motion FAIL, phải sửa nguyên pose nguồn.
 - Run: walk chỉ làm tham khảo concept/giải phẫu, không copy frame và tăng playback để làmrun. Theo Owner làm rõ2026-11-12, sinh pose chạy toàn thân riêng (sải/chúi thân/đẩy chân/thu chân/tiếp đất), kiểm vòng0..N−1→0 riêng. Quy định dùng chung frame/duration0.5 trước đây bị thay thế; không dùng làm mặc định nữa.
 - Turn bắt buộc theo contract trên; khai báo tick và nối thực tế vào runtime hai chiều. Không sửa đòn xoay đã đạt chỉ vì thêm turn.

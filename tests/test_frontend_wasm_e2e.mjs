@@ -221,7 +221,9 @@ if (apiPayload.godot_web_ready) {
   assert.ok(!getEl('godotWebFrame').src, 'Godot Web iframe must lazy-load only when Tab Arena or toggle is activated');
 }
 assert.ok(apiPayload.roster.characters.some(c => c.character_id === 'floating_camera'), 'Floating Camera must be finalized in roster.json');
-assert.equal(T.state.api.roster.characters.length, 11, 'Finalized roster must include all 11 approved characters');
+assert.equal(T.state.releaseRosterCount, 11, 'Finalized roster must include all 11 approved characters');
+const activeReviewCount = apiPayload.review?.roster?.characters?.length || 0;
+assert.equal(T.state.api.roster.characters.length, 11 + activeReviewCount, 'UI roster list must include all 11 finalized characters plus active review demos');
 T.selectCharacter('floating_camera');
 assert.equal(T.state.activeChar.character_id, 'floating_camera', 'Floating Camera must select inside Human Test');
 assert.deepEqual(Array.from(T.getBodyDims(T.state.activeChar)), [70, 74], 'Floating Camera body bbox must be 70x74');

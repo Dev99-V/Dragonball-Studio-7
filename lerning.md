@@ -752,4 +752,62 @@
   3. Đặt `Cache-Control: no-store, no-cache, must-revalidate` cho toàn bộ `/`, `/manifest.json`, `/play/*`, `/download/*`.
 - **Kiểm chứng**: Xác minh thực tế live headers/body trên `https://dr7-alpha-staging.hem-tra.workers.dev`, nâng SemVer đồng bộ `v0.17.0` (`VERSION`, `state.json`, `project.godot`, `Cargo.toml`, `export_presets.cfg`), vượt `./loop.sh test` (`exit 0`), `./loop.sh build-all` 1:1, commit + tag `v0.17.0`, và đẩy lại R2 + Worker mang đúng `v0.17.0` + commit release mới.
 
+### [LRN-110] Chuẩn hóa độ nét theo `walk_v6`, khóa 0-jitter cho clip có aura/tĩnh, không cắt tóc `jump` & đồng bộ trực tiếp tướng lên Sân Tập `localhost:8080` (2026-11-20)
+- **Nguyên nhân thực tế phát hiện qua Owner Human Test Đợt 1**:
+  1. Căn tâm `median(xs)` hoặc `bottom_mid` theo toàn bộ bbox ngoài làm rung khung hình `idle` (`01`), `transform_ssj` (`02+03`), `detransform_base` và `idle_ssj_aura` (`04`) vì cánh tay/hào quang thay đổi lệch trái-phải mỗi frame.
+  2. Dùng `y_band=(78, 360)` toàn chiều ngang để bỏ mũi tên vàng góc trên trái của `07. nhảy.png` vô tình cắt ngang đỉnh tóc các frame nhảy cao (`F1`, `F2`, `F4`, `y=56..64`).
+  3. Scale nguồn chụp GBA/DS bằng fractional `NEAREST` (`0.52×–0.69×`) tạo bậc thang gãy nét, lệch rõ khi ghép với `walk_v6` đã nâng nét `1px gameplay`; vẽ lại `fly_aura` nằm ngang hoàn toàn làm mất 1 chân và dài hơn `fly_launch` Frame #3 (`image copy.png`).
+  4. Tab Sân Tập `localhost:8080` nạp `/godot-web/index.html` không kích hoạt `dev_sandbox` và bị Service Worker cũ cache `index.pck` cũ còn giữ nút/tướng Drum.
+- **Cách khắc phục đã kiểm chứng**:
+  1. Khóa `idle` bằng tương quan 2D phần giày trụ (`stabilize_sequence_by_boots`) và khóa `02/03/04` theo thân nhân vật bên trong (`detect_internal_body_anchor`: tách áo cam/xanh/da khỏi hào quang vàng/trắng ngoài) → triệt tiêu rung khung hình.
+  2. Trên `07. nhảy.png`, chỉ xóa đúng hộp mũi tên vàng `(0, 0, 118, 84)`, giữ nguyên toàn bộ đỉnh tóc `F0..F5`.
+  3. Áp dụng thống nhất pipeline `EPX Scale2x → Premultiplied LANCZOS → Unsharp → hard alpha 0/255` đồng bộ độ nét 1px theo `walk_v6` cho toàn bộ 24 clip; dựng `fly_aura` v2 bám trực tiếp góc độ & đủ 2 chân của `image copy.png` (`fly_launch` Frame #3) + khóa đúng kích thước thân `94px` (`Sobel 840–868`, `1px_run >= 0.9665`).
+  4. Trong `AppStartup.gd` tự vào `ArenaSandbox` khi nhúng iframe tại `localhost`/`127.0.0.1` (`enable_field_mode(true, true)` sinh thẳng Son Goku), chèn script gỡ SW + `Cache-Control: no-store` trong `loop.sh web-export` & `tools/preview/server.py`.
+
+### [LRN-111] Tách nền bảo toàn tóc đen Base (`01`) vs đục hốc kín hào quang (`02` F3-F5), khóa `0.0px` không dính vòng đất trắng (`04`) & xói biên chống ăn nhầm viền hồng-vàng (`fly_aura`) (2026-11-20)
+- **Nguyên nhân thực tế phát hiện qua Owner Human Test Đợt 1 v2 (`image copy 3.png`, `image copy 4.png`)**:
+  1. `01` (`idle` Base) có điểm sáng tóc xám tối `RGB [27..31, 28..32, 28..32]` trùng màu nền `#202020`, nên bộ lọc `tight_pocket` toàn cục đục thủng chấm trắng lõm chõm trên tóc đen khi chuyển nền trắng. Ngược lại `02` (`transform_ssj` F3-F5) có nền xám xanh `[28, 33, 38]` (`chroma = 10 > 6`) nên `tight_pocket` (`chroma <= 6`) lại bỏ sót các hốc nền kín lớn kẹt trong vòng hào quang vàng.
+  2. Thân Goku thực tế trong `02/03/04` cao `152–155px` (chứ không phải `188–192px` đo theo hào quang), khiến tỷ lệ cũ thu nhỏ Goku mất ~20% so với `walk_ssj`; đồng thời tương quan toàn alpha (`vis`) trên `04` bị vòng hào quang & vòng đất trắng kéo lệch từng frame.
+  3. Khi đo bề rộng thân `fly_aura` trên ảnh nền `#FF00FF`, viền pha `1px` giữa vàng `#FFFF39` và hồng `#FF00FF` tạo màu hồng da `(255, 140, 140)` trùng ngưỡng màu da mặt, làm thuật toán đo nhầm toàn bộ đuôi sao chổi thay vì thân nhân vật và thu nhỏ `fly_aura` ~25%.
+- **Cách khắc phục đã kiểm chứng**:
+  1. Tách 2 chế độ đục hốc kín theo thành phần liên thông trong `key_dark_sheet_v3`: với sheet không hào quang (`01`, `tight_bg_diff=6`) chỉ đục hốc `>= 22px` không bị bao quanh bởi tóc đen (`0` lỗ tóc trên cả 14 frame); với sheet có hào quang (`02/03/04`, `chroma <= 13`) đục sạch 100% hốc nền kín kề hào quang vàng (`0` hốc trên `F3-F5`).
+  2. Chuẩn hóa hệ số scale toàn bộ 25 clip đúng theo chiều cao thân Goku `125px` của `walk_v6` (`01: 125/182`, `02: 125/152`, `03/04: 125/155`, `34: 125/158`); khóa `02` theo `row_ground_y` và khóa `04` chỉ trên mặt nạ `blue_boots | skin` (loại trừ hoàn toàn lửa vàng/cam và viền vòng đất trắng).
+  3. Xói biên alpha (`binary_erosion(10px)`) trước khi đo bề rộng thân `blue_boots | orange_gi | skin` cho `fly_aura` v3 → đúng tỷ lệ 1:1 với `walk_ssj` (`162..169px` tổng, thân `109..111px` nằm ngang song song mặt đất).
+
+### [LRN-112] Triệt tiêu `89/142` hốc nền đen kín bị `dark_frac < 0.65` chặn, bỏ `UnsharpMask` gây nhòe ảnh screenshot & sửa lỗi Drum spawn đầu map qua Codespaces URL (2026-11-20)
+- **Nguyên nhân thực tế phát hiện qua Owner Human Test Đợt 1 v3 (`image copy 5.png`)**:
+  1. Mọi khe nền kín giữa cánh tay–eo hoặc giữa 2 chân trong pixel art đều được bao quanh >85% bởi viền đen nhân vật, nên điều kiện `dark_frac < 0.65` ở `v3` đã vô tình **bỏ sót `89/142` frame** còn hốc nền đen `#202020` (`image copy 5.png` `Lasso(125,197,16,23)` trên `idle`, `jump #0/#5`, `attack_light #0`, `hit 0/1/3/5`, `transform #0/#1`, `detransform #4..#6`).
+  2. Chạy `UnsharpMask(145%)` lên ảnh chụp screenshot mờ làm nổi quầng bệt nâu/đỏ quanh viền và giữ nguyên hình dạng lệch giữa `01` Base cũ với `walk_base`.
+  3. Khi mở Sân Tập qua URL Codespaces (`*.app.github.dev`), `AppStartup.gd` chỉ kiểm `hostname == localhost/127.0.0.1` nên rơi vào nhánh Alpha Login và `ArenaSandbox.configure_alpha_session()` vẫn mặc định spawn `"drum"` đến khi bấm Ẩn/Hiện Tướng mới đổi sang Son Goku.
+- **Cách khắc phục đã kiểm chứng**:
+  1. Trong `key_dark_sheet_v4`: với mọi sheet SSJ1 (tóc vàng, 0 tóc đen) đục 100% hốc nền kín `>= 3px` không điều kiện `dark_frac`; với sheet có tóc đen Base đục toàn bộ hốc dưới cổ áo (`cy >= torso_top_y - 4`) và kèm cổng QA tự động `audit_zero_enclosed_dark_pockets` bắt buộc `0 / 132` frame còn hốc 2D `>= 2×2`.
+  2. Dựng lại `idle_base` 4 frame bằng Codex CLI khóa 1:1 theo `walk_base_00` (`67×125 px`, `Sobel 178.0`, `shifts=[(0,0)x4]`) và thay `UnsharpMask` bằng `Premultiplied BOX + Walk-Palette Harmonization` cho toàn bộ clip SSJ1.
+  3. Mở rộng điều kiện nhận diện iframe Sân Tập `/godot-web/` cho `*.app.github.dev` trong `AppStartup.gd` và nâng cấp session `"drum"` sang `DEFAULT_HERO_ID = "songoku_hero_demo"` trong `ArenaSandbox.configure_alpha_session()`.
+
+### [LRN-113] Khắc phục lỗi Quái mất máu nhưng bị đơ / không phản công (`_turn_pending` deadlock + ngoài biên zone + bay trên đầu)
+- **Ngày**: 2026-11-20
+- **Nguyên nhân gốc (3 nhánh)**:
+  1. Khi quái có clip `turn` (`t_rex`, `spinosaurus`, `sarcosuchus`, `dilophosaurus`) đang xoay (`_turn_pending == true`) mà bị đánh vỡ stamina, `_trigger_slot_single_hit_anim()` gọi trực tiếp `spr.play(&"hit")` cướp quyền `AnimatedSprite2D` khỏi `SkillAnimator`, khiến `skill_finished(&"turn")` không bao giờ phát → `_turn_pending` kẹt `true` vĩnh viễn và `_step_slot()` bị kẹt ở nhánh `if turn_pending: return` mãi mãi!
+  2. Đánh quái khi nhân vật đứng ngoài `[zone_min_x, zone_max_x]` khiến `_is_player_in_slot_aggro()` trả `false` → quái mất máu nhưng không kích phản công.
+  3. Nhân vật bay/lơ lửng ngay trên đầu quái mặt đất (`edge_gap <= 50` nhưng `dy > 110`) rơi vào nhánh `else: idle` bất động; đồng thời đòn đánh đa frame (`4–5` hit/clip) trừ thẳng `20` stamina mỗi frame hit làm quái vỡ giáp/stun quá dày.
+- **Cách khắc phục & Kiểm chứng**:
+  - Giữ nguyên `scenes/CharacterFighter2D.gd` bất biến theo khóa SHA-256 contract; tự phục hồi `_turn_pending = false` ngay trong `ArenaSandbox._is_fighter_turning()` khi `spr.animation != _turn_clip` và xóa trực tiếp `_turn_pending`/`_turn_clip` trong `FieldCombatManager._trigger_slot_single_hit_anim()` & `_kill_slot_monster()`.
+  - Thêm `slot["provoked_timer_s"] = 5.0` khi nhận sát thương để quái phản công kể cả khi bị đánh ngoài zone; bổ sung anti-air `power_up` khi player bay ngay trên đầu (`dy > 110`); chia đều `STAMINA_PER_HIT` theo số hit frame trên combo Son Goku.
+  - Khóa bằng unit test hồi quy trong `tests/test_arena_sandbox.gd` (`v5 T1`).
+
+### [LRN-114] Khóa 0-rung `idle_ssj_aura` bằng RGB L1 body template & khóa tỷ lệ `fly_aura` theo trang bị xanh dương
+- **Ngày**: 2026-11-20
+- **Nguyên nhân**:
+  1. `stabilize_by_mask` dùng `max_dx=6, max_dy=3` trên `04. trạng thái aura tĩnh.png` đã cắt cụt độ lệch thực tế `(-6,-7)` của F1 và `(-9,-2)` của F3 khiến khung hình bị rung lại.
+  2. Đo thân `fly_aura` có gộp màu cam (`r>195, g=75..155`) bị tia lửa cam phía sau giày làm kéo dài chiều rộng đo được ở F0/F2, khiến F1 bị phóng to ~12% khi chuẩn hóa.
+- **Cách khắc phục & Kiểm chứng**:
+  - Khóa `idle_ssj_aura` bằng `stabilize_idle_ssj_aura_rgb_l1(max_dx=18, max_dy=18)` chỉ so khớp vùng cơ thể không bị aura che (viền tối + xanh dương + da mặt + mắt ngọc) kèm cổng QA tự động `eye_x_spread <= 1.2px, eye_y_spread <= 1.2px` (đạt `dx=0.733px, dy=1.133px`).
+  - Khóa tỷ lệ `fly_aura` 4 frame theo duy nhất vùng trang bị xanh dương (`boots + undershirt + belt + wristband`, miễn nhiễm 100% với tia lửa vàng/cam) đạt `93–94 px` đồng đều cả 4 frame; và khóa `transform F0–F2` theo chiều cao thân không aura `125 px` (`y=[123..247]`) khớp 1:1 `walk_base_00`.
+
+### [LRN-115] Khóa SHA-256 Base Goku đã duyệt, Utility AI Auto-Battle & Cơ chế Quái Hòa bình ⇄ Chiến đấu (2026-11-20)
+- **Tóm tắt chuẩn v6**:
+  1. **Khóa bất biến 24 frame Base Goku**: Lưu SHA-256 của toàn bộ `idle_base_00..12`, `walk_base_00..07`, `transform_00..02` tại `work/characters/songoku_ssj1/approved_base_lock/base_approved_lock.json` và `review/songoku_hero_demo/base_approved_lock.json`; cổng `QA GATE 0` trong `build_songoku_phase1.py` chặn build ngay nếu sai lệch dù chỉ 1 byte.
+  2. **Quái Hòa bình ⇄ Chiến đấu & bàn giao lượt (`FieldCombatManager.gd`)**: Quái thường spawn ở `"peace"` (không chủ động đánh), chỉ chuyển `"combat"` khi bị tấn công (giữ đến khi chết, hồi sinh về `"peace"`). Boss Drum miễn trừ (luôn `"combat"`), đánh Boss không kéo quái thường sang `"combat"`. Khi attacker khác bỏ chạy/chuyển cảnh (`notify_attacker_fled()`), quái hoàn tất nốt 1 lượt đánh đã gắn (`committed_target_id`) rồi xóa khóa người cũ nhưng giữ `"combat"` để tự đánh tướng đi ngang sau đó.
+  3. **Tự động bay đánh quái trên không + Nút `AUTO` Utility AI**: `UtilityAIController.evaluate_hero_auto()` ưu tiên (1) Dịch chuyển (khi đủ stamina), (2) Nhảy & Bay lên (`fly_aura`) với mục tiêu trên cao; đánh thường `< 30 px` (`150 ms/frame`, nối `170 ms`, `combat_move = 300 px/s`); `hit` vỡ giáp chỉ kích hoạt đúng 1 lần tại khoảnh khắc `armor > 0 → 0`; thao tác tay tự tắt `AUTO` ngay lập tức.
+
 <!-- LERNING_ENTRIES_END -->

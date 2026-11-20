@@ -1,0 +1,274 @@
+{
+  "frames": [
+    {
+      "filename": "0",
+      "frame": {
+        "x": 3,
+        "y": 3,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 100
+    },
+    {
+      "filename": "1",
+      "frame": {
+        "x": 199,
+        "y": 3,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 100
+    },
+    {
+      "filename": "2",
+      "frame": {
+        "x": 395,
+        "y": 3,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 100
+    },
+    {
+      "filename": "3",
+      "frame": {
+        "x": 3,
+        "y": 167,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 100
+    },
+    {
+      "filename": "4",
+      "frame": {
+        "x": 199,
+        "y": 167,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 100
+    },
+    {
+      "filename": "5",
+      "frame": {
+        "x": 395,
+        "y": 167,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 100
+    },
+    {
+      "filename": "6",
+      "frame": {
+        "x": 3,
+        "y": 331,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 100
+    },
+    {
+      "filename": "7",
+      "frame": {
+        "x": 199,
+        "y": 331,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 100
+    },
+    {
+      "filename": "8",
+      "frame": {
+        "x": 395,
+        "y": 331,
+        "w": 192,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 160
+      },
+      "duration": 200
+    }
+  ],
+  "meta": {
+    "app": "agent-sprite-forge export_engine.py",
+    "version": "0.4.0",
+    "image": "songoku_ssj1_walk_demo.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 590,
+      "h": 494
+    },
+    "scale": "1",
+    "frameTags": [
+      {
+        "name": "walk",
+        "from": 0,
+        "to": 7,
+        "direction": "forward",
+        "color": "#000000ff",
+        "data": "{\"events\":[{\"name\":\"step_l\",\"frame\":0,\"at_ms\":0},{\"name\":\"step_r\",\"frame\":4,\"at_ms\":400}]}"
+      },
+      {
+        "name": "idle",
+        "from": 8,
+        "to": 8,
+        "direction": "forward",
+        "color": "#000000ff"
+      }
+    ],
+    "layers": [
+      {
+        "name": "sprite",
+        "opacity": 255,
+        "blendMode": "normal"
+      }
+    ],
+    "slices": [
+      {
+        "name": "anchor",
+        "color": "#0000ffff",
+        "data": "{\"anchor_px\":[96.0,144.0]}",
+        "keys": [
+          {
+            "frame": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "w": 192,
+              "h": 160
+            },
+            "pivot": {
+              "x": 96,
+              "y": 144
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "animations": {
+    "walk": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "idle": [
+      "8"
+    ]
+  }
+}

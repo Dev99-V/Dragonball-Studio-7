@@ -295,8 +295,12 @@ func run_test() -> void:
 		fail("get_stage_metrics() missing D1/D3 display telemetry: " + str(stage_metrics_check))
 		return
 
-	if arena.roster_characters.size() != 11:
-		fail("Expected 11 finalized characters including Floating Camera, got " + str(arena.roster_characters.size()))
+	var finalized_count := 0
+	for _re in arena.roster_characters:
+		if _re is Dictionary and str(_re.get("faction", "")) != "review_demo" and str(_re.get("status", "")) != "human_test_pending":
+			finalized_count += 1
+	if finalized_count != 11:
+		fail("Expected 11 finalized characters including Floating Camera, got " + str(finalized_count) + " (total=" + str(arena.roster_characters.size()) + ")")
 		return
 
 	for entry in arena.roster_characters:
@@ -1057,8 +1061,8 @@ func run_test() -> void:
 			fail("Slot %d mismatch: got %s HP=%s, expected %s HP=%s" % [si, str(s["character_id"]), str(s["max_hp"]), exp_ids[si], str(exp_hps[si])])
 			return
 
-	# Spawn Drum at far left of map
-	arena.set_field_hero_visible(true)
+	# Spawn Drum explicitly for legacy Drum PowerUp orb + 1500 HP test
+	arena.set_field_hero_visible(true, "drum")
 	await process_frame
 	if arena.player_node == null or not fm.player_spawned or absf(arena.player_node.position.x - (arena.walkable_min_x + 24.0)) > 2.0:
 		fail("Drum must spawn at far left end of map")
@@ -1639,6 +1643,8 @@ func run_test() -> void:
 		arena.player_node.position = monster.position - Vector2(250.0, 0.0)
 		arena.player_node.position.x += float(fm._compute_slot_edge_gap(chilopoda)) - target_gap
 		var actual_gap := float(fm._compute_slot_edge_gap(chilopoda))
+		chilopoda["combat_state"] = "combat"
+		chilopoda["aggro_target_id"] = "local"
 		chilopoda["cooldown_s"] = 0.0
 		fm._step_slot(chilopoda, 1.0 / 60.0)
 		if absf(actual_gap - target_gap) > 10.0 or str(chilopoda["action_clip"]) != expected_clip:
@@ -1717,7 +1723,8 @@ func run_test() -> void:
 
 	# Phase 1 regression checks (alpha-login-cloudflare-handoff.md):
 	# (A) Drum Field Mode Mana & queued power_up overwritten by teleport / repeated input
-	arena.enable_field_mode(true, true)
+	arena.enable_field_mode(true, false)
+	arena.set_field_hero_visible(true, "drum")
 	await process_frame
 	var p1_fm = arena.field_manager
 	var p1_spr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
@@ -1818,8 +1825,439 @@ func run_test() -> void:
 		fail("Phase 1 (B): Homing orb steering across Step 1 cliff face must stop on terrain without damaging target behind wall (hp=%.1f)" % float(p1_slot["hp"]))
 		return
 
+	# === SON GOKU HERO PHASE 1 TESTS (Default Hero replacing Drum, Base<->SSJ1, 7-Step Combo, Stamina Teleport, Flight+Fly_Aura) ===
+	arena.set_field_hero_visible(true)
+	await process_frame
+	if arena.active_character_id != "songoku_hero_demo" or arena.player_node == null or not bool(arena.player_node.call(&"is_hero_songoku")):
+		fail("Default Hero must now be Son Goku ('songoku_hero_demo'), got %s" % arena.active_character_id)
+		return
+	var goku: Node2D = arena.player_node
+	# 1) Starts in Base form: cannot attack, jump, or fly
+	if bool(goku.get("is_ssj")) or bool(goku.call(&"can_attack")) or bool(goku.call(&"can_jump")) or bool(goku.call(&"can_fly")):
+		fail("Son Goku must start in Base form with attacks/jump/fly locked")
+		return
+	var sg_slot: Dictionary = p1_fm.slots[0]
+	var sg_mnode: Node2D = sg_slot["node"] as Node2D
+	sg_slot["alive"] = true
+	sg_slot["hp"] = 1000.0
+	goku.position = Vector2(sg_mnode.position.x - 40.0, sg_mnode.position.y)
+	p1_fm.pointer_kind = "enemy"
+	p1_fm.pointer_slot_id = str(sg_slot["id"])
+	if p1_fm.request_player_primary_action():
+		fail("Son Goku in Base form must NOT attack enemies")
+		return
+	# 2) Transform to SSJ1 in Peace mode: invulnerable during transform, loops idle_ssj_aura until move/combat!
+	arena._on_touch_action("transform_ssj")
+	if not bool(goku.get("is_ssj")) or not bool(goku.call(&"can_attack")) or not bool(goku.call(&"can_fly")):
+		fail("Transform SSJ1 must unlock attacks, jump, and flight")
+		return
+	if not bool(goku.call(&"is_transform_invulnerable")):
+		fail("Son Goku must be invulnerable during transform_ssj animation")
+		return
+	var hp_before_invuln: float = p1_fm.player_hp
+	p1_fm.apply_damage_to_player(120.0)
+	if absf(p1_fm.player_hp - hp_before_invuln) > 0.1:
+		fail("Damage during transform_ssj must be blocked (invulnerable)")
+		return
+	# Clear transform invulnerability after transform finishes -> loops idle_ssj_aura in Peace!
+	goku.set("transform_invuln_s", 0.0)
+	var g_spr: AnimatedSprite2D = goku.get_node("Sprite") as AnimatedSprite2D
+	g_spr.play(&"idle_ssj_aura")
+	p1_fm.set_player_immortal(false)
+	if g_spr.sprite_frames.has_animation(&"fly_launch") or g_spr.sprite_frames.has_animation(&"idle_ssj"):
+		fail("fly_launch (19) and redundant idle_ssj must BOTH be REMOVED from Songoku Hero SpriteFrames")
+		return
+	if not g_spr.sprite_frames.has_animation(&"idle_combat") or not g_spr.sprite_frames.has_animation(&"combat_enter"):
+		fail("34 Combat Stance clips (combat_enter & idle_combat) must exist")
+		return
+	if String(goku.call(&"resolve_locomotion_clip", false, false)) != "idle_ssj_aura":
+		fail("In SSJ1 Peace mode, standing clip must be idle_ssj_aura")
+		return
+	# Peace vs Combat state flags
+	var peace_flags: Dictionary = goku.call(&"get_clip_state_flags")
+	if not bool(peace_flags.get("peace", false)) or not bool(peace_flags.get("walk", false)) or bool(peace_flags.get("combat_move", true)):
+		fail("Peace state flags must have walk=true, combat_move=false")
+		return
+	# Moving in Peace uses walk_ssj; stopping immediately returns to idle_ssj_aura!
+	if String(goku.call(&"resolve_locomotion_clip", true, false)) != "walk_ssj":
+		fail("Moving in SSJ1 Peace mode must use walk_ssj")
+		return
+	if String(goku.call(&"resolve_locomotion_clip", false, false)) != "idle_ssj_aura":
+		fail("Stopping movement in SSJ1 Peace mode must return to idle_ssj_aura")
+		return
+	# Incoming attack switches Peace -> Combat, bridges via combat_enter, & shows red CHIẾN ĐẤU banner!
+	p1_fm.apply_damage_to_player(50.0)
+	if not bool(goku.call(&"is_in_combat")):
+		fail("Being attacked must switch Son Goku from Peace to Combat state")
+		return
+	if arena.combat_banner_label == null or not arena.combat_banner_label.visible:
+		fail("Peace -> Combat transition must show red 'CHIẾN ĐẤU' banner")
+		return
+	if String(g_spr.animation) != "combat_enter":
+		fail("Peace -> Combat transition while standing in SSJ1 must play combat_enter bridge, got %s" % String(g_spr.animation))
+		return
+	var combat_flags: Dictionary = goku.call(&"get_clip_state_flags")
+	if bool(combat_flags.get("walk", true)) or not bool(combat_flags.get("combat_move", false)):
+		fail("Combat state flags must have walk=false, combat_move=true")
+		return
+	# Combat move exact 90ms / 60ms loop: backward #0 (90ms) <-> #1 (60ms); forward #3 (90ms) <-> #2 (60ms)!
+	if int(goku.call(&"step_combat_move_frame", 0.05, -1)) != 0:
+		fail("combat_move backward must start at Frame 0")
+		return
+	if int(goku.call(&"step_combat_move_frame", 0.095, -1)) != 1:
+		fail("combat_move backward after 90ms must loop to Frame 1")
+		return
+	if int(goku.call(&"step_combat_move_frame", 0.065, -1)) != 0:
+		fail("combat_move backward after 60ms on Frame 1 must loop back to Frame 0")
+		return
+	if int(goku.call(&"step_combat_move_frame", 0.05, 1)) != 3:
+		fail("combat_move forward must start at Frame 3")
+		return
+	if int(goku.call(&"step_combat_move_frame", 0.095, 1)) != 2:
+		fail("combat_move forward after 90ms must loop to Frame 2")
+		return
+	if int(goku.call(&"step_combat_move_frame", 0.065, 1)) != 3:
+		fail("combat_move forward after 60ms on Frame 2 must loop back to Frame 3")
+		return
+	# Armor-break HIT reaction (08)
+	p1_fm.apply_damage_to_player(30.0, Vector2(-99999.0, -99999.0), false, "armor_break")
+	if String(g_spr.animation) != "hit":
+		fail("Armor-break hit must play 'hit' clip, got %s" % String(g_spr.animation))
+		return
+	# 3) 7-Step Normal Combo sequence (10->11->12->13->14->17->15), new damage (10-20 / 50 / 60), per-frame hit list & persistence!
+	var expected_combo: Array[String] = ["attack_light", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7"]
+	for ci in range(7):
+		var cinfo: Dictionary = goku.call(&"pop_next_combo_attack")
+		if str(cinfo.get("clip", "")) != expected_combo[ci]:
+			fail("Combo step %d mismatch: got %s expected %s" % [ci, str(cinfo.get("clip", "")), expected_combo[ci]])
+			return
+		var cdmg: float = float(cinfo.get("damage", 0.0))
+		if ci < 5 and (cdmg < 10.0 or cdmg > 20.0):
+			fail("Light combo step %d damage must be in [10,20], got %.1f" % [ci, cdmg])
+			return
+		if ci >= 5 and absf(cdmg - 50.0) > 0.1:
+			fail("Heavy combo step %d damage must be 50, got %.1f" % [ci, cdmg])
+			return
+		if ci == 5 and (not bool(cinfo.get("has_gold_slash_60", false)) or absf(float(cinfo.get("gold_slash_damage", 0.0)) - 60.0) > 0.1):
+			fail("Attack 6 (file 17) penultimate golden slash frame must deal 60 damage")
+			return
+		if (cinfo.get("hit_frames", []) as Array).is_empty():
+			fail("Combo step %d must expose per-frame hit_frames" % ci)
+			return
+		if ci == 2:
+			# Use Teleport mid-combo -> combo_step MUST persist (NOT reset!)
+			var saved_step: int = int(goku.get("combo_step"))
+			arena._trigger_songoku_teleport(Vector2(1.0, 0.0))
+			if int(goku.get("combo_step")) != saved_step:
+				fail("Using Teleport skill mid-combo must NOT reset combo_step")
+				return
+	# Reset combo ONLY on KO/death
+	goku.set("combo_step", 4)
+	p1_fm.set_player_immortal(false)
+	p1_fm.apply_damage_to_player(99999.0)
+	if int(goku.get("combo_step")) != 0 or String(g_spr.animation) != "ko":
+		fail("Son Goku combo_step must reset to 0 and play 'ko' upon KO/death")
+		return
+	p1_fm.player_dead = false
+	p1_fm.player_hp = p1_fm.player_max_hp
+	# 4) Stamina Teleport: max 100, static -75, dash -25 (100px), regen +5/s
+	goku.set("stamina", 100.0)
+	if not arena._trigger_songoku_teleport(Vector2.ZERO) or absf(float(goku.get("stamina")) - 25.0) > 0.1:
+		fail("Static Teleport must consume 75 stamina (100 -> 25)")
+		return
+	if not arena._trigger_songoku_teleport(Vector2(1.0, 0.0)) or absf(float(goku.get("stamina"))) > 0.1:
+		fail("Moving Directional Teleport must consume 25 stamina (25 -> 0)")
+		return
+	if arena._trigger_songoku_teleport(Vector2(1.0, 0.0)):
+		fail("Teleport must fail when stamina < 25")
+		return
+	goku.call(&"step_hero_timers", 2.0, false, true, false, 0.0, false)
+	if absf(float(goku.get("stamina")) - 10.0) > 0.15:
+		fail("Stamina must regenerate +5/s (2.0s -> 10.0), got %.2f" % float(goku.get("stamina")))
+		return
+	# 5) 360° Jump (~100px apex, F0..F2 up / F3..F5 fall / F4 high-fall) + Hold Analog UP -> Fly_Aura (200px/s) -> 3s Fly_Prep -> Analog DOWN fast drop!
+	g_spr.play(&"idle_combat")
+	var start_gy: float = arena._ground_y_at(goku.position.x)
+	goku.position.y = start_gy
+	arena.player_vy = 0.0
+	goku.set("flight_state", "ground")
+	arena.step_player_movement(1.0 / 60.0, 0, 0, true, false, false, Vector2.ZERO)
+	var min_jump_y: float = goku.position.y
+	var saw_ascend_frame: bool = false
+	var saw_fall4_frame: bool = false
+	for _jf in range(45):
+		arena.step_player_movement(1.0 / 60.0, 0, 0, false, false, false, Vector2.ZERO)
+		min_jump_y = minf(min_jump_y, goku.position.y)
+		if String(g_spr.animation) == "jump":
+			if g_spr.frame >= 0 and g_spr.frame <= 2 and arena.player_vy < 0.0:
+				saw_ascend_frame = true
+			if g_spr.frame == 4 and arena.player_vy > 130.0:
+				saw_fall4_frame = true
+	var apex_h: float = start_gy - min_jump_y
+	if apex_h < 88.0 or apex_h > 112.0:
+		fail("Son Goku jump height must be ~100px, measured %.1fpx" % apex_h)
+		return
+	if not saw_ascend_frame or not saw_fall4_frame:
+		fail("Jump must use F0..F2 ascending and F4 falling (asc=%s, fall4=%s)" % [str(saw_ascend_frame), str(saw_fall4_frame)])
+		return
+	# Jump + Hold Analog UP -> enters `flying` (`fly_aura`)
+	goku.position.y = start_gy
+	arena.player_vy = 0.0
+	for _jfly in range(18):
+		arena.step_player_movement(1.0 / 60.0, 1, -1, false, false, false, Vector2(0.55, -0.83))
+	if str(goku.get("flight_state")) != "flying":
+		fail("Jump + Hold Analog UP in SSJ1 must enter 'flying' (fly_aura), got %s" % str(goku.get("flight_state")))
+		return
+	arena.step_player_movement(1.0 / 60.0, 0, 0, false, false, false, Vector2.ZERO)
+	if str(goku.get("flight_state")) != "hovering" or String(g_spr.animation) != "fly_prep":
+		fail("Releasing movement mid-flight must enter 3s 'hovering' (fly_prep), got %s/%s" % [str(goku.get("flight_state")), String(g_spr.animation)])
+		return
+	# Air attack / teleport active (> 3.5s) MUST NOT auto-drop; ONLY idle fly_prep counts down 3s!
+	goku.call(&"step_hero_timers", 3.5, false, false, false, 80.0, false, true)
+	if str(goku.get("flight_state")) != "hovering" or absf(float(goku.get("hover_timer_s")) - 3.0) > 0.05:
+		fail("Mid-air attack/teleport must NOT auto-drop after 3s (state=%s, hover_t=%.2f)" % [str(goku.get("flight_state")), float(goku.get("hover_timer_s"))])
+		return
+	# Pulling Analog DOWN while hovering immediately fast-drops without waiting 3s!
+	arena.step_player_movement(1.0 / 60.0, 0, 1, false, true, false, Vector2(0.0, 0.90))
+	if str(goku.get("flight_state")) != "falling" or arena.player_vy < 500.0:
+		fail("Analog DOWN during fly_prep hover must immediately fast-drop (state=%s, vy=%.1f)" % [str(goku.get("flight_state")), arena.player_vy])
+		return
+
+	# === SON GOKU PHASE 1 v5/v6 REGRESSION UNIT TESTS (T1..T8 FULL COVERAGE!) ===
+	# v6 T1: Verify Base Approved SHA-256 Lock file exists with all 24 Base frames!
+	if not FileAccess.file_exists("res://review/songoku_hero_demo/base_approved_lock.json"):
+		fail("v6 T1: Missing immutable review/songoku_hero_demo/base_approved_lock.json")
+		return
+	var base_lock_doc = JSON.parse_string(FileAccess.get_file_as_string("res://review/songoku_hero_demo/base_approved_lock.json"))
+	if not (base_lock_doc is Dictionary) or int(base_lock_doc.get("frame_count", 0)) != 24:
+		fail("v6 T1: base_approved_lock.json must lock all 24 approved Base Goku frames")
+		return
+
+	# v6 Tuning: walk 200px/s, combat_move 400px/s + 20px hover, fly_aura 400px/s, attack_light..attack_7 ~60ms/frame (4 ticks = 66.7ms) & 20ms combo link!
+	if absf(float(goku.get("WALK_SPEED_PX_S")) - 200.0) > 0.1 or absf(float(goku.get("COMBAT_MOVE_SPEED_PX_S")) - 400.0) > 0.1 or absf(float(goku.get("FLIGHT_SPEED_PX_S")) - 400.0) > 0.1 or absf(float(goku.get("COMBO_LINK_COOLDOWN_S")) - 0.02) > 0.005:
+		fail("v6 Tuning: walk=200px/s, combat_move=400px/s, fly_aura=400px/s, combo link=20ms required")
+		return
+	if g_spr.sprite_frames.get_frame_count(&"idle") < 12:
+		fail("v5 T7: idle_base must preserve full 01 warm-up animation sequence (>= 12 frames), got %d" % g_spr.sprite_frames.get_frame_count(&"idle"))
+		return
+	for atk_c in ["attack_light", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7"]:
+		var afps: float = maxf(1.0, g_spr.sprite_frames.get_animation_speed(StringName(atk_c)))
+		var fdur_ms: float = (g_spr.sprite_frames.get_frame_duration(StringName(atk_c), 0) / afps) * 1000.0
+		if fdur_ms < 58.0 or fdur_ms > 70.0:
+			fail("v6 Tuning: %s frame duration must be ~60ms (4 ticks @60Hz = 66.7ms), got %.1fms" % [atk_c, fdur_ms])
+			return
+	goku.set("is_ssj", true)
+	goku.call(&"enter_combat")
+	goku.set("flight_state", "ground")
+	goku.set("jump_land_hold_s", 0.0)
+	goku.position = Vector2(1800.0, arena._ground_y_at(1800.0))
+	arena.player_vy = 0.0
+	g_spr.play(&"idle_combat")
+	var cm_start_x: float = goku.position.x
+	arena.step_player_movement(0.10, 1, 0, false, false, false, Vector2(1.0, 0.0))
+	var cm_moved_x: float = absf(goku.position.x - cm_start_x)
+	var cm_hover_world_px: float = -g_spr.position.y * arena.char_scale
+	if String(g_spr.animation) != "combat_move" or absf(cm_hover_world_px - 20.0) > 0.35 or cm_moved_x < 37.0 or cm_moved_x > 43.0:
+		fail("v6 Tuning: combat_move must glide at 400px/s (dx=%.2f) with 20px foot hover (hover=%.2f, anim=%s)" % [cm_moved_x, cm_hover_world_px, String(g_spr.animation)])
+		return
+	arena.step_player_movement(1.0 / 60.0, 0, 0, false, false, false, Vector2.ZERO)
+	if absf(g_spr.position.y) > 0.01:
+		fail("v5 T4: stopping combat_move must reset Sprite.position.y to 0.0, got %.2f" % g_spr.position.y)
+		return
+
+	# v6 T3: Base Goku takes incoming hit -> AUTOMATICALLY activates SSJ1 (`transform_ssj`) + enters combat!
+	p1_fm.start_field(true)
+	p1_fm.set_player_immortal(false)
+	p1_fm.player_hp = p1_fm.player_max_hp
+	p1_fm.player_armor = p1_fm.player_max_armor
+	p1_fm.player_armor_broken_timer_s = 0.0
+	goku.call(&"reset_hero_state")
+	g_spr.play(&"idle")
+	p1_fm.apply_damage_to_player(20.0, Vector2(-99999.0, -99999.0), false, "melee")
+	if not bool(goku.get("is_ssj")) or String(g_spr.animation) != "transform_ssj" or str(goku.get("game_state")) != "combat":
+		fail("v6 T3: Base Goku taking damage must auto-activate SSJ1 (is_ssj=%s anim=%s state=%s)" % [str(goku.get("is_ssj")), String(g_spr.animation), str(goku.get("game_state"))])
+		return
+
+	# v6 T5: Player Armor Bar (100 max below Mana) drains on hit, breaks to 'hit' (08) STRICTLY ONCE at 0, does NOT re-trigger on subsequent hits while broken, and auto-refills after 3s!
+	p1_fm.player_hp = p1_fm.player_max_hp
+	p1_fm.player_armor = p1_fm.player_max_armor
+	p1_fm.player_armor_broken_timer_s = 0.0
+	goku.set("transform_invuln_s", 0.0)
+	g_spr.play(&"idle_combat")
+	for _arm_i in range(4):
+		p1_fm.apply_damage_to_player(15.0, Vector2(-99999.0, -99999.0), false, "melee")
+	if absf(p1_fm.player_armor - 20.0) > 0.1 or p1_fm.player_armor_broken_timer_s > 0.0 or String(g_spr.animation) == "hit":
+		fail("v6 T5: 4 light hits must drain armor 100->20 without triggering hit (armor=%.1f, anim=%s)" % [p1_fm.player_armor, String(g_spr.animation)])
+		return
+	p1_fm.apply_damage_to_player(15.0, Vector2(-99999.0, -99999.0), false, "melee")
+	if absf(p1_fm.player_armor) > 0.1 or absf(p1_fm.player_armor_broken_timer_s - 3.0) > 0.05 or String(g_spr.animation) != "hit":
+		fail("v6 T5: 5th hit must break armor (0), start 3.0s timer & play 'hit' (08) ONCE (armor=%.1f, t=%.2f, anim=%s)" % [p1_fm.player_armor, p1_fm.player_armor_broken_timer_s, String(g_spr.animation)])
+		return
+	# Subsequent hit during broken-armor window MUST NOT re-trigger 'hit'!
+	g_spr.play(&"idle_combat")
+	p1_fm.apply_damage_to_player(15.0, Vector2(-99999.0, -99999.0), false, "skill")
+	if String(g_spr.animation) == "hit":
+		fail("v6 T5: Subsequent hits while armor is already broken MUST NOT re-trigger 'hit'!")
+		return
+	p1_fm.step(3.1)
+	if absf(p1_fm.player_armor - 100.0) > 0.1 or p1_fm.player_armor_broken_timer_s > 0.0:
+		fail("v6 T5: broken armor must auto-refill to 100 after 3s (armor=%.1f, t=%.2f)" % [p1_fm.player_armor, p1_fm.player_armor_broken_timer_s])
+		return
+
+	# v6 Tuning Melee Range (< 20px): normal attack misses at edge_gap=26px (>=20px) and hits at edge_gap=12px (<20px)!
+	var rng_slot: Dictionary = p1_fm.slots[0]
+	var rng_node: Node2D = rng_slot["node"] as Node2D
+	p1_fm.pointer_kind = "enemy"
+	p1_fm.pointer_slot_id = str(rng_slot["id"])
+	goku.position = Vector2(rng_node.position.x - 260.0, rng_node.position.y)
+	goku.position.x += float(p1_fm._compute_slot_edge_gap(rng_slot)) - 26.0
+	var hp_before_26: float = float(rng_slot["hp"])
+	p1_fm.call("_execute_player_melee_hit", "melee", 20.0, false)
+	if absf(float(rng_slot["hp"]) - hp_before_26) > 0.1:
+		fail("v6 Tuning: Hero normal melee at edge_gap=26px (>=20px) MUST miss, hp=%s/%s" % [str(rng_slot["hp"]), str(hp_before_26)])
+		return
+	goku.position.x += float(p1_fm._compute_slot_edge_gap(rng_slot)) - 12.0
+	p1_fm.call("_execute_player_melee_hit", "melee", 20.0, false)
+	if float(rng_slot["hp"]) >= hp_before_26 - 1.0:
+		fail("v6 Tuning: Hero normal melee at edge_gap=12px (<20px) MUST hit!")
+		return
+
+	# v6 T6: Touch/normal attack on airborne flying monster automatically jumps & enters fly_aura!
+	var fly_slot: Dictionary = p1_fm.slots[7] # f0 flying bat_chiroptera
+	var fly_node: Node2D = fly_slot["node"] as Node2D
+	p1_fm.pointer_kind = "enemy"
+	p1_fm.pointer_slot_id = str(fly_slot["id"])
+	goku.set("is_ssj", true)
+	goku.set("flight_state", "ground")
+	goku.position = Vector2(fly_node.position.x - 40.0, arena._ground_y_at(fly_node.position.x - 40.0))
+	arena.player_vy = 0.0
+	g_spr.play(&"idle_combat")
+	var start_air_y: float = goku.position.y
+	p1_fm.request_player_primary_action()
+	if not p1_fm.auto_approach_active:
+		fail("v6 T6: Attacking airborne monster from ground must activate auto-approach!")
+		return
+	var entered_air_flight := false
+	for _af in range(28):
+		p1_fm.call("_step_auto_approach", 1.0 / 60.0)
+		if str(goku.get("flight_state")) == "flying":
+			entered_air_flight = true
+	if not entered_air_flight or goku.position.y >= start_air_y - 25.0:
+		fail("v6 T6: Auto-approach to airborne monster must jump & enter fly_aura upward (flying=%s, dy=%.1f)" % [str(entered_air_flight), start_air_y - goku.position.y])
+		return
+	p1_fm.cancel_auto_approach()
+
+	# v6 T7: AUTO toggle button + UtilityAIController.evaluate_hero_auto() (flying -> 1 teleport, 2 fly; close -> combo) + manual override disables AUTO!
+	var u_air_tp: Dictionary = UtilityAIController.evaluate_hero_auto({
+		"has_target": true, "is_songoku": true, "is_ssj": true, "is_busy": false,
+		"player_pos": Vector2(400.0, 800.0), "target_pos": Vector2(450.0, 260.0),
+		"edge_dist": 480.0, "v_gap": 450.0, "melee_range_px": 30.0,
+		"stamina": 100.0, "mana": 0.0, "has_power_up": false, "target_airborne": true, "is_airborne_flight": false, "can_light_attack": true,
+	})
+	var u_air_fly: Dictionary = UtilityAIController.evaluate_hero_auto({
+		"has_target": true, "is_songoku": true, "is_ssj": true, "is_busy": false,
+		"player_pos": Vector2(400.0, 800.0), "target_pos": Vector2(450.0, 260.0),
+		"edge_dist": 480.0, "v_gap": 450.0, "melee_range_px": 30.0,
+		"stamina": 10.0, "mana": 0.0, "has_power_up": false, "target_airborne": true, "is_airborne_flight": false, "can_light_attack": true,
+	})
+	var u_close: Dictionary = UtilityAIController.evaluate_hero_auto({
+		"has_target": true, "is_songoku": true, "is_ssj": true, "is_busy": false,
+		"player_pos": Vector2(400.0, 800.0), "target_pos": Vector2(420.0, 800.0),
+		"edge_dist": 18.0, "v_gap": 0.0, "melee_range_px": 30.0,
+		"stamina": 50.0, "mana": 0.0, "has_power_up": false, "target_airborne": false, "is_airborne_flight": false, "can_light_attack": true,
+	})
+	if str(u_air_tp.get("intent", "")) != "teleport_static" or str(u_air_fly.get("intent", "")) != "fly_chase" or str(u_close.get("intent", "")) != "attack_combo":
+		fail("v6 T7: Hero Utility AI mismatch: air_tp=%s air_fly=%s close=%s" % [str(u_air_tp.get("intent")), str(u_air_fly.get("intent")), str(u_close.get("intent"))])
+		return
+	arena.set_hero_auto_battle(true)
+	if not arena.hero_auto_battle_enabled:
+		fail("v6 T7: set_hero_auto_battle(true) must enable AUTO")
+		return
+	arena._on_mobile_pad_action(1, "attack_light")
+	if arena.hero_auto_battle_enabled:
+		fail("v6 T7: Manual action while AUTO is ON must immediately turn AUTO OFF (Owner A1)")
+		return
+
+	# v6 T8: Monster Peace vs Combat State Machine + Boss Exemption + Multi-player Flee Handoff!
+	p1_fm.start_field(true)
+	var peace_slot: Dictionary = p1_fm.slots[1] # g1 spinosaurus
+	var peace_node: Node2D = peace_slot["node"] as Node2D
+	if str(peace_slot.get("combat_state", "")) != "peace":
+		fail("v6 T8: Fresh field monster must start in 'peace', got %s" % str(peace_slot.get("combat_state")))
+		return
+	goku.position = Vector2(peace_node.position.x - 40.0, peace_node.position.y)
+	peace_slot["cooldown_s"] = 0.0
+	if bool(p1_fm.call("_is_player_in_slot_aggro", peace_slot)):
+		fail("v6 T8: Peaceful unprovoked monster MUST NOT aggro Hero walking beside it!")
+		return
+	# Attacking Boss Drum must NOT turn peaceful normal monsters into 'combat'!
+	var b_v6: Dictionary = p1_fm.spawn_boss_drum(peace_node.position.x + 200.0)
+	if str(b_v6.get("combat_state", "")) != "combat":
+		fail("v6 T8: Boss Drum must ALWAYS be in 'combat' state!")
+		return
+	p1_fm.apply_damage_to_slot(b_v6, 100.0, 10.0)
+	if str(peace_slot.get("combat_state", "")) != "peace":
+		fail("v6 T8: Attacking Boss Drum must NOT provoke peaceful normal monsters!")
+		return
+	# Remote attacker 'remote_p1' provokes monster, monster commits 1 attack turn, 'remote_p1' flees -> finishes 1 turn, THEN stays 'combat' and aggros passing local Hero!
+	p1_fm.apply_damage_to_slot(peace_slot, 50.0, 10.0, Vector2(-99999.0, -99999.0), "melee", false, Vector2.RIGHT, "remote_p1")
+	if str(peace_slot.get("combat_state", "")) != "combat" or str(peace_slot.get("aggro_target_id", "")) != "remote_p1":
+		fail("v6 T8: Damaged monster must enter 'combat' targeting attacker 'remote_p1'")
+		return
+	p1_fm.call("_start_slot_attack", peace_slot, "attack_light", 0.5)
+	p1_fm.notify_attacker_fled("remote_p1")
+	# Still finishing that 1 committed attack turn for remote_p1!
+	if str(peace_slot.get("committed_target_id", "")) != "remote_p1":
+		fail("v6 T8: Monster must finish its 1 committed turn against fleeing remote_p1 before switching!")
+		return
+	# Finish the committed attack turn -> now aggro_target_id clears, combat_state STAYS 'combat', and passing local Hero is IMMEDIATELY aggro'd!
+	peace_slot["action_timer_s"] = 0.0
+	p1_fm.call("_step_slot", peace_slot, 1.0 / 60.0)
+	if str(peace_slot.get("combat_state", "")) != "combat" or not str(peace_slot.get("aggro_target_id", "")).is_empty() or not bool(p1_fm.call("_is_player_in_slot_aggro", peace_slot)):
+		fail("v6 T8: After fleeing attacker's committed turn ends, provoked monster must stay 'combat' and aggro passing Hero!")
+		return
+
+	# T2: Persistent Target Pointer remains visible on locked enemy even after transient Red X fades out (>0.75s)!
+	var cyc_res: Dictionary = p1_fm.cycle_target_pointer()
+	if str(cyc_res.get("kind", "")) != "enemy" or str(cyc_res.get("slot_id", "")).is_empty():
+		fail("v5 T2: cycle_pointer() must lock an enemy target, got %s" % str(cyc_res))
+		return
+	p1_fm.step(1.2)
+	var ptr_info: Dictionary = p1_fm.get_active_target_pointer_info()
+	if not bool(ptr_info.get("visible", false)) or not bool(ptr_info.get("persistent", false)) or str(ptr_info.get("kind", "")) != "enemy":
+		fail("v5 T2: Target Pointer must stay persistently visible after 1.2s (got %s)" % str(ptr_info))
+		return
+
+	# T1: Monster freeze/no-counterattack regression checks (interrupted turn + out-of-zone provoke + airborne overhead anti-air!)
+	var t_slot: Dictionary = p1_fm.slots[3] # g3 = t_rex (has turn clip + power_up)
+	var t_node: Node2D = t_slot["node"] as Node2D
+	t_node.set("_turn_pending", true)
+	t_node.set("_turn_clip", &"turn")
+	p1_fm.call("_trigger_slot_single_hit_anim", t_slot)
+	if bool(arena.call("_is_fighter_turning", t_node)):
+		fail("v5 T1: Interrupting a turning monster with hit must clear _turn_pending so it never freezes permanently!")
+		return
+	# Out-of-zone attack must provoke aggro instead of leaving monster unresponsive
+	goku.position = Vector2(float(t_slot["zone_min_x"]) - 120.0, arena._ground_y_at(float(t_slot["zone_min_x"]) - 120.0))
+	p1_fm.apply_damage_to_slot(t_slot, 25.0, 5.0)
+	if not bool(p1_fm.call("_is_player_in_slot_aggro", t_slot)):
+		fail("v5 T1: Monster damaged from outside its zone must become provoked and enter aggro!")
+		return
+	# Ground monster with player hovering directly overhead (>110px) must fire anti-air power_up instead of freezing in idle!
+	t_slot["stun_timer_s"] = 0.0
+	t_slot["hit_anim_timer_s"] = 0.0
+	t_slot["cooldown_s"] = 0.0
+	t_slot["action_clip"] = ""
+	t_slot["action_timer_s"] = 0.0
+	t_slot["turn_lock_s"] = 0.5
+	goku.position = Vector2(t_node.position.x + 20.0, t_node.position.y - 165.0)
+	p1_fm.call("_step_slot", t_slot, 1.0 / 60.0)
+	if str(t_slot.get("action_clip", "")) != "power_up":
+		fail("v5 T1: Ground monster with player hovering overhead must counterattack with 'power_up', got '%s'" % str(t_slot.get("action_clip", "")))
+		return
+
 	var verified_roster_count: int = arena.roster_characters.size()
 	arena.queue_free()
 	await process_frame
-	print("[OK] Godot 4 ArenaSandbox 1920x1080 1:1 parity + Utility AI + %d characters PASSED!" % verified_roster_count)
+	print("[OK] Godot 4 ArenaSandbox 1920x1080 1:1 parity + Utility AI + Son Goku Phase 1 + %d characters PASSED!" % verified_roster_count)
 	quit(0)

@@ -361,3 +361,65 @@ func _evaluate_drum(
 		"edge_dist": edge_dist,
 		"reason": last_reason,
 	}
+
+
+static func evaluate_hero_auto(params: Dictionary) -> Dictionary:
+	## Utility AI decision engine for Hero Auto-Battle (Son Goku / Playable Heroes, Owner v6):
+	## - Ensures SSJ1 transformation before engaging if currently Base.
+	## - If target is airborne / high above ground:
+	##     Priority 1: Teleport (static -75 or air dash -25) when stamina allows & gap > melee_range
+	##     Priority 2: Jump + Fly up (`fly_aura`) toward target!
+	## - If target is close (< melee_range_px): normal combo attack (or skill `power_up` when mana >= 100 & supported).
+	## - If target is mid/far on ground: directional Teleport dash (-25) when stamina >= 45 & gap > 140px, else chase!
+	if not bool(params.get("has_target", false)):
+		return {"intent": "idle", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "no_target"}
+	var is_goku: bool = bool(params.get("is_songoku", false))
+	var is_ssj: bool = bool(params.get("is_ssj", true))
+	if is_goku and not is_ssj:
+		return {"intent": "transform_ssj", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_transform_ssj"}
+	if bool(params.get("is_busy", false)):
+		return {"intent": "busy", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "executing_action"}
+
+	var p_pos: Vector2 = params.get("player_pos", Vector2.ZERO)
+	var t_pos: Vector2 = params.get("target_pos", Vector2.ZERO)
+	var edge_dist: float = float(params.get("edge_dist", 999.0))
+	var v_gap: float = float(params.get("v_gap", 0.0))
+	var melee_range: float = float(params.get("melee_range_px", 20.0))
+	var stamina: float = float(params.get("stamina", 0.0))
+	var mana: float = float(params.get("mana", 0.0))
+	var has_power_up: bool = bool(params.get("has_power_up", false))
+	var target_airborne: bool = bool(params.get("target_airborne", false)) or (t_pos.y < p_pos.y - 68.0)
+	var is_airborne_flight: bool = bool(params.get("is_airborne_flight", false))
+	var can_light: bool = bool(params.get("can_light_attack", true))
+	var to_vec := t_pos - p_pos
+	var dir_x := -1 if to_vec.x < -6.0 else (1 if to_vec.x > 6.0 else 0)
+	var norm_vec := to_vec.normalized() if to_vec.length() > 1.0 else Vector2(float(dir_x if dir_x != 0 else 1), 0.0)
+
+	# 1. Within melee strike range (< 30px) and vertical alignment: attack combo or skill!
+	if edge_dist <= melee_range and v_gap <= 68.0:
+		if has_power_up and mana >= 100.0:
+			return {"intent": "power_up", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_close_power_up"}
+		if can_light:
+			return {"intent": "attack_combo", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_melee_combo"}
+		return {"intent": "wait_cooldown", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_combo_cooldown"}
+
+	# 2. Target is high up / flying: Priority 1 = Teleport, Priority 2 = Jump + Fly up!
+	if target_airborne:
+		if is_goku and stamina >= 75.0 and to_vec.length() >= 95.0:
+			return {"intent": "teleport_static", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_air_teleport_static"}
+		if is_goku and stamina >= 25.0 and to_vec.length() >= 110.0 and is_airborne_flight:
+			return {"intent": "teleport_dash", "move_dir": dir_x, "fly_vec": norm_vec, "jump": false, "reason": "auto_air_teleport_dash"}
+		return {
+			"intent": "fly_chase",
+			"move_dir": dir_x,
+			"fly_vec": norm_vec if is_airborne_flight else Vector2(norm_vec.x * 0.45, -0.90).normalized(),
+			"jump": not is_airborne_flight,
+			"reason": "auto_air_fly_chase",
+		}
+
+	# 3. Ground target at mid/far range: cast power_up if full mana, or directional teleport dash, or chase!
+	if has_power_up and mana >= 100.0 and edge_dist >= 160.0:
+		return {"intent": "power_up", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_ranged_power_up"}
+	if is_goku and stamina >= 45.0 and edge_dist >= 160.0 and absf(to_vec.y) <= 75.0:
+		return {"intent": "teleport_dash", "move_dir": dir_x, "fly_vec": Vector2(float(dir_x if dir_x != 0 else 1), 0.0), "jump": false, "reason": "auto_ground_teleport_dash"}
+	return {"intent": "chase", "move_dir": dir_x, "fly_vec": Vector2(float(dir_x), 0.0), "jump": false, "reason": "auto_ground_chase"}

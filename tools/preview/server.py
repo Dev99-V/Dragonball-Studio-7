@@ -83,6 +83,11 @@ def get_godot_web_bootstrap_status() -> dict:
     web_ready = is_godot_web_built()
     godot_ok = is_godot_installed()
     tpl_ok = is_godot_web_templates_installed()
+    pck_path = WEB_EXPORT_DIR / "index.pck"
+    pck_ver = ""
+    if pck_path.is_file():
+        st_p = pck_path.stat()
+        pck_ver = hashlib.sha256(f"{st_p.st_size}:{int(st_p.st_mtime_ns)}".encode("utf-8")).hexdigest()[:12]
     state = str(_GODOT_BOOTSTRAP_STATE.get("state", "idle"))
     if state == "idle" and web_ready and godot_ok:
         state = "ready"
@@ -94,6 +99,7 @@ def get_godot_web_bootstrap_status() -> dict:
         "godot_installed": godot_ok,
         "templates_installed": tpl_ok,
         "godot_web_ready": web_ready,
+        "pck_version": pck_ver,
         "updated_at_utc": str(_GODOT_BOOTSTRAP_STATE.get("updated_at_utc", "")),
     }
 
@@ -1228,7 +1234,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 ".svg": "image/svg+xml",
                 ".json": "application/json; charset=utf-8",
             }.get(ext, "application/octet-stream")
-            self._send_file(ctype, target, compress=ext in (".html", ".js", ".wasm", ".svg", ".json"))
+            self._send_file(ctype, target, cache_control="no-store, no-cache, must-revalidate", compress=ext in (".html", ".js", ".wasm", ".svg", ".json"))
             return
 
         if req_path == "/api/benchmarks":

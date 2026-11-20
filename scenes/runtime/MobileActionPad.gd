@@ -8,6 +8,7 @@ extends Control
 signal action_triggered(slot_id: int, action_id: String)
 signal target_cycle_requested()
 signal slot_binding_changed(slot_id: int, action_id: String)
+signal auto_battle_toggled(enabled: bool)
 
 const ACTION_LABELS := {
 	"attack_light": "Đánh",
@@ -16,6 +17,8 @@ const ACTION_LABELS := {
 	"power_up": "Chưởng",
 	"attack_heavy": "Đánh nặng",
 	"pickup_items": "Nhặt",
+	"transform_ssj": "Biến SSJ",
+	"fly_toggle": "Bay",
 	"empty": "Trống",
 }
 
@@ -26,10 +29,12 @@ const SHORT_LABELS := {
 	"power_up": "CHƯỞNG",
 	"attack_heavy": "NẶNG",
 	"pickup_items": "NHẶT",
+	"transform_ssj": "SSJ1",
+	"fly_toggle": "BAY",
 	"cycle_target": "TRỎ",
 }
 
-const ASSIGNABLE_ACTIONS := ["jump", "teleport", "power_up", "attack_heavy", "pickup_items", "empty"]
+const ASSIGNABLE_ACTIONS := ["jump", "teleport", "transform_ssj", "fly_toggle", "power_up", "attack_heavy", "pickup_items", "empty"]
 
 var analog_dir_x: int = 0
 var analog_dir_y: int = 0
@@ -39,6 +44,9 @@ var safe_root: MarginContainer = null
 var _anchor_ctrl: Control = null
 var _analog_ctrl: Control = null
 var _buttons_root: Control = null
+var _auto_btn: Button = null
+var _auto_visual: Control = null
+var _auto_battle_enabled: bool = false
 var _slot_buttons: Dictionary = {}
 var _slot_visuals: Dictionary = {}
 var _slot_bindings: Dictionary = {
@@ -59,6 +67,13 @@ var _max_mana: float = 100.0
 var _jump_enabled: bool = true
 var _flight_mode: bool = false
 var _pointer_kind: String = "enemy"
+var _hero_stamina: float = 100.0
+var _hero_max_stamina: float = 100.0
+var _hero_is_songoku: bool = false
+var _hero_is_ssj: bool = false
+var _hero_can_attack: bool = true
+var _hero_fly_active: bool = false
+var _hero_combo_step: int = 0
 
 # Analog drag tracking
 var _analog_touch_idx: int = -1
@@ -175,6 +190,35 @@ func _build_ui() -> void:
 		_slot_buttons[sid] = btn
 		_slot_visuals[sid] = vis
 
+	# Dedicated AUTO / TAY Battle Toggle Button (directly above TRỎ reticle, slot_id = 9)
+	_auto_btn = Button.new()
+	_auto_btn.name = "AutoBattleCircle"
+	_auto_btn.position = Vector2(12, 126)
+	_auto_btn.size = Vector2(62, 62)
+	_auto_btn.custom_minimum_size = Vector2(62, 62)
+	_apply_circle_button_theme(_auto_btn, 9)
+	_auto_btn.tooltip_text = "Bật/Tắt Tự Động Đánh Quái (Utility AI)"
+	_auto_visual = _SkillButtonVisual.new()
+	_auto_visual.name = "Visual"
+	_auto_visual.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_auto_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_auto_visual.set("pad_owner", self)
+	_auto_visual.set("owner_btn", _auto_btn)
+	_auto_visual.set("slot_id", 9)
+	_auto_btn.add_child(_auto_visual)
+	_auto_btn.pressed.connect(func() -> void:
+		_auto_battle_enabled = not _auto_battle_enabled
+		_auto_visual.queue_redraw()
+		auto_battle_toggled.emit(_auto_battle_enabled)
+	)
+	var redraw_auto := func() -> void:
+		_auto_visual.queue_redraw()
+	_auto_btn.button_down.connect(redraw_auto)
+	_auto_btn.button_up.connect(redraw_auto)
+	_auto_btn.mouse_entered.connect(redraw_auto)
+	_auto_btn.mouse_exited.connect(redraw_auto)
+	_buttons_root.add_child(_auto_btn)
+
 	_build_settings_modal()
 	_refresh_slot_buttons()
 
@@ -280,7 +324,18 @@ func is_screen_point_over_pad(screen_pos: Vector2) -> bool:
 		if btn != null and is_instance_valid(btn) and btn.visible:
 			if btn.get_global_rect().has_point(screen_pos):
 				return true
+	if _auto_btn != null and is_instance_valid(_auto_btn) and _auto_btn.visible:
+		if _auto_btn.get_global_rect().has_point(screen_pos):
+			return true
 	return false
+
+
+func set_auto_battle_enabled(enabled: bool) -> void:
+	_auto_battle_enabled = enabled
+	if _auto_btn != null and is_instance_valid(_auto_btn):
+		_auto_btn.tooltip_text = "AUTO ĐANG BẬT (Bấm hoặc kéo Analog để tắt)" if enabled else "Bật Tự Động Đánh Quái (Utility AI)"
+	if _auto_visual != null and is_instance_valid(_auto_visual):
+		_auto_visual.queue_redraw()
 
 
 var _configured_char_id: String = ""
@@ -306,11 +361,16 @@ func get_slot_binding(slot_id: int) -> String:
 func configure_for_character(char_id: String, available_clips: PackedStringArray, is_flying: bool) -> void:
 	_configured_char_id = char_id
 	_flight_mode = is_flying
+	_hero_is_songoku = (char_id == "songoku_hero_demo")
 	var avail := PackedStringArray(["attack_light"])
 	if is_flying or available_clips.has("jump"):
 		avail.append("jump")
 	if available_clips.has("teleport"):
 		avail.append("teleport")
+	if available_clips.has("transform_ssj"):
+		avail.append("transform_ssj")
+	if available_clips.has("fly_aura") or available_clips.has("fly_launch"):
+		avail.append("fly_toggle")
 	if available_clips.has("power_up"):
 		avail.append("power_up")
 	if available_clips.has("attack_heavy"):
@@ -318,7 +378,7 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 	_available_actions = avail
 	_jump_enabled = is_flying or available_clips.has("jump")
 
-	# Default bindings per character (Drum: 1=Đánh, 2=Nhảy, 3=Tốc biến, 4=Chưởng Orb, 5..7=empty)
+	# Default bindings per character
 	_slot_bindings[1] = "attack_light"
 	_slot_bindings[2] = "jump" if _jump_enabled else "empty"
 	_slot_bindings[3] = "teleport" if avail.has("teleport") else ("attack_heavy" if avail.has("attack_heavy") else "empty")
@@ -327,7 +387,12 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 	_slot_bindings[6] = "empty"
 	_slot_bindings[7] = "empty"
 	_slot_bindings[8] = "cycle_target"
-	if char_id == "drum":
+	if char_id == "songoku_hero_demo":
+		_slot_bindings[2] = "jump"
+		_slot_bindings[3] = "teleport"
+		_slot_bindings[4] = "transform_ssj"
+		_slot_bindings[5] = "empty"
+	elif char_id == "drum":
 		_slot_bindings[2] = "jump"
 		_slot_bindings[3] = "teleport"
 		_slot_bindings[4] = "power_up"
@@ -348,6 +413,16 @@ func set_mana_and_pointer_state(mana: float, max_mana: float, pointer_kind: Stri
 	_current_mana = mana
 	_max_mana = max_mana
 	_pointer_kind = pointer_kind
+	_refresh_slot_buttons()
+
+
+func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool, can_attack_now: bool, fly_active: bool, combo_step: int) -> void:
+	_hero_stamina = stamina
+	_hero_max_stamina = maxf(1.0, max_stamina)
+	_hero_is_ssj = is_ssj
+	_hero_can_attack = can_attack_now
+	_hero_fly_active = fly_active
+	_hero_combo_step = combo_step
 	_refresh_slot_buttons()
 
 
@@ -378,11 +453,16 @@ func _refresh_slot_buttons() -> void:
 		if sid == 1:
 			if _pointer_kind == "item":
 				btn.tooltip_text = "Nhặt vật phẩm"
+				btn.disabled = false
 			elif _pointer_kind == "npc":
 				btn.tooltip_text = "Nói chuyện"
+				btn.disabled = false
+			elif _hero_is_songoku and not _hero_can_attack:
+				btn.tooltip_text = "Đang ở dạng Base — Biến SSJ1 để tấn công"
+				btn.disabled = false
 			else:
-				btn.tooltip_text = "Đánh thường"
-			btn.disabled = false
+				btn.tooltip_text = "Đánh thường (Đòn %d/7)" % ((_hero_combo_step % 7) + 1) if _hero_is_songoku else "Đánh thường"
+				btn.disabled = false
 			if vis != null:
 				vis.queue_redraw()
 			continue
@@ -394,7 +474,20 @@ func _refresh_slot_buttons() -> void:
 			btn.disabled = _current_mana < 100.0
 		elif act == "jump":
 			btn.tooltip_text = lbl
-			btn.disabled = not _jump_enabled
+			btn.disabled = (not _jump_enabled) or (_hero_is_songoku and not _hero_is_ssj)
+		elif act == "fly_toggle":
+			btn.tooltip_text = "Hạ cánh" if _hero_fly_active else "Bay lên (Fly_Aura)"
+			btn.disabled = _hero_is_songoku and not _hero_is_ssj
+		elif act == "transform_ssj":
+			btn.tooltip_text = "Xả SSJ1 → Base" if _hero_is_ssj else "Biến hình SSJ1"
+			btn.disabled = false
+		elif act == "teleport":
+			if _hero_is_songoku:
+				btn.tooltip_text = "Dịch chuyển (TL %d/%d · Tĩnh -75 / Di chuyển -25)" % [int(floor(_hero_stamina)), int(round(_hero_max_stamina))]
+				btn.disabled = (not _hero_is_ssj) or (_hero_stamina < 25.0)
+			else:
+				btn.tooltip_text = lbl
+				btn.disabled = false
 		else:
 			btn.tooltip_text = lbl
 			btn.disabled = false
@@ -518,6 +611,21 @@ class _SkillButtonVisual extends Control:
 		var alpha_mul := 0.42 if disabled_now else 1.0
 		var font := ThemeDB.fallback_font
 
+		if slot_id == 9:
+			# Dedicated AUTO / TAY toggle button (glowing emerald-gold when ON, frosted dark when OFF)
+			var is_on: bool = bool(pad_owner._auto_battle_enabled)
+			var bg_c := Color(0.10, 0.34, 0.22, 0.90) if is_on else Color(0.08, 0.11, 0.16, 0.72)
+			var ring_c := Color(0.28, 0.98, 0.56, 0.98) if is_on else Color(0.86, 0.90, 0.96, 0.85)
+			draw_circle(center, r * 0.90, bg_c)
+			draw_arc(center, r * 0.90, 0.0, TAU, 36, ring_c, 3.0 if is_on else 2.2, true)
+			if is_on:
+				draw_arc(center, r * 0.72, -PI * 0.75, PI * 0.25, 18, Color(1.0, 0.88, 0.26, 0.95), 2.6, true)
+				draw_arc(center, r * 0.72, PI * 0.25, PI * 1.25, 18, Color(0.26, 0.96, 0.58, 0.95), 2.6, true)
+			if font != null:
+				draw_string(font, Vector2(center.x - 24.0, center.y + 4.0), "AUTO", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 12, Color(1.0, 0.96, 0.45, 1.0) if is_on else Color(0.92, 0.96, 1.0, 0.94))
+				draw_string(font, Vector2(center.x - 24.0, size.y - 6.0), "BẬT" if is_on else "TAY", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 9, ring_c)
+			return
+
 		if slot_id == 8:
 			# Green segmented target reticle inspired by image copy 8.png
 			var col_g := Color(0.22, 0.96, 0.52, (0.98 if not pressed_now else 1.0) * alpha_mul)
@@ -568,12 +676,15 @@ class _SkillButtonVisual extends Control:
 				if font != null:
 					draw_string(font, Vector2(center.x - 32.0, center.y + r * 0.50), "N.CHUYỆN", HORIZONTAL_ALIGNMENT_CENTER, 64.0, 11, Color(0.95, 0.99, 1.0, 0.95))
 			else:
-				_draw_fist_icon(center + Vector2(0.0, -6.0), r * 0.32, green_ring)
+				var locked_base: bool = bool(pad_owner._hero_is_songoku) and not bool(pad_owner._hero_can_attack)
+				var fist_col := Color(0.62, 0.66, 0.72, 0.65) if locked_base else green_ring
+				_draw_fist_icon(center + Vector2(0.0, -6.0), r * 0.32, fist_col)
 				if font != null:
-					draw_string(font, Vector2(center.x - 28.0, center.y + r * 0.50), "ĐÁNH", HORIZONTAL_ALIGNMENT_CENTER, 56.0, 12, Color(0.95, 0.99, 1.0, 0.95))
+					var atk_txt := "KHÓA" if locked_base else ("ĐÁNH %d/7" % ((int(pad_owner._hero_combo_step) % 7) + 1) if bool(pad_owner._hero_is_songoku) else "ĐÁNH")
+					draw_string(font, Vector2(center.x - 34.0, center.y + r * 0.50), atk_txt, HORIZONTAL_ALIGNMENT_CENTER, 68.0, 11, Color(0.95, 0.99, 1.0, 0.95))
 			return
 
-		# Secondary skill buttons (Jump, Teleport/Dash, PowerUp, AttackHeavy, Pickup)
+		# Secondary skill buttons (Jump, Teleport/Dash + Radial Stamina Ring, Transform SSJ, Fly, PowerUp, AttackHeavy, Pickup)
 		var icon_col := Color(0.95, 0.98, 1.0, 0.96 * alpha_mul)
 		var accent_col := Color(0.32, 0.88, 1.0, 0.95 * alpha_mul)
 		var short_lbl := str(SHORT_LABELS.get(act, act.to_upper()))
@@ -582,7 +693,31 @@ class _SkillButtonVisual extends Control:
 				short_lbl = "BAY"
 			_draw_jump_icon(center + Vector2(0.0, -6.0), r * 0.42, icon_col)
 		elif act == "teleport":
-			_draw_dash_icon(center + Vector2(0.0, -6.0), r * 0.44, icon_col, accent_col)
+			if bool(pad_owner._hero_is_songoku):
+				var s_ratio: float = clampf(float(pad_owner._hero_stamina) / maxf(1.0, float(pad_owner._hero_max_stamina)), 0.0, 1.0)
+				# Background track ring + active rotating radial stamina ring around Teleport skill button
+				draw_arc(center, r * 0.93, 0.0, TAU, 36, Color(0.18, 0.24, 0.32, 0.68), 3.6, true)
+				if s_ratio > 0.005:
+					var s_col := Color(0.24, 0.96, 0.64, 0.98) if float(pad_owner._hero_stamina) >= 75.0 else (Color(0.32, 0.86, 1.0, 0.94) if float(pad_owner._hero_stamina) >= 25.0 else Color(1.0, 0.56, 0.22, 0.92))
+					draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * s_ratio, 36, s_col, 3.8, true)
+				short_lbl = "TL %d" % int(floor(float(pad_owner._hero_stamina)))
+			_draw_dash_icon(center + Vector2(0.0, -7.0), r * 0.40, icon_col, accent_col)
+		elif act == "transform_ssj":
+			var ssj_gold := Color(1.0, 0.86, 0.22, 0.98 * alpha_mul)
+			if bool(pad_owner._hero_is_ssj):
+				draw_arc(center, r * 0.93, 0.0, TAU, 36, ssj_gold, 3.2, true)
+				short_lbl = "XẢ SSJ"
+			else:
+				short_lbl = "SSJ1"
+			_draw_ki_icon(center + Vector2(0.0, -7.0), r * 0.36, ssj_gold)
+		elif act == "fly_toggle":
+			var fly_col := Color(1.0, 0.92, 0.32, 0.98 * alpha_mul) if bool(pad_owner._hero_fly_active) else icon_col
+			if bool(pad_owner._hero_fly_active):
+				draw_arc(center, r * 0.93, 0.0, TAU, 36, fly_col, 3.2, true)
+				short_lbl = "HẠ"
+			else:
+				short_lbl = "BAY"
+			_draw_jump_icon(center + Vector2(0.0, -6.0), r * 0.42, fly_col)
 		elif act == "power_up":
 			var ratio: float = clampf(pad_owner._current_mana / maxf(1.0, pad_owner._max_mana), 0.0, 1.0)
 			if ratio > 0.01:
