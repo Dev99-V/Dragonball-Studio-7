@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-20T10:55:51Z",
+  "updated_at": "2026-11-20T12:41:37Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.17.0",
@@ -162,9 +162,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "SONGOKU-HERO-PHASE1-V6-TUNE60",
+    "active_task_id": "SONGOKU-HERO-PHASE1-V7-SSJ-SYNC",
     "status": "DONE",
-    "summary": "Chốt tinh chỉnh v6: attack ~60ms/frame (4 ticks=66.7ms) + nối đòn 20ms; walk Base/SSJ 200px/s; bay & combat_move 400px/s; combat_move 90ms/60ms (lùi & tiến); tầm đánh thường <20px. Full Web Export + test + HTTP 200 SHA-256 parity PASS.",
+    "summary": "Dong bo 1:1 toan bo 92 frame SSJ1 nhom 07..17, 20, 34 theo chuan walk_ssj bang Codex CLI (66 pose unique + 6 scanline dich chuyen + 7 pure VFX), giu khoa SHA-256 24/24 Base + fly_aura v3 + toan bo co che v6; QA Gate 0..3 PASS (0/24 Base, 0/141 pockets, 0 hair holes, aura <1.2px), atlas sha256=afc9cc3f4b1de231, web-export + test + check exit 0 + HTTP 200 SHA-256 Parity PASS; liet ke du 14 sheet skill chua vao bundle.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1319,6 +1319,12 @@
       "timestamp": "2026-11-20T10:55:51Z",
       "status": "DONE",
       "summary": "Chốt tinh chỉnh v6: attack ~60ms/frame (4 ticks=66.7ms) + nối đòn 20ms; walk Base/SSJ 200px/s; bay & combat_move 400px/s; combat_move 90ms/60ms (lùi & tiến); tầm đánh thường <20px. Full Web Export + test + HTTP 200 SHA-256 parity PASS."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE1-V7-SSJ-SYNC",
+      "timestamp": "2026-11-20T12:41:37Z",
+      "status": "DONE",
+      "summary": "Dong bo 1:1 toan bo 92 frame SSJ1 nhom 07..17, 20, 34 theo chuan walk_ssj bang Codex CLI (66 pose unique + 6 scanline dich chuyen + 7 pure VFX), giu khoa SHA-256 24/24 Base + fly_aura v3 + toan bo co che v6; QA Gate 0..3 PASS (0/24 Base, 0/141 pockets, 0 hair holes, aura <1.2px), atlas sha256=afc9cc3f4b1de231, web-export + test + check exit 0 + HTTP 200 SHA-256 Parity PASS; liet ke du 14 sheet skill chua vao bundle."
     }
   ],
   "quick_resume_commands": [
@@ -1651,5 +1657,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-20T10:55:51Z"
+  "last_updated_utc": "2026-11-20T12:41:37Z"
 }

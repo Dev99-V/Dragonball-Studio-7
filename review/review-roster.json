@@ -1,17 +1,18 @@
 {
   "schema": "dr7-studio.review_roster.v1",
-  "note": "Son Goku Tướng Đợt 1 v6 (T1 Khóa cứng 24 frame Base SHA-256, T2 Khôi phục duy nhất fly_aura v3 + đòn đánh ~80ms, T3 Base bị đánh tự biến SSJ1, T4 combat_move 300px/s + nối đòn 170ms + tầm đánh <30px, T5 Vỡ giáp hit chỉ 1 lần, T6 Chạm quái bay tự nhảy & bay lên đánh, T7 Nút AUTO + Utility AI Tướng, T8 Quái Hòa bình/Chiến đấu + miễn trừ Boss + bàn giao lượt + icon dưới thanh giáp quái).",
+  "note": "Son Goku Tướng Đợt 1 v7 (Đồng bộ 1:1 toàn bộ 92 frame nhóm đánh/nhảy/thế chiến đấu/dịch chuyển SSJ1 07..17, 20, 34 theo chuẩn walk_ssj qua Codex CLI + giữ nguyên khóa SHA-256 24 frame Base + fly_aura v3 + toàn bộ cơ chế v6).",
   "characters": [
     {
       "character_id": "songoku_hero_demo",
-      "display_name": "Son Goku (Đợt 1 v6 · Base Locked + Auto AI + Peace/Combat Mob) [Human Test]",
+      "display_name": "Son Goku (Đợt 1 v7 · Đồng bộ 1:1 SSJ1 · Base Locked) [Human Test]",
       "role": "hero",
       "faction": "review_demo",
-      "role_label": "Human Test — Tướng Son Goku Đợt 1 v6 (Base Locked · Walk 200 · Fly/CMove 400 · 60/20ms · <20px)",
+      "role_label": "Human Test — Tướng Son Goku Đợt 1 v7 (SSJ1 1:1 walk_ssj · Base Locked · Walk 200 · Fly/CMove 400 · 60/20ms · <20px)",
       "tags": [
         "human_test",
         "hero_first",
-        "phase1_v6",
+        "phase1_v7",
+        "ssj1_walk_synced",
         "base_approved_locked",
         "zero_enclosed_pockets",
         "walk_matched"
@@ -23,7 +24,7 @@
       "bundle_dir": "res://review/songoku_hero_demo/godot_bundle",
       "scene_2d": "res://review/songoku_hero_demo/SongokuHero.tscn",
       "avatar_path": "res://review/songoku_hero_demo/avatar_son-goku-ssj1.png",
-      "review_atlas_sha256": "6f047f02cbe0c6654d49c110c8ea1d1b715e722fa0acc8761940656a4973c2db",
+      "review_atlas_sha256": "afc9cc3f4b1de2316e091c6e285c93978622043b19f493757c98a391872fd2e5",
       "canvas_size_px": [
         288,
         288
@@ -34,14 +35,14 @@
       ],
       "default_scale": 1.0,
       "atlas_path": "review/songoku_hero_demo/godot_bundle/godot/songoku_hero_demo-atlas-00.png",
-      "atlas_sha256": "6f047f02cbe0c6654d49c110c8ea1d1b715e722fa0acc8761940656a4973c2db",
+      "atlas_sha256": "afc9cc3f4b1de2316e091c6e285c93978622043b19f493757c98a391872fd2e5",
       "atlas_size_px": [
         3506,
-        3506
+        3214
       ],
       "atlas_pages": 1,
       "tres_path": "review/songoku_hero_demo/godot_bundle/godot/songoku_hero_demo.tres",
-      "tres_sha256": "ebefa3d929b1ea5c7abd152a5ee763389f750e91e17c12371cdb6a822b98eafc",
+      "tres_sha256": "e60332d1dbfc471085b066202d90ae446082827a099479e9f178dd78b3f8345c",
       "engine_export_path": "review/songoku_hero_demo/godot_bundle/engine-export.json",
       "prefab_path": "review/songoku_hero_demo/SongokuHero.tscn",
       "frame_count": 141,
@@ -293,13 +294,13 @@
         "idle_base_sobel": 107.304,
         "walk_base_sobel": 151.124,
         "walk_ssj_sobel": 257.617,
-        "idle_combat_sobel": 164.955,
+        "idle_combat_sobel": 123.56,
         "fly_prep_sobel": 471.104,
         "fly_aura_sobel": 873.741,
         "alpha_hardness_pct": 100.0,
         "enclosed_dark_pockets": 0,
         "minimum_horizontal_constant_rgba_run_px": 1,
-        "generation_route": "Codex (local CLI) codex-image_gen for idle_base/fly_prep/fly_aura + clean Walk-palette BOX for sheets"
+        "generation_route": "Codex (local CLI) codex-image_gen 1:1 synced to walk_ssj (all 07..17, 20, 34 + fly_prep/fly_aura/idle_base) + SHA-256 locked Base"
       }
     },
     {
