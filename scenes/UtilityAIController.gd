@@ -432,9 +432,18 @@ static func evaluate_hero_auto(params: Dictionary) -> Dictionary:
 			"reason": "auto_air_fly_chase",
 		}
 
-	# 3. Ground target at mid/far range: cast power_up if full mana, or directional teleport dash, or chase!
+	# 3. Ground target at mid/far range: cast power_up if full mana, or descend if airborne, or directional teleport dash, or chase!
 	if has_power_up and mana >= 100.0 and edge_dist >= 160.0:
 		return {"intent": "power_up", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_ranged_power_up"}
+	if is_goku and is_airborne_flight:
+		if stamina >= 75.0 and to_vec.length() >= 95.0:
+			return {"intent": "teleport_static", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_ground_teleport_static"}
+		if stamina >= 25.0 and to_vec.length() >= 110.0:
+			return {"intent": "teleport_dash", "move_dir": dir_x, "fly_vec": norm_vec, "jump": false, "reason": "auto_ground_teleport_dash_descend"}
+		if absf(to_vec.x) <= 95.0 and to_vec.y >= -60.0:
+			return {"intent": "fast_drop", "move_dir": dir_x, "fly_vec": norm_vec, "jump": false, "drop": true, "reason": "auto_ground_fast_drop"}
+		var desc_vec: Vector2 = norm_vec if to_vec.y > 24.0 or to_vec.y < -60.0 else Vector2(norm_vec.x, maxf(norm_vec.y, 0.35)).normalized()
+		return {"intent": "fly_chase", "move_dir": dir_x, "fly_vec": desc_vec, "jump": false, "reason": "auto_ground_fly_descend"}
 	if is_goku and stamina >= 45.0 and edge_dist >= 160.0 and absf(to_vec.y) <= 75.0:
 		return {"intent": "teleport_dash", "move_dir": dir_x, "fly_vec": Vector2(float(dir_x if dir_x != 0 else 1), 0.0), "jump": false, "reason": "auto_ground_teleport_dash"}
 	return {"intent": "chase", "move_dir": dir_x, "fly_vec": Vector2(float(dir_x), 0.0), "jump": false, "reason": "auto_ground_chase"}

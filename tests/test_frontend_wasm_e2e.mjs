@@ -221,9 +221,10 @@ if (apiPayload.godot_web_ready) {
   assert.ok(!getEl('godotWebFrame').src, 'Godot Web iframe must lazy-load only when Tab Arena or toggle is activated');
 }
 assert.ok(apiPayload.roster.characters.some(c => c.character_id === 'floating_camera'), 'Floating Camera must be finalized in roster.json');
-assert.equal(T.state.releaseRosterCount, 11, 'Finalized roster must include all 11 approved characters');
+assert.ok(apiPayload.roster.characters.some(c => c.character_id === 'songoku'), 'Son Goku must be finalized in roster.json');
+assert.equal(T.state.releaseRosterCount, 12, 'Finalized roster must include all 12 approved characters');
 const activeReviewCount = apiPayload.review?.roster?.characters?.length || 0;
-assert.equal(T.state.api.roster.characters.length, 11 + activeReviewCount, 'UI roster list must include all 11 finalized characters plus active review demos');
+assert.equal(T.state.api.roster.characters.length, 12 + activeReviewCount, 'UI roster list must include all 12 finalized characters plus active review demos');
 T.selectCharacter('floating_camera');
 assert.equal(T.state.activeChar.character_id, 'floating_camera', 'Floating Camera must select inside Human Test');
 assert.deepEqual(Array.from(T.getBodyDims(T.state.activeChar)), [70, 74], 'Floating Camera body bbox must be 70x74');
@@ -1328,10 +1329,10 @@ if (apiPayload.roster.characters.length > 0) {
 
   // Toggle real Godot Web runtime iframe when build/web/index.html exists
   if (apiPayload.godot_web_ready) {
-    assert.ok(getEl('godotWebFrame').src.endsWith('/godot-web/index.html'), 'Switching to Tab Arena must lazy-load Godot Web iframe');
+    assert.ok(getEl('godotWebFrame').src.includes('/godot-web/index.html'), 'Switching to Tab Arena must lazy-load Godot Web iframe');
     getEl('chkGodotWebRuntime').onchange({ target: { checked: true } });
     assert.equal(getEl('godotWebFrame').style.display, 'block');
-    assert.ok(getEl('godotWebFrame').src.endsWith('/godot-web/index.html'));
+    assert.ok(getEl('godotWebFrame').src.includes('/godot-web/index.html'));
     getEl('chkGodotWebRuntime').onchange({ target: { checked: false } });
     assert.equal(getEl('godotWebFrame').style.display, 'none');
   }

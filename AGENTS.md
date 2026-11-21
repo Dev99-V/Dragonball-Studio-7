@@ -33,7 +33,7 @@ Hiến pháp tối cao ở root `DR7-Studio` (tự nạp bởi `agy` & `codex`).
 3. **Thông Số Kỹ Thuật Bóc Tách, Tách Nền & Đóng Gói Bắt Buộc (Chuẩn `trunks_rage`)**:
    - **Phân tách cụm 2D (`2D Component Ownership Masking`)**: Nhãn liên thông 2D `3×3`/`5×5`, loại bỏ header/footer/chữ thừa/vạch chia `1px`, ghép liền chiêu chia khúc vào đúng tọa độ tay.
    - **Tách nền 2 giai đoạn**: (1) Đục thủng 100% hốc nền kín (`enclosed_key_pockets == 0`, `opaque_key_px == 0`) trước khi khử viền; (2) Khử pha viền `1px` (`outer_ring_spill_fraction <= 0.005`), giữ `alpha_hardness_pct >= 95%` (với pixel art).
-   - **Tâm gốc chống trượt chân**: `X` theo trung vị thân/viền tối (`detect_body_center_x`); `Y` theo mặt đất chung từng hàng (`row_ground_y` / `detect_boot_bottom_y`). Khung `[W, H]` bội số của `16`; `centered = false`, `offset = Vector2(-anchor_x, -anchor_y)`.
+   - **Tâm gốc chống trượt chân & Cấm rung khung hình (Bắt buộc)**: `X` trên mọi clip đứng đất/vận công/phóng chiêu (`idle*`, `power_up`, `energy_recover`, `barrier_cast`, `kame_*`, `atomic_*`...) bắt buộc khóa theo **trung điểm 2 bàn chân (`stance_mid = 0.5*(L_foot + R_foot)`)** về đúng `anchor_x` (`±1.0 px`) và `boot_y = anchor_y - 1` (`row_ground_y`); **cấm** căn theo `median` pixel toàn thân hoặc bbox bị kéo lệch bởi tay vươn/FX gây giật ngang khi phát hoặc lật ngang. Bắt buộc kiểm đo tự động `stance_mid` từng frame trước khi repack/Human Test. Khung `[W, H]` bội số của `16`; `centered = false`, `offset = Vector2(-anchor_x, -anchor_y)`.
    - **Texture Atlas Engine**: **1 trang PNG duy nhất (`pages == 1`, `<= 4096 × 4096 px`)**, lọc **`Nearest` (`texture_filter = 1`)**, tốc độ **`60Hz` ticks** trên `.tres` + `engine-export.json`, đặt `.gdignore` trong `source/` & `clips/`.
 
 ---

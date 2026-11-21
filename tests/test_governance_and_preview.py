@@ -67,7 +67,8 @@ class GovernanceAndPreviewTests(unittest.TestCase):
         tools_dir = REPO_ROOT / "tools"
         for p in list(assets_dir.rglob("*")) + list(scenes_dir.rglob("*")):
             low = p.name.lower()
-            self.assertNotIn("songoku", low, f"Old Son Goku test asset must be deleted: {p}")
+            self.assertNotIn("songoku_hero_demo", low, f"Unfinalized Son Goku demo asset must be deleted: {p}")
+            self.assertNotIn("walk_demo", low, f"Old walk demo asset must be deleted: {p}")
             self.assertNotIn("sphere_of_destruction", low, f"Old purple test asset must be deleted: {p}")
             self.assertNotIn("modularauracharacter", low, f"Deprecated 3-layer rig script must be deleted: {p}")
             self.assertNotIn("trunks", low, f"Deleted Trunks asset/scene must not remain: {p}")

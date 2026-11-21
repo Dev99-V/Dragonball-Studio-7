@@ -304,6 +304,49 @@ def rebuild_bundle_and_roster() -> Dict[str, str]:
 
     atlas_path = bundle_dir / "godot" / "songoku_hero_demo-atlas-00.png"
     tres_path = bundle_dir / "godot" / "songoku_hero_demo.tres"
+    exp_path = bundle_dir / "engine-export.json"
+
+    # Normalize any duration_ms-based clip (e.g. atomic_ground [90..90, 100, 90]) to 60Hz exact fractional ticks in .tres & engine-export.json
+    exp_doc = json.loads(exp_path.read_text(encoding="utf-8"))
+    tres_text = tres_path.read_text(encoding="utf-8")
+    tres_modified = False
+    import re as _re
+    for cname, cdata in exp_doc.get("clips", {}).items():
+        ginfo = cdata.get("godot", {})
+        if isinstance(ginfo, dict) and abs(float(ginfo.get("speed", 60.0)) - 60.0) > 1e-6:
+            durs_ms = cdata.get("duration_ms", [])
+            if isinstance(durs_ms, list) and durs_ms:
+                rel_60 = [round(float(d) * 60.0 / 1000.0, 6) for d in durs_ms]
+                ginfo["speed"] = 60.0
+                ginfo["basis"] = "duration_ms mapped to exact 60 Hz"
+                ginfo["relative_durations"] = rel_60
+                # Patch ONLY the exact matching animation block inside .tres (never cross into earlier clips!)
+                marker = f'"name": &"{cname}"'
+                m_pos = tres_text.find(marker)
+                if m_pos != -1:
+                    blk_start = tres_text.rfind('"frames": [', 0, m_pos)
+                    spd_m = _re.search(r'"speed":\s*([0-9.]+)', tres_text[m_pos : m_pos + 120])
+                    if blk_start != -1 and spd_m:
+                        spd_end = m_pos + spd_m.end()
+                        sub_block = tres_text[blk_start:spd_end]
+                        idx_ref = [0]
+                        def _rep_dur(dm: _re.Match) -> str:
+                            val = rel_60[idx_ref[0]] if idx_ref[0] < len(rel_60) else 5.0
+                            idx_ref[0] += 1
+                            return f'"duration": {val:g}'
+                        new_sub = _re.sub(r'"duration":\s*[0-9.]+', _rep_dur, sub_block)
+                        new_sub = _re.sub(r'"speed":\s*[0-9.]+', '"speed": 60.0', new_sub)
+                        tres_text = tres_text[:blk_start] + new_sub + tres_text[spd_end:]
+                        tres_modified = True
+    if tres_modified:
+        tres_path.write_text(tres_text, encoding="utf-8")
+        new_tres_sha = sha256_file(tres_path)
+        for frec in exp_doc.get("files", []):
+            if frec.get("path") == "godot/songoku_hero_demo.tres":
+                frec["sha256"] = new_tres_sha
+                frec["bytes"] = tres_path.stat().st_size
+        exp_path.write_text(json.dumps(exp_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
     atlas_sha = sha256_file(atlas_path)
     tres_sha = sha256_file(tres_path)
     atlas_im = Image.open(atlas_path)
@@ -312,15 +355,14 @@ def rebuild_bundle_and_roster() -> Dict[str, str]:
     # Update review-roster.json
     rroster = json.loads(REVIEW_ROSTER_PATH.read_text(encoding="utf-8"))
     rroster["note"] = (
-        "Son Goku Tướng Đợt 1 v9 (khử nhấp nháy viền idle_combat 100% dark outline, "
-        "combat_move dash liên tục không aura: lùi #0 400px/s -> phanh #1, tiến #3 500px/s -> phanh #2 khi kéo analog gần giữa, "
-        "vẽ lại chuẩn walk_ssj các frame lỗi attack_light #2/#4/#8/#10, attack_2 #1/#2, attack_5 #1/#5/#6/#7, attack_6 #2, "
-        "giữ khóa SHA-256 24/24 Base)."
+        "Son Goku Tướng Đợt 1 v10.6 (34 clips gồm atomic_ground_up, khóa stance_mid chống rung chân, "
+        "tỉ lệ gọn kgu_01/kgu_02c theo #5, agu_06 cầu nối & agu_07 đứng tấn 2 tay lên trời chuẩn #2, "
+        "atomic_ground 90/100/90 ms @ 60Hz, giữ khóa SHA-256 24/24 Base)."
     )
     for ch in rroster["characters"]:
         if ch.get("character_id") == "songoku_hero_demo":
-            ch["display_name"] = "Son Goku (Đợt 1 v9 · Viền Idle · Dash/Phanh CMove · Fix Attack) [Human Test]"
-            ch["role_label"] = "Human Test — Tướng Son Goku Đợt 1 v9 (Clean Idle Border · CMove Dash 400/500 & Brake #1/#2 · Walk-Synced Attacks)"
+            ch["display_name"] = "Son Goku (Đợt 1 v10.6 · 34 Clips · Full Atomic/Kame & HUD) [Human Test]"
+            ch["role_label"] = "Human Test — Tướng Son Goku Đợt 1 v10.6 (34 Clips · Anti-Jitter Stance · Atomic Up/Ground/Air · Kamehameha)"
             ch["review_atlas_sha256"] = atlas_sha
             ch["atlas_sha256"] = atlas_sha
             ch["atlas_size_px"] = [atlas_w, atlas_h]
@@ -356,9 +398,17 @@ def rebuild_bundle_and_roster() -> Dict[str, str]:
             hm["flight_ki_regen_per_sec"] = 5.0
             hm["flight_ki_bar_color"] = "orange"
             hm["flight_ki_bar_layout"] = "vertical_right_of_hp_mana_armor"
-            # Sync `render_contract` into `engine-export.json` (required by tools/preview/server.py load_review_content!)
-            exp_path = bundle_dir / "engine-export.json"
+            # Sync `render_contract.body_clips`, `present_clips`, and `clips` from `engine-export.json` (so Human Test tab ALWAYS shows every clip!)
             exp_doc = json.loads(exp_path.read_text(encoding="utf-8"))
+            raw_clips = exp_doc.get("clips", {})
+            clip_names = list(raw_clips.keys()) if isinstance(raw_clips, dict) else [str(c.get("name", "")) for c in raw_clips if isinstance(c, dict) and c.get("name")]
+            if clip_names:
+                fx_set = set(rc.get("effect_clips") or ch.get("effect_clips") or [])
+                body_names = [c for c in clip_names if c not in fx_set]
+                rc["body_clips"] = body_names
+                ch["clips"] = clip_names
+                ch["present_clips"] = body_names
+                ch["modes"]["combined_1layer"]["label"] = f"Son Goku Hero Đợt 1 v10.6 (Combined 1-Layer · 125px · {len(clip_names)} clips)"
             exp_doc["render_contract"] = rc
             exp_path.write_text(json.dumps(exp_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             break

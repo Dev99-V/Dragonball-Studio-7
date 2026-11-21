@@ -7,17 +7,26 @@
  *   test real-time 2-Drum multiplayer (PvP + PvE + zone switch) over Internet at 0d immediately.
  */
 
+const DEFAULT_HERO_CID = "songoku";
+const ALLOWED_HERO_CIDS = new Set(["songoku", "drum"]);
+
+function normalizeHeroCharacterId(raw) {
+  const s = String(raw || "").trim();
+  if (!s || s === "drum" || s === "songoku_hero_demo") return DEFAULT_HERO_CID;
+  return ALLOWED_HERO_CIDS.has(s) ? s : DEFAULT_HERO_CID;
+}
+
 const ALPHA_USERS = {
   vinhadmin: {
     email: "vinhadmin@dr7-alpha.local",
     display_name: "Vinh",
-    character_id: "drum",
+    character_id: DEFAULT_HERO_CID,
     spawn_x: 560.0,
   },
   thaiadmin: {
     email: "thaiadmin@dr7-alpha.local",
     display_name: "Thái",
-    character_id: "drum",
+    character_id: DEFAULT_HERO_CID,
     spawn_x: 760.0,
   },
 };
@@ -326,7 +335,7 @@ async function handleAlphaLogin(request, env, origin) {
     user_id: userId,
     username,
     display_name: String(meta.display_name || userSpec.display_name),
-    character_id: String(meta.character_id || userSpec.character_id || "drum"),
+    character_id: normalizeHeroCharacterId(meta.character_id || userSpec.character_id),
     map_id: "rocky_plateau",
     zone_id: 0,
     spawn_x: Number(meta.spawn_x ?? userSpec.spawn_x ?? 560.0),
@@ -468,7 +477,7 @@ export class ZoneRoomDO {
         user_id: String(u.id),
         username: String(meta.username || u.email || ""),
         display_name: String(meta.display_name || "Player"),
-        character_id: String(meta.character_id || "drum") || "drum",
+        character_id: normalizeHeroCharacterId(meta.character_id),
         spawn_x: Number(meta.spawn_x ?? 560.0),
       };
     } catch {
@@ -623,8 +632,13 @@ export class ZoneRoomDO {
       p.x = Math.round(rx * 10) / 10;
       p.y = Math.round(ry * 10) / 10;
       p.facing_left = Boolean(pkt.facing_left ?? p.facing_left);
+      if (pkt.character_id) {
+        const nextCid = normalizeHeroCharacterId(pkt.character_id);
+        p.character_id = nextCid;
+        info.character_id = nextCid;
+      }
       const act = String(pkt.act || "idle");
-      if (["idle", "walk", "run", "jump", "teleport", "attack_light", "attack_heavy", "power_up", "hit", "ko"].includes(act)) {
+      if (/^[a-z0-9_]{1,36}$/.test(act)) {
         p.act = act;
       }
       this._emitSnapshot(z);
@@ -711,7 +725,7 @@ export class ZoneRoomDO {
       authenticated: false,
       user_id: "",
       display_name: "",
-      character_id: "drum",
+      character_id: DEFAULT_HERO_CID,
       map_id: "rocky_plateau",
       zone_id: 0,
       zone_key: "",

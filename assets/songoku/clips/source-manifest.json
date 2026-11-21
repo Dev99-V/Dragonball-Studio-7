@@ -1,0 +1,1725 @@
+{
+  "schema": "generate2dsprite.animation_clips.v2",
+  "art_source": "host_image",
+  "pixel_art": true,
+  "sampling": "nearest",
+  "body_height_px": 125,
+  "anchor_px": [
+    144,
+    248
+  ],
+  "shadow": {
+    "rx": 28,
+    "ry": 6,
+    "opacity": 0.32
+  },
+  "frames": [
+    {
+      "name": "idle_base_00",
+      "file": "raw_frames/idle_base_00.png"
+    },
+    {
+      "name": "idle_base_01",
+      "file": "raw_frames/idle_base_01.png"
+    },
+    {
+      "name": "idle_base_02",
+      "file": "raw_frames/idle_base_02.png"
+    },
+    {
+      "name": "idle_base_03",
+      "file": "raw_frames/idle_base_03.png"
+    },
+    {
+      "name": "idle_base_04",
+      "file": "raw_frames/idle_base_04.png"
+    },
+    {
+      "name": "idle_base_05",
+      "file": "raw_frames/idle_base_05.png"
+    },
+    {
+      "name": "idle_base_06",
+      "file": "raw_frames/idle_base_06.png"
+    },
+    {
+      "name": "idle_base_07",
+      "file": "raw_frames/idle_base_07.png"
+    },
+    {
+      "name": "idle_base_08",
+      "file": "raw_frames/idle_base_08.png"
+    },
+    {
+      "name": "idle_base_09",
+      "file": "raw_frames/idle_base_09.png"
+    },
+    {
+      "name": "idle_base_10",
+      "file": "raw_frames/idle_base_10.png"
+    },
+    {
+      "name": "idle_base_11",
+      "file": "raw_frames/idle_base_11.png"
+    },
+    {
+      "name": "idle_base_12",
+      "file": "raw_frames/idle_base_12.png"
+    },
+    {
+      "name": "walk_base_00",
+      "file": "raw_frames/walk_base_00.png"
+    },
+    {
+      "name": "walk_base_01",
+      "file": "raw_frames/walk_base_01.png"
+    },
+    {
+      "name": "walk_base_02",
+      "file": "raw_frames/walk_base_02.png"
+    },
+    {
+      "name": "walk_base_03",
+      "file": "raw_frames/walk_base_03.png"
+    },
+    {
+      "name": "walk_base_04",
+      "file": "raw_frames/walk_base_04.png"
+    },
+    {
+      "name": "walk_base_05",
+      "file": "raw_frames/walk_base_05.png"
+    },
+    {
+      "name": "walk_base_06",
+      "file": "raw_frames/walk_base_06.png"
+    },
+    {
+      "name": "walk_base_07",
+      "file": "raw_frames/walk_base_07.png"
+    },
+    {
+      "name": "transform_00",
+      "file": "raw_frames/transform_00.png"
+    },
+    {
+      "name": "transform_01",
+      "file": "raw_frames/transform_01.png"
+    },
+    {
+      "name": "transform_02",
+      "file": "raw_frames/transform_02.png"
+    },
+    {
+      "name": "transform_03",
+      "file": "raw_frames/transform_03.png"
+    },
+    {
+      "name": "transform_04",
+      "file": "raw_frames/transform_04.png"
+    },
+    {
+      "name": "transform_05",
+      "file": "raw_frames/transform_05.png"
+    },
+    {
+      "name": "transform_06",
+      "file": "raw_frames/transform_06.png"
+    },
+    {
+      "name": "trans_bridge_00",
+      "file": "raw_frames/trans_bridge_00.png"
+    },
+    {
+      "name": "idle_ssj_aura_00",
+      "file": "raw_frames/idle_ssj_aura_00.png"
+    },
+    {
+      "name": "idle_ssj_aura_01",
+      "file": "raw_frames/idle_ssj_aura_01.png"
+    },
+    {
+      "name": "idle_ssj_aura_02",
+      "file": "raw_frames/idle_ssj_aura_02.png"
+    },
+    {
+      "name": "idle_ssj_aura_03",
+      "file": "raw_frames/idle_ssj_aura_03.png"
+    },
+    {
+      "name": "combat_enter_00",
+      "file": "raw_frames/combat_enter_00.png"
+    },
+    {
+      "name": "combat_enter_01",
+      "file": "raw_frames/combat_enter_01.png"
+    },
+    {
+      "name": "combat_enter_02",
+      "file": "raw_frames/combat_enter_02.png"
+    },
+    {
+      "name": "combat_enter_03",
+      "file": "raw_frames/combat_enter_03.png"
+    },
+    {
+      "name": "idle_combat_00",
+      "file": "raw_frames/idle_combat_00.png"
+    },
+    {
+      "name": "idle_combat_01",
+      "file": "raw_frames/idle_combat_01.png"
+    },
+    {
+      "name": "idle_combat_02",
+      "file": "raw_frames/idle_combat_02.png"
+    },
+    {
+      "name": "idle_combat_03",
+      "file": "raw_frames/idle_combat_03.png"
+    },
+    {
+      "name": "walk_ssj_00",
+      "file": "raw_frames/walk_ssj_00.png"
+    },
+    {
+      "name": "walk_ssj_01",
+      "file": "raw_frames/walk_ssj_01.png"
+    },
+    {
+      "name": "walk_ssj_02",
+      "file": "raw_frames/walk_ssj_02.png"
+    },
+    {
+      "name": "walk_ssj_03",
+      "file": "raw_frames/walk_ssj_03.png"
+    },
+    {
+      "name": "walk_ssj_04",
+      "file": "raw_frames/walk_ssj_04.png"
+    },
+    {
+      "name": "walk_ssj_05",
+      "file": "raw_frames/walk_ssj_05.png"
+    },
+    {
+      "name": "walk_ssj_06",
+      "file": "raw_frames/walk_ssj_06.png"
+    },
+    {
+      "name": "walk_ssj_07",
+      "file": "raw_frames/walk_ssj_07.png"
+    },
+    {
+      "name": "combat_move_00",
+      "file": "raw_frames/combat_move_00.png"
+    },
+    {
+      "name": "combat_move_01",
+      "file": "raw_frames/combat_move_01.png"
+    },
+    {
+      "name": "combat_move_02",
+      "file": "raw_frames/combat_move_02.png"
+    },
+    {
+      "name": "combat_move_03",
+      "file": "raw_frames/combat_move_03.png"
+    },
+    {
+      "name": "jump_00",
+      "file": "raw_frames/jump_00.png"
+    },
+    {
+      "name": "jump_01",
+      "file": "raw_frames/jump_01.png"
+    },
+    {
+      "name": "jump_02",
+      "file": "raw_frames/jump_02.png"
+    },
+    {
+      "name": "jump_03",
+      "file": "raw_frames/jump_03.png"
+    },
+    {
+      "name": "jump_04",
+      "file": "raw_frames/jump_04.png"
+    },
+    {
+      "name": "jump_05",
+      "file": "raw_frames/jump_05.png"
+    },
+    {
+      "name": "hit_00",
+      "file": "raw_frames/hit_00.png"
+    },
+    {
+      "name": "hit_01",
+      "file": "raw_frames/hit_01.png"
+    },
+    {
+      "name": "hit_02",
+      "file": "raw_frames/hit_02.png"
+    },
+    {
+      "name": "hit_03",
+      "file": "raw_frames/hit_03.png"
+    },
+    {
+      "name": "hit_04",
+      "file": "raw_frames/hit_04.png"
+    },
+    {
+      "name": "ko_00",
+      "file": "raw_frames/ko_00.png"
+    },
+    {
+      "name": "ko_01",
+      "file": "raw_frames/ko_01.png"
+    },
+    {
+      "name": "ko_02",
+      "file": "raw_frames/ko_02.png"
+    },
+    {
+      "name": "atk1_00",
+      "file": "raw_frames/atk1_00.png"
+    },
+    {
+      "name": "atk1_01",
+      "file": "raw_frames/atk1_01.png"
+    },
+    {
+      "name": "atk1_02",
+      "file": "raw_frames/atk1_02.png"
+    },
+    {
+      "name": "atk1_03",
+      "file": "raw_frames/atk1_03.png"
+    },
+    {
+      "name": "atk1_04",
+      "file": "raw_frames/atk1_04.png"
+    },
+    {
+      "name": "atk1_05",
+      "file": "raw_frames/atk1_05.png"
+    },
+    {
+      "name": "atk1_06",
+      "file": "raw_frames/atk1_06.png"
+    },
+    {
+      "name": "atk1_07",
+      "file": "raw_frames/atk1_07.png"
+    },
+    {
+      "name": "atk1_08",
+      "file": "raw_frames/atk1_08.png"
+    },
+    {
+      "name": "atk1_09",
+      "file": "raw_frames/atk1_09.png"
+    },
+    {
+      "name": "atk1_10",
+      "file": "raw_frames/atk1_10.png"
+    },
+    {
+      "name": "atk1_11",
+      "file": "raw_frames/atk1_11.png"
+    },
+    {
+      "name": "atk2_00",
+      "file": "raw_frames/atk2_00.png"
+    },
+    {
+      "name": "atk2_01",
+      "file": "raw_frames/atk2_01.png"
+    },
+    {
+      "name": "atk2_02",
+      "file": "raw_frames/atk2_02.png"
+    },
+    {
+      "name": "atk2_03",
+      "file": "raw_frames/atk2_03.png"
+    },
+    {
+      "name": "atk3_00",
+      "file": "raw_frames/atk3_00.png"
+    },
+    {
+      "name": "atk3_01",
+      "file": "raw_frames/atk3_01.png"
+    },
+    {
+      "name": "atk3_02",
+      "file": "raw_frames/atk3_02.png"
+    },
+    {
+      "name": "atk3_03",
+      "file": "raw_frames/atk3_03.png"
+    },
+    {
+      "name": "atk4_00",
+      "file": "raw_frames/atk4_00.png"
+    },
+    {
+      "name": "atk4_01",
+      "file": "raw_frames/atk4_01.png"
+    },
+    {
+      "name": "atk4_02",
+      "file": "raw_frames/atk4_02.png"
+    },
+    {
+      "name": "atk4_03",
+      "file": "raw_frames/atk4_03.png"
+    },
+    {
+      "name": "atk4_04",
+      "file": "raw_frames/atk4_04.png"
+    },
+    {
+      "name": "atk4_05",
+      "file": "raw_frames/atk4_05.png"
+    },
+    {
+      "name": "atk4_06",
+      "file": "raw_frames/atk4_06.png"
+    },
+    {
+      "name": "atk5_00",
+      "file": "raw_frames/atk5_00.png"
+    },
+    {
+      "name": "atk5_01",
+      "file": "raw_frames/atk5_01.png"
+    },
+    {
+      "name": "atk5_02",
+      "file": "raw_frames/atk5_02.png"
+    },
+    {
+      "name": "atk5_03",
+      "file": "raw_frames/atk5_03.png"
+    },
+    {
+      "name": "atk5_04",
+      "file": "raw_frames/atk5_04.png"
+    },
+    {
+      "name": "atk5_05",
+      "file": "raw_frames/atk5_05.png"
+    },
+    {
+      "name": "atk5_06",
+      "file": "raw_frames/atk5_06.png"
+    },
+    {
+      "name": "atk5_07",
+      "file": "raw_frames/atk5_07.png"
+    },
+    {
+      "name": "atk5_08",
+      "file": "raw_frames/atk5_08.png"
+    },
+    {
+      "name": "atk6_00",
+      "file": "raw_frames/atk6_00.png"
+    },
+    {
+      "name": "atk6_01",
+      "file": "raw_frames/atk6_01.png"
+    },
+    {
+      "name": "atk6_02",
+      "file": "raw_frames/atk6_02.png"
+    },
+    {
+      "name": "atk6_03",
+      "file": "raw_frames/atk6_03.png"
+    },
+    {
+      "name": "atk6_04",
+      "file": "raw_frames/atk6_04.png"
+    },
+    {
+      "name": "atk6_05",
+      "file": "raw_frames/atk6_05.png"
+    },
+    {
+      "name": "atk6_06",
+      "file": "raw_frames/atk6_06.png"
+    },
+    {
+      "name": "atk6_07",
+      "file": "raw_frames/atk6_07.png"
+    },
+    {
+      "name": "atk6_08",
+      "file": "raw_frames/atk6_08.png"
+    },
+    {
+      "name": "atk6_09",
+      "file": "raw_frames/atk6_09.png"
+    },
+    {
+      "name": "atk6_10",
+      "file": "raw_frames/atk6_10.png"
+    },
+    {
+      "name": "atk6_11",
+      "file": "raw_frames/atk6_11.png"
+    },
+    {
+      "name": "atk6_12",
+      "file": "raw_frames/atk6_12.png"
+    },
+    {
+      "name": "atk6_13",
+      "file": "raw_frames/atk6_13.png"
+    },
+    {
+      "name": "atk6_14",
+      "file": "raw_frames/atk6_14.png"
+    },
+    {
+      "name": "atk7_00",
+      "file": "raw_frames/atk7_00.png"
+    },
+    {
+      "name": "atk7_01",
+      "file": "raw_frames/atk7_01.png"
+    },
+    {
+      "name": "atk7_02",
+      "file": "raw_frames/atk7_02.png"
+    },
+    {
+      "name": "atk7_03",
+      "file": "raw_frames/atk7_03.png"
+    },
+    {
+      "name": "atk7_04",
+      "file": "raw_frames/atk7_04.png"
+    },
+    {
+      "name": "atk7_05",
+      "file": "raw_frames/atk7_05.png"
+    },
+    {
+      "name": "tele_static_00",
+      "file": "raw_frames/tele_static_00.png"
+    },
+    {
+      "name": "tele_static_01",
+      "file": "raw_frames/tele_static_01.png"
+    },
+    {
+      "name": "tele_static_02",
+      "file": "raw_frames/tele_static_02.png"
+    },
+    {
+      "name": "tele_ground_00",
+      "file": "raw_frames/tele_ground_00.png"
+    },
+    {
+      "name": "tele_ground_01",
+      "file": "raw_frames/tele_ground_01.png"
+    },
+    {
+      "name": "tele_ground_02",
+      "file": "raw_frames/tele_ground_02.png"
+    },
+    {
+      "name": "tele_air_00",
+      "file": "raw_frames/tele_air_00.png"
+    },
+    {
+      "name": "tele_air_01",
+      "file": "raw_frames/tele_air_01.png"
+    },
+    {
+      "name": "tele_air_02",
+      "file": "raw_frames/tele_air_02.png"
+    },
+    {
+      "name": "fly_prep_00",
+      "file": "raw_frames/fly_prep_00.png"
+    },
+    {
+      "name": "fly_prep_01",
+      "file": "raw_frames/fly_prep_01.png"
+    },
+    {
+      "name": "fly_prep_02",
+      "file": "raw_frames/fly_prep_02.png"
+    },
+    {
+      "name": "fly_prep_03",
+      "file": "raw_frames/fly_prep_03.png"
+    },
+    {
+      "name": "fly_aura_00",
+      "file": "raw_frames/fly_aura_00.png"
+    },
+    {
+      "name": "fly_aura_01",
+      "file": "raw_frames/fly_aura_01.png"
+    },
+    {
+      "name": "fly_aura_02",
+      "file": "raw_frames/fly_aura_02.png"
+    },
+    {
+      "name": "fly_aura_03",
+      "file": "raw_frames/fly_aura_03.png"
+    },
+    {
+      "name": "bar_00",
+      "file": "raw_frames/bar_00.png"
+    },
+    {
+      "name": "bar_01",
+      "file": "raw_frames/bar_01.png"
+    },
+    {
+      "name": "bar_02",
+      "file": "raw_frames/bar_02.png"
+    },
+    {
+      "name": "rec_00",
+      "file": "raw_frames/rec_00.png"
+    },
+    {
+      "name": "rec_01",
+      "file": "raw_frames/rec_01.png"
+    },
+    {
+      "name": "rec_02",
+      "file": "raw_frames/rec_02.png"
+    },
+    {
+      "name": "rec_03",
+      "file": "raw_frames/rec_03.png"
+    },
+    {
+      "name": "rec_04",
+      "file": "raw_frames/rec_04.png"
+    },
+    {
+      "name": "rec_05",
+      "file": "raw_frames/rec_05.png"
+    },
+    {
+      "name": "flk_00",
+      "file": "raw_frames/flk_00.png"
+    },
+    {
+      "name": "flk_01",
+      "file": "raw_frames/flk_01.png"
+    },
+    {
+      "name": "flk_02",
+      "file": "raw_frames/flk_02.png"
+    },
+    {
+      "name": "flk_03",
+      "file": "raw_frames/flk_03.png"
+    },
+    {
+      "name": "flk_04",
+      "file": "raw_frames/flk_04.png"
+    },
+    {
+      "name": "flk_05",
+      "file": "raw_frames/flk_05.png"
+    },
+    {
+      "name": "flk_06",
+      "file": "raw_frames/flk_06.png"
+    },
+    {
+      "name": "atg_00",
+      "file": "raw_frames/atg_00.png"
+    },
+    {
+      "name": "atg_01",
+      "file": "raw_frames/atg_01.png"
+    },
+    {
+      "name": "atg_02",
+      "file": "raw_frames/atg_02.png"
+    },
+    {
+      "name": "atg_03",
+      "file": "raw_frames/atg_03.png"
+    },
+    {
+      "name": "atg_04",
+      "file": "raw_frames/atg_04.png"
+    },
+    {
+      "name": "atg_05",
+      "file": "raw_frames/atg_05.png"
+    },
+    {
+      "name": "ata_00",
+      "file": "raw_frames/ata_00.png"
+    },
+    {
+      "name": "ata_01",
+      "file": "raw_frames/ata_01.png"
+    },
+    {
+      "name": "ata_02",
+      "file": "raw_frames/ata_02.png"
+    },
+    {
+      "name": "ata_03",
+      "file": "raw_frames/ata_03.png"
+    },
+    {
+      "name": "kgh_00",
+      "file": "raw_frames/kgh_00.png"
+    },
+    {
+      "name": "kgh_01",
+      "file": "raw_frames/kgh_01.png"
+    },
+    {
+      "name": "kgh_02",
+      "file": "raw_frames/kgh_02.png"
+    },
+    {
+      "name": "kgh_03",
+      "file": "raw_frames/kgh_03.png"
+    },
+    {
+      "name": "kgh_04",
+      "file": "raw_frames/kgh_04.png"
+    },
+    {
+      "name": "kgu_00",
+      "file": "raw_frames/kgu_00.png"
+    },
+    {
+      "name": "kgu_01",
+      "file": "raw_frames/kgu_01.png"
+    },
+    {
+      "name": "kgu_02",
+      "file": "raw_frames/kgu_02.png"
+    },
+    {
+      "name": "kgu_03",
+      "file": "raw_frames/kgu_03.png"
+    },
+    {
+      "name": "kah_00",
+      "file": "raw_frames/kah_00.png"
+    },
+    {
+      "name": "kah_01",
+      "file": "raw_frames/kah_01.png"
+    },
+    {
+      "name": "kah_02",
+      "file": "raw_frames/kah_02.png"
+    },
+    {
+      "name": "kah_03",
+      "file": "raw_frames/kah_03.png"
+    },
+    {
+      "name": "kad_00",
+      "file": "raw_frames/kad_00.png"
+    },
+    {
+      "name": "kad_01",
+      "file": "raw_frames/kad_01.png"
+    },
+    {
+      "name": "kad_02",
+      "file": "raw_frames/kad_02.png"
+    },
+    {
+      "name": "kad_03",
+      "file": "raw_frames/kad_03.png"
+    },
+    {
+      "name": "kgh_02b",
+      "file": "raw_frames/kgh_02b.png"
+    },
+    {
+      "name": "kgh_02c",
+      "file": "raw_frames/kgh_02c.png"
+    },
+    {
+      "name": "kgu_02b",
+      "file": "raw_frames/kgu_02b.png"
+    },
+    {
+      "name": "kgu_02c",
+      "file": "raw_frames/kgu_02c.png"
+    },
+    {
+      "name": "kah_02b",
+      "file": "raw_frames/kah_02b.png"
+    },
+    {
+      "name": "kah_02c",
+      "file": "raw_frames/kah_02c.png"
+    },
+    {
+      "name": "kad_02b",
+      "file": "raw_frames/kad_02b.png"
+    },
+    {
+      "name": "kad_02c",
+      "file": "raw_frames/kad_02c.png"
+    },
+    {
+      "name": "atg_06",
+      "file": "raw_frames/atg_06.png"
+    },
+    {
+      "name": "atg_07",
+      "file": "raw_frames/atg_07.png"
+    },
+    {
+      "name": "agu_06",
+      "file": "raw_frames/agu_06.png"
+    },
+    {
+      "name": "agu_07",
+      "file": "raw_frames/agu_07.png"
+    }
+  ],
+  "clips": {
+    "idle": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "idle_base_00",
+        "idle_base_01",
+        "idle_base_02",
+        "idle_base_03",
+        "idle_base_04",
+        "idle_base_05",
+        "idle_base_06",
+        "idle_base_07",
+        "idle_base_08",
+        "idle_base_09",
+        "idle_base_10",
+        "idle_base_11",
+        "idle_base_12"
+      ],
+      "ticks": [
+        9,
+        7,
+        7,
+        10,
+        8,
+        7,
+        8,
+        8,
+        8,
+        12,
+        8,
+        8,
+        10
+      ]
+    },
+    "walk": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "walk_base_00",
+        "walk_base_01",
+        "walk_base_02",
+        "walk_base_03",
+        "walk_base_04",
+        "walk_base_05",
+        "walk_base_06",
+        "walk_base_07"
+      ],
+      "ticks": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "events": [
+        {
+          "at": 0,
+          "name": "step_l"
+        },
+        {
+          "at": 4,
+          "name": "step_r"
+        }
+      ]
+    },
+    "transform_ssj": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "transform_00",
+        "transform_01",
+        "transform_02",
+        "transform_03",
+        "transform_04",
+        "transform_05",
+        "transform_06",
+        "trans_bridge_00"
+      ],
+      "ticks": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        6,
+        6,
+        7
+      ],
+      "events": [
+        {
+          "name": "custom:ssj_transform_complete",
+          "at": 7
+        }
+      ]
+    },
+    "detransform_base": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "transform_06",
+        "transform_05",
+        "transform_04",
+        "transform_03",
+        "transform_02",
+        "transform_01",
+        "transform_00"
+      ],
+      "ticks": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "events": [
+        {
+          "name": "custom:ssj_detransform_complete",
+          "at": 6
+        }
+      ]
+    },
+    "idle_ssj_aura": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "idle_ssj_aura_00",
+        "idle_ssj_aura_01",
+        "idle_ssj_aura_02",
+        "idle_ssj_aura_03"
+      ],
+      "ticks": [
+        5,
+        5,
+        5,
+        5
+      ]
+    },
+    "combat_enter": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "combat_enter_00",
+        "combat_enter_01",
+        "combat_enter_02",
+        "combat_enter_03"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        5
+      ]
+    },
+    "idle_combat": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "idle_combat_00",
+        "idle_combat_01",
+        "idle_combat_02",
+        "idle_combat_03"
+      ],
+      "ticks": [
+        7,
+        7,
+        7,
+        7
+      ]
+    },
+    "walk_ssj": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "walk_ssj_00",
+        "walk_ssj_01",
+        "walk_ssj_02",
+        "walk_ssj_03",
+        "walk_ssj_04",
+        "walk_ssj_05",
+        "walk_ssj_06",
+        "walk_ssj_07"
+      ],
+      "ticks": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "events": [
+        {
+          "at": 0,
+          "name": "step_l"
+        },
+        {
+          "at": 4,
+          "name": "step_r"
+        }
+      ]
+    },
+    "combat_move": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "combat_move_00",
+        "combat_move_01",
+        "combat_move_02",
+        "combat_move_03"
+      ],
+      "ticks": [
+        6,
+        5,
+        6,
+        5
+      ]
+    },
+    "jump": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "jump_00",
+        "jump_01",
+        "jump_02",
+        "jump_03",
+        "jump_04",
+        "jump_05"
+      ],
+      "ticks": [
+        5,
+        6,
+        6,
+        6,
+        6,
+        5
+      ]
+    },
+    "hit": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "hit_00",
+        "hit_01",
+        "hit_02",
+        "hit_03",
+        "hit_04"
+      ],
+      "ticks": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ]
+    },
+    "ko": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "ko_00",
+        "ko_01",
+        "ko_02"
+      ],
+      "ticks": [
+        7,
+        7,
+        14
+      ]
+    },
+    "attack_light": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atk1_00",
+        "atk1_01",
+        "atk1_02",
+        "atk1_03",
+        "atk1_04",
+        "atk1_05",
+        "atk1_06",
+        "atk1_07",
+        "atk1_08",
+        "atk1_09",
+        "atk1_10",
+        "atk1_11"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "hit",
+          "at": 2
+        },
+        {
+          "name": "hit",
+          "at": 5
+        },
+        {
+          "name": "hit",
+          "at": 8
+        },
+        {
+          "name": "hit",
+          "at": 10
+        }
+      ]
+    },
+    "attack_2": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atk2_00",
+        "atk2_01",
+        "atk2_02",
+        "atk2_03"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "hit",
+          "at": 2
+        }
+      ]
+    },
+    "attack_3": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atk3_00",
+        "atk3_01",
+        "atk3_02",
+        "atk3_03"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "hit",
+          "at": 2
+        }
+      ]
+    },
+    "attack_4": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atk4_00",
+        "atk4_01",
+        "atk4_02",
+        "atk4_03",
+        "atk4_04",
+        "atk4_05",
+        "atk4_06"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "hit",
+          "at": 2
+        },
+        {
+          "name": "hit",
+          "at": 5
+        }
+      ]
+    },
+    "attack_5": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atk5_00",
+        "atk5_01",
+        "atk5_02",
+        "atk5_03",
+        "atk5_04",
+        "atk5_05",
+        "atk5_06",
+        "atk5_07",
+        "atk5_08"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "hit",
+          "at": 2
+        },
+        {
+          "name": "hit",
+          "at": 5
+        },
+        {
+          "name": "hit",
+          "at": 7
+        }
+      ]
+    },
+    "attack_6": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atk6_00",
+        "atk6_01",
+        "atk6_02",
+        "atk6_03",
+        "atk6_04",
+        "atk6_05",
+        "atk6_06",
+        "atk6_07",
+        "atk6_08",
+        "atk6_09",
+        "atk6_10",
+        "atk6_11",
+        "atk6_12",
+        "atk6_13",
+        "atk6_14"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "hit",
+          "at": 2
+        },
+        {
+          "name": "hit",
+          "at": 5
+        },
+        {
+          "name": "hit",
+          "at": 8
+        },
+        {
+          "name": "hit",
+          "at": 11
+        },
+        {
+          "name": "custom:gold_slash_60",
+          "at": 13
+        }
+      ]
+    },
+    "attack_7": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atk7_00",
+        "atk7_01",
+        "atk7_02",
+        "atk7_03",
+        "atk7_04",
+        "atk7_05"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "hit",
+          "at": 2
+        },
+        {
+          "name": "hit",
+          "at": 4
+        }
+      ]
+    },
+    "teleport": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "tele_static_00",
+        "tele_static_01",
+        "tele_static_02"
+      ],
+      "ticks": [
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "custom:teleport_relocate",
+          "at": 2
+        }
+      ]
+    },
+    "teleport_dash_ground": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "tele_ground_00",
+        "tele_ground_01",
+        "tele_ground_02"
+      ],
+      "ticks": [
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "custom:teleport_dash",
+          "at": 1
+        }
+      ]
+    },
+    "teleport_dash_air": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "tele_air_00",
+        "tele_air_01",
+        "tele_air_02"
+      ],
+      "ticks": [
+        4,
+        4,
+        4
+      ],
+      "events": [
+        {
+          "name": "custom:teleport_dash",
+          "at": 1
+        }
+      ]
+    },
+    "fly_prep": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "fly_prep_00",
+        "fly_prep_01",
+        "fly_prep_02",
+        "fly_prep_03"
+      ],
+      "ticks": [
+        6,
+        6,
+        6,
+        6
+      ]
+    },
+    "fly_aura": {
+      "loop_policy": "cycle",
+      "role": "player",
+      "frames": [
+        "fly_aura_00",
+        "fly_aura_01",
+        "fly_aura_02",
+        "fly_aura_03"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "barrier_cast": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "bar_00",
+        "bar_01",
+        "bar_02"
+      ],
+      "ticks": [
+        4,
+        5,
+        6
+      ],
+      "events": [
+        {
+          "name": "custom:barrier_activate",
+          "at": 2
+        }
+      ]
+    },
+    "energy_recover": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "rec_00",
+        "rec_01",
+        "rec_02",
+        "rec_03",
+        "rec_04",
+        "rec_05",
+        "rec_01",
+        "rec_00"
+      ],
+      "ticks": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "events": [
+        {
+          "name": "custom:recover_loop_start",
+          "at": 2
+        }
+      ]
+    },
+    "flurry_kick": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "flk_00",
+        "flk_01",
+        "flk_02",
+        "flk_03",
+        "flk_04",
+        "flk_05",
+        "flk_06",
+        "flk_03"
+      ],
+      "ticks": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        5
+      ],
+      "events": [
+        {
+          "name": "hit",
+          "at": 1
+        },
+        {
+          "name": "hit",
+          "at": 2
+        },
+        {
+          "name": "hit",
+          "at": 3
+        },
+        {
+          "name": "hit",
+          "at": 4
+        },
+        {
+          "name": "hit",
+          "at": 5
+        },
+        {
+          "name": "hit",
+          "at": 6
+        },
+        {
+          "name": "hit",
+          "at": 7
+        }
+      ]
+    },
+    "atomic_ground": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atg_00",
+        "atg_01",
+        "atg_02",
+        "atg_03",
+        "atg_04",
+        "atg_05",
+        "atg_06",
+        "atg_07"
+      ],
+      "duration_ms": [
+        90,
+        90,
+        90,
+        90,
+        90,
+        90,
+        100,
+        90
+      ],
+      "events": [
+        {
+          "name": "custom:atomic_fire",
+          "at": 6
+        }
+      ]
+    },
+    "atomic_air_down": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "ata_00",
+        "ata_01",
+        "ata_02",
+        "ata_03"
+      ],
+      "ticks": [
+        4,
+        5,
+        5,
+        6
+      ],
+      "events": [
+        {
+          "name": "custom:atomic_fire_down",
+          "at": 2
+        }
+      ]
+    },
+    "kame_ground_horiz": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "kgh_00",
+        "kgh_01",
+        "kgh_02",
+        "kgh_02b",
+        "kgh_02c",
+        "kgh_03",
+        "kgh_04"
+      ],
+      "ticks": [
+        8,
+        8,
+        12,
+        12,
+        12,
+        6,
+        12
+      ],
+      "events": [
+        {
+          "name": "custom:kame_fire",
+          "at": 5
+        }
+      ]
+    },
+    "kame_ground_up": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "kgu_00",
+        "kgu_01",
+        "kgu_02",
+        "kgu_02b",
+        "kgu_02c",
+        "kgu_03"
+      ],
+      "ticks": [
+        8,
+        8,
+        12,
+        12,
+        12,
+        16
+      ],
+      "events": [
+        {
+          "name": "custom:kame_fire",
+          "at": 5
+        }
+      ]
+    },
+    "kame_air_horiz": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "kah_00",
+        "kah_01",
+        "kah_02",
+        "kah_02b",
+        "kah_02c",
+        "kah_03"
+      ],
+      "ticks": [
+        8,
+        8,
+        12,
+        12,
+        12,
+        16
+      ],
+      "events": [
+        {
+          "name": "custom:kame_fire",
+          "at": 5
+        }
+      ]
+    },
+    "kame_air_down": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "kad_00",
+        "kad_01",
+        "kad_02",
+        "kad_02b",
+        "kad_02c",
+        "kad_03"
+      ],
+      "ticks": [
+        8,
+        8,
+        12,
+        12,
+        12,
+        16
+      ],
+      "events": [
+        {
+          "name": "custom:kame_fire",
+          "at": 5
+        }
+      ]
+    },
+    "atomic_ground_up": {
+      "loop_policy": "oneshot",
+      "role": "player",
+      "frames": [
+        "atg_00",
+        "atg_01",
+        "atg_02",
+        "atg_03",
+        "atg_04",
+        "atg_05",
+        "agu_06",
+        "agu_07"
+      ],
+      "duration_ms": [
+        90,
+        90,
+        90,
+        90,
+        90,
+        90,
+        90,
+        100
+      ],
+      "events": [
+        {
+          "name": "custom:atomic_fire_up",
+          "at": 7
+        }
+      ]
+    }
+  },
+  "states": {
+    "idle": "idle",
+    "walk": "walk",
+    "moving": "walk"
+  }
+}

@@ -48,7 +48,11 @@ static func draw_vertical_pill_bar(canvas: CanvasItem, rect: Rect2, ratio: float
 		canvas.draw_style_box(_cached_sb_fill, Rect2(rect.position.x, fill_y, rect.size.x, fill_h))
 
 
-static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, hp: float, max_hp: float, mana: float, max_mana: float, display_name: String = "", is_remote: bool = false, armor: float = -1.0, max_armor: float = 100.0, armor_broken: bool = false, ki: float = -1.0, max_ki: float = 50.0, ki_exhausted: bool = false) -> void:
+const KI_BAR_WIDTH := 5.4 # 60% of previous 9.0px thickness (-40% per Owner v10.6 HUD spec)
+const STATE_ICON_RADIUS := 7.5 # Exact radius shared by Peace/Combat & Shield-Break badges
+
+
+static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, hp: float, max_hp: float, mana: float, max_mana: float, display_name: String = "", is_remote: bool = false, armor: float = -1.0, max_armor: float = 100.0, armor_broken: bool = false, ki: float = -1.0, max_ki: float = 50.0, ki_exhausted: bool = false, show_shield_break_icon: bool = false, shield_break_alpha: float = 1.0) -> void:
 	var bar_w := 124.0
 	var hp_h := 16.0
 	var mana_h := 9.0
@@ -70,8 +74,8 @@ static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, 
 		var armor_track := Color(0.18, 0.22, 0.30, 0.85)
 		draw_pill_bar(canvas, armor_rect, armor / maxf(1.0, max_armor), armor_fill, armor_track)
 	if ki >= 0.0:
-		# Orange vertical Flight KI bar directly to the right of HP / Mana / Armor bars (10% slimmer per Owner v10)!
-		var ki_w := 9.0
+		# Orange vertical Flight KI bar directly to the right of HP / Mana / Armor bars (60% thickness = 5.4px)
+		var ki_w := KI_BAR_WIDTH
 		var ki_gap := 5.0
 		var ki_top := hp_rect.position.y
 		var ki_h := maxf(24.0, top_y - ki_top)
@@ -80,20 +84,21 @@ static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, 
 		var ki_track := Color(0.16, 0.20, 0.28, 0.88)
 		draw_vertical_pill_bar(canvas, ki_rect, ki / maxf(1.0, max_ki), ki_fill, ki_track)
 		canvas.draw_rect(ki_rect.grow(0.5), Color(0.04, 0.06, 0.10, 0.75), false, 1.0)
+	if show_shield_break_icon and shield_break_alpha > 0.02:
+		draw_shield_break_icon(canvas, Vector2(center_x, hp_rect.position.y - STATE_ICON_RADIUS - 3.0), shield_break_alpha)
 	var font := ThemeDB.fallback_font
 	if font != null:
 		var txt := "%d/%d" % [int(ceilf(maxf(0.0, hp))), int(round(max_hp))]
-		if has_armor and armor_broken:
-			txt += " [VỠ GIÁP]"
-		canvas.draw_string(font, Vector2(x0 - 16.0, hp_rect.position.y - 4.0), txt, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 32.0, 15, Color(0.98, 1.0, 0.98, 0.98))
+		var hp_txt_y := hp_rect.position.y - (STATE_ICON_RADIUS * 2.0 + 7.0 if show_shield_break_icon else 4.0)
+		canvas.draw_string(font, Vector2(x0 - 16.0, hp_txt_y), txt, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 32.0, 15, Color(0.98, 1.0, 0.98, 0.98))
 		if not display_name.is_empty():
-			var name_pos := Vector2(x0 - 36.0, hp_rect.position.y - 24.0)
+			var name_pos := Vector2(x0 - 36.0, hp_txt_y - 20.0)
 			var name_col := Color(0.42, 0.96, 1.0, 1.0) if is_remote else Color(1.0, 0.92, 0.36, 1.0)
 			canvas.draw_string_outline(font, name_pos, display_name, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 72.0, 18, 4, Color(0.03, 0.06, 0.12, 0.96))
 			canvas.draw_string(font, name_pos, display_name, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 72.0, 18, name_col)
 
 
-static func draw_enemy_bars(canvas: CanvasItem, center_x: float, top_y: float, hp: float, max_hp: float, stamina: float, max_stamina: float, stunned: bool = false, label_txt: String = "", is_boss: bool = false, combat_state: String = "peace") -> void:
+static func draw_enemy_bars(canvas: CanvasItem, center_x: float, top_y: float, hp: float, max_hp: float, stamina: float, max_stamina: float, stunned: bool = false, label_txt: String = "", is_boss: bool = false, combat_state: String = "peace", show_shield_break_icon: bool = false, shield_break_alpha: float = 1.0) -> void:
 	var bar_w := 152.0 if is_boss else 116.0
 	var hp_h := 17.0 if is_boss else 14.0
 	var stam_h := 9.0 if is_boss else 8.0
@@ -106,31 +111,74 @@ static func draw_enemy_bars(canvas: CanvasItem, center_x: float, top_y: float, h
 	var stam_fill := Color(0.98, 0.72, 0.18, 1.0) if stunned else Color(0.93, 0.94, 0.97, 0.96)
 	var stam_track := Color(0.18, 0.22, 0.30, 0.85)
 	draw_pill_bar(canvas, stam_rect, stamina / maxf(1.0, max_stamina), stam_fill, stam_track)
+	if show_shield_break_icon and shield_break_alpha > 0.02:
+		draw_shield_break_icon(canvas, Vector2(center_x, hp_rect.position.y - STATE_ICON_RADIUS - 3.0), shield_break_alpha)
 	# Peace vs Combat state emblem directly below monster Armor/Stamina bar (Owner v6)!
 	var is_combat := is_boss or (combat_state == "combat")
 	var icon_c := Vector2(center_x, top_y + 10.0)
 	draw_monster_state_icon(canvas, icon_c, is_combat)
 	var font := ThemeDB.fallback_font
 	if font != null:
+		var lbl_offset_y := (STATE_ICON_RADIUS * 2.0 + 8.0) if show_shield_break_icon else 6.0
 		if is_boss:
 			var boss_name := label_txt if not label_txt.is_empty() else "Drum"
 			if stunned:
 				boss_name += " [STUN]"
-			var name_pos := Vector2(x0 - 24.0, hp_rect.position.y - 6.0)
+			var name_pos := Vector2(x0 - 24.0, hp_rect.position.y - lbl_offset_y)
 			canvas.draw_string_outline(font, name_pos, boss_name, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 48.0, 18, 4, Color(0.05, 0.02, 0.03, 0.96))
 			canvas.draw_string(font, name_pos, boss_name, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 48.0, 18, Color(1.0, 0.14, 0.14, 1.0))
 		else:
 			var top_str := "%s %d" % [label_txt, int(ceilf(maxf(0.0, hp)))] if not label_txt.is_empty() else "%d/%d" % [int(ceilf(maxf(0.0, hp))), int(round(max_hp))]
 			if stunned:
 				top_str += " [STUN]"
-			canvas.draw_string(font, Vector2(x0 - 24.0, hp_rect.position.y - 4.0), top_str, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 48.0, 14, Color(1.0, 0.94, 0.82, 0.98))
+			canvas.draw_string(font, Vector2(x0 - 24.0, hp_rect.position.y - (lbl_offset_y - 2.0)), top_str, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 48.0, 14, Color(1.0, 0.94, 0.82, 0.98))
+
+
+static func draw_shield_break_icon(canvas: CanvasItem, center: Vector2, alpha_mul: float = 1.0) -> void:
+	## Cracked-shield emblem directly above HP bar, exact same size (r=7.5) as Peace/Combat state icon, flashes then fades!
+	var a := clampf(alpha_mul, 0.0, 1.0)
+	if a <= 0.01:
+		return
+	var r := STATE_ICON_RADIUS
+	canvas.draw_circle(center, r + 1.4, Color(0.06, 0.07, 0.11, 0.90 * a))
+	var ring_col := Color(1.0, 0.62, 0.16, 0.98 * a)
+	var shield_col := Color(0.98, 0.84, 0.44, 0.96 * a)
+	var crack_col := Color(0.18, 0.05, 0.02, 0.98 * a)
+	canvas.draw_arc(center, r, 0.0, TAU, 20, ring_col, 1.8, true)
+	# Left & right split halves of a shield silhouette
+	var left_half := PackedVector2Array([
+		center + Vector2(-4.4, -3.8),
+		center + Vector2(-0.6, -4.4),
+		center + Vector2(-1.4, -0.4),
+		center + Vector2(-0.4, 2.2),
+		center + Vector2(-1.0, 4.6),
+		center + Vector2(-4.2, 1.4),
+	])
+	var right_half := PackedVector2Array([
+		center + Vector2(0.8, -4.4),
+		center + Vector2(4.4, -3.8),
+		center + Vector2(4.2, 1.4),
+		center + Vector2(1.0, 4.6),
+		center + Vector2(1.6, 2.0),
+		center + Vector2(0.5, -0.6),
+	])
+	canvas.draw_colored_polygon(left_half, shield_col)
+	canvas.draw_colored_polygon(right_half, shield_col)
+	# Jagged fracture crack down the middle
+	var crack := PackedVector2Array([
+		center + Vector2(0.2, -4.6),
+		center + Vector2(-0.9, -0.8),
+		center + Vector2(0.8, 1.4),
+		center + Vector2(-0.2, 4.8),
+	])
+	canvas.draw_polyline(crack, crack_col, 1.7, true)
 
 
 static func draw_monster_state_icon(canvas: CanvasItem, center: Vector2, in_combat: bool) -> void:
 	## Crisp badge below Monster Armor bar:
 	## - Peace  (in_combat=false): calm emerald-green emblem with leaf/peace crest
 	## - Combat (in_combat=true) : blazing crimson emblem with crossed swords
-	var r := 7.5
+	var r := STATE_ICON_RADIUS
 	var bg := Color(0.06, 0.08, 0.12, 0.88)
 	canvas.draw_circle(center, r + 1.4, bg)
 	if in_combat:

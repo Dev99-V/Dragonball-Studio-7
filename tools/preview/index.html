@@ -1326,19 +1326,23 @@
       const m = ch.map_sync_metrics;
       const s = ch.pixel_sharpness_metrics;
       const fxBox = m.full_fx_bbox_px || m.full_aura_shock_bbox_px;
+      const world = m.world_size_at_64ppu_m;
+      const tiles = m.tile_32px_span;
       document.getElementById('metricsTable').innerHTML = `
         <tr><td>Khung Canvas nhân vật</td><td>${m.canvas_size_px[0]} × ${m.canvas_size_px[1]} px</td></tr>
         <tr><td>Tâm chân mặt đất (<code>anchor_px</code>)</td><td>(${m.foot_anchor_px[0]}, ${m.foot_anchor_px[1]}) px</td></tr>
         <tr><td>Kích thước Thân thuần (<code>Body BBox</code>)</td><td>${m.body_only_bbox_px.w} × ${m.body_only_bbox_px.h} px</td></tr>
         <tr><td>Kích thước Toàn thân / Vũ khí / FX</td><td>${fxBox.w} × ${fxBox.h} px</td></tr>
-        <tr><td>Quy đổi Map @ <code>64 PPU</code> (Thân)</td><td>${m.world_size_at_64ppu_m.body_w_m}m × ${m.world_size_at_64ppu_m.body_h_m}m</td></tr>
-        <tr><td>Quy đổi Map @ <code>64 PPU</code> (Full FX)</td><td>${m.world_size_at_64ppu_m.aura_w_m}m × ${m.world_size_at_64ppu_m.aura_h_m}m</td></tr>
-        <tr><td>Số ô Tile Map <code>32×32 px</code> (Thân)</td><td>${m.tile_32px_span.body_tiles_w} × ${m.tile_32px_span.body_tiles_h} ô</td></tr>
+        ${world ? `
+        <tr><td>Quy đổi Map @ <code>64 PPU</code> (Thân)</td><td>${world.body_w_m}m × ${world.body_h_m}m</td></tr>
+        <tr><td>Quy đổi Map @ <code>64 PPU</code> (Full FX)</td><td>${world.aura_w_m}m × ${world.aura_h_m}m</td></tr>` : ''}
+        ${tiles ? `<tr><td>Số ô Tile Map <code>32×32 px</code> (Thân)</td><td>${tiles.body_tiles_w} × ${tiles.body_tiles_h} ô</td></tr>` : ''}
+        ${s ? `
         <tr><td>Tỷ lệ Texel &amp; Lọc mẫu</td><td>${s.texel_scale_ratio}</td></tr>
         <tr><td>Độ sắc nét biên (<code>Sobel Acutance</code>)</td><td>${s.edge_acutance_sobel}</td></tr>
         <tr><td>Độ cứng biên Pixel (<code>Alpha &ge; 245</code>)</td><td>${s.alpha_hardness_pct}%</td></tr>
         <tr><td>Hốc màu nền kẹt (<code>enclosed_pockets</code>)</td><td>${s.enclosed_key_pockets} px (Sạch 100%)</td></tr>
-        <tr><td>Nhiễu nền đặc / viền ngoài</td><td>${s.opaque_key_px} px / ${s.outer_ring_spill_fraction ?? 'chưa đo'}</td></tr>
+        <tr><td>Nhiễu nền đặc / viền ngoài</td><td>${s.opaque_key_px} px / ${s.outer_ring_spill_fraction ?? 'chưa đo'}</td></tr>` : ''}
       `;
     }
 
@@ -3090,9 +3094,12 @@
           godotFrame.style.display = 'block';
           const shouldLoadFrame = forceLoadGodotFrame || state.activeTab === 'tab-arena';
           const directLink = document.getElementById('btnOpenGodotDirect');
-          if (directLink) directLink.href = `/godot-web/index.html?dev_sandbox=1${arena.godotWebVersion ? '&v=' + encodeURIComponent(arena.godotWebVersion) : ''}`;
-          if (shouldLoadFrame && (!godotFrame.src || !godotFrame.src.endsWith('/godot-web/index.html'))) {
-            godotFrame.src = '/godot-web/index.html';
+          const verQ = arena.godotWebVersion ? '&v=' + encodeURIComponent(arena.godotWebVersion) : '';
+          const targetGodotSrc = `/godot-web/index.html?dev_sandbox=1${verQ}`;
+          if (directLink) directLink.href = targetGodotSrc;
+          if (shouldLoadFrame && (!godotFrame.src || !godotFrame.src.includes('/godot-web/index.html') || godotFrame._loadedPckVersion !== String(arena.godotWebVersion || ''))) {
+            godotFrame._loadedPckVersion = String(arena.godotWebVersion || '');
+            godotFrame.src = targetGodotSrc;
           }
         } else {
           godotFrame.style.display = 'none';

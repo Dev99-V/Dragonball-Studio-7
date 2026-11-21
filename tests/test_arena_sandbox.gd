@@ -299,8 +299,8 @@ func run_test() -> void:
 	for _re in arena.roster_characters:
 		if _re is Dictionary and str(_re.get("faction", "")) != "review_demo" and str(_re.get("status", "")) != "human_test_pending":
 			finalized_count += 1
-	if finalized_count != 11:
-		fail("Expected 11 finalized characters including Floating Camera, got " + str(finalized_count) + " (total=" + str(arena.roster_characters.size()) + ")")
+	if finalized_count != 12:
+		fail("Expected 12 finalized characters including Floating Camera and Son Goku, got " + str(finalized_count) + " (total=" + str(arena.roster_characters.size()) + ")")
 		return
 
 	for entry in arena.roster_characters:
@@ -1002,9 +1002,9 @@ func run_test() -> void:
 		fail("Flying character over Step 3 must descend to local floor y=945, got " + str(arena.player_node.position.y))
 		return
 
-	# Verify PixelRulerModal 1:1 world PX measurements across devices (FHD, K70E, iPad)
-	if arena.ruler_button == null or arena.ruler_modal == null or arena.ruler_modal_visible:
-		fail("Ruler button and hidden PixelRulerModal must initialize cleanly")
+	# Verify PixelRulerModal 1:1 world PX measurements across devices (FHD, K70E, iPad); ruler_button removed from Sân Tập HUD (Owner v10.6)
+	if arena.ruler_button != null or arena.ruler_modal == null or arena.ruler_modal_visible:
+		fail("Ruler button must be removed from Sân Tập HUD and hidden PixelRulerModal must initialize cleanly")
 		return
 	arena.select_character("drum")
 	await process_frame
@@ -1577,9 +1577,9 @@ func run_test() -> void:
 		fail("Boss Drum must globally pursue & teleport to Hero at x=3300 (>400px away), got x=%.1f" % bnode.position.x)
 		return
 
-	# 4) Manual HUD summon button & Boss KO -> 100% Dragon Ball drop + 30' (1800s) respawn cooldown
-	if DisplayServer.get_name() != "headless" and (arena.boss_spawn_button == null or arena.boss_spawn_button.text != "⚡ Gọi Boss Drum"):
-		fail("ArenaSandbox must expose '⚡ Gọi Boss Drum' manual test button")
+	# 4) Manual HUD Boss dropdown + summon button & Boss KO -> 100% Dragon Ball drop + 30' (1800s) respawn cooldown
+	if arena.boss_selector == null or arena.boss_spawn_button == null or arena.boss_spawn_button.text != "⚡ Gọi Boss":
+		fail("ArenaSandbox must expose BossSelectorDropdown and '⚡ Gọi Boss' button")
 		return
 	arena.enable_field_mode(true, true)
 	var b_manual: Dictionary = arena.spawn_boss_drum_now()
@@ -1828,8 +1828,8 @@ func run_test() -> void:
 	# === SON GOKU HERO PHASE 1 TESTS (Default Hero replacing Drum, Base<->SSJ1, 7-Step Combo, Stamina Teleport, Flight+Fly_Aura) ===
 	arena.set_field_hero_visible(true)
 	await process_frame
-	if arena.active_character_id != "songoku_hero_demo" or arena.player_node == null or not bool(arena.player_node.call(&"is_hero_songoku")):
-		fail("Default Hero must now be Son Goku ('songoku_hero_demo'), got %s" % arena.active_character_id)
+	if arena.active_character_id != "songoku" or arena.player_node == null or not bool(arena.player_node.call(&"is_hero_songoku")):
+		fail("Default Hero must now be Son Goku ('songoku'), got %s" % arena.active_character_id)
 		return
 	var goku: Node2D = arena.player_node
 	# 1) Starts in Base form: cannot attack, jump, or fly
@@ -2037,10 +2037,10 @@ func run_test() -> void:
 
 	# === SON GOKU PHASE 1 v5/v6 REGRESSION UNIT TESTS (T1..T8 FULL COVERAGE!) ===
 	# v6 T1: Verify Base Approved SHA-256 Lock file exists with all 24 Base frames!
-	if not FileAccess.file_exists("res://review/songoku_hero_demo/base_approved_lock.json"):
-		fail("v6 T1: Missing immutable review/songoku_hero_demo/base_approved_lock.json")
+	if not FileAccess.file_exists("res://assets/songoku/base_approved_lock.json"):
+		fail("v6 T1: Missing immutable assets/songoku/base_approved_lock.json")
 		return
-	var base_lock_doc = JSON.parse_string(FileAccess.get_file_as_string("res://review/songoku_hero_demo/base_approved_lock.json"))
+	var base_lock_doc = JSON.parse_string(FileAccess.get_file_as_string("res://assets/songoku/base_approved_lock.json"))
 	if not (base_lock_doc is Dictionary) or int(base_lock_doc.get("frame_count", 0)) != 24:
 		fail("v6 T1: base_approved_lock.json must lock all 24 approved Base Goku frames")
 		return
@@ -2126,7 +2126,7 @@ func run_test() -> void:
 		return
 
 	# v10 Phase 2 Skills verification (05 Barrier 10s, 06 Recover 3s HP/Armor/KI, 26 Flurry Kick universal Stun, Atomic 12s CD, Kamehameha 250 MP)
-	for req_p2 in ["barrier_cast", "energy_recover", "flurry_kick", "atomic_ground", "atomic_air_down", "kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"]:
+	for req_p2 in ["barrier_cast", "energy_recover", "flurry_kick", "atomic_ground", "atomic_ground_up", "atomic_air_down", "kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"]:
 		if not g_spr.sprite_frames.has_animation(StringName(req_p2)):
 			fail("v10 Phase 2: Songoku bundle missing required clip '%s'" % req_p2)
 			return
@@ -2187,16 +2187,19 @@ func run_test() -> void:
 	if float(stun_slot.get("hard_stun_timer_s", 0.0)) < 1.5:
 		fail("v10 Flurry Stun: apply_hard_stun_to_slot must lock slot for >= 1.5s")
 		return
-	# 4) Atomic 12s CD (4 alternating homing bolts @ 1500px/s ignoring terrain) & Kamehameha 80 MP gate (Sheet 28 7-frame charge + 2500px/s NO 1s hold, immediate Branch 2 vanish on hit, ignoring terrain) targeting BOTH pointed ground & flying enemies!
-	if absf(float(goku.get("ATOMIC_SPEED_PX_S")) - 1500.0) > 0.1 or int(goku.get("ATOMIC_BOLT_COUNT")) != 4 or absf(float(goku.get("KAME_MANA_COST")) - 80.0) > 0.1 or absf(float(goku.get("KAME_SPEED_PX_S")) - 2500.0) > 0.1 or absf(float(goku.get("KAME_HOLD_S")) - 0.0) > 0.01:
-		fail("v10.5 Tuning: Atomic=4 bolts@1500px/s, Kamehameha=80MP@2500px/s hold=0.0s required")
+	# 4) Atomic 12s CD (Sheet 21 exact 8 frames + 6 alternating homing bolts @ 2500px/s ignoring terrain) & Kamehameha 80 MP gate (2.0s charge + 3000px/s +20% size, immediate Column 2 fade on hit, ignoring terrain) targeting BOTH pointed ground & flying enemies!
+	if absf(float(goku.get("ATOMIC_SPEED_PX_S")) - 2500.0) > 0.1 or int(goku.get("ATOMIC_BOLT_COUNT")) != 6 or absf(float(goku.get("KAME_MANA_COST")) - 80.0) > 0.1 or absf(float(goku.get("KAME_SPEED_PX_S")) - 3000.0) > 0.1 or absf(float(goku.get("KAME_CHARGE_DURATION_S")) - 2.0) > 0.05 or absf(float(goku.get("KAME_BEAM_SCALE_MUL")) - 1.2) > 0.01 or absf(float(goku.get("KAME_HOLD_S")) - 0.0) > 0.01:
+		fail("v10.6 Tuning: Atomic=6 bolts@2500px/s, Kamehameha=80MP@3000px/s charge=2.0s scale=1.2x hold=0.0s required")
 		return
 	var atomic_spr: AnimatedSprite2D = goku.get_node_or_null("Sprite") as AnimatedSprite2D
 	if atomic_spr != null:
+		if atomic_spr.sprite_frames.get_frame_count(&"atomic_ground") != 8:
+			fail("v10.6 Atomic: Sheet 21 atomic_ground must have exact 8 frames, got %d" % atomic_spr.sprite_frames.get_frame_count(&"atomic_ground"))
+			return
 		atomic_spr.play(&"idle_combat")
 	if is_instance_valid(stun_slot.get("node")):
 		var snode: Node2D = stun_slot.get("node") as Node2D
-		snode.position = Vector2(goku.position.x + 880.0, arena._ground_y_at(goku.position.x + 880.0))
+		snode.position = Vector2(goku.position.x + 1250.0, arena._ground_y_at(goku.position.x + 1250.0))
 	p1_fm.pointer_kind = "enemy"
 	p1_fm.pointer_slot_id = str(stun_slot.get("id", ""))
 	if not p1_fm.request_player_atomic_blast() or absf(float(goku.get("atomic_cooldown_s")) - 12.0) > 0.2:
@@ -2205,21 +2208,105 @@ func run_test() -> void:
 	if p1_fm.request_player_atomic_blast():
 		fail("v10 Atomic: must reject recast while on 12s cooldown")
 		return
-	# Verify Atomic fires 4 alternating bolts @ 1500px/s with ignore_terrain=true locked to pointed target!
+	# Verify Atomic fires 6 curved bolts (#6 left x3 -> #7 right x3) @ 2500px/s with ignore_terrain=false (Điều 7.8) + >=30px muzzle clearance + Sheet 23 muzzle sparks!
 	if atomic_spr != null:
-		atomic_spr.frame = 4
+		atomic_spr.frame = 6
 		p1_fm.step(0.02)
 		var bolts_after_1: int = int(p1_fm._hero_skill_projectiles.size())
-		var first_bolt_ok: bool = bolts_after_1 >= 1 and absf(float(p1_fm._hero_skill_projectiles[0].get("speed", 0.0)) - 1500.0) <= 0.1 and bool(p1_fm._hero_skill_projectiles[0].get("ignore_terrain", false)) and str(p1_fm._hero_skill_projectiles[0].get("target", {}).get("id", "")) == p1_fm.pointer_slot_id
-		p1_fm.step(0.08)
-		p1_fm.step(0.08)
-		p1_fm.step(0.08)
-		var bolts_after_4: int = int(p1_fm._hero_skill_projectiles.size())
-		if not first_bolt_ok or bolts_after_4 < 4 or not p1_fm._hero_atomic_pending_bolts.is_empty():
-			fail("v10.3 Atomic: must launch 4 alternating homing bolts (@1500px/s ignore_terrain) to pointed target (anim=%s b1=%d b4=%d pend=%d)" % [String(atomic_spr.animation), bolts_after_1, bolts_after_4, p1_fm._hero_atomic_pending_bolts.size()])
+		var first_bolt_ok: bool = bolts_after_1 >= 1 and absf(float(p1_fm._hero_skill_projectiles[0].get("speed", 0.0)) - 2500.0) <= 0.1 and (not bool(p1_fm._hero_skill_projectiles[0].get("ignore_terrain", true))) and str(p1_fm._hero_skill_projectiles[0].get("target", {}).get("id", "")) == p1_fm.pointer_slot_id
+		for _step_a in range(8):
+			p1_fm.step(0.065)
+		var fire_log: Array = p1_fm._last_atomic_fire_log
+		var frame_seq: Array[int] = []
+		for ent_v in fire_log:
+			var ent: Dictionary = ent_v as Dictionary
+			frame_seq.append(int(ent.get("hand_frame", -1)))
+			if float(ent.get("rear_gap_px", 0.0)) < 29.5:
+				fail("v10.6+ Atomic: bolt spawn must keep >= 30px clearance outside muzzle flash tip, got %.2f" % float(ent.get("rear_gap_px", 0.0)))
+				return
+		if not first_bolt_ok or fire_log.size() != 6 or frame_seq != [6, 6, 6, 7, 7, 7] or not p1_fm._hero_atomic_pending_bolts.is_empty():
+			fail("v10.6+ Atomic: must launch 6 curved bolts in [6,6,6,7,7,7] order (@2500px/s ignore_terrain=false) to pointed target (seq=%s pend=%d)" % [str(frame_seq), p1_fm._hero_atomic_pending_bolts.size()])
 			return
+		# Verify curved arc lateral deviation on bolt #0 vs chord
+		var p_arc0: Dictionary = p1_fm._hero_skill_projectiles[0] if not p1_fm._hero_skill_projectiles.is_empty() else {}
+		if not p_arc0.is_empty() and absf(float(p_arc0.get("arc_amp", 0.0))) < 20.0:
+			fail("v10.6+ Atomic: bolts must follow curved arc (arc_amp > 20px)")
+			return
+		# Verify flipped-left 30px clearance too
+		p1_fm._hero_skill_projectiles.clear()
+		p1_fm._last_atomic_fire_log.clear()
+		goku.scale = Vector2(-absf(goku.scale.x), goku.scale.y)
+		p1_fm._spawn_atomic_bolt(goku, arena.char_scale, "ground_horiz", 6, 0)
+		if p1_fm._last_atomic_fire_log.is_empty() or float(p1_fm._last_atomic_fire_log[0].get("rear_gap_px", 0.0)) < 29.5:
+			fail("v10.6+ Atomic: flipped-left spawn must also keep >= 30px clearance outside muzzle tip")
+			return
+		goku.scale = Vector2(absf(goku.scale.x), goku.scale.y)
+
+		# Verify atomic_air_down upgraded to 6 bolts [2,2,2,3,3,3] @ 1500px/s + muzzle flashes
+		p1_fm._hero_skill_projectiles.clear()
+		p1_fm._hero_atomic_muzzle_flashes.clear()
+		p1_fm._last_atomic_fire_log.clear()
+		p1_fm._hero_atomic_fired = false
+		atomic_spr.play(&"atomic_air_down")
+		atomic_spr.set_frame_and_progress(2, 0.0)
+		p1_fm._step_hero_phase2_skills(0.0)
+		for _step_air in range(6):
+			p1_fm._step_hero_phase2_skills(0.071)
+		var air_seq: Array[int] = []
+		for ent_a in p1_fm._last_atomic_fire_log:
+			air_seq.append(int((ent_a as Dictionary).get("hand_frame", -1)))
+		if p1_fm._hero_skill_projectiles.size() != 6 or air_seq != [2, 2, 2, 3, 3, 3] or not p1_fm._hero_atomic_pending_bolts.is_empty() or p1_fm._hero_atomic_muzzle_flashes.is_empty():
+			fail("v10.6+ Airborne Atomic must fire 6 bolts [2,2,2,3,3,3] with muzzle sparks (cnt=%d seq=%s)" % [p1_fm._hero_skill_projectiles.size(), str(air_seq)])
+			return
+		for bolt in p1_fm._hero_skill_projectiles:
+			if not bool(bolt.get("air_down")) or float(bolt.get("speed")) != 1500.0 or bool(bolt.get("ignore_terrain", true)):
+				fail("v10.6+ Airborne Atomic bolts must keep speed=1500px/s and ignore_terrain=false")
+				return
+
+		# Verify atomic_ground_up selects automatically when grounded pointing at flying target (dy < -65),
+		# uses #6 as bridge (no premature fire), and fires 6 bolts from BOTH raised hands at #7 ([7,7,7,7,7,7])
 		atomic_spr.play(&"idle_combat")
-	# Point specifically at a FLYING monster and verify Kamehameha locks onto that flying target!
+		p1_fm._hero_skill_projectiles.clear()
+		p1_fm._last_atomic_fire_log.clear()
+		goku.set("atomic_cooldown_s", 0.0)
+		goku.set("flight_state", "ground")
+		goku.position = Vector2(560.0, arena._ground_y_at(560.0))
+		var up_fly_slot: Dictionary = {}
+		for fsl_u in p1_fm.slots:
+			var d_u: Dictionary = fsl_u as Dictionary
+			if bool(d_u.get("alive", false)) and bool(d_u.get("is_flying", false)):
+				up_fly_slot = d_u
+				break
+		if not up_fly_slot.is_empty():
+			(up_fly_slot["node"] as Node2D).position = Vector2(880.0, 260.0)
+			p1_fm.pointer_kind = "enemy"
+			p1_fm.pointer_slot_id = str(up_fly_slot["id"])
+			if not p1_fm.request_player_atomic_blast() or p1_fm._hero_atomic_mode != "ground_up" or String(atomic_spr.animation) != "atomic_ground_up":
+				fail("v10.6+ Atomic Ground Up must trigger atomic_ground_up when grounded targeting flying enemy (mode=%s anim=%s)" % [p1_fm._hero_atomic_mode, String(atomic_spr.animation)])
+				return
+			atomic_spr.set_frame_and_progress(6, 0.0)
+			p1_fm._step_hero_phase2_skills(0.0)
+			if not p1_fm._last_atomic_fire_log.is_empty():
+				fail("v10.6+ Atomic Ground Up frame #6 is bridge only and must not fire prematurely")
+				return
+			atomic_spr.set_frame_and_progress(7, 0.0)
+			p1_fm._step_hero_phase2_skills(0.0)
+			for _step_up in range(6):
+				p1_fm._step_hero_phase2_skills(0.071)
+			var up_seq: Array[int] = []
+			for ent_u in p1_fm._last_atomic_fire_log:
+				up_seq.append(int((ent_u as Dictionary).get("hand_frame", -1)))
+			if up_seq != [7, 7, 7, 7, 7, 7]:
+				fail("v10.6+ Atomic Ground Up must fire 6 bolts at 2-hands-raised frame #7 [7,7,7,7,7,7], got %s" % str(up_seq))
+				return
+			var up_h0: Vector2 = (p1_fm._last_atomic_fire_log[0] as Dictionary).get("hand_pos", Vector2.ZERO)
+			var up_h3: Vector2 = (p1_fm._last_atomic_fire_log[3] as Dictionary).get("hand_pos", Vector2.ZERO)
+			if up_h0.distance_to(up_h3) < 10.0:
+				fail("v10.6+ Atomic Ground Up bolts 0..2 and 3..5 must fire from left and right raised palms separately")
+				return
+		p1_fm._hero_skill_projectiles.clear()
+		atomic_spr.play(&"idle_combat")
+	# Point specifically at a FLYING monster and verify Kamehameha 2.0s charge + 3000px/s +20% beam locks onto that flying target!
 	var fly_kame_slot: Dictionary = {}
 	for fsl_v in p1_fm.slots:
 		var fsl: Dictionary = fsl_v as Dictionary
@@ -2239,12 +2326,18 @@ func run_test() -> void:
 		return
 	if atomic_spr != null:
 		if atomic_spr.sprite_frames.get_frame_count(&"kame_ground_horiz") != 7:
-			fail("v10.5 Kamehameha: Sheet 28 kame_ground_horiz must have exact 7 frames, got %d" % atomic_spr.sprite_frames.get_frame_count(&"kame_ground_horiz"))
+			fail("v10.6 Kamehameha: Sheet 28 kame_ground_horiz must have exact 7 frames, got %d" % atomic_spr.sprite_frames.get_frame_count(&"kame_ground_horiz"))
 			return
-		atomic_spr.frame = 5
-		p1_fm.step(0.02)
-		if p1_fm._hero_kame_beams.is_empty() or absf(float(p1_fm._hero_kame_beams[0].get("speed", 0.0)) - 2500.0) > 0.1 or absf(float(p1_fm._hero_kame_beams[0].get("hold_s", 99.0)) - 0.0) > 0.01 or absf(float(p1_fm._hero_kame_beams[0].get("fade_s", 0.0)) - 0.18) > 0.01 or not bool(p1_fm._hero_kame_beams[0].get("ignore_terrain", false)):
-			fail("v10.5 Kamehameha: beam must fire at frame #5, travel at 2500px/s with NO 1s hold (hold_s=0.0, fade_s=0.18) ignoring terrain (anim=%s beams=%d)" % [String(atomic_spr.animation), p1_fm._hero_kame_beams.size()])
+		# Verify 2.0s charge holds before firing, then fires cleanly at ~2.0s!
+		for _step_chg in range(18):
+			p1_fm.step(0.10)
+		if not p1_fm._hero_kame_beams.is_empty():
+			fail("v10.6 Kamehameha: must charge for ~2.0s before firing (fired early at 1.80s!)")
+			return
+		p1_fm.step(0.12)
+		p1_fm.step(0.12)
+		if p1_fm._hero_kame_beams.is_empty() or absf(float(p1_fm._hero_kame_beams[0].get("speed", 0.0)) - 3000.0) > 0.1 or absf(float(p1_fm._hero_kame_beams[0].get("scale_mul", 0.0)) - 1.2) > 0.01 or absf(float(p1_fm._hero_kame_beams[0].get("hold_s", 99.0)) - 0.0) > 0.01 or absf(float(p1_fm._hero_kame_beams[0].get("fade_s", 0.0)) - 0.18) > 0.01 or bool(p1_fm._hero_kame_beams[0].get("ignore_terrain", true)):
+			fail("v10.6+ Kamehameha: beam must fire after 2.0s charge at 3000px/s (+20% size, hold_s=0.0, fade_s=0.18) with Điều 7.8 terrain collision (ignore_terrain=false) (anim=%s beams=%d)" % [String(atomic_spr.animation), p1_fm._hero_kame_beams.size()])
 			return
 		if not fly_kame_slot.is_empty() and str(p1_fm._hero_kame_beams[0].get("target", {}).get("id", "")) != str(fly_kame_slot.get("id", "")):
 			fail("v10.3 Kamehameha Pointer Lock: must aim directly at pointed flying target")
@@ -2253,7 +2346,7 @@ func run_test() -> void:
 		for _step_k in range(30):
 			p1_fm.step(0.03)
 		if not p1_fm._hero_kame_beams.is_empty():
-			fail("v10.5 Kamehameha: beam must vanish immediately after target impact + 0.18s fade (no 1.0s hold), still active after 0.90s!")
+			fail("v10.6 Kamehameha: beam must vanish immediately after target impact + 0.18s fade (no 1.0s hold), still active after 0.90s!")
 			return
 		atomic_spr.play(&"idle_combat")
 
@@ -2570,6 +2663,286 @@ func run_test() -> void:
 	if str(t_slot.get("action_clip", "")) != "power_up":
 		fail("v5 T1: Ground monster with player hovering overhead must counterattack with 'power_up', got '%s'" % str(t_slot.get("action_clip", "")))
 		return
+
+	# v10.6+ regression: energy_recover must ONLY activate when grounded (rejected in jump/fly/fall) + MobileActionPad slot 10 disabled in air
+	var MobilePadScriptV106 := preload("res://scenes/runtime/MobileActionPad.gd")
+	var pad_v106 := MobilePadScriptV106.new() as Control
+	root.add_child(pad_v106)
+	pad_v106.configure_for_character("songoku", PackedStringArray(["idle_ssj", "energy_recover", "atomic_ground", "kame_ground_horiz", "barrier", "flurry_kick", "teleport"]), false)
+	var gy_v106: float = arena._ground_y_at(600.0)
+	goku.set("is_ssj", true)
+	goku.set("recover_timer_s", 0.0)
+	goku.set("recover_cooldown_s", 0.0)
+	goku.position = Vector2(600.0, gy_v106 - 240.0)
+	goku.set("flight_state", "flying")
+	arena.set("player_vy", 0.0)
+	if arena.is_player_grounded_for_recover():
+		fail("v10.6+: is_player_grounded_for_recover must be false while flying")
+		return
+	if p1_fm.request_player_energy_recover() or goku.call("trigger_energy_recover", arena.is_player_grounded_for_recover()):
+		fail("v10.6+: energy_recover must be rejected while flying")
+		return
+	if absf(goku.position.y - (gy_v106 - 240.0)) > 0.5 or str(goku.get("flight_state")) != "flying":
+		fail("v10.6+: rejected energy_recover in flight must NOT force Goku onto the ground")
+		return
+	pad_v106.set_hero_stamina_and_state(100.0, 100.0, true, true, true, 0, 0.0, 0.0, 0.0, 0.0, 0.0, false)
+	if not bool(pad_v106._slot_buttons[10].disabled):
+		fail("v10.6+: MobileActionPad slot 10 (Hồi 3s) must be disabled while airborne")
+		return
+	goku.set("flight_state", "falling")
+	if arena.is_player_grounded_for_recover() or p1_fm.request_player_energy_recover():
+		fail("v10.6+: energy_recover must be rejected while falling")
+		return
+	goku.set("flight_state", "ground")
+	goku.position = Vector2(600.0, gy_v106 - 48.0)
+	arena.set("player_vy", -180.0)
+	if arena.is_player_grounded_for_recover() or p1_fm.request_player_energy_recover():
+		fail("v10.6+: energy_recover must be rejected while jumping")
+		return
+	goku.position = Vector2(600.0, gy_v106)
+	arena.set("player_vy", 0.0)
+	pad_v106.set_hero_stamina_and_state(100.0, 100.0, true, true, false, 0, 0.0, 0.0, 0.0, 0.0, 0.0, true)
+	if bool(pad_v106._slot_buttons[10].disabled):
+		fail("v10.6+: MobileActionPad slot 10 (Hồi 3s) must re-enable upon landing")
+		return
+	if not p1_fm.request_player_energy_recover():
+		fail("v10.6+: energy_recover must succeed when grounded in SSJ1")
+		return
+	pad_v106.queue_free()
+
+	# v10.6+ regression: Hero AI air->ground target switch must exit fly_prep/fly_aura (teleport or descend/land) instead of hovering until KI empties
+	goku.set("recover_timer_s", 0.0)
+	goku.set("recover_cooldown_s", 0.0)
+	goku.get_node("Sprite").play(&"fly_aura")
+	var gnd_slot_v106: Dictionary = p1_fm.slots[0]
+	var gnd_node_v106: Node2D = gnd_slot_v106["node"] as Node2D
+	gnd_slot_v106["alive"] = true
+	gnd_slot_v106["hp"] = 500.0
+	gnd_node_v106.position = Vector2(330.0, arena._ground_y_at(330.0))
+	p1_fm.pointer_kind = "enemy"
+	p1_fm.pointer_slot_id = str(gnd_slot_v106["id"])
+	arena.set_hero_auto_battle(true)
+	# Path A: low stamina (no teleport) -> diagonal descend + fast_drop -> land cleanly with KI preserved
+	goku.set("ki", 50.0)
+	goku.set("stamina", 10.0)
+	goku.set("flight_state", "flying")
+	goku.position = Vector2(600.0, 300.0)
+	arena.set("player_vy", 0.0)
+	var ai_desc_landed := false
+	for _ai_i in range(180):
+		await process_frame
+		p1_fm.step_hero_auto_battle(1.0 / 60.0)
+		if str(goku.get("flight_state")) == "ground" and goku.position.y >= arena._ground_y_at(goku.position.x) - 2.5:
+			ai_desc_landed = true
+			break
+	if not ai_desc_landed or float(goku.get("ki")) <= 10.0:
+		fail("v10.6+: Hero AI airborne->ground target must descend and land instead of fly_prep/fly_aura loop (fstate=%s y=%.1f ki=%.2f)" % [str(goku.get("flight_state")), goku.position.y, float(goku.get("ki"))])
+		return
+	# Path B: high stamina -> teleport_static relocates onto ground and clears flight_state
+	goku.set("ki", 90.0)
+	goku.set("stamina", 90.0)
+	goku.set("flight_state", "flying")
+	goku.position = Vector2(600.0, 300.0)
+	goku.get_node("Sprite").play(&"fly_aura")
+	var ai_tp_landed := false
+	for _tp_i in range(60):
+		await process_frame
+		p1_fm.step_hero_auto_battle(1.0 / 60.0)
+		arena._step_songoku_teleport_midclip()
+		if str(goku.get("flight_state")) == "ground" and goku.position.y >= arena._ground_y_at(goku.position.x) - 2.5:
+			ai_tp_landed = true
+			break
+	if not ai_tp_landed:
+		fail("v10.6+: Hero AI teleport_static to ground target must land cleanly in flight_state='ground'")
+		return
+	# Path C: _step_auto_approach from air to ground target must descend & land
+	arena.set_hero_auto_battle(false)
+	goku.set("ki", 50.0)
+	goku.set("stamina", 10.0)
+	goku.set("flight_state", "flying")
+	goku.position = Vector2(600.0, 300.0)
+	arena.set("player_vy", 0.0)
+	goku.get_node("Sprite").play(&"fly_aura")
+	p1_fm.auto_approach_active = true
+	p1_fm._auto_approach_kind = "enemy"
+	p1_fm._auto_approach_slot_id = str(gnd_slot_v106["id"])
+	p1_fm._auto_approach_timeout_s = 5.0
+	var app_desc_landed := false
+	for _ap_i in range(180):
+		await process_frame
+		if p1_fm.auto_approach_active:
+			p1_fm._step_auto_approach(1.0 / 60.0)
+		else:
+			arena.step_player_movement(1.0 / 60.0, 0, 0, false, false, false, Vector2.ZERO)
+		if str(goku.get("flight_state")) == "ground" and goku.position.y >= arena._ground_y_at(goku.position.x) - 2.5:
+			app_desc_landed = true
+			break
+	if not app_desc_landed:
+		fail("v10.6+: _step_auto_approach airborne->ground must descend and land (fstate=%s y=%.1f)" % [str(goku.get("flight_state")), goku.position.y])
+		return
+	# Path D: rapid target switching air <-> ground and invalidated target mid-approach must not stall or crash
+	goku.set("flight_state", "flying")
+	goku.position = Vector2(600.0, 300.0)
+	arena.set_hero_auto_battle(true)
+	if p1_fm.slots.size() >= 2:
+		var slot_b: Dictionary = p1_fm.slots[1]
+		p1_fm.pointer_slot_id = str(slot_b["id"])
+		p1_fm.step_hero_auto_battle(1.0 / 60.0)
+		p1_fm.pointer_slot_id = str(gnd_slot_v106["id"])
+		p1_fm.step_hero_auto_battle(1.0 / 60.0)
+	# Invalidate pointed target mid-chase
+	gnd_slot_v106["alive"] = false
+	var dec_dead: Dictionary = p1_fm.step_hero_auto_battle(1.0 / 60.0)
+	if dec_dead.is_empty():
+		fail("v10.6+: step_hero_auto_battle must return valid decision dictionary when pointed target becomes invalid mid-way")
+		return
+	gnd_slot_v106["alive"] = true
+	arena.set_hero_auto_battle(false)
+
+	# v10.6+ HUD & Sân Tập regression tests (Section 3 of docs/songoku-v10-6-upgrade-handoff.md)
+	# 1) KI bar thickness reduced 40% (9.0 -> 5.4) & Shield-break icon radius equals Peace/Combat icon radius (7.5)
+	if absf(OverheadBarsDrawScript.KI_BAR_WIDTH - 5.4) > 0.01 or absf(OverheadBarsDrawScript.STATE_ICON_RADIUS - 7.5) > 0.01:
+		fail("v10.6+ HUD: KI_BAR_WIDTH must be 5.4 (60% of 9.0) and STATE_ICON_RADIUS must be 7.5")
+		return
+	# 2) Shield-break icon triggers ONLY when armor transitions >0 -> 0 (NOT when armor was already 0!)
+	p1_fm.set_player_immortal(false)
+	p1_fm.player_armor = 15.0
+	p1_fm.player_armor_broken_timer_s = 0.0
+	p1_fm.player_shield_break_icon_timer_s = 0.0
+	p1_fm.apply_damage_to_player(10.0, goku.position, false, "heavy")
+	if p1_fm.player_armor > 0.0 or p1_fm.player_shield_break_icon_timer_s <= 0.0:
+		fail("v10.6+ HUD: Shield-break icon must trigger when hit drains armor >0 to 0")
+		return
+	# Now let icon timer expire while armor stays 0.0 -> another hit MUST NOT re-trigger shield-break icon!
+	p1_fm.player_armor = 0.0
+	p1_fm.player_armor_broken_timer_s = 0.0
+	p1_fm.player_shield_break_icon_timer_s = 0.0
+	p1_fm.apply_damage_to_player(10.0, goku.position, false, "heavy")
+	if p1_fm.player_shield_break_icon_timer_s > 0.0:
+		fail("v10.6+ HUD: Hit when armor is ALREADY 0 must NOT trigger shield-break icon")
+		return
+	# 3) Left cluster (Đăng xuất, Khu, Avatar, HeroSelectorDropdown) & Right cluster (removed Pixel/Thước/Tâm quái + Infinite Mana toggle)
+	if arena.logout_button == null or arena.zone_selector == null or arena.hero_selector == null or arena.hero_avatar_panel == null:
+		fail("v10.6+ HUD: Left cluster must include logout_button, zone_selector, hero_selector, and hero_avatar_panel")
+		return
+	if arena.hero_selector.item_count < 1:
+		fail("v10.6+ HUD: hero_selector must populate playable heroes")
+		return
+	if arena.pixel_perfect_button != null or arena.ruler_button != null or arena.monster_range_button != null:
+		fail("v10.6+ HUD: Pixel, Thước, and Tâm quái buttons must be removed from Sân Tập HUD")
+		return
+	if arena.infinite_mana_button == null or arena.infinite_mana_button.anchor_left < 0.9:
+		fail("v10.6+ HUD: InfiniteManaButton must exist on the right cluster")
+		return
+	arena.set_infinite_mana_enabled(true)
+	if not arena.infinite_mana_button.text.contains("BẬT") or absf(p1_fm.player_mana - p1_fm.player_max_mana) > 0.01:
+		fail("v10.6+ HUD: Enabling Infinite Mana must show BẬT indicator and fill player_mana")
+		return
+	goku.set("kame_cooldown_s", 0.0)
+	goku.set("flight_state", "ground")
+	goku.position = Vector2(560.0, arena._ground_y_at(560.0))
+	p1_fm.request_player_kamehameha()
+	if absf(p1_fm.player_mana - p1_fm.player_max_mana) > 0.01:
+		fail("v10.6+ HUD: Casting Kamehameha with Infinite Mana ON must keep mana full, got %.1f" % p1_fm.player_mana)
+		return
+	arena.set_infinite_mana_enabled(false)
+	if not arena.infinite_mana_button.text.contains("TẮT"):
+		fail("v10.6+ HUD: Disabling Infinite Mana must show TẮT indicator")
+		return
+	# 4) Boss dropdown summons same boss across TWO distinct maps (including map with NO fixed boss config)
+	arena.set_sandbox_map_id("rocky_plateau")
+	var b_map1: Dictionary = arena.spawn_selected_boss_now("drum")
+	if b_map1.is_empty() or not bool(b_map1.get("alive", false)) or str(b_map1.get("map_id", "")) != "rocky_plateau":
+		fail("v10.6+ HUD: Boss summon on map 1 (rocky_plateau) failed")
+		return
+	arena.set_sandbox_map_id("sandbox_unconfigured_plain", {"viewport": {"width": 1920, "height": 1080}, "gameplay": {"ground_y": 840.0}})
+	var b_map2: Dictionary = arena.spawn_selected_boss_now("drum")
+	if b_map2.is_empty() or not bool(b_map2.get("alive", false)) or str(b_map2.get("map_id", "")) != "sandbox_unconfigured_plain":
+		fail("v10.6+ HUD: Boss summon on map 2 (without fixed boss config) failed")
+		return
+	arena.set_sandbox_map_id("rocky_plateau")
+	# 5) Simultaneous multi-touch: holding Joystick while pressing skill button works independently
+	var pad_mt := MobilePadScriptV106.new() as Control
+	root.add_child(pad_mt)
+	pad_mt.configure_for_character("songoku", PackedStringArray(["idle_ssj", "kame_ground_horiz", "atomic_ground", "energy_recover"]), false)
+	pad_mt._analog_touch_idx = 0
+	pad_mt.analog_vector = Vector2(0.85, 0.0)
+	var mt_actions: Array[String] = []
+	pad_mt.action_triggered.connect(func(_sid: int, act: String) -> void: mt_actions.append(act))
+	pad_mt._on_slot_pressed(5)
+	if pad_mt._analog_touch_idx != 0 or pad_mt.analog_vector.x < 0.8 or mt_actions.is_empty():
+		fail("v10.6+ HUD: Holding Joystick while pressing skill button must preserve analog touch and emit skill action")
+		return
+	pad_mt.queue_free()
+
+	# 6) Enemy/Boss flashing shield-break icon triggers ONLY when stamina drains >0 -> 0 (NOT when already 0)
+	var sb_slot: Dictionary = p1_fm.slots[0]
+	sb_slot["alive"] = true
+	sb_slot["hp"] = 1000.0
+	sb_slot["stamina"] = 20.0
+	sb_slot["stun_timer_s"] = 0.0
+	sb_slot["shield_break_icon_timer_s"] = 0.0
+	p1_fm.apply_damage_to_slot(sb_slot, 10.0, 25.0)
+	if float(sb_slot.get("shield_break_icon_timer_s", 0.0)) <= 0.0:
+		fail("v10.6+ HUD: Monster shield-break icon must trigger when stamina drains >0 to 0")
+		return
+	sb_slot["stamina"] = 0.0
+	sb_slot["stun_timer_s"] = 0.0
+	sb_slot["shield_break_icon_timer_s"] = 0.0
+	p1_fm.apply_damage_to_slot(sb_slot, 10.0, 25.0)
+	if float(sb_slot.get("shield_break_icon_timer_s", 0.0)) > 0.0:
+		fail("v10.6+ HUD: Monster hit when stamina is ALREADY 0 must NOT trigger shield-break icon")
+		return
+
+	# 7) Điều 7.8 terrain collision: Atomic bolt & Kamehameha beam stop when hitting solid terrain step wall (step edge ~2700..3000 -> floor 840 -> 890)
+	p1_fm._hero_skill_projectiles.clear()
+	p1_fm._hero_kame_beams.clear()
+	p1_fm._hero_skill_projectiles.append({
+		"pos": Vector2(2800.0, 875.0),
+		"start_pos": Vector2(2800.0, 875.0),
+		"end_pos": Vector2(2400.0, 875.0),
+		"t_prog": 0.0,
+		"arc_sign": 0.0,
+		"arc_amp": 0.0,
+		"dir": Vector2(-1.0, 0.0),
+		"speed": 2500.0,
+		"life_s": 1.0,
+		"age_s": 0.0,
+		"air_down": false,
+		"mode": "ground_horiz",
+		"damage": 55.0,
+		"target": {},
+		"ignore_terrain": false,
+	})
+	for _tb_i in range(20):
+		p1_fm._step_hero_skill_projectiles_and_beams(0.016)
+	if not p1_fm._hero_skill_projectiles.is_empty():
+		fail("v10.6+ Điều 7.8: Atomic bolt fired into solid terrain step must stop/explode on terrain")
+		return
+
+	# 8) Online Vinh & Thái bug regression: remote peer snapshot with legacy "drum" MUST upgrade to songoku_hero_demo when local hero is Son Goku!
+	p1_fm.sync_from_zone_snapshot({
+		"uid_thai": {
+			"id": "uid_thai",
+			"kind": "player",
+			"display_name": "Thái",
+			"character_id": "drum",
+			"x": 760.0,
+			"y": arena._ground_y_at(760.0),
+			"facing_left": true,
+			"act": "idle_ssj",
+			"hp": 1500.0,
+			"max_hp": 1500.0,
+			"mana": 50.0,
+			"max_mana": 100.0,
+			"alive": true,
+		}
+	}, {}, "uid_vinh")
+	var r_thai: Dictionary = p1_fm.remote_player_slots.get("uid_thai", {})
+	if r_thai.is_empty() or str(r_thai.get("character_id", "")) != "songoku":
+		fail("v10.6+ Online Vinh/Thái fix: remote peer must render as 'songoku' (not legacy 'drum'), got '%s'" % str(r_thai.get("character_id", "")))
+		return
+	p1_fm.sync_from_zone_snapshot({}, {}, "uid_vinh")
 
 	var verified_roster_count: int = arena.roster_characters.size()
 	arena.queue_free()

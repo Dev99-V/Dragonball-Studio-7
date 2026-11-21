@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-20T18:21:05Z",
+  "updated_at": "2026-11-21T08:44:20Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.17.0",
+    "version": "0.18.0",
     "version_history": [
       {
         "version": "0.1.0",
@@ -124,6 +124,11 @@
         "version": "0.17.0",
         "date": "2026-11-19T13:57:00Z",
         "summary": "Owner chốt v0.17.0: Alpha Login (AppStartup + Splash + LoginScreen kính mờ viền bạc + Loading 7 Ngọc Rồng + Supabase Auth cho vinhadmin/Vinh & thaiadmin/Thái), Godot 4.7.2 Headless Dedicated Server + Cloudflare R2/DO Staging 0đ (triệt cache PWA SW cũ qua /play/v/<pck_hash12>/ & SW tự xóa cache), sửa đồng bộ PvE/PvP online + hàng chờ power_up Mana + giao cắt địa hình liên tục 4 bậc, và chuẩn hóa Hit Effect mặc định 7 frame assets/fx/hit_impact/ (melee 144px / heavy 216px) cho toàn bộ tướng/quái/boss."
+      },
+      {
+        "version": "0.18.0",
+        "date": "2026-11-21T08:36:13.899612+00:00",
+        "summary": "Chốt chính thức tướng Son Goku (PIPE-022 · 34 clips thân trên 1 trang 4090x4090 Nearest 60Hz + 14 clips FX độc lập assets/fx/songoku_skills_fx, khóa stance_mid chống rung chân, HUD Sân Tập kính mờ chuẩn mẫu, fix online Cloudflare Vinh/Thái, dọn sạch /work, /review và file thừa; đồng bộ 4 nền tảng Web/APK/IPA)."
       }
     ],
     "genre": "2D Dragon Ball Real-Time Mass Action / RPG",
@@ -162,9 +167,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "SONGOKU-HERO-PHASE2-V10-5-KAME7F-2500-RECOVER-FLUTTER",
-    "status": "ready_for_owner_human_test",
-    "summary": "v10.5 Human Test (chưa chốt): energy_recover phấp phới tóc/áo/đai xanh + aura vàng-cam & vòng đất trắng chuẩn Sheet 06 (khóa boot_cx<=0.5px, y1=247, f2b=86..87, atlas sha=4051e08c649526c7); Kamehameha đủ 7 frame chuẩn Sheet 28 (5 frame vận công kèm cầu xanh 6 tia xoay tròn không hốc fx sha=efebd842267306f9 + bắn 1 tia 2500px/s bỏ duy trì 1s, biến mất ngay theo nhánh 2 khi chạm mục tiêu giữ nguyên cấu trúc); thêm job build-android-apk vào CI/CD.",
+    "active_task_id": "SONGOKU-HERO-RELEASE-V0-18-0",
+    "status": "completed_owner_approved",
+    "summary": "Chot chinh thuc Son Goku (PIPE-022, v0.18.0): 34 clips than 4090x4090 Nearest 60Hz tai assets/songoku/ + 14 clips FX doc lap tai assets/fx/songoku_skills_fx/, prefab scenes/SongokuHero.tscn, HUD San Tap kinh mo, fix online Vinh/Thai, don sach /work, /review demo, Songoku/ va file thua; 0 junk & 100% parity Web/APK/IPA; ./loop.sh test & check exit 0.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1373,6 +1378,18 @@
       "timestamp": "2026-11-20T18:21:05Z",
       "status": "ready_for_owner_human_test",
       "summary": "v10.5 Human Test (chưa chốt): energy_recover phấp phới tóc/áo/đai xanh + aura vàng-cam & vòng đất trắng chuẩn Sheet 06 (khóa boot_cx<=0.5px, y1=247, f2b=86..87, atlas sha=4051e08c649526c7); Kamehameha đủ 7 frame chuẩn Sheet 28 (5 frame vận công kèm cầu xanh 6 tia xoay tròn không hốc fx sha=efebd842267306f9 + bắn 1 tia 2500px/s bỏ duy trì 1s, biến mất ngay theo nhánh 2 khi chạm mục tiêu giữ nguyên cấu trúc); thêm job build-android-apk vào CI/CD."
+    },
+    {
+      "id": "SONGOKU-HERO-PHASE2-V10-6",
+      "timestamp": "2026-11-21T08:24:08Z",
+      "status": "awaiting_owner_human_test",
+      "summary": "Hoan tat agu_06 (cau noi #5->#7) va agu_07 (dung tan 2 tay len troi, tam 2 long ban tay +19,-108 va +39,-105) dong nhat concept #2 atg_02; full ./loop.sh test exit 0; dong bo Web/APK/IPA (pck_version e8569536b269) va kiem ke no ky thuat cho Owner quyet dinh chot version."
+    },
+    {
+      "id": "SONGOKU-HERO-RELEASE-V0-18-0",
+      "timestamp": "2026-11-21T08:44:20Z",
+      "status": "completed_owner_approved",
+      "summary": "Chot chinh thuc Son Goku (PIPE-022, v0.18.0): 34 clips than 4090x4090 Nearest 60Hz tai assets/songoku/ + 14 clips FX doc lap tai assets/fx/songoku_skills_fx/, prefab scenes/SongokuHero.tscn, HUD San Tap kinh mo, fix online Vinh/Thai, don sach /work, /review demo, Songoku/ va file thua; 0 junk & 100% parity Web/APK/IPA; ./loop.sh test & check exit 0."
     }
   ],
   "quick_resume_commands": [
@@ -1608,6 +1625,18 @@
       "prefab_sha256": "6f3528518baed67d3bd12cd7d64da196a46a0575f917cd6531843c4bfa3b3973",
       "revision": "size70x74-idle-phase-v1 / v0.16.0",
       "summary": "Floating Camera v0.16.0 (quái bay 70x74 1-pass Nearest từ 20x24 nguồn gốc, 13 màu RGB, alpha 100%, 0 pockets/spill, idle=walk nối pha mượt, 150 px/s tại flight_default_y=300, đạn projectile_fx top_level +X, AI attack_light fallback >=50px)."
+    },
+    {
+      "id": "PIPE-022",
+      "character_id": "songoku",
+      "display_name": "Son Goku",
+      "approved_at": "2026-11-21T08:36:13.899612+00:00",
+      "approval_file": "assets/songoku/owner_approval.json",
+      "atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
+      "tres_sha256": "b5d45d0c1f3aafdb2b45830bd27684f8bf80394e9fa10a8d26ea9f81902756e8",
+      "prefab_sha256": "4a77fbf793b4fc7bc41881cb0420f920eabdbb3b7732735939b0cdf6478a5bbc",
+      "revision": "phase2-v10.6-final / v0.18.0",
+      "summary": "Son Goku Hero v0.18.0 (34 clips thân 196 frames trên 1 trang 4090x4090 Nearest 60Hz + 14 clips FX độc lập 1 trang; 24/24 Base Lock, khóa stance_mid, kame_ground_up gọn theo #5, agu_06 cầu nối & agu_07 đứng tấn 2 tay lên trời chuẩn #2, atomic_ground [90x6,100,90]ms & atomic_ground_up [90x7,100]ms, va chạm địa hình Điều 7.8, HUD Sân Tập kính mờ & fix đồng bộ online)."
     }
   ],
   "approved_item_workflows": [
@@ -1705,5 +1734,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-20T18:21:05Z"
+  "last_updated_utc": "2026-11-21T08:44:20Z"
 }

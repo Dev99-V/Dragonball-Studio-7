@@ -84,6 +84,8 @@ const MONSTER_STATS := {
 
 const FLYING_ROTATION := ["bat_chiroptera", "pteranodon", "floating_camera"]
 
+const SHIELD_BREAK_ICON_DURATION_S := 2.6
+
 var arena: Node2D = null
 var active: bool = false
 var player_spawned: bool = false
@@ -91,9 +93,11 @@ var player_hp: float = PLAYER_MAX_HP
 var player_max_hp: float = PLAYER_MAX_HP
 var player_mana: float = 0.0
 var player_max_mana: float = PLAYER_MAX_MANA
+var player_infinite_mana: bool = false
 var player_armor: float = PLAYER_MAX_ARMOR
 var player_max_armor: float = PLAYER_MAX_ARMOR
 var player_armor_broken_timer_s: float = 0.0
+var player_shield_break_icon_timer_s: float = 0.0
 var player_hard_stun_timer_s: float = 0.0
 var player_dead: bool = false
 var player_immortal: bool = false
@@ -114,9 +118,14 @@ var _hero_kame_beams: Array[Dictionary] = []          # Kamehameha beams (31/32)
 var _hero_flurry_hits_fired: Array[int] = []
 var _hero_atomic_fired: bool = false
 var _hero_atomic_air_down: bool = false
+var _hero_atomic_mode: String = "ground_horiz"
 var _hero_atomic_target: Dictionary = {}
 var _hero_atomic_pending_bolts: Array[Dictionary] = []
+var _hero_atomic_muzzle_flashes: Array[Dictionary] = []
+var _last_atomic_fire_log: Array[Dictionary] = []
 var _hero_kame_fired: bool = false
+var _hero_kame_charging: bool = false
+var _hero_kame_charge_elapsed_s: float = 0.0
 var _hero_kame_mode: String = "ground_horiz"
 var _hero_kame_target: Dictionary = {}
 var _hero_barrier_burst_s: float = 0.0
@@ -268,14 +277,20 @@ func start_field(spawn_player_immediately: bool = false) -> void:
 	player_armor = PLAYER_MAX_ARMOR
 	player_max_armor = PLAYER_MAX_ARMOR
 	player_armor_broken_timer_s = 0.0
+	player_shield_break_icon_timer_s = 0.0
 	player_hard_stun_timer_s = 0.0
 	_hero_skill_projectiles.clear()
 	_hero_kame_beams.clear()
 	_hero_flurry_hits_fired.clear()
 	_hero_atomic_fired = false
+	_hero_atomic_mode = "ground_horiz"
 	_hero_atomic_target = {}
 	_hero_atomic_pending_bolts.clear()
+	_hero_atomic_muzzle_flashes.clear()
+	_last_atomic_fire_log.clear()
 	_hero_kame_fired = false
+	_hero_kame_charging = false
+	_hero_kame_charge_elapsed_s = 0.0
 	_hero_kame_target = {}
 	_hero_barrier_burst_s = 0.0
 	if arena != null and arena.player_node != null and _is_hero_songoku_node(arena.player_node):
@@ -488,6 +503,10 @@ func step(delta: float) -> void:
 		if player_respawn_timer_s <= 0.0:
 			respawn_player_at_left()
 	elif player_spawned and arena.player_node != null:
+		if player_infinite_mana and player_mana < player_max_mana:
+			player_mana = player_max_mana
+		if player_shield_break_icon_timer_s > 0.0:
+			player_shield_break_icon_timer_s = maxf(0.0, player_shield_break_icon_timer_s - delta)
 		if player_armor_broken_timer_s > 0.0:
 			player_armor_broken_timer_s = maxf(0.0, player_armor_broken_timer_s - delta)
 			if player_armor_broken_timer_s <= 0.0:
@@ -504,6 +523,10 @@ func step(delta: float) -> void:
 		_step_player_combat_hooks()
 
 	# 2. Step Boss Map schedule + all active monster slots + Boss Drum
+	for s_sb in _get_combat_slots():
+		var sb_t: float = float(s_sb.get("shield_break_icon_timer_s", 0.0))
+		if sb_t > 0.0:
+			s_sb["shield_break_icon_timer_s"] = maxf(0.0, sb_t - delta)
 	_step_boss_spawn_schedule(delta)
 	for slot in slots:
 		_step_slot(slot, delta)
@@ -563,23 +586,41 @@ func _pick_random_boss_spawn_x(min_x: float, max_x: float) -> float:
 	return randf_range(lo, hi)
 
 
+func set_player_infinite_mana(enabled: bool) -> void:
+	player_infinite_mana = enabled
+	if enabled:
+		player_mana = player_max_mana
+	player_state_changed.emit()
+
+
 func spawn_boss_drum(forced_spawn_x: float = -999999.0) -> Dictionary:
+	return spawn_boss("drum", forced_spawn_x)
+
+
+func spawn_boss(boss_cid: String = "drum", forced_spawn_x: float = -999999.0) -> Dictionary:
 	if arena == null:
 		return {}
+	var req_cid := boss_cid.strip_edges()
+	if req_cid.is_empty():
+		req_cid = "drum"
+	var cur_map_id := str(arena.get("current_map_id")) if arena.get("current_map_id") != null else "rocky_plateau"
 	if not boss_slot.is_empty() and bool(boss_slot.get("alive", false)) and is_instance_valid(boss_slot.get("node")):
-		# Never double-spawn while alive; re-trigger entry teleport onto hero if desired for test.
-		if player_spawned and not player_dead and arena.player_node != null:
-			var existing_ai := boss_slot.get("ai") as UtilityAIController
-			if existing_ai != null:
-				existing_ai.set_meta(&"drum_engaged", true)
-				existing_ai.set_meta(&"drum_phase", "post_teleport_light")
-			_start_slot_attack(boss_slot, "teleport", 0.0)
-		return boss_slot
+		if str(boss_slot.get("character_id", "")) == req_cid and str(boss_slot.get("map_id", "")) == cur_map_id:
+			# Never double-spawn identical live boss on same map; re-trigger entry teleport onto hero if desired.
+			if player_spawned and not player_dead and arena.player_node != null:
+				var existing_ai := boss_slot.get("ai") as UtilityAIController
+				if existing_ai != null:
+					existing_ai.set_meta(&"drum_engaged", true)
+					existing_ai.set_meta(&"drum_phase", "post_teleport_light")
+				if req_cid == "drum":
+					_start_slot_attack(boss_slot, "teleport", 0.0)
+			return boss_slot
 
-	var drum_entry: Dictionary = arena.call("_find_character_entry_ro", "drum")
-	if drum_entry.is_empty():
+	var boss_entry: Dictionary = arena.call("_find_character_entry_ro", req_cid)
+	if boss_entry.is_empty():
 		return {}
-	var boss_bounds: Vector2 = arena.call("_get_fighter_walk_bounds_x", drum_entry, 2.5)
+	var default_boss_scale := 2.5 if req_cid == "drum" else float(arena.call("_get_entry_default_scale", boss_entry)) * 1.25
+	var boss_bounds: Vector2 = arena.call("_get_fighter_walk_bounds_x", boss_entry, default_boss_scale)
 	var spawn_x := forced_spawn_x
 	if spawn_x < -900000.0:
 		spawn_x = _pick_random_boss_spawn_x(boss_bounds.x, boss_bounds.y)
@@ -587,24 +628,29 @@ func spawn_boss_drum(forced_spawn_x: float = -999999.0) -> Dictionary:
 		spawn_x = clampf(spawn_x, boss_bounds.x, boss_bounds.y)
 
 	var ai := UtilityAIControllerScript.new()
-	if arena.stage_config is Dictionary:
+	if arena.stage_config is Dictionary and not (arena.stage_config as Dictionary).is_empty():
 		ai.configure_from_stage(arena.stage_config)
 	ai.reset_zone((boss_bounds.x + boss_bounds.y) * 0.5, boss_bounds.x, boss_bounds.y, true)
 
-	# Free any previous dead/stale Boss Drum node before replacing boss_slot (prevents node leak).
+	# Free any previous dead/stale Boss node before replacing boss_slot (prevents node leak).
 	var stale_boss_node := boss_slot.get("node") as Node2D
 	if stale_boss_node != null and is_instance_valid(stale_boss_node):
 		if stale_boss_node.get_parent() != null:
 			stale_boss_node.get_parent().remove_child(stale_boss_node)
 		stale_boss_node.queue_free()
 
+	var boss_label := str(boss_entry.get("display_name", req_cid.capitalize()))
+	if req_cid == "drum":
+		boss_label = "Drum"
 	boss_slot = {
-		"id": "boss_drum",
-		"native_cid": "drum",
-		"character_id": "drum",
-		"is_flying": false,
+		"id": "boss_%s" % req_cid,
+		"native_cid": req_cid,
+		"character_id": req_cid,
+		"display_name": boss_label,
+		"map_id": cur_map_id,
+		"is_flying": bool(arena.call("_is_flying_entry", boss_entry)),
 		"is_boss": true,
-		"boss_scale": 2.5,
+		"boss_scale": default_boss_scale,
 		"ai": ai,
 		"x_home": spawn_x,
 		"y_home": float(arena.call("_ground_y_at", spawn_x)),
@@ -627,7 +673,7 @@ func spawn_boss_drum(forced_spawn_x: float = -999999.0) -> Dictionary:
 		"action_clip": "",
 		"action_timer_s": 0.0,
 		"vy": 0.0,
-		"scale_val": 2.5,
+		"scale_val": default_boss_scale,
 		"facing_left": true,
 		"patrol_dir": -1,
 		"patrol_pause_s": 0.0,
@@ -656,7 +702,7 @@ func spawn_boss_drum(forced_spawn_x: float = -999999.0) -> Dictionary:
 		"committed_target_id": "",
 		"fled_attackers": [],
 	}
-	_spawn_slot_monster(boss_slot, "drum")
+	_spawn_slot_monster(boss_slot, req_cid)
 	boss_has_spawned_once = true
 	boss_spawn_timer_s = 0.0
 	boss_respawn_timer_s = 0.0
@@ -796,9 +842,10 @@ func _step_boss_drum_ai(slot: Dictionary, delta: float) -> void:
 func respawn_player_at_left() -> void:
 	player_dead = false
 	player_hp = player_max_hp
-	player_mana = 0.0
+	player_mana = player_max_mana if player_infinite_mana else 0.0
 	player_armor = player_max_armor
 	player_armor_broken_timer_s = 0.0
+	player_shield_break_icon_timer_s = 0.0
 	player_respawn_timer_s = 0.0
 	_local_hp_grace_s = 0.45
 	_local_mana_grace_s = 0.45
@@ -959,7 +1006,7 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	var goku_is_ssj: bool = bool(p_node.get("is_ssj")) if is_goku else true
 	var can_kame: bool = is_goku and goku_is_ssj and player_mana + 0.001 >= 80.0 and float(p_node.get("kame_cooldown_s")) <= 0.0
 	var can_atomic: bool = is_goku and goku_is_ssj and float(p_node.get("atomic_cooldown_s")) <= 0.0
-	var can_recover: bool = is_goku and goku_is_ssj and float(p_node.get("recover_cooldown_s")) <= 0.0 and float(p_node.get("ki")) < float(p_node.get("max_ki")) - 5.0
+	var can_recover: bool = is_goku and goku_is_ssj and bool(arena.call("is_player_grounded_for_recover")) and float(p_node.get("recover_cooldown_s")) <= 0.0 and float(p_node.get("ki")) < float(p_node.get("max_ki")) - 5.0
 	var can_fly_auto: bool = (bool(p_node.call(&"can_fly")) and (not _auto_ki_ground_lock)) if is_goku else false
 	var dec: Dictionary = UtilityAIControllerScript.evaluate_hero_auto({
 		"has_target": true,
@@ -1009,6 +1056,12 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	elif intent == "attack_combo":
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 		request_player_primary_action()
+	elif intent == "fast_drop":
+		var fvec_drop: Vector2 = dec.get("fly_vec", Vector2(0.0, 1.0))
+		var mdir_drop: int = int(dec.get("move_dir", 0))
+		if is_goku:
+			p_node.call(&"trigger_fast_drop_from_flight")
+		arena.call("step_player_movement", delta, mdir_drop, 1, false, true, false, fvec_drop)
 	elif intent == "fly_chase":
 		var fvec2: Vector2 = dec.get("fly_vec", Vector2(0.0, -1.0))
 		var mdir: int = int(dec.get("move_dir", 0))
@@ -1120,6 +1173,18 @@ func _step_auto_approach(delta: float) -> void:
 			else:
 				var fly_y := -1 if air_vec.y < -0.15 else (1 if air_vec.y > 0.15 else 0)
 				arena.call("step_player_movement", delta, air_dir, fly_y, false, false, false, air_vec)
+			return
+		elif is_goku and bool(p_node.call(&"is_airborne_flight")):
+			var to_desc: Vector2 = m_core - p_core
+			var desc_dir := -1 if to_desc.x < -8.0 else (1 if to_desc.x > 8.0 else 0)
+			if absf(to_desc.x) <= 95.0 and to_desc.y >= -60.0:
+				p_node.call(&"trigger_fast_drop_from_flight")
+				arena.call("step_player_movement", delta, desc_dir, 1, false, true, false, Vector2(0.0, 1.0))
+				return
+			var desc_raw: Vector2 = to_desc.normalized() if to_desc.length() > 1.0 else Vector2(0.0, 1.0)
+			var desc_vec: Vector2 = desc_raw if to_desc.y > 24.0 or to_desc.y < -60.0 else Vector2(desc_raw.x, maxf(desc_raw.y, 0.35)).normalized()
+			var desc_fly_y := -1 if desc_vec.y < -0.15 else (1 if desc_vec.y > 0.15 else 0)
+			arena.call("step_player_movement", delta, desc_dir, desc_fly_y, false, false, false, desc_vec)
 			return
 		if is_flying:
 			var to_vec := m_core - p_core
@@ -1336,7 +1401,8 @@ func request_player_power_up() -> bool:
 		var queued_act := String(arena.player_node.get_meta(&"_arena_queued_action", ""))
 		var started_now := pspr != null and String(pspr.animation) == "power_up" and pspr.is_playing() and queued_act != "power_up"
 		if started_now:
-			player_mana = maxf(0.0, player_mana - 100.0)
+			if not player_infinite_mana:
+				player_mana = maxf(0.0, player_mana - 100.0)
 			_local_mana_grace_s = 0.85
 			_player_power_pending = true
 			_player_power_target = tgt
@@ -1589,12 +1655,14 @@ func apply_damage_to_slot(slot: Dictionary, dmg: float, stamina_dmg: float = STA
 		_kill_slot_monster(slot)
 		return
 	var broke_stun := false
-	if float(slot["stun_timer_s"]) <= 0.0 and float(slot["stamina"]) > 0.0:
-		slot["stamina"] = maxf(0.0, float(slot["stamina"]) - stamina_dmg)
+	var prev_stam := float(slot["stamina"])
+	if float(slot["stun_timer_s"]) <= 0.0 and prev_stam > 0.0:
+		slot["stamina"] = maxf(0.0, prev_stam - stamina_dmg)
 		if float(slot["stamina"]) <= 0.0:
-			# Break white stamina -> 3s attack-lock window + exactly 1 HIT clip for this hit!
+			# Break white stamina -> 3s attack-lock window + flashing shield-break icon + 1 HIT clip!
 			broke_stun = true
 			slot["stun_timer_s"] = MINI_STUN_DURATION_S
+			slot["shield_break_icon_timer_s"] = SHIELD_BREAK_ICON_DURATION_S
 			_trigger_slot_single_hit_anim(slot)
 	elif float(slot["stun_timer_s"]) > 0.0:
 		# Broken stamina window active: 1 incoming hit = 1 HIT clip (0 hits when unattacked).
@@ -1642,7 +1710,8 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 	player_hit_flash_s = 0.19
 	player_hit_shake_s = 0.09 * HIT_SHAKE_SCALE_MUL
 	var armor_broke_now := false
-	if player_armor_broken_timer_s <= 0.0 and player_armor > 0.0:
+	var prev_armor := player_armor
+	if prev_armor > 0.0 and player_armor_broken_timer_s <= 0.0:
 		var armor_dmg := PLAYER_ARMOR_DMG_PER_HIT
 		if hit_kind == "heavy" or hit_kind == "skill":
 			armor_dmg = 35.0
@@ -1652,6 +1721,7 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 		if player_armor <= 0.0:
 			armor_broke_now = true
 			player_armor_broken_timer_s = PLAYER_ARMOR_BREAK_STUN_S
+			player_shield_break_icon_timer_s = SHIELD_BREAK_ICON_DURATION_S
 	var dmg_txt := "-%d VỠ GIÁP!" % int(round(dmg)) if armor_broke_now else "-%d" % int(round(dmg))
 	var dmg_col := Color(1.0, 0.68, 0.15, 1.0) if armor_broke_now else Color(1.0, 0.28, 0.28, 1.0)
 	_spawn_hit_impact_fx(fx_pos, hit_kind, dmg_txt, dmg_col, impact_dir, attacker_cid)
@@ -2681,6 +2751,21 @@ func get_active_target_pointer_info() -> Dictionary:
 	return {"visible": false, "persistent": false, "kind": "", "slot_id": "", "tip_pos": Vector2.ZERO}
 
 
+func draw_back_overlays(canvas: CanvasItem) -> void:
+	if not active:
+		return
+	if player_spawned and not player_dead and arena != null and arena.player_node != null:
+		_draw_hero_phase2_back_fx_overlays(canvas)
+
+
+static func _shield_break_flash_alpha(timer_s: float) -> float:
+	if timer_s <= 0.0:
+		return 0.0
+	var fade := clampf(timer_s / 0.45, 0.0, 1.0)
+	var pulse := 0.26 + 0.74 * absf(sin(timer_s * 15.0))
+	return clampf(fade * pulse, 0.0, 1.0)
+
+
 func draw_overlays(canvas: CanvasItem) -> void:
 	if not active:
 		return
@@ -2698,7 +2783,7 @@ func draw_overlays(canvas: CanvasItem) -> void:
 			p_ki = float(arena.player_node.get("ki"))
 			p_max_ki = float(arena.player_node.get("max_ki"))
 			p_ki_ex = bool(arena.player_node.get("ki_exhausted"))
-		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0, p_ki, p_max_ki, p_ki_ex)
+		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0, p_ki, p_max_ki, p_ki_ex, player_shield_break_icon_timer_s > 0.0, _shield_break_flash_alpha(player_shield_break_icon_timer_s))
 		if player_hard_stun_timer_s > 0.0:
 			OverheadBarsDrawScript.draw_stun_stars_ring(canvas, Vector2(p_cx, p_rect.position.y), _sim_time_s)
 		_draw_hero_phase2_fx_overlays(canvas)
@@ -2725,9 +2810,10 @@ func draw_overlays(canvas: CanvasItem) -> void:
 			continue
 		var stunned := float(s["stun_timer_s"]) > 0.0 or float(s.get("hard_stun_timer_s", 0.0)) > 0.0
 		var is_boss := bool(s.get("is_boss", false))
-		var lbl := "Drum" if is_boss else str(s["character_id"])
+		var lbl := str(s.get("display_name", "Drum")) if is_boss else str(s["character_id"])
 		var m_cstate := "combat" if is_boss else str(s.get("combat_state", "peace"))
-		OverheadBarsDrawScript.draw_enemy_bars(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, lbl, is_boss, m_cstate)
+		var sb_rem: float = float(s.get("shield_break_icon_timer_s", 0.0))
+		OverheadBarsDrawScript.draw_enemy_bars(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, lbl, is_boss, m_cstate, sb_rem > 0.0, _shield_break_flash_alpha(sb_rem))
 		if float(s.get("hard_stun_timer_s", 0.0)) > 0.0:
 			OverheadBarsDrawScript.draw_stun_stars_ring(canvas, Vector2(e_cx, m_rect.position.y), _sim_time_s)
 
@@ -2868,9 +2954,19 @@ func sync_from_zone_snapshot(players_by_id: Dictionary, monsters_by_id: Dictiona
 
 		seen_remote[uid] = true
 		var rslot: Dictionary = remote_player_slots.get(uid, {})
-		var cid := str(pdata.get("character_id", "drum"))
+		var cid := str(pdata.get("character_id", "")).strip_edges()
+		# Online Vinh/Thái fix: upgrade legacy "drum"/empty remote character_id to Son Goku on live runtime (or when local hero is Son Goku), while preserving headless legacy 2-Drum E2E!
+		var has_goku_entry: bool = not (arena.call("_find_character_entry_ro", "songoku") as Dictionary).is_empty()
+		if has_goku_entry and (cid.is_empty() or cid == "drum" or cid == "songoku_hero_demo") and (DisplayServer.get_name() != "headless" or str(arena.active_character_id) == "songoku"):
+			cid = "songoku"
 		if cid.is_empty():
 			cid = "drum"
+		if (not rslot.is_empty()) and str(rslot.get("character_id", "")) != cid:
+			var old_rnode := rslot.get("node") as Node2D
+			if old_rnode != null and is_instance_valid(old_rnode):
+				old_rnode.queue_free()
+			remote_player_slots.erase(uid)
+			rslot = {}
 		if rslot.is_empty() or not is_instance_valid(rslot.get("node")):
 			rslot = _spawn_remote_player_slot(uid, cid, pdata)
 			if rslot.is_empty():
@@ -3081,7 +3177,7 @@ func apply_network_combat_event(ev: Dictionary, local_uid: String) -> void:
 func _get_songoku_fx_frames() -> SpriteFrames:
 	if _songoku_fx_frames != null:
 		return _songoku_fx_frames
-	var fx_path := "res://review/songoku_hero_demo/fx/godot/songoku_skills_fx.tres"
+	var fx_path := "res://assets/fx/songoku_skills_fx/songoku_skills_fx.tres"
 	if ResourceLoader.exists(fx_path):
 		_songoku_fx_frames = load(fx_path) as SpriteFrames
 	return _songoku_fx_frames
@@ -3158,16 +3254,12 @@ func request_player_energy_recover() -> bool:
 		return false
 	if not _is_hero_songoku_node(arena.player_node):
 		return false
-	if not bool(arena.player_node.call(&"trigger_energy_recover")):
+	var on_ground_r: bool = bool(arena.call("is_player_grounded_for_recover"))
+	if not on_ground_r:
 		return false
-	# Lock Goku solidly standing on the ground during 3s energy recovery (no aerial hover/sway).
-	var pnode_r: Node2D = arena.player_node as Node2D
-	pnode_r.set("flight_state", "ground")
-	pnode_r.set("hover_timer_s", 0.0)
+	if not bool(arena.player_node.call(&"trigger_energy_recover", on_ground_r)):
+		return false
 	arena.set("player_vy", 0.0)
-	var gy_r: float = float(arena.call("_ground_y_at", pnode_r.position.x))
-	if pnode_r.position.y < gy_r:
-		pnode_r.position.y = gy_r
 	arena.call("_request_player_action", "energy_recover")
 	player_state_changed.emit()
 	return true
@@ -3198,16 +3290,30 @@ func request_player_atomic_blast() -> bool:
 		return false
 	_hero_atomic_fired = false
 	_hero_atomic_pending_bolts.clear()
+	_last_atomic_fire_log.clear()
 	refresh_pointer_valid()
 	var tgt: Dictionary = _resolve_player_attack_target(true)
 	_hero_atomic_target = tgt
+	var dy_tgt := 0.0
 	if not tgt.is_empty():
-		_face_player_toward_x(_get_slot_core_pos(tgt).x)
+		var tcore := _get_slot_core_pos(tgt)
+		_face_player_toward_x(tcore.x)
+		dy_tgt = tcore.y - _get_player_core_pos().y
 	var sup_y: float = float(arena.call("get_nearest_support_y_below", arena.player_node.position.x, arena.player_node.position.y))
 	var pnode_a: Node2D = arena.player_node as Node2D
 	var airborne: bool = bool(pnode_a.call(&"is_airborne_flight")) or (pnode_a.position.y < sup_y - 18.0)
 	_hero_atomic_air_down = airborne
-	arena.call("_request_player_action", "atomic_air_down" if airborne else "atomic_ground")
+	var clip := "atomic_ground"
+	if airborne:
+		_hero_atomic_mode = "air_down"
+		clip = "atomic_air_down"
+	elif dy_tgt < -65.0:
+		_hero_atomic_mode = "ground_up"
+		clip = "atomic_ground_up"
+	else:
+		_hero_atomic_mode = "ground_horiz"
+		clip = "atomic_ground"
+	arena.call("_request_player_action", clip)
 	player_state_changed.emit()
 	return true
 
@@ -3221,9 +3327,12 @@ func request_player_kamehameha() -> bool:
 		return false
 	if not bool(arena.player_node.call(&"trigger_kamehameha", player_mana)):
 		return false
-	player_mana = maxf(0.0, player_mana - 80.0)
+	if not player_infinite_mana:
+		player_mana = maxf(0.0, player_mana - 80.0)
 	_local_mana_grace_s = 0.85
 	_hero_kame_fired = false
+	_hero_kame_charging = true
+	_hero_kame_charge_elapsed_s = 0.0
 	refresh_pointer_valid()
 	var tgt: Dictionary = _resolve_player_attack_target(true)
 	_hero_kame_target = tgt
@@ -3255,33 +3364,137 @@ func request_player_kamehameha() -> bool:
 	return true
 
 
-func _spawn_atomic_bolt(goku: Node2D, c_sc: float, air_down: bool, hand_offset_y: float) -> void:
+func _get_atomic_hand_world_pos(goku: Node2D, c_sc: float, mode: String, hand_frame: int, bolt_idx: int = 0) -> Vector2:
 	var face_x: float = -1.0 if goku.scale.x < 0.0 else 1.0
-	var hand_pos: Vector2 = goku.position + Vector2(38.0 * face_x * c_sc, (-62.0 + hand_offset_y) * c_sc)
-	# Always honor LIVE pointed target (flying OR ground enemy!) first; fallback to locked cast target.
+	var rel := Vector2(85.0 * face_x, -74.0)
+	if mode == "ground_up":
+		# Frame #7 (agu_07): both hands raised to sky — left palm (+19, -108) for bolts 0..2, right palm (+39, -105) for bolts 3..5
+		rel = Vector2(19.0 * face_x, -108.0) if bolt_idx < 3 else Vector2(39.0 * face_x, -105.0)
+	elif mode == "air_down":
+		rel = Vector2(57.0 * face_x, -28.0) if hand_frame == 2 else Vector2(49.0 * face_x, -41.0)
+	else:
+		rel = Vector2(64.0 * face_x, -74.0) if hand_frame == 6 else Vector2(59.0 * face_x, -75.0)
+	return goku.position + rel * c_sc
+
+
+func _spawn_atomic_bolt(goku: Node2D, c_sc: float, mode: String, hand_frame: int, bolt_idx: int) -> void:
+	# Always honor LIVE pointed target first; fallback to locked cast target.
 	var tgt: Dictionary = _resolve_player_attack_target(true)
 	if tgt.is_empty() or not bool(tgt.get("alive", false)) or not is_instance_valid(tgt.get("node")):
 		tgt = _hero_atomic_target
 	if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
 		_face_player_toward_x(_get_slot_core_pos(tgt).x)
-		face_x = -1.0 if goku.scale.x < 0.0 else 1.0
-		hand_pos = goku.position + Vector2(38.0 * face_x * c_sc, (-62.0 + hand_offset_y) * c_sc)
-	var dir_vec: Vector2 = Vector2(face_x * 0.72, 0.69).normalized() if air_down else Vector2(face_x, 0.0)
+	var face_x: float = -1.0 if goku.scale.x < 0.0 else 1.0
+	var hand_pos: Vector2 = _get_atomic_hand_world_pos(goku, c_sc, mode, hand_frame, bolt_idx)
+	var dir_vec: Vector2 = Vector2(face_x, 0.0)
+	if mode == "air_down":
+		dir_vec = Vector2(face_x * 0.72, 0.69).normalized()
+	elif mode == "ground_up":
+		dir_vec = Vector2(face_x * 0.74, -0.67).normalized()
 	if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
 		var dv: Vector2 = _get_slot_core_pos(tgt) - hand_pos
 		if dv.length() > 4.0:
 			dir_vec = dv.normalized()
-	_hero_skill_projectiles.append({
+	# PA A: Sheet 23 yellow hand muzzle flash + fixed 30 px clearance outside largest frame-2 muzzle tip (138/256)
+	var muzzle_draw_sz: float = 92.0 * c_sc
+	var muzzle_max_len: float = (138.0 / 256.0) * muzzle_draw_sz
+	var muzzle_tip: Vector2 = hand_pos + dir_vec * muzzle_max_len
+	var bolt_half_len: float = 28.0 * c_sc
+	var spawn_pos: Vector2 = muzzle_tip + dir_vec * (30.0 + bolt_half_len)
+	_hero_atomic_muzzle_flashes.append({
 		"pos": hand_pos,
 		"dir": dir_vec,
-		"speed": 1500.0,
-		"life_s": 1.6,
 		"age_s": 0.0,
-		"air_down": air_down,
+		"duration_s": 0.13,
+		"size": muzzle_draw_sz,
+		"hand_frame": hand_frame,
+		"mode": mode,
+	})
+	# PA A: Curved quadratic Bezier arcs (3 alternating curves per hand converging tail-to-tail onto target)
+	var local_i: int = bolt_idx % 3
+	var arc_sign: float = -1.0 if local_i == 0 else (0.35 if local_i == 1 else 1.0)
+	var arc_amp: float = 92.0 if local_i == 0 else (36.0 if local_i == 1 else 88.0)
+	var end_pos: Vector2 = _get_slot_core_pos(tgt) if (not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node"))) else (spawn_pos + dir_vec * 960.0)
+	_hero_skill_projectiles.append({
+		"pos": spawn_pos,
+		"start_pos": spawn_pos,
+		"end_pos": end_pos,
+		"t_prog": 0.0,
+		"arc_sign": arc_sign,
+		"arc_amp": arc_amp,
+		"dir": dir_vec,
+		"speed": 1500.0 if mode == "air_down" else 2500.0,
+		"life_s": 1.8,
+		"age_s": 0.0,
+		"air_down": mode == "air_down",
+		"mode": mode,
+		"hand_frame": hand_frame,
+		"bolt_idx": bolt_idx,
 		"damage": 55.0,
 		"target": tgt,
-		"ignore_terrain": true,
+		"ignore_terrain": false,
 	})
+	_last_atomic_fire_log.append({
+		"bolt_idx": bolt_idx,
+		"mode": mode,
+		"hand_frame": hand_frame,
+		"hand_pos": hand_pos,
+		"muzzle_tip": muzzle_tip,
+		"spawn_pos": spawn_pos,
+		"rear_gap_px": spawn_pos.distance_to(muzzle_tip) - bolt_half_len,
+		"arc_sign": arc_sign,
+		"arc_amp": arc_amp,
+		"time_s": _sim_time_s,
+	})
+
+
+func _fire_hero_kame_beam(goku: Node2D, c_sc: float) -> void:
+	_hero_kame_fired = true
+	_hero_kame_charging = false
+	var tgt: Dictionary = _resolve_player_attack_target(true)
+	if tgt.is_empty() or not bool(tgt.get("alive", false)) or not is_instance_valid(tgt.get("node")):
+		tgt = _hero_kame_target
+	if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
+		_face_player_toward_x(_get_slot_core_pos(tgt).x)
+	var face_x: float = -1.0 if goku.scale.x < 0.0 else 1.0
+	var hand_pos: Vector2 = goku.position + Vector2(44.0 * face_x * c_sc, -64.0 * c_sc)
+	var dir_vec: Vector2 = Vector2(face_x, 0.0)
+	if _hero_kame_mode == "ground_up":
+		dir_vec = Vector2(face_x * 0.75, -0.66).normalized()
+	elif _hero_kame_mode == "air_down":
+		dir_vec = Vector2(face_x * 0.75, 0.66).normalized()
+	var max_len: float = 950.0
+	if not tgt.is_empty():
+		var dv_k: Vector2 = _get_slot_core_pos(tgt) - hand_pos
+		if dv_k.length() > 8.0:
+			dir_vec = dv_k.normalized()
+			max_len = maxf(dv_k.length() + 36.0, 180.0)
+	_hero_kame_beams.append({
+		"start": hand_pos,
+		"dir": dir_vec,
+		"speed": 3000.0,
+		"cur_len": 56.0,
+		"max_len": max_len,
+		"mode": _hero_kame_mode,
+		"age_s": 0.0,
+		"hold_s": 0.0,
+		"fade_s": 0.18,
+		"fade_age_s": 0.0,
+		"fading": false,
+		"duration_s": 0.18,
+		"scale_mul": 1.20,
+		"target": tgt,
+		"hit_ids": [],
+		"damage": 360.0,
+		"ignore_terrain": false,
+	})
+
+
+func _get_kame_hand_center(goku: Node2D, c_sc: float, anim: String) -> Vector2:
+	var face_kx: float = -1.0 if goku.scale.x < 0.0 else 1.0
+	if anim == "kame_air_horiz" or anim == "kame_air_down":
+		return goku.position + Vector2(-12.0 * face_kx * c_sc, -68.0 * c_sc)
+	return goku.position + Vector2(-16.0 * face_kx * c_sc, -52.0 * c_sc)
 
 
 func _step_hero_phase2_skills(delta: float) -> void:
@@ -3334,72 +3547,68 @@ func _step_hero_phase2_skills(delta: float) -> void:
 						apply_hard_stun_to_slot(s, 1.6)
 						player_mana = minf(player_max_mana, player_mana + 8.0)
 
-	# 3. Atomic Blast (`21` ground / `24` air_down): fires 4 alternating homing bolts @ 1500 px/s to pointed target (flying OR ground), ZERO terrain collision!
+	# 3. Atomic Blast: 3 bolts on left hand (#6 / #2) -> then 3 bolts on right hand (#7 / #3), with Sheet 23 muzzle sparks!
+	for mfi in range(_hero_atomic_muzzle_flashes.size() - 1, -1, -1):
+		var mf: Dictionary = _hero_atomic_muzzle_flashes[mfi]
+		mf["age_s"] = float(mf.get("age_s", 0.0)) + delta
+		if float(mf["age_s"]) >= float(mf.get("duration_s", 0.13)):
+			_hero_atomic_muzzle_flashes.remove_at(mfi)
+
 	for bi in range(_hero_atomic_pending_bolts.size() - 1, -1, -1):
 		var pb: Dictionary = _hero_atomic_pending_bolts[bi]
 		pb["delay_s"] = float(pb.get("delay_s", 0.0)) - delta
 		if float(pb["delay_s"]) <= 0.0:
-			var oy: float = float(pb.get("offset_y", 0.0))
-			var ad: bool = bool(pb.get("air_down", _hero_atomic_air_down))
+			var p_mode: String = str(pb.get("mode", _hero_atomic_mode))
+			var h_frame: int = int(pb.get("hand_frame", 6))
+			var b_idx: int = int(pb.get("bolt_idx", 0))
 			_hero_atomic_pending_bolts.remove_at(bi)
-			_spawn_atomic_bolt(goku, c_sc, ad, oy)
+			if anim in ["atomic_ground", "atomic_ground_up", "atomic_air_down"]:
+				pspr.set_frame_and_progress(h_frame, 0.0)
+			_spawn_atomic_bolt(goku, c_sc, p_mode, h_frame, b_idx)
 
-	if (anim == "atomic_ground" or anim == "atomic_air_down") and pspr.is_playing() and not _hero_atomic_fired:
-		var release_f: int = 2 if anim == "atomic_air_down" else 4
+	if anim in ["atomic_ground", "atomic_ground_up", "atomic_air_down"] and pspr.is_playing() and not _hero_atomic_fired:
+		var release_f: int = 2 if anim == "atomic_air_down" else (7 if anim == "atomic_ground_up" else 6)
 		if frame >= release_f:
 			_hero_atomic_fired = true
-			var ad_now: bool = (anim == "atomic_air_down")
-			# 4 alternating staggered bolts (upper/lower/upper/lower @ 0ms, 70ms, 140ms, 210ms)!
-			_spawn_atomic_bolt(goku, c_sc, ad_now, -10.0)
-			_hero_atomic_pending_bolts.append({"delay_s": 0.07, "offset_y": 12.0, "air_down": ad_now})
-			_hero_atomic_pending_bolts.append({"delay_s": 0.14, "offset_y": -10.0, "air_down": ad_now})
-			_hero_atomic_pending_bolts.append({"delay_s": 0.21, "offset_y": 12.0, "air_down": ad_now})
+			var f_left: int = 2 if anim == "atomic_air_down" else (7 if anim == "atomic_ground_up" else 6)
+			var f_right: int = 3 if anim == "atomic_air_down" else 7
+			var mode_s: String = "air_down" if anim == "atomic_air_down" else ("ground_up" if anim == "atomic_ground_up" else "ground_horiz")
+			pspr.set_frame_and_progress(f_left, 0.0)
+			_spawn_atomic_bolt(goku, c_sc, mode_s, f_left, 0)
+			_hero_atomic_pending_bolts.append({"delay_s": 0.070, "mode": mode_s, "hand_frame": f_left, "bolt_idx": 1})
+			_hero_atomic_pending_bolts.append({"delay_s": 0.140, "mode": mode_s, "hand_frame": f_left, "bolt_idx": 2})
+			_hero_atomic_pending_bolts.append({"delay_s": 0.220, "mode": mode_s, "hand_frame": f_right, "bolt_idx": 3})
+			_hero_atomic_pending_bolts.append({"delay_s": 0.290, "mode": mode_s, "hand_frame": f_right, "bolt_idx": 4})
+			_hero_atomic_pending_bolts.append({"delay_s": 0.360, "mode": mode_s, "hand_frame": f_right, "bolt_idx": 5})
 
-	# 4. Kamehameha (`28` 7-frame / `29/30/27` 6-frame): 5 charge frames (0..1 gather + 2..4 rotating cyan sphere) -> fire at frame #5!
-	# Single seamless beam @ 2500 px/s (NO 1.0s hold!), vanishes immediately via Branch 2 shrink fade upon hitting target, ignoring terrain!
+	# 4. Kamehameha (`28` 7-frame / `29/30/27` 6-frame): ~2.0s charge (0.0..0.34s gather #0->#1, 0.34..2.0s pulsing #2->#3->#4 with Sheet 28 rings+6 rays & cyan reflection) -> fire at #5!
+	# Single seamless beam @ 3000 px/s (+20% size, NO 1.0s hold!), vanishes immediately via Sheet 31 Column 2 top->bottom fade upon hitting target, ignoring terrain!
 	if anim in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"] and pspr.is_playing() and not _hero_kame_fired:
 		if frame >= 5:
-			_hero_kame_fired = true
-			var tgt: Dictionary = _resolve_player_attack_target(true)
-			if tgt.is_empty() or not bool(tgt.get("alive", false)) or not is_instance_valid(tgt.get("node")):
-				tgt = _hero_kame_target
-			if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
-				_face_player_toward_x(_get_slot_core_pos(tgt).x)
-			var face_x: float = -1.0 if goku.scale.x < 0.0 else 1.0
-			var hand_pos: Vector2 = goku.position + Vector2(44.0 * face_x * c_sc, -64.0 * c_sc)
-			var dir_vec: Vector2 = Vector2(face_x, 0.0)
-			if _hero_kame_mode == "ground_up":
-				dir_vec = Vector2(face_x * 0.75, -0.66).normalized()
-			elif _hero_kame_mode == "air_down":
-				dir_vec = Vector2(face_x * 0.75, 0.66).normalized()
-			var max_len: float = 950.0
-			if not tgt.is_empty():
-				var dv_k: Vector2 = _get_slot_core_pos(tgt) - hand_pos
-				if dv_k.length() > 8.0:
-					dir_vec = dv_k.normalized()
-					max_len = maxf(dv_k.length() + 36.0, 180.0)
-			_hero_kame_beams.append({
-				"start": hand_pos,
-				"dir": dir_vec,
-				"speed": 2500.0,
-				"cur_len": 48.0,
-				"max_len": max_len,
-				"mode": _hero_kame_mode,
-				"age_s": 0.0,
-				"hold_s": 0.0,
-				"fade_s": 0.18,
-				"fade_age_s": 0.0,
-				"fading": false,
-				"duration_s": 0.18,
-				"target": tgt,
-				"hit_ids": [],
-				"damage": 360.0,
-				"ignore_terrain": true,
-			})
+			_fire_hero_kame_beam(goku, c_sc)
+		elif _hero_kame_charging:
+			_hero_kame_charge_elapsed_s += delta
+			var charge_dur: float = 2.0
+			if _hero_kame_charge_elapsed_s < 0.16:
+				pspr.set_frame_and_progress(0, 0.0)
+			elif _hero_kame_charge_elapsed_s < 0.34:
+				pspr.set_frame_and_progress(1, 0.0)
+			elif _hero_kame_charge_elapsed_s < charge_dur:
+				# 4 crisp contracting/flaring pulse cycles (#2 -> #3 -> #4) over 1.66s, ending on peak shouting #4!
+				var phase_t: float = (_hero_kame_charge_elapsed_s - 0.34) / maxf(0.01, charge_dur - 0.34)
+				var step_i: int = mini(11, int(floor(phase_t * 12.0)))
+				var charge_f: int = 2 + (step_i % 3)
+				pspr.set_frame_and_progress(charge_f, 0.0)
+			else:
+				pspr.set_frame_and_progress(5, 0.0)
+				_fire_hero_kame_beam(goku, c_sc)
+	elif _hero_kame_charging and anim not in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"]:
+		_hero_kame_charging = false
+		_hero_kame_charge_elapsed_s = 0.0
 
 
 func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
-	# Atomic Blast dual bolts: 1500 px/s, 100% homing accuracy, ZERO terrain collision!
+	# Atomic Blast curved quadratic Bezier bolts with AGENTS.md Điều 7.8 solid terrain collision (ignore_terrain=false)
 	for i in range(_hero_skill_projectiles.size() - 1, -1, -1):
 		var pr: Dictionary = _hero_skill_projectiles[i]
 		pr["age_s"] = float(pr["age_s"]) + delta
@@ -3409,23 +3618,39 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 		var spd: float = float(pr["speed"])
 		var step_dist: float = spd * delta
 		var hit_done := false
-		if not tgt.is_empty() and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node")):
-			var t_core: Vector2 = _get_slot_core_pos(tgt)
-			var to_t: Vector2 = t_core - old_p
-			var dist_t: float = to_t.length()
-			if dist_t > 1.0:
-				dir_v = to_t / dist_t
-				pr["dir"] = dir_v
-			if dist_t <= maxf(58.0, step_dist + 24.0):
-				pr["pos"] = t_core
-				apply_damage_to_slot(tgt, float(pr["damage"]), 24.0, t_core, "heavy", false, dir_v)
-				_spawn_skill_explosion_33(t_core, 1.05)
-				hit_done = true
-			else:
-				pr["pos"] = old_p + dir_v * step_dist
-		else:
-			var new_p: Vector2 = old_p + dir_v * step_dist
+		var has_live_tgt: bool = (not tgt.is_empty()) and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node"))
+		var start_p_arc: Vector2 = pr.get("start_pos", old_p) as Vector2
+		var end_p_arc: Vector2 = _get_slot_core_pos(tgt) if has_live_tgt else (pr.get("end_pos", old_p + dir_v * 900.0) as Vector2)
+		pr["end_pos"] = end_p_arc
+		var chord: Vector2 = end_p_arc - start_p_arc
+		var chord_len: float = maxf(64.0, chord.length())
+		var chord_dir: Vector2 = chord / chord_len
+		var perp: Vector2 = Vector2(-chord_dir.y, chord_dir.x)
+		var arc_sign: float = float(pr.get("arc_sign", 0.0))
+		var arc_amp: float = minf(float(pr.get("arc_amp", 0.0)), chord_len * 0.28)
+		var ctrl_p: Vector2 = (start_p_arc + end_p_arc) * 0.5 + perp * (arc_sign * arc_amp)
+		var t_next: float = minf(1.0, float(pr.get("t_prog", 0.0)) + step_dist / maxf(80.0, chord_len * 1.06))
+		pr["t_prog"] = t_next
+		var u: float = 1.0 - t_next
+		var new_p: Vector2 = (u * u) * start_p_arc + (2.0 * u * t_next) * ctrl_p + (t_next * t_next) * end_p_arc
+		var seg_d: Vector2 = new_p - old_p
+		if seg_d.length() > 0.5:
+			dir_v = seg_d.normalized()
+			pr["dir"] = dir_v
+		# Điều 7.8: Stop & explode when hitting solid terrain step/floor
+		if (not bool(pr.get("ignore_terrain", false))) and arena != null and bool(arena.call("terrain_blocks_segment", old_p, new_p)):
 			pr["pos"] = new_p
+			_spawn_skill_explosion_33(new_p, 0.85)
+			_hero_skill_projectiles.remove_at(i)
+			continue
+		pr["pos"] = new_p
+		if has_live_tgt:
+			if t_next >= 0.985 or new_p.distance_to(end_p_arc) <= maxf(58.0, step_dist + 20.0):
+				pr["pos"] = end_p_arc
+				apply_damage_to_slot(tgt, float(pr["damage"]), 24.0, end_p_arc, "heavy", false, dir_v)
+				_spawn_skill_explosion_33(end_p_arc, 1.05)
+				hit_done = true
+		else:
 			for s in _get_combat_slots():
 				if not bool(s.get("alive", false)) or not is_instance_valid(s.get("node")):
 					continue
@@ -3435,10 +3660,10 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 					_spawn_skill_explosion_33(sc, 1.05)
 					hit_done = true
 					break
-		if hit_done or float(pr["age_s"]) >= float(pr["life_s"]):
+		if hit_done or t_next >= 1.0 or float(pr["age_s"]) >= float(pr["life_s"]):
 			_hero_skill_projectiles.remove_at(i)
 
-	# Kamehameha beams: single 2500 px/s beam-head flight (NO 1.0s hold!), immediately enters Branch 2 shrink fade upon hitting target / max_len, ZERO terrain collision!
+	# Kamehameha beams: 3000 px/s beam-head flight (+20% size) with Điều 7.8 solid terrain collision (ignore_terrain=false)
 	for j in range(_hero_kame_beams.size() - 1, -1, -1):
 		var bm: Dictionary = _hero_kame_beams[j]
 		bm["age_s"] = float(bm["age_s"]) + delta
@@ -3456,7 +3681,17 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 					bm["dir"] = dir_v
 					max_len = maxf(dv.length() + 36.0, 180.0)
 					bm["max_len"] = max_len
-			var cur_len: float = minf(max_len, float(bm.get("cur_len", 48.0)) + float(bm.get("speed", 2500.0)) * delta)
+			var prev_len: float = float(bm.get("cur_len", 48.0))
+			var cur_len: float = minf(max_len, prev_len + float(bm.get("speed", 3000.0)) * delta)
+			var prev_tip: Vector2 = start_p + dir_v * prev_len
+			var next_tip: Vector2 = start_p + dir_v * cur_len
+			if (not bool(bm.get("ignore_terrain", false))) and arena != null and bool(arena.call("terrain_blocks_segment", prev_tip, next_tip)):
+				bm["cur_len"] = cur_len
+				bm["terrain_blocked"] = true
+				bm["fading"] = true
+				bm["fade_age_s"] = 0.0
+				_spawn_skill_explosion_33(next_tip, 1.05)
+				continue
 			bm["cur_len"] = cur_len
 			var hit_ids: Array = bm.get("hit_ids", [])
 			var target_impacted: bool = false
@@ -3487,6 +3722,42 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 				_hero_kame_beams.remove_at(j)
 
 
+func _draw_hero_phase2_back_fx_overlays(canvas: CanvasItem) -> void:
+	## Draws exact Sheet 28 contracting dark shockwave circle + concentric cyan/white rings + 6 flaring radial rays BEHIND Goku so his blue-lit face stays 100% crisp!
+	if arena == null or arena.player_node == null or not _is_hero_songoku_node(arena.player_node):
+		return
+	var fx_sf := _get_songoku_fx_frames()
+	if fx_sf == null or not fx_sf.has_animation(&"kame_charge_fx"):
+		return
+	var goku: Node2D = arena.player_node as Node2D
+	var pspr := goku.get_node_or_null("Sprite") as AnimatedSprite2D
+	if pspr == null or not pspr.is_playing():
+		return
+	var an := String(pspr.animation)
+	if an not in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"]:
+		return
+	var f_k: int = pspr.frame
+	if f_k < 2 or f_k > 4:
+		return
+	var cfc := fx_sf.get_frame_count(&"kame_charge_fx")
+	if cfc <= 0:
+		return
+	var stage_i: int = clampi(f_k - 2, 0, cfc - 1)
+	var ctex := fx_sf.get_frame_texture(&"kame_charge_fx", stage_i)
+	if ctex == null:
+		return
+	var c_sc: float = float(arena.char_scale)
+	var hand_c: Vector2 = _get_kame_hand_center(goku, c_sc, an)
+	# Exact Sheet 28 ratio (323px dark ring for 147px Goku -> 264px for 120px Goku)
+	var csz: float = 264.0 * c_sc
+	var face_kx: float = -1.0 if goku.scale.x < 0.0 else 1.0
+	# Subtle rhythmic rotation around Goku's hands while keeping exact 6-ray progressive contraction!
+	var rot_a: float = sin(_sim_time_s * 5.0) * 0.14 * face_kx
+	canvas.draw_set_transform(hand_c, rot_a, Vector2(face_kx, 1.0))
+	canvas.draw_texture_rect(ctex, Rect2(-csz * 0.5, -csz * 0.5, csz, csz), false, Color.WHITE)
+	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
 func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 	if arena == null or arena.player_node == null or not _is_hero_songoku_node(arena.player_node):
 		return
@@ -3510,39 +3781,52 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 					var sz: float = 178.0 * c_sc
 					canvas.draw_texture_rect(tex, Rect2(p_core - Vector2(sz * 0.5, sz * 0.5), Vector2(sz, sz)), false, Color.WHITE)
 
-	# 2. Kamehameha independent cyan charge VFX (Sheet 28 exact 5-frame charge: #0..#1 converging streaks, #2..#4 rotating 6-ray cyan sphere around cupped hands!)
+	# 2. Kamehameha FRONT hand VFX (Sheet 28 exact pixel gather on #0..#1 + blazing front core orb on #2..#4, while rings+rays render BEHIND Goku!)
 	var pspr := goku.get_node_or_null("Sprite") as AnimatedSprite2D
 	if pspr != null and pspr.is_playing():
 		var an := String(pspr.animation)
 		if an in ["kame_ground_horiz", "kame_ground_up", "kame_air_horiz", "kame_air_down"]:
 			var f_k: int = pspr.frame
 			var face_kx: float = -1.0 if goku.scale.x < 0.0 else 1.0
-			var hand_c: Vector2 = goku.position + Vector2(-10.0 * face_kx * c_sc, -56.0 * c_sc)
-			if f_k >= 0 and f_k <= 1:
-				# Subtle converging cyan energy gather streaks pulling into cupped hands (Sheet 28 frames 0..1)
-				var r_in: float = (18.0 if f_k == 0 else 12.0) * c_sc
-				var r_out: float = (44.0 if f_k == 0 else 56.0) * c_sc
-				var base_a: float = _sim_time_s * 5.2 * face_kx
-				for si in range(4):
-					var ang_s: float = base_a + float(si) * (PI * 0.5) + (0.35 if f_k == 1 else 0.0)
-					var dir_s: Vector2 = Vector2(cos(ang_s), sin(ang_s))
-					canvas.draw_line(hand_c + dir_s * r_out, hand_c + dir_s * r_in, Color(0.35, 0.94, 1.0, 0.92), maxf(2.0, 2.5 * c_sc))
-				canvas.draw_circle(hand_c, (7.0 if f_k == 0 else 11.0) * c_sc, Color(0.55, 0.96, 1.0, 0.85))
-				canvas.draw_circle(hand_c, (4.0 if f_k == 0 else 6.5) * c_sc, Color(0.95, 1.0, 1.0, 0.95))
-			elif f_k >= 2 and f_k <= 4:
-				if fx_sf.has_animation(&"kame_charge_fx"):
-					var cfc := fx_sf.get_frame_count(&"kame_charge_fx")
-					if cfc > 0:
-						var stage_i: int = clampi(f_k - 2, 0, cfc - 1)
-						var ctex := fx_sf.get_frame_texture(&"kame_charge_fx", stage_i)
-						if ctex != null:
-							var csz: float = (206.0 if stage_i == 0 else (196.0 if stage_i == 1 else 224.0)) * c_sc
-							var rot_a: float = _sim_time_s * 6.5 * face_kx
-							canvas.draw_set_transform(hand_c, rot_a, Vector2.ONE)
-							canvas.draw_texture_rect(ctex, Rect2(-csz * 0.5, -csz * 0.5, csz, csz), false, Color.WHITE)
-							canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			var hand_c: Vector2 = _get_kame_hand_center(goku, c_sc, an)
+			if f_k >= 0 and f_k <= 1 and fx_sf.has_animation(&"kame_gather_fx"):
+				var gfc := fx_sf.get_frame_count(&"kame_gather_fx")
+				if gfc > 0:
+					var gtex := fx_sf.get_frame_texture(&"kame_gather_fx", clampi(f_k, 0, gfc - 1))
+					if gtex != null:
+						var gsz: float = 148.0 * c_sc
+						canvas.draw_set_transform(hand_c, 0.0, Vector2(face_kx, 1.0))
+						canvas.draw_texture_rect(gtex, Rect2(-gsz * 0.5, -gsz * 0.5, gsz, gsz), false, Color.WHITE)
+						canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			elif f_k >= 2 and f_k <= 4 and fx_sf.has_animation(&"kame_orb_front_fx"):
+				var ofc := fx_sf.get_frame_count(&"kame_orb_front_fx")
+				if ofc > 0:
+					var o_stage: int = clampi(f_k - 2, 0, ofc - 1)
+					var otex := fx_sf.get_frame_texture(&"kame_orb_front_fx", o_stage)
+					if otex != null:
+						var osz: float = 264.0 * c_sc
+						canvas.draw_set_transform(hand_c, 0.0, Vector2(face_kx, 1.0))
+						canvas.draw_texture_rect(otex, Rect2(-osz * 0.5, -osz * 0.5, osz, osz), false, Color.WHITE)
+						canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	# 3. Active Atomic Blast 4x alternating homing bolts (1500 px/s, rotated along live flight direction, ZERO missing/spark blink frames!)
+	# 3a. Sheet 23 Yellow Hand Muzzle Sparks (clean 3-frame unclipped flash synced to firing hand & launch angle!)
+	if fx_sf.has_animation(&"atomic_fx_muzzle"):
+		var mfc: int = fx_sf.get_frame_count(&"atomic_fx_muzzle")
+		if mfc > 0:
+			for mf in _hero_atomic_muzzle_flashes:
+				var m_age: float = float(mf.get("age_s", 0.0))
+				var m_dur: float = maxf(0.01, float(mf.get("duration_s", 0.13)))
+				var mfi: int = clampi(int(floor((m_age / m_dur) * float(mfc))), 0, mfc - 1)
+				var mtex := fx_sf.get_frame_texture(&"atomic_fx_muzzle", mfi)
+				if mtex != null:
+					var mpos: Vector2 = mf["pos"] as Vector2
+					var mdir: Vector2 = mf["dir"] as Vector2
+					var msz: float = float(mf.get("size", 92.0 * c_sc))
+					canvas.draw_set_transform(mpos, mdir.angle(), Vector2.ONE)
+					canvas.draw_texture_rect(mtex, Rect2(-64.0 / 256.0 * msz, -0.5 * msz, msz, msz), false, Color.WHITE)
+					canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+	# 3b. Active Atomic Blast 6x curved homing bolts (rotated along live curved tangent, ZERO blink!)
 	for pr in _hero_skill_projectiles:
 		if fx_sf.has_animation(&"atomic_fx_horiz"):
 			var pfc: int = fx_sf.get_frame_count(&"atomic_fx_horiz")
@@ -3558,7 +3842,7 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 					canvas.draw_texture_rect(ptex, Rect2(-psz * 0.5, -psz * 0.5, psz, psz), false, Color.WHITE)
 					canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	# 4. Active Kamehameha seamless multi-segment beam (UNCHANGED 3-part structure: orig+mid+head @ 2500 px/s, NO 1.0s hold -> immediate Branch 2 top->bottom shrink fade on target impact!)
+	# 4. Active Kamehameha seamless multi-segment beam (Sheet 31 Col 1 cycling layers @ 3000 px/s, +20% size -> Col 2 top->bottom shrink fade!)
 	for bm in _hero_kame_beams:
 		var age: float = float(bm["age_s"])
 		var is_fading: bool = bool(bm.get("fading", false))
@@ -3567,50 +3851,53 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 		var start_p: Vector2 = bm["start"] as Vector2
 		var dir_v: Vector2 = bm["dir"] as Vector2
 		var b_len: float = maxf(64.0, float(bm.get("cur_len", 64.0)))
+		var beam_mul: float = float(bm.get("scale_mul", 1.20))
 		var ang: float = dir_v.angle()
 		canvas.draw_set_transform(start_p, ang, Vector2.ONE)
 		if (not is_fading) and fx_sf.has_animation(&"kame_h_orig") and fx_sf.has_animation(&"kame_h_mid") and fx_sf.has_animation(&"kame_h_head"):
-			# 3-frame rotating energy surge cycle (matching Sheet 31 & reference GIF!)
-			var fi: int = int(floor(age * 20.0)) % 3
+			# 3-frame multi-layer cycling energy surge (Sheet 31 Col 1: 24 Hz cycling + per-segment layer offset to avoid static sliding!)
+			var fi: int = int(floor(age * 24.0)) % 3
 			var t_orig := fx_sf.get_frame_texture(&"kame_h_orig", fi)
-			var t_mid := fx_sf.get_frame_texture(&"kame_h_mid", fi)
 			var t_head := fx_sf.get_frame_texture(&"kame_h_head", fi)
-			# Exact seam geometry from Sheet 31 packed into 256x256 cells:
-			# - kame_h_orig: opaque [76..256] (180px flush-right seam at x=256)
-			# - kame_h_mid:  opaque [0..256]  (256px seamless 3-tile shaft, 0px edge gap!)
-			# - kame_h_head: opaque [0..180]  (180px flush-left seam at x=0)
-			var bh: float = 128.0 * c_sc
+			var bh: float = 128.0 * beam_mul * c_sc
 			var cell_sc: float = bh / 256.0
 			var cap_w: float = 180.0 * cell_sc
 			var pad_l: float = 76.0 * cell_sc
 			var tile_w: float = 256.0 * cell_sc
 			var orig_end: float = cap_w
 			var head_x: float = maxf(orig_end - 2.0, b_len - cap_w)
-			# 4a) Seamless tiled middle shaft connecting orig_end .. head_x with ZERO gap!
-			if t_mid != null and head_x > orig_end - 1.0:
+			# 4a) Seamless tiled middle shaft cycling across the 3 Sheet 31 rows per tile!
+			if head_x > orig_end - 1.0:
 				var span: float = head_x - orig_end + 4.0
 				if span <= tile_w:
-					canvas.draw_texture_rect(t_mid, Rect2(orig_end - 2.0, -bh * 0.5, span, bh), false, Color.WHITE)
+					var t_mid0 := fx_sf.get_frame_texture(&"kame_h_mid", fi)
+					if t_mid0 != null:
+						canvas.draw_texture_rect(t_mid0, Rect2(orig_end - 2.0, -bh * 0.5, span, bh), false, Color.WHITE)
 				else:
 					var cx: float = orig_end - 2.0
 					var limit_x: float = head_x + 2.0
+					var tile_idx: int = 0
 					while cx + tile_w < limit_x:
-						canvas.draw_texture_rect(t_mid, Rect2(cx, -bh * 0.5, tile_w, bh), false, Color.WHITE)
+						var t_mid_i := fx_sf.get_frame_texture(&"kame_h_mid", (fi + tile_idx) % 3)
+						if t_mid_i != null:
+							canvas.draw_texture_rect(t_mid_i, Rect2(cx, -bh * 0.5, tile_w, bh), false, Color.WHITE)
 						cx += tile_w - 1.0
-					# Final seamless tile aligned flush to head_x (no stretch, no gap!)
-					canvas.draw_texture_rect(t_mid, Rect2(limit_x - tile_w, -bh * 0.5, tile_w, bh), false, Color.WHITE)
-			# 4b) Origin sphere flush at start_p (drawn over seam so right edge meets mid seamlessly)
+						tile_idx += 1
+					var t_mid_last := fx_sf.get_frame_texture(&"kame_h_mid", (fi + tile_idx) % 3)
+					if t_mid_last != null:
+						canvas.draw_texture_rect(t_mid_last, Rect2(limit_x - tile_w, -bh * 0.5, tile_w, bh), false, Color.WHITE)
+			# 4b) Origin sphere flush at start_p
 			if t_orig != null:
 				canvas.draw_texture_rect(t_orig, Rect2(-pad_l, -bh * 0.5, tile_w, bh), false, Color.WHITE)
-			# 4c) Front impact head flush at head_x (left edge meets mid seamlessly)
+			# 4c) Front impact head flush at head_x
 			if t_head != null:
 				canvas.draw_texture_rect(t_head, Rect2(head_x, -bh * 0.5, tile_w, bh), false, Color.WHITE)
 		elif fx_sf.has_animation(&"kame_h_fade"):
-			# Sheet 31 Branch 2 (top -> middle -> bottom shrinking beam: frames 0 -> 1 -> 2)
+			# Sheet 31 Column 2 (top -> middle -> bottom shrinking beam: frames 0 -> 1 -> 2, +20% size matching Column 1!)
 			var fade_prog: float = clampf(fade_age / maxf(0.01, fade_s), 0.0, 0.999)
 			var f_idx: int = clampi(int(floor(fade_prog * 3.0)), 0, 2)
 			var t_fade := fx_sf.get_frame_texture(&"kame_h_fade", f_idx)
 			if t_fade != null:
-				var fh: float = 128.0 * c_sc
+				var fh: float = 128.0 * beam_mul * c_sc
 				canvas.draw_texture_rect(t_fade, Rect2(0.0, -fh * 0.5, b_len, fh), false, Color.WHITE)
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

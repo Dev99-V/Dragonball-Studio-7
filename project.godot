@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="DR7-Studio DragonBall 2D"
-config/version="0.17.0"
+config/version="0.18.0"
 run/main_scene="res://scenes/AppStartup.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/bg_color=Color(0.05, 0.08, 0.14, 1)

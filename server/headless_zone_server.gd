@@ -477,8 +477,15 @@ func _handle_peer_packet(pid: int, pkt: Dictionary) -> void:
 		pdata["x"] = snappedf(next_pos.x, 0.1)
 		pdata["y"] = snappedf(next_pos.y, 0.1)
 		pdata["facing_left"] = bool(pkt.get("facing_left", pdata["facing_left"]))
-		var act := str(pkt.get("act", "idle"))
-		if act in ["idle", "walk", "run", "jump", "teleport", "attack_light", "attack_heavy", "power_up", "hit", "ko"]:
+		if pkt.has("character_id"):
+			var req_cid := str(pkt.get("character_id", "")).strip_edges()
+			if req_cid == "songoku_hero_demo":
+				req_cid = "songoku"
+			if req_cid in ["songoku", "drum"]:
+				pdata["character_id"] = req_cid
+				pinfo["character_id"] = req_cid
+		var act := str(pkt.get("act", "idle")).strip_edges()
+		if not act.is_empty() and act.length() <= 36:
 			pdata["act"] = act
 		return
 

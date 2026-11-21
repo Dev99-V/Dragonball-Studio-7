@@ -58,13 +58,15 @@ const FLURRY_KICK_RANGE_FWD_PX: float = 215.0
 const FLURRY_KICK_RANGE_V_PX: float = 160.0
 const FLURRY_KICK_SPEED_FACTOR: float = 0.70
 const ATOMIC_COOLDOWN_S: float = 12.0
-const ATOMIC_SPEED_PX_S: float = 1500.0
-const ATOMIC_BOLT_COUNT: int = 4
+const ATOMIC_SPEED_PX_S: float = 2500.0
+const ATOMIC_BOLT_COUNT: int = 6
 const KAME_MANA_COST: float = 80.0
-const KAME_SPEED_PX_S: float = 2500.0
+const KAME_SPEED_PX_S: float = 3000.0
+const KAME_CHARGE_DURATION_S: float = 2.0
+const KAME_BEAM_SCALE_MUL: float = 1.20
 const KAME_HOLD_S: float = 0.0
 const KAME_FADE_S: float = 0.18
-const KAME_CHARGE_SPEED_SCALE: float = 0.70
+const KAME_CHARGE_SPEED_SCALE: float = 1.00
 const HERO_MAX_MANA: float = 100.0
 const TELEPORT_STATIC_COST: float = 75.0
 const TELEPORT_DASH_COST: float = 25.0
@@ -564,12 +566,11 @@ func trigger_barrier() -> bool:
 	return true
 
 
-func trigger_energy_recover() -> bool:
-	if not is_ssj or recover_cooldown_s > 0.0:
+func trigger_energy_recover(on_ground: bool = true) -> bool:
+	if not is_ssj or recover_cooldown_s > 0.0 or (not on_ground) or flight_state != "ground":
 		return false
 	recover_timer_s = RECOVER_DURATION_S
 	recover_cooldown_s = RECOVER_COOLDOWN_S
-	flight_state = "ground"
 	hover_timer_s = 0.0
 	hero_state_changed.emit()
 	return true

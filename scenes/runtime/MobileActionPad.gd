@@ -89,6 +89,7 @@ var _hero_barrier_active_s: float = 0.0
 var _hero_barrier_cd: float = 0.0
 var _hero_recover_cd: float = 0.0
 var _hero_flurry_cd: float = 0.0
+var _hero_on_ground: bool = true
 
 # Analog drag tracking
 var _analog_touch_idx: int = -1
@@ -135,47 +136,50 @@ func _build_ui() -> void:
 	_anchor_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	safe_root.add_child(_anchor_ctrl)
 
-	# Bottom-Left Virtual Analog Stick
+	# Bottom-Left Virtual Analog Stick (Region #1 of c5ebb08600d4cf82deaf6312bac7905a.jpg)
 	_analog_ctrl = _AnalogCanvas.new()
 	_analog_ctrl.name = "AnalogStick"
 	_analog_ctrl.anchor_left = 0.0
 	_analog_ctrl.anchor_right = 0.0
 	_analog_ctrl.anchor_top = 1.0
 	_analog_ctrl.anchor_bottom = 1.0
-	_analog_ctrl.offset_left = 26.0
-	_analog_ctrl.offset_top = -188.0
-	_analog_ctrl.offset_right = 190.0
-	_analog_ctrl.offset_bottom = -24.0
+	_analog_ctrl.offset_left = 44.0
+	_analog_ctrl.offset_top = -236.0
+	_analog_ctrl.offset_right = 248.0
+	_analog_ctrl.offset_bottom = -32.0
 	_analog_ctrl.mouse_filter = Control.MOUSE_FILTER_STOP
 	_analog_ctrl.set("pad_owner", self)
 	_anchor_ctrl.add_child(_analog_ctrl)
 
-	# Bottom-Right Circular Button Cluster (1 primary + 2..7 arc + 8 target reticle)
+	# Bottom-Right Honeycomb Skill Cluster (1:1 proportions from Region #2 of c5ebb08600d4cf82deaf6312bac7905a.jpg)
 	_buttons_root = Control.new()
 	_buttons_root.name = "CircularSkillCluster"
 	_buttons_root.anchor_left = 1.0
 	_buttons_root.anchor_right = 1.0
 	_buttons_root.anchor_top = 1.0
 	_buttons_root.anchor_bottom = 1.0
-	_buttons_root.offset_left = -392.0
-	_buttons_root.offset_top = -296.0
-	_buttons_root.offset_right = -18.0
-	_buttons_root.offset_bottom = -14.0
+	_buttons_root.offset_left = -492.0
+	_buttons_root.offset_top = -384.0
+	_buttons_root.offset_right = -24.0
+	_buttons_root.offset_bottom = -16.0
 	_buttons_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_anchor_ctrl.add_child(_buttons_root)
 
-	# Coordinates inside 374x282 cluster box (bottom-right)
-	# Slot 10 (80, 122, 62x62): Dedicated Energy Recovery (`HỒI 3S`) visible for Son Goku Hero!
+	# Measured 3-column honeycomb matching uploaded HUD reference Region #2 (box 468x368 anchored bottom-right):
+	#   Col R (large): Slot 1 (B: Attack 122px bottom-right), Slot 5 (Y: Kamehameha 106px directly above B)
+	#   Col M (core):  Slot 2 (RB: Teleport/Jump 92px top), Slot 4 (X: Atomic 94px center), Slot 3 (A: Flurry Kick 92px bottom)
+	#   Col L (inner): Slot 6 (Barrier 84px upper-left), Slot 10 (Hồi 3s 88px lower-left, 75/150 style)
+	#   Outer-Left:    Slot 7 (SSJ1 72px), Slot 9 (AUTO 62px), Slot 8 (TRỎ 62px)
 	var layout_specs := {
-		1: Rect2(236, 148, 112, 112),
-		2: Rect2(298, 72, 68, 68),
-		3: Rect2(158, 208, 68, 68),
-		4: Rect2(294, 0, 68, 68),
-		5: Rect2(214, 46, 66, 66),
-		6: Rect2(146, 116, 66, 66),
-		7: Rect2(80, 196, 68, 68),
-		8: Rect2(12, 200, 62, 62),
-		10: Rect2(80, 122, 62, 62),
+		1: Rect2(326, 224, 122, 122),
+		5: Rect2(340, 100, 106, 106),
+		2: Rect2(226, 16, 92, 92),
+		4: Rect2(210, 144, 94, 94),
+		3: Rect2(204, 266, 92, 92),
+		6: Rect2(106, 80, 84, 84),
+		10: Rect2(92, 200, 88, 88),
+		7: Rect2(10, 140, 72, 72),
+		8: Rect2(14, 294, 62, 62),
 	}
 	for sid in [1, 2, 3, 4, 5, 6, 7, 8, 10]:
 		var r: Rect2 = layout_specs[sid]
@@ -207,10 +211,10 @@ func _build_ui() -> void:
 		_slot_buttons[sid] = btn
 		_slot_visuals[sid] = vis
 
-	# Dedicated AUTO / TAY Battle Toggle Button (directly above TRỎ reticle, slot_id = 9)
+	# Dedicated AUTO / TAY Battle Toggle Button (outer-left directly above TRỎ reticle, slot_id = 9)
 	_auto_btn = Button.new()
 	_auto_btn.name = "AutoBattleCircle"
-	_auto_btn.position = Vector2(12, 126)
+	_auto_btn.position = Vector2(14, 224)
 	_auto_btn.size = Vector2(62, 62)
 	_auto_btn.custom_minimum_size = Vector2(62, 62)
 	_apply_circle_button_theme(_auto_btn, 9)
@@ -378,7 +382,7 @@ func get_slot_binding(slot_id: int) -> String:
 func configure_for_character(char_id: String, available_clips: PackedStringArray, is_flying: bool) -> void:
 	_configured_char_id = char_id
 	_flight_mode = is_flying
-	_hero_is_songoku = (char_id == "songoku_hero_demo")
+	_hero_is_songoku = (char_id == "songoku" or char_id == "songoku_hero_demo")
 	var avail := PackedStringArray(["attack_light"])
 	if is_flying or available_clips.has("jump"):
 		avail.append("jump")
@@ -386,15 +390,15 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 		avail.append("teleport")
 	if available_clips.has("transform_ssj"):
 		avail.append("transform_ssj")
-	if available_clips.has("barrier_cast") or char_id == "songoku_hero_demo":
+	if available_clips.has("barrier_cast") or _hero_is_songoku:
 		avail.append("barrier")
-	if available_clips.has("energy_recover") or char_id == "songoku_hero_demo":
+	if available_clips.has("energy_recover") or _hero_is_songoku:
 		avail.append("energy_recover")
-	if available_clips.has("flurry_kick") or char_id == "songoku_hero_demo":
+	if available_clips.has("flurry_kick") or _hero_is_songoku:
 		avail.append("flurry_kick")
-	if available_clips.has("atomic_ground") or char_id == "songoku_hero_demo":
+	if available_clips.has("atomic_ground") or _hero_is_songoku:
 		avail.append("atomic_blast")
-	if available_clips.has("kame_ground_horiz") or char_id == "songoku_hero_demo":
+	if available_clips.has("kame_ground_horiz") or _hero_is_songoku:
 		avail.append("kamehameha")
 	if available_clips.has("fly_aura") or available_clips.has("fly_launch"):
 		avail.append("fly_toggle")
@@ -415,7 +419,7 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 	_slot_bindings[7] = "empty"
 	_slot_bindings[8] = "cycle_target"
 	_slot_bindings[10] = "empty"
-	if char_id == "songoku_hero_demo":
+	if _hero_is_songoku:
 		# Full Phase 2 Hero Skill Arc (ALL skills directly visible on screen: 2..7 + dedicated slot 10 `energy_recover`!)
 		_slot_bindings[2] = "transform_ssj"
 		_slot_bindings[3] = "teleport"
@@ -448,7 +452,7 @@ func set_mana_and_pointer_state(mana: float, max_mana: float, pointer_kind: Stri
 	_refresh_slot_buttons()
 
 
-func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool, can_attack_now: bool, fly_active: bool, combo_step: int, atomic_cd: float = 0.0, barrier_s: float = 0.0, barrier_cd: float = 0.0, recover_cd: float = 0.0, flurry_cd: float = 0.0) -> void:
+func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool, can_attack_now: bool, fly_active: bool, combo_step: int, atomic_cd: float = 0.0, barrier_s: float = 0.0, barrier_cd: float = 0.0, recover_cd: float = 0.0, flurry_cd: float = 0.0, on_ground: bool = true) -> void:
 	_hero_stamina = stamina
 	_hero_max_stamina = maxf(1.0, max_stamina)
 	_hero_is_ssj = is_ssj
@@ -460,6 +464,7 @@ func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool
 	_hero_barrier_cd = barrier_cd
 	_hero_recover_cd = recover_cd
 	_hero_flurry_cd = flurry_cd
+	_hero_on_ground = on_ground
 	_refresh_slot_buttons()
 
 
@@ -538,8 +543,13 @@ func _refresh_slot_buttons() -> void:
 			btn.tooltip_text = "Khiên 10s (Đang bật %.1fs)" % _hero_barrier_active_s if _hero_barrier_active_s > 0.0 else ("Khiên bảo vệ 10s" if _hero_barrier_cd <= 0.0 else "Khiên (%.1fs)" % _hero_barrier_cd)
 			btn.disabled = (not _hero_is_ssj) or _hero_barrier_cd > 0.0
 		elif act == "energy_recover":
-			btn.tooltip_text = "Gồng hồi 3s (Máu + Giáp + Khinh công)" if _hero_recover_cd <= 0.0 else "Gồng hồi (%.1fs)" % _hero_recover_cd
-			btn.disabled = (not _hero_is_ssj) or _hero_recover_cd > 0.0
+			if not _hero_on_ground:
+				btn.tooltip_text = "Gồng hồi 3s (Chỉ dùng khi đứng mặt đất)"
+			elif _hero_recover_cd <= 0.0:
+				btn.tooltip_text = "Gồng hồi 3s (Máu + Giáp + Khinh công)"
+			else:
+				btn.tooltip_text = "Gồng hồi (%.1fs)" % _hero_recover_cd
+			btn.disabled = (not _hero_is_ssj) or (not _hero_on_ground) or _hero_recover_cd > 0.0
 		else:
 			btn.tooltip_text = lbl
 			btn.disabled = false
@@ -636,15 +646,18 @@ class _AnalogCanvas extends Control:
 		var center := size * 0.5
 		var base_r := minf(size.x, size.y) * 0.45
 		pad_owner._analog_radius = base_r
-		# Frosted dark pad with crisp white outer ring (matching image copy 8.png)
-		draw_arc(center, base_r + 2.5, 0.0, TAU, 56, Color(0.95, 0.98, 1.0, 0.16), 4.0, true)
-		draw_circle(center, base_r, Color(0.08, 0.11, 0.16, 0.66))
-		draw_arc(center, base_r, 0.0, TAU, 56, Color(0.94, 0.97, 1.0, 0.90), 2.5, true)
-		draw_arc(center, base_r * 0.86, 0.0, TAU, 48, Color(0.88, 0.94, 1.0, 0.18), 1.0, true)
+		var active_drag: bool = pad_owner.analog_vector.length() > 0.08 or pad_owner._analog_touch_idx != -1 or pad_owner._analog_mouse_down
+		# Frosted translucent glass joystick referencing green region #1 of c5ebb08600d4cf82deaf6312bac7905a.jpg
+		draw_circle(center, base_r, Color(0.86, 0.92, 0.98, 0.18 if active_drag else 0.12))
+		draw_circle(center, base_r * 0.82, Color(0.08, 0.12, 0.18, 0.24 if active_drag else 0.18))
+		draw_arc(center, base_r, 0.0, TAU, 56, Color(0.96, 0.98, 1.0, 0.68 if active_drag else 0.48), 2.0, true)
+		draw_arc(center, base_r * 0.82, 0.0, TAU, 48, Color(0.95, 0.98, 1.0, 0.26), 1.0, true)
+		# Subtle frosted glass specular highlight on top-left rim
+		draw_arc(center, base_r - 2.0, -PI * 0.82, -PI * 0.26, 20, Color(1.0, 1.0, 1.0, 0.34), 1.6, true)
 		var knob_pos: Vector2 = center + pad_owner.analog_vector * (base_r - pad_owner._knob_radius * 0.4)
-		var active_drag: bool = pad_owner.analog_vector.length() > 0.08
-		draw_circle(knob_pos, pad_owner._knob_radius, Color(0.12, 0.18, 0.25, 0.84) if active_drag else Color(0.10, 0.13, 0.19, 0.72))
-		draw_arc(knob_pos, pad_owner._knob_radius, 0.0, TAU, 36, Color(0.28, 0.96, 0.58, 0.96) if active_drag else Color(0.94, 0.97, 1.0, 0.92), 2.5, true)
+		var knob_r: float = pad_owner._knob_radius * (0.94 if active_drag else 0.86)
+		draw_circle(knob_pos, knob_r, Color(0.92, 0.97, 1.0, 0.36 if active_drag else 0.22))
+		draw_arc(knob_pos, knob_r, 0.0, TAU, 36, Color(0.45, 0.96, 1.0, 0.92) if active_drag else Color(0.96, 0.98, 1.0, 0.72), 2.2, true)
 
 
 class _SkillButtonVisual extends Control:
@@ -656,89 +669,87 @@ class _SkillButtonVisual extends Control:
 		if pad_owner == null or owner_btn == null:
 			return
 		var center := size * 0.5
-		var r := minf(size.x, size.y) * 0.47
 		var pressed_now := owner_btn.button_pressed
 		var hovered_now := owner_btn.is_hovered()
 		var disabled_now := owner_btn.disabled
-		var alpha_mul := 0.42 if disabled_now else 1.0
+		# Tactile press scale feedback (shrinks subtly on touch/press, restores on release)
+		var r := minf(size.x, size.y) * (0.435 if pressed_now else 0.47)
+		var alpha_mul := 0.36 if disabled_now else 1.0
 		var font := ThemeDB.fallback_font
 
 		if slot_id == 9:
-			# Dedicated AUTO / TAY toggle button (glowing emerald-gold when ON, frosted dark when OFF)
+			# Frosted glass AUTO / TAY toggle button
 			var is_on: bool = bool(pad_owner._auto_battle_enabled)
-			var bg_c := Color(0.10, 0.34, 0.22, 0.90) if is_on else Color(0.08, 0.11, 0.16, 0.72)
-			var ring_c := Color(0.28, 0.98, 0.56, 0.98) if is_on else Color(0.86, 0.90, 0.96, 0.85)
-			draw_circle(center, r * 0.90, bg_c)
-			draw_arc(center, r * 0.90, 0.0, TAU, 36, ring_c, 3.0 if is_on else 2.2, true)
+			var bg_c := Color(0.16, 0.46, 0.32, 0.52 if pressed_now else 0.42) if is_on else Color(0.10, 0.14, 0.22, 0.44 if pressed_now else 0.30)
+			var ring_c := Color(0.35, 0.98, 0.62, 0.95) if is_on else Color(0.94, 0.97, 1.0, 0.66)
+			draw_circle(center, r * 0.92, bg_c)
+			draw_arc(center, r * 0.92, -PI * 0.85, -PI * 0.22, 18, Color(1.0, 1.0, 1.0, 0.32), 1.4, true)
+			draw_arc(center, r * 0.92, 0.0, TAU, 36, ring_c, 2.6 if is_on else 1.8, true)
 			if is_on:
-				draw_arc(center, r * 0.72, -PI * 0.75, PI * 0.25, 18, Color(1.0, 0.88, 0.26, 0.95), 2.6, true)
-				draw_arc(center, r * 0.72, PI * 0.25, PI * 1.25, 18, Color(0.26, 0.96, 0.58, 0.95), 2.6, true)
+				draw_arc(center, r * 0.72, -PI * 0.75, PI * 0.25, 18, Color(1.0, 0.90, 0.32, 0.92), 2.2, true)
+				draw_arc(center, r * 0.72, PI * 0.25, PI * 1.25, 18, Color(0.28, 0.98, 0.62, 0.92), 2.2, true)
 			if font != null:
-				draw_string(font, Vector2(center.x - 24.0, center.y + 4.0), "AUTO", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 12, Color(1.0, 0.96, 0.45, 1.0) if is_on else Color(0.92, 0.96, 1.0, 0.94))
+				draw_string(font, Vector2(center.x - 24.0, center.y + 4.0), "AUTO", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 12, Color(1.0, 0.97, 0.50, 1.0) if is_on else Color(0.95, 0.98, 1.0, 0.94))
 				draw_string(font, Vector2(center.x - 24.0, size.y - 6.0), "BẬT" if is_on else "TAY", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 9, ring_c)
 			return
 
 		if slot_id == 8:
-			# Green segmented target reticle inspired by image copy 8.png
-			var col_g := Color(0.22, 0.96, 0.52, (0.98 if not pressed_now else 1.0) * alpha_mul)
-			draw_circle(center, r * 0.88, Color(0.07, 0.10, 0.15, 0.68 if not hovered_now else 0.84))
+			# Frosted glass target reticle button
+			var col_g := Color(0.32, 0.98, 0.62, (0.98 if pressed_now else 0.92) * alpha_mul)
+			draw_circle(center, r * 0.90, Color(0.14, 0.20, 0.28, (0.50 if pressed_now else (0.38 if hovered_now else 0.28)) * alpha_mul))
+			draw_arc(center, r * 0.90, 0.0, TAU, 36, Color(0.94, 0.98, 1.0, 0.56 * alpha_mul), 1.6, true)
 			for q in range(4):
-				var a0 := float(q) * PI * 0.5 + 0.18
-				var a1 := float(q + 1) * PI * 0.5 - 0.18
-				draw_arc(center, r * 0.82, a0, a1, 14, col_g, 3.0, true)
+				var a0 := float(q) * PI * 0.5 + 0.20
+				var a1 := float(q + 1) * PI * 0.5 - 0.20
+				draw_arc(center, r * 0.70, a0, a1, 12, col_g, 2.4, true)
 			for dir_v in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
-				draw_line(center + dir_v * (r * 0.54), center + dir_v * (r * 0.96), col_g, 3.0, true)
-			draw_circle(center, 3.5, col_g)
+				draw_line(center + dir_v * (r * 0.46), center + dir_v * (r * 0.84), col_g, 2.2, true)
+			draw_circle(center, 3.0, col_g)
 			if font != null:
-				draw_string(font, Vector2(center.x - 16.0, size.y - 6.0), "TRỎ", HORIZONTAL_ALIGNMENT_CENTER, 32.0, 11, Color(0.95, 0.99, 1.0, alpha_mul))
+				draw_string(font, Vector2(center.x - 16.0, size.y - 5.0), "TRỎ", HORIZONTAL_ALIGNMENT_CENTER, 32.0, 10, Color(0.96, 0.99, 1.0, alpha_mul))
 			return
 
 		var act := str(pad_owner._slot_bindings.get(slot_id, "empty"))
-		var base_bg := Color(0.16, 0.22, 0.28, 0.88) if pressed_now else (Color(0.12, 0.16, 0.23, 0.82) if hovered_now else Color(0.09, 0.12, 0.18, 0.76))
-		base_bg.a *= alpha_mul
-		draw_circle(center, r, base_bg)
-		draw_arc(center, r, 0.0, TAU, 48, Color(0.94, 0.97, 1.0, 0.90 * alpha_mul), 2.4, true)
-		draw_arc(center, r * 0.87, 0.0, TAU, 40, Color(0.88, 0.95, 1.0, 0.24 * alpha_mul), 1.2, true)
+		# Frosted translucent glass base disc (green region #2 style from c5ebb08600d4cf82deaf6312bac7905a.jpg)
+		var glass_bg := Color(0.86, 0.94, 1.0, 0.34) if pressed_now else (Color(0.22, 0.30, 0.42, 0.38) if hovered_now else Color(0.10, 0.14, 0.22, 0.30))
+		glass_bg.a *= alpha_mul
+		draw_circle(center, r, glass_bg)
+		# Inner frosted sheen + crisp thin glass rim
+		draw_circle(center, r * 0.86, Color(0.94, 0.98, 1.0, (0.14 if pressed_now else 0.07) * alpha_mul))
+		draw_arc(center, r, 0.0, TAU, 48, Color(0.96, 0.98, 1.0, (0.94 if pressed_now else 0.68) * alpha_mul), 2.4 if pressed_now else 1.8, true)
+		draw_arc(center, r * 0.88, -PI * 0.84, -PI * 0.20, 22, Color(1.0, 1.0, 1.0, 0.40 * alpha_mul), 1.4, true)
 
 		if slot_id == 1:
-			# Primary large button: 4 cardinal ticks + neon-green segmented inner ring + fist/pickup vector icon
-			var green_ring := Color(0.20, 0.96, 0.48, 0.95 * alpha_mul)
+			# Primary large frosted glass attack/interact circle
+			var accent_main := Color(0.96, 0.98, 1.0, 0.96 * alpha_mul)
 			if pad_owner._pointer_kind == "item":
-				green_ring = Color(0.32, 0.88, 1.0, 0.95 * alpha_mul)
+				accent_main = Color(0.40, 0.92, 1.0, 0.96 * alpha_mul)
 			elif pad_owner._pointer_kind == "npc":
-				green_ring = Color(1.0, 0.84, 0.30, 0.95 * alpha_mul)
+				accent_main = Color(1.0, 0.88, 0.40, 0.96 * alpha_mul)
 			for q in range(4):
-				var a0 := float(q) * PI * 0.5 + 0.24
-				var a1 := float(q + 1) * PI * 0.5 - 0.24
-				draw_arc(center, r * 0.62, a0, a1, 14, green_ring, 3.2, true)
-			# 4 small white directional triangle ticks inside outer ring
-			for dir_a in [0.0, PI * 0.5, PI, PI * 1.5]:
-				var dir_v := Vector2(cos(dir_a), sin(dir_a))
-				var perp := Vector2(-dir_v.y, dir_v.x)
-				var tip := center + dir_v * (r * 0.90)
-				var b1 := center + dir_v * (r * 0.77) + perp * 4.5
-				var b2 := center + dir_v * (r * 0.77) - perp * 4.5
-				draw_colored_polygon(PackedVector2Array([tip, b1, b2]), Color(0.96, 0.98, 1.0, 0.90))
+				var a0 := float(q) * PI * 0.5 + 0.26
+				var a1 := float(q + 1) * PI * 0.5 - 0.26
+				draw_arc(center, r * 0.72, a0, a1, 14, Color(accent_main.r, accent_main.g, accent_main.b, 0.65 * alpha_mul), 2.2, true)
 			if pad_owner._pointer_kind == "item":
-				_draw_pickup_icon(center + Vector2(0.0, -5.0), r * 0.34, green_ring)
+				_draw_pickup_icon(center + Vector2(0.0, -5.0), r * 0.36, accent_main)
 				if font != null:
-					draw_string(font, Vector2(center.x - 28.0, center.y + r * 0.50), "NHẶT", HORIZONTAL_ALIGNMENT_CENTER, 56.0, 12, Color(0.95, 0.99, 1.0, 0.95))
+					draw_string(font, Vector2(center.x - 28.0, center.y + r * 0.54), "NHẶT", HORIZONTAL_ALIGNMENT_CENTER, 56.0, 11, Color(0.96, 0.99, 1.0, 0.95))
 			elif pad_owner._pointer_kind == "npc":
-				_draw_talk_icon(center + Vector2(0.0, -5.0), r * 0.32, green_ring)
+				_draw_talk_icon(center + Vector2(0.0, -5.0), r * 0.34, accent_main)
 				if font != null:
-					draw_string(font, Vector2(center.x - 32.0, center.y + r * 0.50), "N.CHUYỆN", HORIZONTAL_ALIGNMENT_CENTER, 64.0, 11, Color(0.95, 0.99, 1.0, 0.95))
+					draw_string(font, Vector2(center.x - 32.0, center.y + r * 0.54), "N.CHUYỆN", HORIZONTAL_ALIGNMENT_CENTER, 64.0, 10, Color(0.96, 0.99, 1.0, 0.95))
 			else:
 				var locked_base: bool = bool(pad_owner._hero_is_songoku) and not bool(pad_owner._hero_can_attack)
-				var fist_col := Color(0.62, 0.66, 0.72, 0.65) if locked_base else green_ring
-				_draw_fist_icon(center + Vector2(0.0, -6.0), r * 0.32, fist_col)
+				var fist_col := Color(0.68, 0.72, 0.78, 0.58) if locked_base else accent_main
+				_draw_fist_icon(center + Vector2(0.0, -6.0), r * 0.34, fist_col)
 				if font != null:
 					var atk_txt := "KHÓA" if locked_base else ("ĐÁNH %d/7" % ((int(pad_owner._hero_combo_step) % 7) + 1) if bool(pad_owner._hero_is_songoku) else "ĐÁNH")
-					draw_string(font, Vector2(center.x - 34.0, center.y + r * 0.50), atk_txt, HORIZONTAL_ALIGNMENT_CENTER, 68.0, 11, Color(0.95, 0.99, 1.0, 0.95))
+					draw_string(font, Vector2(center.x - 34.0, center.y + r * 0.54), atk_txt, HORIZONTAL_ALIGNMENT_CENTER, 68.0, 11, Color(0.96, 0.99, 1.0, 0.95))
 			return
 
-		# Secondary skill buttons (Jump, Teleport/Dash + Radial Stamina Ring, Transform SSJ, Fly, PowerUp, AttackHeavy, Pickup)
-		var icon_col := Color(0.95, 0.98, 1.0, 0.96 * alpha_mul)
-		var accent_col := Color(0.32, 0.88, 1.0, 0.95 * alpha_mul)
+		# Secondary skill buttons: crisp minimalist vector icons on frosted glass
+		var icon_col := Color(0.96, 0.99, 1.0, 0.96 * alpha_mul)
+		var accent_col := Color(0.36, 0.90, 1.0, 0.96 * alpha_mul)
 		var short_lbl := str(SHORT_LABELS.get(act, act.to_upper()))
 		if act == "jump":
 			if pad_owner._flight_mode:
@@ -747,25 +758,24 @@ class _SkillButtonVisual extends Control:
 		elif act == "teleport":
 			if bool(pad_owner._hero_is_songoku):
 				var s_ratio: float = clampf(float(pad_owner._hero_stamina) / maxf(1.0, float(pad_owner._hero_max_stamina)), 0.0, 1.0)
-				# Background track ring + active rotating radial stamina ring around Teleport skill button
-				draw_arc(center, r * 0.93, 0.0, TAU, 36, Color(0.18, 0.24, 0.32, 0.68), 3.6, true)
+				draw_arc(center, r * 0.94, 0.0, TAU, 36, Color(0.20, 0.28, 0.36, 0.42), 3.0, true)
 				if s_ratio > 0.005:
-					var s_col := Color(0.24, 0.96, 0.64, 0.98) if float(pad_owner._hero_stamina) >= 75.0 else (Color(0.32, 0.86, 1.0, 0.94) if float(pad_owner._hero_stamina) >= 25.0 else Color(1.0, 0.56, 0.22, 0.92))
-					draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * s_ratio, 36, s_col, 3.8, true)
+					var s_col := Color(0.34, 0.98, 0.68, 0.95) if float(pad_owner._hero_stamina) >= 75.0 else (Color(0.36, 0.88, 1.0, 0.92) if float(pad_owner._hero_stamina) >= 25.0 else Color(1.0, 0.60, 0.24, 0.90))
+					draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * s_ratio, 36, s_col, 3.2, true)
 				short_lbl = "TL %d" % int(floor(float(pad_owner._hero_stamina)))
 			_draw_dash_icon(center + Vector2(0.0, -7.0), r * 0.40, icon_col, accent_col)
 		elif act == "transform_ssj":
-			var ssj_gold := Color(1.0, 0.86, 0.22, 0.98 * alpha_mul)
+			var ssj_gold := Color(1.0, 0.88, 0.28, 0.98 * alpha_mul)
 			if bool(pad_owner._hero_is_ssj):
-				draw_arc(center, r * 0.93, 0.0, TAU, 36, ssj_gold, 3.2, true)
+				draw_arc(center, r * 0.94, 0.0, TAU, 36, ssj_gold, 2.8, true)
 				short_lbl = "XẢ SSJ"
 			else:
 				short_lbl = "SSJ1"
-			_draw_ki_icon(center + Vector2(0.0, -7.0), r * 0.36, ssj_gold)
+			_draw_ssj_bolt_icon(center + Vector2(0.0, -7.0), r * 0.42, ssj_gold)
 		elif act == "fly_toggle":
-			var fly_col := Color(1.0, 0.92, 0.32, 0.98 * alpha_mul) if bool(pad_owner._hero_fly_active) else icon_col
+			var fly_col := Color(1.0, 0.92, 0.36, 0.98 * alpha_mul) if bool(pad_owner._hero_fly_active) else icon_col
 			if bool(pad_owner._hero_fly_active):
-				draw_arc(center, r * 0.93, 0.0, TAU, 36, fly_col, 3.2, true)
+				draw_arc(center, r * 0.94, 0.0, TAU, 36, fly_col, 2.8, true)
 				short_lbl = "HẠ"
 			else:
 				short_lbl = "BAY"
@@ -773,50 +783,117 @@ class _SkillButtonVisual extends Control:
 		elif act == "power_up":
 			var ratio: float = clampf(pad_owner._current_mana / maxf(1.0, pad_owner._max_mana), 0.0, 1.0)
 			if ratio > 0.01:
-				draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * ratio, 36, Color(0.24, 0.86, 1.0, 0.96 if ratio >= 1.0 else 0.72), 3.2, true)
+				draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ratio, 36, Color(0.28, 0.88, 1.0, 0.95 if ratio >= 1.0 else 0.68), 3.0, true)
 			_draw_ki_icon(center + Vector2(0.0, -8.0), r * 0.36, accent_col if ratio >= 1.0 else icon_col)
 			short_lbl = "%d/%d" % [int(floor(pad_owner._current_mana)), int(round(pad_owner._max_mana))]
 		elif act == "attack_heavy":
-			_draw_heavy_icon(center + Vector2(0.0, -6.0), r * 0.40, Color(1.0, 0.80, 0.34, 0.96 * alpha_mul))
+			_draw_heavy_icon(center + Vector2(0.0, -6.0), r * 0.40, Color(1.0, 0.82, 0.36, 0.96 * alpha_mul))
 		elif act == "atomic_blast":
 			var cd_a: float = float(pad_owner._hero_atomic_cd)
 			var ready_a: float = clampf(1.0 - cd_a / 12.0, 0.0, 1.0)
-			var gold_a := Color(1.0, 0.84, 0.14, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * ready_a, 36, gold_a, 3.4, true)
-			_draw_ki_icon(center + Vector2(0.0, -8.0), r * 0.36, gold_a)
+			var gold_a := Color(1.0, 0.86, 0.20, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ready_a, 36, gold_a, 3.0, true)
+			_draw_atomic_orbs_icon(center + Vector2(0.0, -7.0), r * 0.42, gold_a)
 			short_lbl = ("%ds" % int(ceilf(cd_a))) if cd_a > 0.05 else "ATOMIC"
 		elif act == "kamehameha":
 			var mp_ratio: float = clampf(pad_owner._current_mana / 80.0, 0.0, 1.0)
-			var cyan_k := Color(0.22, 0.90, 1.0, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * mp_ratio, 36, cyan_k if mp_ratio >= 1.0 else Color(0.22, 0.72, 0.95, 0.65), 3.4, true)
-			_draw_ki_icon(center + Vector2(0.0, -8.0), r * 0.38, cyan_k if mp_ratio >= 1.0 else icon_col)
+			var blue_k := Color(0.18, 0.72, 1.0, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * mp_ratio, 36, blue_k if mp_ratio >= 1.0 else Color(0.24, 0.66, 0.96, 0.62), 3.0, true)
+			# Dedicated blue Kamehameha beam icon on transparent frosted glass disc (Owner v10.6 HUD spec)
+			_draw_kame_beam_icon(center + Vector2(0.0, -7.0), r * 0.48, blue_k, alpha_mul)
 			short_lbl = "KAME" if mp_ratio >= 1.0 else "%d/80" % int(floor(pad_owner._current_mana))
 		elif act == "flurry_kick":
 			var cd_f: float = float(pad_owner._hero_flurry_cd)
 			var ready_f: float = clampf(1.0 - cd_f / 6.0, 0.0, 1.0)
-			var amber_f := Color(1.0, 0.68, 0.18, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * ready_f, 36, amber_f, 3.2, true)
-			_draw_heavy_icon(center + Vector2(0.0, -6.0), r * 0.38, amber_f)
+			var amber_f := Color(1.0, 0.74, 0.24, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ready_f, 36, amber_f, 2.8, true)
+			_draw_flurry_kick_icon(center + Vector2(0.0, -6.0), r * 0.42, amber_f)
 			short_lbl = ("%ds" % int(ceilf(cd_f))) if cd_f > 0.05 else "ĐÁ LH"
 		elif act == "barrier":
 			var act_b: float = float(pad_owner._hero_barrier_active_s)
 			var cd_b: float = float(pad_owner._hero_barrier_cd)
-			var col_b := Color(1.0, 0.92, 0.30, 0.98 * alpha_mul) if act_b > 0.0 else Color(0.45, 0.92, 1.0, 0.95 * alpha_mul)
+			var col_b := Color(1.0, 0.92, 0.34, 0.98 * alpha_mul) if act_b > 0.0 else Color(0.46, 0.92, 1.0, 0.95 * alpha_mul)
 			var ring_r: float = clampf(act_b / 10.0, 0.0, 1.0) if act_b > 0.0 else clampf(1.0 - cd_b / 16.0, 0.0, 1.0)
-			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * ring_r, 36, col_b, 3.2, true)
-			draw_arc(center + Vector2(0.0, -6.0), r * 0.34, 0.0, TAU, 24, col_b, 2.4, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_r, 36, col_b, 2.8, true)
+			_draw_shield_icon(center + Vector2(0.0, -6.0), r * 0.40, col_b)
 			short_lbl = ("%.0fs" % ceilf(act_b)) if act_b > 0.05 else (("%ds" % int(ceilf(cd_b))) if cd_b > 0.05 else "KHIÊN")
 		elif act == "energy_recover":
 			var cd_r: float = float(pad_owner._hero_recover_cd)
-			var green_r := Color(0.28, 0.96, 0.52, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.93, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_r / 10.0, 0.0, 1.0), 36, green_r, 3.2, true)
-			_draw_ki_icon(center + Vector2(0.0, -7.0), r * 0.36, green_r)
+			var green_r := Color(0.32, 0.98, 0.56, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_r / 10.0, 0.0, 1.0), 36, green_r, 2.8, true)
+			_draw_recover_icon(center + Vector2(0.0, -7.0), r * 0.40, green_r)
 			short_lbl = ("%ds" % int(ceilf(cd_r))) if cd_r > 0.05 else "HỒI 3S"
 		elif act == "pickup_items":
 			_draw_pickup_icon(center + Vector2(0.0, -6.0), r * 0.40, accent_col)
 
 		if font != null:
-			draw_string(font, Vector2(center.x - 30.0, center.y + r * 0.64), short_lbl, HORIZONTAL_ALIGNMENT_CENTER, 60.0, 10, Color(0.96, 0.99, 1.0, 0.95 * alpha_mul))
+			draw_string(font, Vector2(center.x - 30.0, center.y + r * 0.66), short_lbl, HORIZONTAL_ALIGNMENT_CENTER, 60.0, 10, Color(0.96, 0.99, 1.0, 0.95 * alpha_mul))
+
+	func _draw_kame_beam_icon(c: Vector2, s: float, col: Color, alpha_mul: float) -> void:
+		# Crisp transparent-background blue Kamehameha wave beam (origin orb + horizontal flaring blue energy stream + bright white core)
+		var orig := c + Vector2(-s * 0.72, 0.0)
+		var tip := c + Vector2(s * 0.88, 0.0)
+		var outer_beam := PackedVector2Array([
+			orig + Vector2(0.0, -s * 0.24),
+			tip + Vector2(-s * 0.14, -s * 0.46),
+			tip + Vector2(s * 0.08, 0.0),
+			tip + Vector2(-s * 0.14, s * 0.46),
+			orig + Vector2(0.0, s * 0.24),
+		])
+		draw_colored_polygon(outer_beam, Color(0.12, 0.58, 1.0, 0.72 * alpha_mul))
+		var core_beam := PackedVector2Array([
+			orig + Vector2(0.0, -s * 0.11),
+			tip + Vector2(-s * 0.10, -s * 0.20),
+			tip + Vector2(s * 0.05, 0.0),
+			tip + Vector2(-s * 0.10, s * 0.20),
+			orig + Vector2(0.0, s * 0.11),
+		])
+		draw_colored_polygon(core_beam, Color(0.84, 0.97, 1.0, 0.96 * alpha_mul))
+		draw_circle(orig, s * 0.30, Color(0.22, 0.76, 1.0, 0.85 * alpha_mul))
+		draw_circle(orig, s * 0.16, Color(1.0, 1.0, 1.0, 0.98 * alpha_mul))
+		draw_arc(orig, s * 0.42, -PI * 0.58, PI * 0.58, 14, col, 1.8, true)
+
+	func _draw_atomic_orbs_icon(c: Vector2, s: float, col: Color) -> void:
+		for off_v in [Vector2(-0.52, -0.22), Vector2(0.0, -0.40), Vector2(0.54, -0.10), Vector2(-0.18, 0.34), Vector2(0.42, 0.36)]:
+			var off: Vector2 = off_v as Vector2
+			var p: Vector2 = c + off * s
+			draw_circle(p, s * 0.19, Color(col.r, col.g, col.b, col.a * 0.55))
+			draw_circle(p, s * 0.10, Color(1.0, 1.0, 0.92, col.a))
+			draw_line(p - Vector2(s * 0.26, 0.0), p, Color(col.r, col.g, col.b, col.a * 0.85), 1.6, true)
+
+	func _draw_ssj_bolt_icon(c: Vector2, s: float, col: Color) -> void:
+		var bolt := PackedVector2Array([
+			c + Vector2(s * 0.14, -s * 0.72),
+			c + Vector2(-s * 0.38, s * 0.06),
+			c + Vector2(s * 0.02, s * 0.06),
+			c + Vector2(-s * 0.18, s * 0.74),
+			c + Vector2(s * 0.42, -s * 0.08),
+			c + Vector2(0.0, -s * 0.08),
+		])
+		draw_colored_polygon(bolt, col)
+
+	func _draw_flurry_kick_icon(c: Vector2, s: float, col: Color) -> void:
+		for i in range(3):
+			var off_y := (float(i) - 1.0) * s * 0.34
+			draw_arc(c + Vector2(-s * 0.18, off_y), s * 0.52, -PI * 0.35, PI * 0.30, 12, col, 2.2, true)
+		draw_line(c + Vector2(-s * 0.55, s * 0.36), c + Vector2(s * 0.55, -s * 0.36), Color(1.0, 0.96, 0.86, col.a), 2.4, true)
+
+	func _draw_shield_icon(c: Vector2, s: float, col: Color) -> void:
+		var pts := PackedVector2Array([
+			c + Vector2(0.0, -s * 0.76),
+			c + Vector2(s * 0.64, -s * 0.48),
+			c + Vector2(s * 0.56, s * 0.22),
+			c + Vector2(0.0, s * 0.76),
+			c + Vector2(-s * 0.56, s * 0.22),
+			c + Vector2(-s * 0.64, -s * 0.48),
+		])
+		draw_colored_polygon(pts, Color(col.r, col.g, col.b, col.a * 0.24))
+		draw_polyline(pts + PackedVector2Array([pts[0]]), col, 2.2, true)
+
+	func _draw_recover_icon(c: Vector2, s: float, col: Color) -> void:
+		draw_line(c + Vector2(0.0, -s * 0.56), c + Vector2(0.0, s * 0.56), col, 3.0, true)
+		draw_line(c + Vector2(-s * 0.56, 0.0), c + Vector2(s * 0.56, 0.0), col, 3.0, true)
+		draw_arc(c, s * 0.76, -PI * 0.82, -PI * 0.18, 12, Color(col.r, col.g, col.b, col.a * 0.75), 1.8, true)
 
 	func _draw_fist_icon(c: Vector2, s: float, col: Color) -> void:
 		# Stylized angled fist outline (inspired by primary green attack icon in image copy 8.png)

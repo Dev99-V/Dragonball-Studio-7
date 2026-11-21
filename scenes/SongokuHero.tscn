@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/SaiyanHeroFighter2D.gd" id="1_script"]
+[ext_resource type="SpriteFrames" path="res://assets/songoku/godot_bundle/godot/songoku.tres" id="2_frames"]
+
+[node name="SongokuHero" type="Node2D"]
+texture_filter = 1
+script = ExtResource("1_script")
+character_id = &"songoku"
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+centered = false
+offset = Vector2(-144, -248)

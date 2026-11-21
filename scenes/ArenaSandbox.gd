@@ -189,17 +189,23 @@ var combat_banner_label: Label = null
 var _combat_banner_timer_s: float = 0.0
 const COMBAT_BANNER_DURATION_S: float = 0.55
 
-const DEFAULT_HERO_ID: String = "songoku_hero_demo"
+const DEFAULT_HERO_ID: String = "songoku"
 
+var current_map_id: String = "rocky_plateau"
 var field_mode_enabled: bool = false
 var hud_ui_hidden: bool = false
 var hero_immortal_enabled: bool = false
+var hero_infinite_mana_enabled: bool = false
 var show_monster_ranges_enabled: bool = false
 var field_manager = null
 var _field_overlay_node: Node2D = null
+var _field_back_overlay_node: Node2D = null
 var mobile_pad = null
 var hero_avatar_panel: PanelContainer = null
 var hero_avatar_rect: TextureRect = null
+var hero_selector: OptionButton = null
+var boss_selector: OptionButton = null
+var infinite_mana_button: Button = null
 var pixel_perfect_button: Button = null
 var toggle_hero_button: Button = null
 var pad_settings_button: Button = null
@@ -207,6 +213,8 @@ var toggle_ui_button: Button = null
 var immortal_button: Button = null
 var monster_range_button: Button = null
 var boss_spawn_button: Button = null
+var _hero_selector_syncing: bool = false
+var _boss_selector_syncing: bool = false
 var _arena_theme: Theme = null
 
 @onready var background_sprite: Sprite2D = get_node_or_null("BackgroundLayer/BackgroundSprite")
@@ -341,6 +349,13 @@ func _ensure_field_manager() -> void:
 			if _field_overlay_node != null and is_instance_valid(_field_overlay_node):
 				_field_overlay_node.queue_redraw()
 		)
+	if _field_back_overlay_node == null or not is_instance_valid(_field_back_overlay_node):
+		_field_back_overlay_node = Node2D.new()
+		_field_back_overlay_node.name = "FieldBackOverlayLayer"
+		_field_back_overlay_node.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_field_back_overlay_node.z_index = Z_LAYER_HERO - 1
+		add_child(_field_back_overlay_node)
+		_field_back_overlay_node.draw.connect(_on_field_back_overlay_draw)
 	if _field_overlay_node == null or not is_instance_valid(_field_overlay_node):
 		_field_overlay_node = Node2D.new()
 		_field_overlay_node.name = "FieldOverlayLayer"
@@ -348,6 +363,13 @@ func _ensure_field_manager() -> void:
 		_field_overlay_node.z_index = 65
 		add_child(_field_overlay_node)
 		_field_overlay_node.draw.connect(_on_field_overlay_draw)
+
+
+func _on_field_back_overlay_draw() -> void:
+	if _field_back_overlay_node == null or not is_instance_valid(_field_back_overlay_node):
+		return
+	if field_mode_enabled and field_manager != null and field_manager.active and field_manager.has_method(&"draw_back_overlays"):
+		field_manager.draw_back_overlays(_field_back_overlay_node)
 
 
 func _on_field_overlay_draw() -> void:
@@ -520,6 +542,10 @@ func _step_songoku_teleport_midclip() -> void:
 					dest_y = clampf(tpos.y, fly_min_y, dest_y)
 					player_node.set("flight_state", "hovering")
 					player_node.set("hover_timer_s", 3.0)
+				else:
+					player_node.set("flight_state", "ground")
+					player_node.set("hover_timer_s", 0.0)
+					player_vy = 0.0
 				player_node.position = Vector2(dest_x, dest_y)
 				player_facing_left = tpos.x < dest_x
 				player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
@@ -551,6 +577,17 @@ func _step_songoku_teleport_midclip() -> void:
 			_spawn_ground_dust(player_node.position.x, max_y, 0.78)
 
 
+func is_player_grounded_for_recover() -> bool:
+	if player_node == null or not is_instance_valid(player_node):
+		return false
+	if _is_hero_songoku(player_node) and str(player_node.get("flight_state")) != "ground":
+		return false
+	if absf(player_vy) > 1.0:
+		return false
+	var support_y: float = get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+	return player_node.position.y >= support_y - 2.5
+
+
 func _sync_field_pad_state() -> void:
 	if mobile_pad == null or not is_instance_valid(mobile_pad) or field_manager == null:
 		return
@@ -568,7 +605,8 @@ func _sync_field_pad_state() -> void:
 			float(player_node.get("barrier_timer_s")),
 			float(player_node.get("barrier_cooldown_s")),
 			float(player_node.get("recover_cooldown_s")),
-			float(player_node.get("flurry_cooldown_s"))
+			float(player_node.get("flurry_cooldown_s")),
+			is_player_grounded_for_recover()
 		)
 
 
@@ -638,9 +676,12 @@ func _on_touch_action(action_name: String) -> void:
 			_request_player_action("barrier_cast")
 		_sync_field_pad_state()
 	elif action_name == "energy_recover":
+		if not is_player_grounded_for_recover():
+			_sync_field_pad_state()
+			return
 		if field_mode_enabled and field_manager != null and field_manager.active:
 			field_manager.request_player_energy_recover()
-		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_energy_recover")):
+		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_energy_recover", true)):
 			_request_player_action("energy_recover")
 		_sync_field_pad_state()
 	elif action_name == "flurry_kick":
@@ -864,81 +905,124 @@ func _apply_hud_safe_area() -> void:
 	var ins_l := float(insets.get("left", 0.0))
 	var ins_t := float(insets.get("top", 0.0))
 	var ins_r := float(insets.get("right", 0.0))
-	var vis := _get_visible_logic_size()
-	var compact_top := vis.x < 1260.0
 	if hud_label != null:
 		hud_label.offset_left = 20.0 + ins_l
 		hud_label.offset_top = 14.0 + ins_t
+
+	# Left cluster: Đăng xuất + Khu + Dropdown chọn tướng + Avatar (Owner v10.6 HUD spec)
+	if logout_button != null and is_instance_valid(logout_button):
+		logout_button.anchor_left = 0.0
+		logout_button.anchor_right = 0.0
+		logout_button.offset_left = 20.0 + ins_l
+		logout_button.offset_right = 132.0 + ins_l
+		logout_button.offset_top = 58.0 + ins_t
+		logout_button.offset_bottom = 96.0 + ins_t
+	if zone_selector != null and is_instance_valid(zone_selector):
+		zone_selector.anchor_left = 0.0
+		zone_selector.anchor_right = 0.0
+		zone_selector.offset_left = 138.0 + ins_l
+		zone_selector.offset_right = 232.0 + ins_l
+		zone_selector.offset_top = 58.0 + ins_t
+		zone_selector.offset_bottom = 96.0 + ins_t
+	if hero_selector != null and is_instance_valid(hero_selector):
+		hero_selector.anchor_left = 0.0
+		hero_selector.anchor_right = 0.0
+		hero_selector.offset_left = 238.0 + ins_l
+		hero_selector.offset_right = 432.0 + ins_l
+		hero_selector.offset_top = 58.0 + ins_t
+		hero_selector.offset_bottom = 96.0 + ins_t
+	if hero_avatar_panel != null and is_instance_valid(hero_avatar_panel):
+		hero_avatar_panel.anchor_left = 0.0
+		hero_avatar_panel.anchor_right = 0.0
+		hero_avatar_panel.offset_left = 20.0 + ins_l
+		hero_avatar_panel.offset_right = 88.0 + ins_l
+		hero_avatar_panel.offset_top = 104.0 + ins_t
+		hero_avatar_panel.offset_bottom = 196.0 + ins_t
+
+	# Right cluster (Column R1: Gọi Shenron + Ngọc + Phím/Ẩn UI; Column R2: Vô hạn mana + Bất tử + Tướng + Dropdown Gọi Boss)
 	if summon_button != null:
-		summon_button.offset_left = -320.0 - ins_r
-		summon_button.offset_right = -40.0 - ins_r
-		summon_button.offset_top = 78.0 + ins_t
-		summon_button.offset_bottom = 134.0 + ins_t
+		summon_button.anchor_left = 1.0
+		summon_button.anchor_right = 1.0
+		summon_button.offset_left = -268.0 - ins_r
+		summon_button.offset_right = -16.0 - ins_r
+		summon_button.offset_top = 58.0 + ins_t
+		summon_button.offset_bottom = 102.0 + ins_t
 	if item_toggle_button != null:
-		item_toggle_button.offset_left = -320.0 - ins_r
-		item_toggle_button.offset_right = -184.0 - ins_r
-		item_toggle_button.offset_top = 142.0 + ins_t
-		item_toggle_button.offset_bottom = 184.0 + ins_t
+		item_toggle_button.anchor_left = 1.0
+		item_toggle_button.anchor_right = 1.0
+		item_toggle_button.offset_left = -268.0 - ins_r
+		item_toggle_button.offset_right = -146.0 - ins_r
+		item_toggle_button.offset_top = 108.0 + ins_t
+		item_toggle_button.offset_bottom = 146.0 + ins_t
 	if item_drop_test_button != null:
-		item_drop_test_button.offset_left = -178.0 - ins_r
-		item_drop_test_button.offset_right = -40.0 - ins_r
-		item_drop_test_button.offset_top = 142.0 + ins_t
-		item_drop_test_button.offset_bottom = 184.0 + ins_t
+		item_drop_test_button.anchor_left = 1.0
+		item_drop_test_button.anchor_right = 1.0
+		item_drop_test_button.offset_left = -140.0 - ins_r
+		item_drop_test_button.offset_right = -16.0 - ins_r
+		item_drop_test_button.offset_top = 108.0 + ins_t
+		item_drop_test_button.offset_bottom = 146.0 + ins_t
 	if item_pickup_button != null:
-		item_pickup_button.offset_left = -320.0 - ins_r
-		item_pickup_button.offset_right = -40.0 - ins_r
-		item_pickup_button.offset_top = 190.0 + ins_t
-		item_pickup_button.offset_bottom = 232.0 + ins_t
-	if wish_panel != null:
-		wish_panel.offset_left = -500.0 - ins_r
-		wish_panel.offset_right = -40.0 - ins_r
-		wish_panel.offset_top = (124.0 + ins_t) if hud_ui_hidden else (244.0 + ins_t)
-	var row1_t := 68.0 + ins_t
-	var row1_b := 112.0 + ins_t
-	var row2_t := (120.0 + ins_t) if compact_top else row1_t
-	var row2_b := (164.0 + ins_t) if compact_top else row1_b
-	if pixel_perfect_button != null:
-		pixel_perfect_button.offset_left = 20.0 + ins_l
-		pixel_perfect_button.offset_right = 216.0 + ins_l
-		pixel_perfect_button.offset_top = row1_t
-		pixel_perfect_button.offset_bottom = row1_b
-	if ruler_button != null:
-		ruler_button.offset_left = 224.0 + ins_l
-		ruler_button.offset_right = 376.0 + ins_l
-		ruler_button.offset_top = row1_t
-		ruler_button.offset_bottom = row1_b
-	if toggle_hero_button != null:
-		toggle_hero_button.offset_left = 384.0 + ins_l
-		toggle_hero_button.offset_right = 632.0 + ins_l
-		toggle_hero_button.offset_top = row1_t
-		toggle_hero_button.offset_bottom = row1_b
+		item_pickup_button.anchor_left = 1.0
+		item_pickup_button.anchor_right = 1.0
+		item_pickup_button.offset_left = -268.0 - ins_r
+		item_pickup_button.offset_right = -16.0 - ins_r
+		item_pickup_button.offset_top = 152.0 + ins_t
+		item_pickup_button.offset_bottom = 190.0 + ins_t
 	if pad_settings_button != null:
-		pad_settings_button.offset_left = (20.0 + ins_l) if compact_top else (640.0 + ins_l)
-		pad_settings_button.offset_right = (148.0 + ins_l) if compact_top else (768.0 + ins_l)
-		pad_settings_button.offset_top = row2_t
-		pad_settings_button.offset_bottom = row2_b
+		pad_settings_button.anchor_left = 1.0
+		pad_settings_button.anchor_right = 1.0
+		pad_settings_button.offset_left = -268.0 - ins_r
+		pad_settings_button.offset_right = -146.0 - ins_r
+		pad_settings_button.offset_top = 196.0 + ins_t
+		pad_settings_button.offset_bottom = 234.0 + ins_t
 	if toggle_ui_button != null:
-		toggle_ui_button.offset_left = (156.0 + ins_l) if compact_top else (776.0 + ins_l)
-		toggle_ui_button.offset_right = (288.0 + ins_l) if compact_top else (908.0 + ins_l)
-		toggle_ui_button.offset_top = row2_t
-		toggle_ui_button.offset_bottom = row2_b
-	var row2_only_t := 118.0 + ins_t
-	var row2_only_b := 162.0 + ins_t
+		toggle_ui_button.anchor_left = 1.0
+		toggle_ui_button.anchor_right = 1.0
+		toggle_ui_button.offset_left = -140.0 - ins_r
+		toggle_ui_button.offset_right = -16.0 - ins_r
+		toggle_ui_button.offset_top = 196.0 + ins_t
+		toggle_ui_button.offset_bottom = 234.0 + ins_t
+
+	# Column R2 (immediately left of Gọi Shenron cluster, right-anchored)
+	if infinite_mana_button != null:
+		infinite_mana_button.anchor_left = 1.0
+		infinite_mana_button.anchor_right = 1.0
+		infinite_mana_button.offset_left = -504.0 - ins_r
+		infinite_mana_button.offset_right = -276.0 - ins_r
+		infinite_mana_button.offset_top = 58.0 + ins_t
+		infinite_mana_button.offset_bottom = 102.0 + ins_t
 	if immortal_button != null:
-		immortal_button.offset_left = (296.0 + ins_l) if compact_top else (20.0 + ins_l)
-		immortal_button.offset_right = (464.0 + ins_l) if compact_top else (196.0 + ins_l)
-		immortal_button.offset_top = row2_only_t
-		immortal_button.offset_bottom = row2_only_b
-	if monster_range_button != null:
-		monster_range_button.offset_left = (472.0 + ins_l) if compact_top else (204.0 + ins_l)
-		monster_range_button.offset_right = (676.0 + ins_l) if compact_top else (408.0 + ins_l)
-		monster_range_button.offset_top = row2_only_t
-		monster_range_button.offset_bottom = row2_only_b
+		immortal_button.anchor_left = 1.0
+		immortal_button.anchor_right = 1.0
+		immortal_button.offset_left = -504.0 - ins_r
+		immortal_button.offset_right = -276.0 - ins_r
+		immortal_button.offset_top = 108.0 + ins_t
+		immortal_button.offset_bottom = 146.0 + ins_t
+	if toggle_hero_button != null:
+		toggle_hero_button.anchor_left = 1.0
+		toggle_hero_button.anchor_right = 1.0
+		toggle_hero_button.offset_left = -504.0 - ins_r
+		toggle_hero_button.offset_right = -276.0 - ins_r
+		toggle_hero_button.offset_top = 152.0 + ins_t
+		toggle_hero_button.offset_bottom = 190.0 + ins_t
+	if boss_selector != null:
+		boss_selector.anchor_left = 1.0
+		boss_selector.anchor_right = 1.0
+		boss_selector.offset_left = -504.0 - ins_r
+		boss_selector.offset_right = -388.0 - ins_r
+		boss_selector.offset_top = 196.0 + ins_t
+		boss_selector.offset_bottom = 234.0 + ins_t
 	if boss_spawn_button != null:
-		boss_spawn_button.offset_left = (20.0 + ins_l) if compact_top else (416.0 + ins_l)
-		boss_spawn_button.offset_right = (236.0 + ins_l) if compact_top else (632.0 + ins_l)
-		boss_spawn_button.offset_top = (row2_only_b + 6.0) if compact_top else row2_only_t
-		boss_spawn_button.offset_bottom = (row2_only_b + 50.0) if compact_top else row2_only_b
+		boss_spawn_button.anchor_left = 1.0
+		boss_spawn_button.anchor_right = 1.0
+		boss_spawn_button.offset_left = -382.0 - ins_r
+		boss_spawn_button.offset_right = -276.0 - ins_r
+		boss_spawn_button.offset_top = 196.0 + ins_t
+		boss_spawn_button.offset_bottom = 234.0 + ins_t
+	if wish_panel != null:
+		wish_panel.offset_left = -504.0 - ins_r
+		wish_panel.offset_right = -16.0 - ins_r
+		wish_panel.offset_top = (124.0 + ins_t) if hud_ui_hidden else (244.0 + ins_t)
 	if ruler_modal != null and is_instance_valid(ruler_modal):
 		ruler_modal.apply_safe_area(insets)
 	if mobile_pad != null and is_instance_valid(mobile_pad):
@@ -949,18 +1033,9 @@ func _setup_ruler_control() -> void:
 	var hud_layer := get_node_or_null("HUDLayer")
 	if hud_layer == null:
 		return
-	ruler_button = Button.new()
-	ruler_button.name = "RulerModalButton"
-	ruler_button.text = "📏 Thước PX"
-	ruler_button.offset_left = 300.0
-	ruler_button.offset_right = 446.0
-	ruler_button.offset_top = 60.0
-	ruler_button.offset_bottom = 98.0
-	ruler_button.pressed.connect(func() -> void:
-		set_ruler_modal_visible(not ruler_modal_visible)
-	)
-	hud_layer.add_child(ruler_button)
-
+	# Pixel/Ruler/MonsterRange buttons intentionally removed from Sân Tập HUD (Owner v10.6 HUD spec);
+	# keep PixelRulerModal hidden for programmatic measurement APIs only.
+	ruler_button = null
 	ruler_modal = PixelRulerModalScript.new()
 	ruler_modal.name = "PixelRulerModal"
 	ruler_modal.visible = false
@@ -1006,36 +1081,119 @@ func _setup_ruler_control() -> void:
 	_apply_hud_safe_area()
 
 
+func get_playable_hero_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for e in roster_characters:
+		if not (e is Dictionary):
+			continue
+		var cid := str(e.get("character_id", ""))
+		var role := str(e.get("role", e.get("category", ""))).to_lower()
+		if role == "hero" or cid == DEFAULT_HERO_ID:
+			out.append(e)
+	if out.is_empty():
+		var fallback := _find_character_entry(DEFAULT_HERO_ID)
+		if not fallback.is_empty():
+			out.append(fallback)
+	return out
+
+
+func get_available_boss_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	var drum_entry := _find_character_entry("drum")
+	if not drum_entry.is_empty():
+		out.append(drum_entry)
+		seen["drum"] = true
+	for e in roster_characters:
+		if not (e is Dictionary):
+			continue
+		var cid := str(e.get("character_id", ""))
+		if seen.has(cid):
+			continue
+		var role := str(e.get("role", e.get("category", ""))).to_lower()
+		if role == "boss":
+			out.append(e)
+			seen[cid] = true
+	return out
+
+
+func _refresh_hero_selector() -> void:
+	if hero_selector == null or not is_instance_valid(hero_selector):
+		return
+	_hero_selector_syncing = true
+	hero_selector.clear()
+	var heroes := get_playable_hero_entries()
+	var sel_idx := 0
+	for i in range(heroes.size()):
+		var h: Dictionary = heroes[i]
+		var cid := str(h.get("character_id", ""))
+		var lbl := str(h.get("display_name", cid))
+		hero_selector.add_item(lbl, i)
+		hero_selector.set_item_metadata(i, cid)
+		if cid == active_character_id:
+			sel_idx = i
+	if heroes.size() == 1:
+		sel_idx = 0
+		var sole_cid := str(heroes[0].get("character_id", ""))
+		if not sole_cid.is_empty() and active_character_id != sole_cid and field_mode_enabled:
+			select_character(sole_cid)
+	if hero_selector.item_count > 0:
+		hero_selector.select(sel_idx)
+	_hero_selector_syncing = false
+
+
+func _refresh_boss_selector() -> void:
+	if boss_selector == null or not is_instance_valid(boss_selector):
+		return
+	_boss_selector_syncing = true
+	boss_selector.clear()
+	var bosses := get_available_boss_entries()
+	for i in range(bosses.size()):
+		var b: Dictionary = bosses[i]
+		var cid := str(b.get("character_id", ""))
+		var lbl := str(b.get("display_name", cid.capitalize()))
+		if cid == "drum":
+			lbl = "Boss Drum"
+		boss_selector.add_item(lbl, i)
+		boss_selector.set_item_metadata(i, cid)
+	if boss_selector.item_count > 0:
+		boss_selector.select(0)
+	_boss_selector_syncing = false
+
+
 func _setup_field_hud_controls() -> void:
 	var hud_layer := get_node_or_null("HUDLayer")
 	if hud_layer == null:
 		return
-	if DisplayServer.get_name() != "headless":
-		pixel_perfect_button = Button.new()
-		pixel_perfect_button.name = "PixelPerfectButton"
-		pixel_perfect_button.text = "Pixel: Perfect" if pixel_perfect_enabled else "Pixel: Fractional"
-		pixel_perfect_button.pressed.connect(func() -> void:
-			set_pixel_perfect_enabled(not pixel_perfect_enabled)
-		)
-		hud_layer.add_child(pixel_perfect_button)
+	# Pixel, Thước, Tâm quái removed from Sân Tập HUD (Owner v10.6 HUD spec)
+	pixel_perfect_button = null
+	monster_range_button = null
 
-		toggle_hero_button = Button.new()
-		toggle_hero_button.name = "ToggleHeroButton"
-		toggle_hero_button.text = "👤 Hiện Tướng (Son Goku)"
-		toggle_hero_button.pressed.connect(func() -> void:
-			var spawned_now: bool = field_manager != null and bool(field_manager.player_spawned)
-			set_field_hero_visible(not spawned_now)
-		)
-		hud_layer.add_child(toggle_hero_button)
+	# Left cluster: Đăng xuất + Khu + Dropdown chọn tướng + Avatar
+	_setup_alpha_session_hud()
 
+	if hero_selector == null:
+		hero_selector = OptionButton.new()
+		hero_selector.name = "HeroSelectorDropdown"
+		hero_selector.tooltip_text = "Chọn tướng Sân Tập"
+		hero_selector.item_selected.connect(func(idx: int) -> void:
+			if _hero_selector_syncing:
+				return
+			var picked_cid := str(hero_selector.get_item_metadata(idx))
+			if not picked_cid.is_empty():
+				if field_mode_enabled:
+					set_field_hero_visible(true, picked_cid)
+				else:
+					select_character(picked_cid)
+		)
+		hud_layer.add_child(hero_selector)
+	_refresh_hero_selector()
+
+	if hero_avatar_panel == null:
 		hero_avatar_panel = PanelContainer.new()
 		hero_avatar_panel.name = "HeroAvatarPanel"
 		hero_avatar_panel.anchor_left = 0.0
 		hero_avatar_panel.anchor_top = 0.0
-		hero_avatar_panel.offset_left = 18.0
-		hero_avatar_panel.offset_top = 104.0
-		hero_avatar_panel.offset_right = 86.0
-		hero_avatar_panel.offset_bottom = 196.0
 		hero_avatar_panel.visible = false
 		hero_avatar_rect = TextureRect.new()
 		hero_avatar_rect.name = "HeroAvatarRect"
@@ -1045,53 +1203,90 @@ func _setup_field_hud_controls() -> void:
 		hero_avatar_panel.add_child(hero_avatar_rect)
 		hud_layer.add_child(hero_avatar_panel)
 
-		pad_settings_button = Button.new()
-		pad_settings_button.name = "PadSettingsButton"
-		pad_settings_button.text = "⚙️ Phím"
-		pad_settings_button.pressed.connect(func() -> void:
-			if mobile_pad != null and is_instance_valid(mobile_pad):
-				mobile_pad.toggle_settings_modal()
-		)
-		hud_layer.add_child(pad_settings_button)
+	# Right cluster controls (next to Gọi Shenron)
+	infinite_mana_button = Button.new()
+	infinite_mana_button.name = "InfiniteManaButton"
+	infinite_mana_button.pressed.connect(func() -> void:
+		set_infinite_mana_enabled(not hero_infinite_mana_enabled)
+	)
+	hud_layer.add_child(infinite_mana_button)
+	_sync_infinite_mana_button()
 
-		toggle_ui_button = Button.new()
-		toggle_ui_button.name = "ToggleUiButton"
-		toggle_ui_button.text = "👁️ Ẩn UI"
-		toggle_ui_button.pressed.connect(func() -> void:
-			set_hud_ui_hidden(not hud_ui_hidden)
-		)
-		hud_layer.add_child(toggle_ui_button)
+	toggle_hero_button = Button.new()
+	toggle_hero_button.name = "ToggleHeroButton"
+	toggle_hero_button.text = "👤 Hiện Tướng (Son Goku)"
+	toggle_hero_button.pressed.connect(func() -> void:
+		var spawned_now: bool = field_manager != null and bool(field_manager.player_spawned)
+		set_field_hero_visible(not spawned_now)
+	)
+	hud_layer.add_child(toggle_hero_button)
 
-		immortal_button = Button.new()
-		immortal_button.name = "ImmortalModeButton"
-		immortal_button.pressed.connect(func() -> void:
-			set_hero_immortal(not hero_immortal_enabled)
-		)
-		hud_layer.add_child(immortal_button)
-		_sync_immortal_button()
+	pad_settings_button = Button.new()
+	pad_settings_button.name = "PadSettingsButton"
+	pad_settings_button.text = "⚙️ Phím"
+	pad_settings_button.pressed.connect(func() -> void:
+		if mobile_pad != null and is_instance_valid(mobile_pad):
+			mobile_pad.toggle_settings_modal()
+	)
+	hud_layer.add_child(pad_settings_button)
 
-		monster_range_button = Button.new()
-		monster_range_button.name = "MonsterRangeButton"
-		monster_range_button.pressed.connect(func() -> void:
-			set_show_monster_ranges(not show_monster_ranges_enabled)
-		)
-		hud_layer.add_child(monster_range_button)
-		_sync_monster_range_button()
+	toggle_ui_button = Button.new()
+	toggle_ui_button.name = "ToggleUiButton"
+	toggle_ui_button.text = "👁️ Ẩn UI"
+	toggle_ui_button.pressed.connect(func() -> void:
+		set_hud_ui_hidden(not hud_ui_hidden)
+	)
+	hud_layer.add_child(toggle_ui_button)
 
-		boss_spawn_button = Button.new()
-		boss_spawn_button.name = "SpawnBossButton"
-		boss_spawn_button.text = "⚡ Gọi Boss Drum"
-		boss_spawn_button.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35, 1.0))
-		boss_spawn_button.pressed.connect(func() -> void:
-			spawn_boss_drum_now()
-		)
-		hud_layer.add_child(boss_spawn_button)
+	immortal_button = Button.new()
+	immortal_button.name = "ImmortalModeButton"
+	immortal_button.pressed.connect(func() -> void:
+		set_hero_immortal(not hero_immortal_enabled)
+	)
+	hud_layer.add_child(immortal_button)
+	_sync_immortal_button()
+
+	boss_selector = OptionButton.new()
+	boss_selector.name = "BossSelectorDropdown"
+	boss_selector.tooltip_text = "Chọn Boss để triệu hồi tại map hiện tại"
+	hud_layer.add_child(boss_selector)
+	_refresh_boss_selector()
+
+	boss_spawn_button = Button.new()
+	boss_spawn_button.name = "SpawnBossButton"
+	boss_spawn_button.text = "⚡ Gọi Boss"
+	boss_spawn_button.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35, 1.0))
+	boss_spawn_button.pressed.connect(func() -> void:
+		spawn_selected_boss_now()
+	)
+	hud_layer.add_child(boss_spawn_button)
 
 	if _arena_theme != null:
 		for c in hud_layer.get_children():
 			if c is Control and c != mobile_pad:
 				(c as Control).theme = _arena_theme
 	_apply_hud_safe_area()
+
+
+func _sync_infinite_mana_button() -> void:
+	if infinite_mana_button == null or not is_instance_valid(infinite_mana_button):
+		return
+	if hero_infinite_mana_enabled:
+		infinite_mana_button.text = "♾️ Vô hạn mana: BẬT"
+		infinite_mana_button.add_theme_color_override("font_color", Color(0.28, 0.94, 1.0, 1.0))
+	else:
+		infinite_mana_button.text = "♾️ Vô hạn mana: TẮT"
+		infinite_mana_button.remove_theme_color_override("font_color")
+
+
+func set_infinite_mana_enabled(enabled: bool) -> void:
+	hero_infinite_mana_enabled = enabled
+	_ensure_field_manager()
+	field_manager.set_player_infinite_mana(enabled)
+	_sync_infinite_mana_button()
+	_sync_field_pad_state()
+	_update_hud()
+	queue_redraw()
 
 
 func _sync_immortal_button() -> void:
@@ -1135,23 +1330,42 @@ func set_show_monster_ranges(enabled: bool) -> void:
 	queue_redraw()
 
 
-func spawn_boss_drum_now() -> Dictionary:
+func set_sandbox_map_id(map_id: String, map_stage_override: Dictionary = {}) -> void:
+	current_map_id = map_id.strip_edges()
+	if current_map_id.is_empty():
+		current_map_id = "rocky_plateau"
+	if not map_stage_override.is_empty():
+		stage_config = map_stage_override.duplicate(true)
+	_update_hud()
+	queue_redraw()
+
+
+func spawn_selected_boss_now(boss_cid: String = "") -> Dictionary:
+	var cid := boss_cid.strip_edges()
+	if cid.is_empty() and boss_selector != null and is_instance_valid(boss_selector) and boss_selector.selected >= 0:
+		cid = str(boss_selector.get_item_metadata(boss_selector.selected))
+	if cid.is_empty():
+		cid = "drum"
 	if not field_mode_enabled:
 		enable_field_mode(true, true)
 	elif field_manager != null and (not field_manager.player_spawned or player_node == null):
 		set_field_hero_visible(true)
 	if field_manager == null:
 		return {}
-	var b := field_manager.spawn_boss_drum() as Dictionary
+	var b := field_manager.spawn_boss(cid) as Dictionary
 	_update_hud()
 	queue_redraw()
 	return b
 
 
+func spawn_boss_drum_now() -> Dictionary:
+	return spawn_selected_boss_now("drum")
+
+
 func set_hud_ui_hidden(hidden: bool) -> void:
 	hud_ui_hidden = hidden
 	var vis_flag := not hidden
-	for n in [hud_label, pixel_perfect_button, ruler_button, pad_settings_button, immortal_button, monster_range_button, boss_spawn_button, summon_button, item_toggle_button, item_drop_test_button, item_pickup_button]:
+	for n in [hud_label, pad_settings_button, infinite_mana_button, immortal_button, toggle_hero_button, boss_selector, boss_spawn_button, summon_button, item_toggle_button, item_drop_test_button, item_pickup_button]:
 		if n != null and is_instance_valid(n):
 			n.visible = vis_flag
 	if toggle_ui_button != null:
@@ -1345,15 +1559,19 @@ func _setup_alpha_session_hud() -> void:
 		for z in range(20):
 			zone_selector.add_item("Khu %d" % z, z)
 		zone_selector.item_selected.connect(func(idx: int) -> void:
-			if _zone_selector_syncing or zone_sync == null:
+			if _zone_selector_syncing:
 				return
-			zone_sync.request_zone_switch(zone_sync.current_map_id, idx)
+			if zone_sync != null and alpha_session_active:
+				zone_sync.request_zone_switch(zone_sync.current_map_id, idx)
+			else:
+				_update_hud()
 		)
 		hud_layer.add_child(zone_selector)
 	if zone_sync != null and zone_selector != null:
 		_zone_selector_syncing = true
 		zone_selector.select(clampi(zone_sync.current_zone_id, 0, 19))
 		_zone_selector_syncing = false
+	_apply_hud_safe_area()
 
 
 func _on_zone_snapshot_applied(_tick: int, _payload: Dictionary) -> void:
@@ -1405,7 +1623,7 @@ func step_alpha_network(delta: float, move_dir: int = 0) -> void:
 	if _net_intent_accum_s >= 0.05 or cur_act != _last_sent_action:
 		_net_intent_accum_s = 0.0
 		_last_sent_action = cur_act
-		zone_sync.send_player_intent(player_node.position, move_dir, cur_act, player_node.scale.x < 0.0)
+		zone_sync.send_player_intent(player_node.position, move_dir, cur_act, player_node.scale.x < 0.0, {"character_id": active_character_id})
 
 
 func set_ruler_modal_visible(visible_flag: bool) -> void:
@@ -3263,7 +3481,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 		player_node.set("flight_state", "ground")
 		player_node.set("hover_timer_s", 0.0)
 		player_vy = 0.0
-		var rec_gy := _ground_y_at(player_node.position.x)
+		var rec_gy := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
 		if player_node.position.y < rec_gy:
 			player_node.position.y = rec_gy
 		move_dir = 0
@@ -3428,6 +3646,10 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 			pass
 		else:
 			player_node.position.y = clampf(player_node.position.y + _flight_vel.y * delta, fly_min_y, max_fly_y)
+			if is_goku and player_node.position.y >= max_fly_y - 1.5 and (_flight_vel.y > 15.0 or eff_fly_dir_y > 0 or holding_down):
+				player_node.set("flight_state", "ground")
+				player_node.set("hover_timer_s", 0.0)
+				is_flying = false
 		player_vy = 0.0
 	elif is_stationary:
 		player_vy = 0.0
@@ -3740,7 +3962,7 @@ func _is_point_over_hud_controls(screen_pos: Vector2) -> bool:
 		return true
 	if mobile_pad != null and is_instance_valid(mobile_pad) and bool(mobile_pad.call("is_screen_point_over_pad", screen_pos)):
 		return true
-	for ctrl in [summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, pixel_perfect_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, monster_range_button, boss_spawn_button]:
+	for ctrl in [logout_button, zone_selector, hero_selector, summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, infinite_mana_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, boss_selector, boss_spawn_button]:
 		if ctrl != null and is_instance_valid(ctrl) and (ctrl as Control).visible:
 			if (ctrl as Control).get_global_rect().has_point(screen_pos):
 				return true
@@ -3899,6 +4121,9 @@ func _draw() -> void:
 			if is_instance_valid(item_n) and item_n.visible:
 				_draw_pixel_contact_shadow(item_n.position.x, item_n.position.y, 28.0, item_n.scale.x, true)
 
+	if _field_back_overlay_node != null and is_instance_valid(_field_back_overlay_node):
+		_field_back_overlay_node.visible = field_mode_enabled and field_manager != null and field_manager.active
+		_field_back_overlay_node.queue_redraw()
 	if _field_overlay_node != null and is_instance_valid(_field_overlay_node):
 		_field_overlay_node.visible = field_mode_enabled and field_manager != null and field_manager.active
 		_field_overlay_node.queue_redraw()

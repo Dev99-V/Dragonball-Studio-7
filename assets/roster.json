@@ -2623,7 +2623,407 @@
         "notes": "Floating Camera 70x74 via 1-pass direct Nearest from 20x24 source (13 colors, {0,255} alpha, 0 pockets/spill), idle=walk seamless hover phase continuity, flight_default_y=300 at 150 px/s, +X muzzle projectile_fx top_level, 3-bg filmstrips & localhost/Godot Web/Android APK Human Test approved.",
         "naturalness_verdict": "owner_approved"
       }
+    },
+    {
+      "character_id": "songoku",
+      "display_name": "Son Goku",
+      "faction": "saiyan_heroes",
+      "combat_role": "hero",
+      "role_label": "Playable Hero — Son Goku (Base / SSJ1 · 7-Hit Combo · Teleport · Flight · Barrier · Energy Recover · Flurry Kick · Atomic Blast · Kamehameha)",
+      "tags": [
+        "hero",
+        "songoku",
+        "saiyan",
+        "ssj1",
+        "playable",
+        "pixel_art",
+        "60hz",
+        "combined_1layer"
+      ],
+      "status": "finalized_owner_approved",
+      "atlas_stage": "finalized_owner_approved",
+      "owner_animation_approval": {
+        "status": "owner_approved",
+        "workflow_id": "PIPE-022",
+        "revision": "phase2-v10.6-final",
+        "release_version": "0.18.0",
+        "approved_at": "2026-11-21T08:36:13.899612+00:00",
+        "owner_message": "ok giúp anh chốt toàn bộ hoạt ảnh hiện tại của Son Goku (Đợt 1 v10.6 · 34 Clips làm đúng theo qui trình dọn dẹp các file thừa kiểm tra apk, ipa, xem đồng bộ chưa có file rác dư thừa nặng bundle không sau đó push và chay cicd update version để sang nhân vật tiếp theo",
+        "approval_file": "assets/songoku/owner_approval.json",
+        "atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0"
+      },
+      "canonical_identity": {
+        "path": "assets/songoku/source/raw_frames/idle_base_00.png",
+        "sha256": "427bd1ee3086e90b1f1f36446bf7b41de1f90c663a0116411a0fc7b192d97874",
+        "base_approved_lock": "assets/songoku/base_approved_lock.json"
+      },
+      "facing_contract": {
+        "camera_view": "side_view_2d_three_quarter",
+        "default_atlas_facing": "right(+X)",
+        "left_facing_rule": "Instant horizontal flip with locked foot stance_mid around anchor_x=144, boot_y=247.",
+        "locomotion_vector_rule": "Base walk 200px/s, SSJ1 Peace walk_ssj 200px/s, Combat Move continuous dash (back 400px/s #0/#1, fwd 500px/s #3/#2), SSJ1 Flight 400px/s."
+      },
+      "map_sync_metrics": {
+        "canvas_size_px": [
+          288,
+          288
+        ],
+        "foot_anchor_px": [
+          144,
+          248
+        ],
+        "body_only_bbox_px": {
+          "x": 106,
+          "y": 123,
+          "w": 70,
+          "h": 125
+        },
+        "full_fx_bbox_px": {
+          "x": 16,
+          "y": 42,
+          "w": 258,
+          "h": 222
+        },
+        "reference_ppu_64": 64,
+        "world_size_at_64ppu_m": {
+          "body_w_m": 1.094,
+          "body_h_m": 1.953,
+          "aura_w_m": 4.031,
+          "aura_h_m": 3.469
+        },
+        "tile_32px_span": {
+          "body_tiles_w": 2.1875,
+          "body_tiles_h": 3.9062,
+          "full_fx_tiles_w": 8.0625,
+          "full_fx_tiles_h": 6.9375
+        }
+      },
+      "pixel_sharpness_metrics": {
+        "texel_scale_ratio": "Native 1px gameplay, Nearest, whole-pose only (125px height)",
+        "edge_acutance_sobel": 547.791,
+        "alpha_hardness_pct": 100.0,
+        "visible_alpha_hardness_pct": 100.0,
+        "opaque_key_px": 0,
+        "enclosed_key_pockets": 0,
+        "outer_ring_spill_fraction": 0.0,
+        "reference_note": "Combined 1-Layer 4090x4090 1-page atlas (34 clips, 196 frames, 60Hz, stance_mid locked) + independent skills FX atlas (14 clips, 53 frames, 1 page)."
+      },
+      "present_clips": [
+        "idle",
+        "walk",
+        "transform_ssj",
+        "detransform_base",
+        "idle_ssj_aura",
+        "combat_enter",
+        "idle_combat",
+        "walk_ssj",
+        "combat_move",
+        "jump",
+        "hit",
+        "ko",
+        "attack_light",
+        "attack_2",
+        "attack_3",
+        "attack_4",
+        "attack_5",
+        "attack_6",
+        "attack_7",
+        "teleport",
+        "teleport_dash_ground",
+        "teleport_dash_air",
+        "fly_prep",
+        "fly_aura",
+        "barrier_cast",
+        "energy_recover",
+        "flurry_kick",
+        "atomic_ground",
+        "atomic_air_down",
+        "kame_ground_horiz",
+        "kame_ground_up",
+        "kame_air_horiz",
+        "kame_air_down",
+        "atomic_ground_up"
+      ],
+      "effect_clips": [],
+      "missing_provisional_clips": [
+        "run",
+        "guard",
+        "attack_heavy",
+        "power_up",
+        "aura_loop",
+        "win"
+      ],
+      "not_applicable_clips": {
+        "run": "Son Goku uses walk (Base), walk_ssj (SSJ1 Peace), and combat_move continuous dash (Combat) instead of a separate run clip.",
+        "guard": "guard/win excluded project-wide per Owner rule.",
+        "win": "guard/win excluded project-wide per Owner rule.",
+        "attack_heavy": "Heavy strikes are covered by combo finishers attack_6 and attack_7.",
+        "power_up": "Power-up/transformation is covered by transform_ssj, detransform_base, and energy_recover.",
+        "aura_loop": "SSJ1 standing aura is covered by idle_ssj_aura and fly_aura; skill FX live in independent atlas assets/fx/songoku_skills_fx/.",
+        "turn": "Owner scoped new characters to instant horizontal flip without dedicated turn clip."
+      },
+      "render_contract": {
+        "body_clips": [
+          "idle",
+          "walk",
+          "transform_ssj",
+          "detransform_base",
+          "idle_ssj_aura",
+          "combat_enter",
+          "idle_combat",
+          "walk_ssj",
+          "combat_move",
+          "jump",
+          "hit",
+          "ko",
+          "attack_light",
+          "attack_2",
+          "attack_3",
+          "attack_4",
+          "attack_5",
+          "attack_6",
+          "attack_7",
+          "teleport",
+          "teleport_dash_ground",
+          "teleport_dash_air",
+          "fly_prep",
+          "fly_aura",
+          "barrier_cast",
+          "energy_recover",
+          "flurry_kick",
+          "atomic_ground",
+          "atomic_air_down",
+          "kame_ground_horiz",
+          "kame_ground_up",
+          "kame_air_horiz",
+          "kame_air_down",
+          "atomic_ground_up"
+        ],
+        "effect_clips": [],
+        "locomotion": {
+          "kind": "ground",
+          "clip": "walk",
+          "walk_cycle_order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "default_scale": 1.0,
+          "screen_speed_px_per_second": 200,
+          "speed_px_per_second": 200.0,
+          "combat_speed_px_per_second": 500.0,
+          "combat_move_hover_y_px": 0.0,
+          "flight_speed_px_per_second": 400.0,
+          "jump_height_px": 100.0,
+          "combat_move_hop_distance_px": 0.0,
+          "combat_back_speed_px_per_second": 400.0,
+          "combat_fwd_speed_px_per_second": 500.0
+        },
+        "game_states": {
+          "peace": {
+            "walk": true,
+            "walk_ssj": true,
+            "idle_ssj_aura": true,
+            "combat_move": false,
+            "idle_combat": false,
+            "attack": false
+          },
+          "combat": {
+            "walk": false,
+            "walk_ssj": false,
+            "idle_ssj_aura": false,
+            "combat_move": true,
+            "idle_combat": true,
+            "attack": true
+          }
+        },
+        "aura": {
+          "loop_clip": "idle_ssj_aura",
+          "charge_clip": "transform_ssj",
+          "independent_clock": true
+        },
+        "projectile": null,
+        "turning": {
+          "clip": null,
+          "flip_h": true
+        },
+        "hero_mechanics": {
+          "forms": [
+            "base",
+            "ssj1"
+          ],
+          "base_approved_locked": true,
+          "base_auto_transform_on_hit": true,
+          "base_can_attack": false,
+          "base_can_jump": false,
+          "base_can_fly": false,
+          "transform_invulnerable": true,
+          "player_armor_max": 100,
+          "player_armor_break_stun_sec": 3.0,
+          "armor_break_hit_triggers_once": true,
+          "melee_strike_range_px": 20.0,
+          "auto_battle_utility_ai": true,
+          "ssj_peace_idle": "idle_ssj_aura",
+          "ssj_combat_enter_bridge": "combat_enter",
+          "ssj_combat_idle": "idle_combat",
+          "combat_combo_sequence": [
+            "attack_light",
+            "attack_2",
+            "attack_3",
+            "attack_4",
+            "attack_5",
+            "attack_6",
+            "attack_7"
+          ],
+          "combo_frame_ms": 60,
+          "combo_link_gap_ms": 20,
+          "combo_per_frame_hit_impact": true,
+          "combo_light_damage_range": [
+            10,
+            20
+          ],
+          "combo_heavy_damage": 50,
+          "combo_attack6_penultimate_gold_slash_damage": 60,
+          "combo_persists_across_skills": true,
+          "combo_resets_only_on": [
+            "ko",
+            "map_switch"
+          ],
+          "teleport_stamina_max": 100,
+          "teleport_stamina_regen_per_sec": 5,
+          "teleport_static_cost": 75,
+          "teleport_moving_cost": 25,
+          "teleport_moving_distance_px": 100,
+          "flight_entry": "jump_and_hold_analog_up_ssj_only",
+          "flight_speed_px_per_sec": 400.0,
+          "flight_hover_timeout_sec": 3.0,
+          "flight_fast_drop_on_analog_down": true,
+          "combat_move_speed_px_per_sec": 500.0,
+          "combat_move_hover_y_px": 0.0,
+          "combat_move_loop_ms": {
+            "backward": [
+              0,
+              100,
+              1,
+              120
+            ],
+            "forward": [
+              3,
+              100,
+              2,
+              120
+            ]
+          },
+          "jump_frame_map": {
+            "ascend": [
+              0,
+              1,
+              2
+            ],
+            "apex_descend": [
+              3,
+              4,
+              5
+            ],
+            "universal_fall": 4
+          },
+          "combat_move_hop_distance_px": 0.0,
+          "flight_ki_max": 50.0,
+          "flight_ki_drain_per_sec": 5.0,
+          "flight_ki_regen_per_sec": 5.0,
+          "flight_ki_bar_color": "orange",
+          "flight_ki_bar_layout": "vertical_right_of_hp_mana_armor",
+          "combat_move_back_speed_px_per_sec": 400.0,
+          "combat_move_fwd_speed_px_per_sec": 500.0,
+          "combat_move_dash_no_aura": true,
+          "combat_move_mode": "continuous_dash_with_analog_brake",
+          "combat_move_frame_roles": {
+            "back_dash": 0,
+            "back_brake": 1,
+            "fwd_brake": 2,
+            "fwd_dash": 3
+          },
+          "combat_move_wind_streaks": true,
+          "flight_ki_bar_width_px": 9.0,
+          "barrier_duration_sec": 10.0,
+          "barrier_free_movement": true,
+          "energy_recover_duration_sec": 3.0,
+          "energy_recover_restores": [
+            "hp",
+            "armor",
+            "flight_ki"
+          ],
+          "flurry_kick_universal_stun": true,
+          "atomic_cooldown_sec": 12.0,
+          "atomic_speed_px_per_sec": 2500.0,
+          "atomic_bolt_count": 6,
+          "atomic_homing_ignore_terrain": true,
+          "kamehameha_mana_cost": 80.0,
+          "kamehameha_speed_px_per_sec": 3000.0,
+          "kamehameha_homing_ignore_terrain": true,
+          "hero_max_mana": 100.0,
+          "flurry_kick_speed_scale": 0.7,
+          "flurry_kick_lunge_speed_px_per_sec": 260.0,
+          "flurry_kick_range_fwd_px": 215.0,
+          "flurry_kick_range_v_px": 160.0,
+          "auto_ki_ground_switch_until_full": true,
+          "auto_flying_ranged_skill_priority": true,
+          "energy_recover_loop_frames": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "energy_recover_pad_slot": 10,
+          "kamehameha_seamless_tiled_beam": true,
+          "kamehameha_hold_sec": 0.0,
+          "kamehameha_fade_sec": 0.18,
+          "kamehameha_charge_speed_scale": 0.7,
+          "energy_recover_body_locked_ground": true,
+          "energy_recover_grounded_static_px": 0.0,
+          "energy_recover_dynamic_hair_cloth_flutter": true,
+          "kamehameha_ground_horiz_frames": 7,
+          "energy_recover_body_structure_locked": true,
+          "atomic_ground_frames": 8,
+          "atomic_bolts_per_hand": 3,
+          "kamehameha_charge_duration_sec": 2.0,
+          "kamehameha_blue_light_reflection": true,
+          "kamehameha_beam_scale_mul": 1.2
+        },
+        "facing_default": "right",
+        "skills_fx_tres": "res://assets/fx/songoku_skills_fx/songoku_skills_fx.tres"
+      },
+      "modes": {
+        "combined_1layer": {
+          "label": "Combined 1-Layer Son Goku Hero (Base + SSJ1 · 125px · 34 clips)",
+          "godot_prefab": "res://scenes/SongokuHero.tscn",
+          "bundle_id": "songoku"
+        }
+      },
+      "motion_quality": {
+        "status": "owner_approved",
+        "method": "imagegen_complete_body_keyframes",
+        "turn_method": "instant_flip",
+        "atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
+        "owner_approved": true,
+        "checks": {
+          "body_connections": true,
+          "whole_pose_sequence": true,
+          "perspective_turns": true,
+          "phase_timing": true,
+          "three_backgrounds": true
+        },
+        "unresolved_structural_failures": [],
+        "review_evidence": "assets/songoku/clips/review/filmstrip-30.png",
+        "notes": "Son Goku Hero Phase 1+2 v10.6 (34 body clips, 196 frames on 1-page 4090x4090 Nearest atlas + 14 independent FX clips on 1-page atlas): 24/24 Base Lock verified, stance_mid locked across grounded/charge/cast clips, slim #1/#4 kame_ground_up matched to #5, agu_06 bridge + agu_07 2-hands-to-sky matched to #2, atomic_ground [90x6,100,90]ms & atomic_ground_up [90x7,100]ms @ 60Hz, full HUD & combat verified.",
+        "naturalness_verdict": "owner_approved"
+      }
     }
   ],
-  "updated_at": "2026-11-16T15:27:40.485077+00:00"
+  "updated_at": "2026-11-21T08:36:13.899612+00:00"
 }

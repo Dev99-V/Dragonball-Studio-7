@@ -1234,6 +1234,36 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 ".svg": "image/svg+xml",
                 ".json": "application/json; charset=utf-8",
             }.get(ext, "application/octet-stream")
+            if rel_name == "index.service.worker.js":
+                # Localhost preview: immediately evict any previously cached Godot PWA index.pck/index.wasm so rebuilds show up live without manual cache clearing.
+                kill_sw = (
+                    "self.addEventListener('install', (e) => { self.skipWaiting(); });\n"
+                    "self.addEventListener('activate', (e) => {\n"
+                    "  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.map((k) => caches.delete(k)))).then(() => self.clients.claim()));\n"
+                    "});\n"
+                    "self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request, { cache: 'no-store' })); });\n"
+                ).encode("utf-8")
+                self._send_bytes(200, "application/javascript; charset=utf-8", kill_sw, cache_control="no-store, no-cache, must-revalidate", compress=False)
+                return
+            if rel_name == "index.html":
+                raw_html = target.read_text(encoding="utf-8", errors="replace")
+                pck_ver = str(get_godot_web_bootstrap_status().get("pck_version", "") or "")
+                # Disable PWA SW caching on localhost preview & bust index.pck/index.wasm cache with current pck_version.
+                raw_html = raw_html.replace('"serviceWorker":"index.service.worker.js"', '"serviceWorker":""')
+                if pck_ver:
+                    bust_script = (
+                        "<script>(function(){"
+                        "if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}"
+                        "if('caches' in window){caches.keys().then(function(ks){ks.forEach(function(k){if(k.indexOf('DR7-Studio')!==-1||k.indexOf('godot')!==-1)caches.delete(k);});}).catch(function(){});}"
+                        "var _origFetch=window.fetch;if(_origFetch){window.fetch=function(u,o){try{var s=typeof u==='string'?u:(u&&u.url?u.url:'');if(s&&(s.indexOf('index.pck')!==-1||s.indexOf('index.wasm')!==-1)&&s.indexOf('v=')===-1){var sep=s.indexOf('?')===-1?'?':'&';var nu=s+sep+'v=" + pck_ver + "';u=(typeof u==='string')?nu:new Request(nu,u);o=Object.assign({},o||{},{cache:'no-store'});}}catch(_e){}return _origFetch.call(this,u,o);};}"
+                        "})();</script>"
+                    )
+                    if "<head>" in raw_html:
+                        raw_html = raw_html.replace("<head>", "<head>" + bust_script, 1)
+                    else:
+                        raw_html = bust_script + raw_html
+                self._send_bytes(200, "text/html; charset=utf-8", raw_html.encode("utf-8"), cache_control="no-store, no-cache, must-revalidate", compress=True)
+                return
             self._send_file(ctype, target, cache_control="no-store, no-cache, must-revalidate", compress=ext in (".html", ".js", ".wasm", ".svg", ".json"))
             return
 
