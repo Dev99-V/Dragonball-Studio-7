@@ -100,10 +100,10 @@ func send_player_intent(pos: Vector2, dir_x: int, action: String = "", facing_le
 	return transport.send_packet(pkt)
 
 
-func send_combat_action(action_kind: String, target_id: String, target_kind: String, origin_pos: Vector2, facing_left: bool) -> Error:
+func send_combat_action(action_kind: String, target_id: String, target_kind: String, origin_pos: Vector2, facing_left: bool, damage: float = -1.0) -> Error:
 	if transport == null or not transport.is_connected_state or not session_authenticated or not zone_confirmed:
 		return ERR_UNAVAILABLE
-	return transport.send_packet({
+	var pkt := {
 		"op": "combat_action",
 		"map_id": current_map_id,
 		"zone_id": current_zone_id,
@@ -113,7 +113,10 @@ func send_combat_action(action_kind: String, target_id: String, target_kind: Str
 		"x": snappedf(origin_pos.x, 0.1),
 		"y": snappedf(origin_pos.y, 0.1),
 		"facing_left": facing_left,
-	})
+	}
+	if damage >= 0.0:
+		pkt["damage"] = snappedf(damage, 0.1)
+	return transport.send_packet(pkt)
 
 
 func send_player_pve_state(damage: float, new_hp: float, alive: bool) -> Error:

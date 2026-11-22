@@ -177,6 +177,8 @@ if export_presets.exists():
         errors.append(f"export_presets.cfg (Android) chưa đồng bộ version/name=\"{ver_txt}\"")
     if f'application/short_version="{ver_txt}"' not in ep:
         errors.append(f"export_presets.cfg (iOS) chưa đồng bộ application/short_version=\"{ver_txt}\"")
+    if 'name="Windows Desktop"' in ep and f'application/product_version="{ver_txt}"' not in ep:
+        errors.append(f"export_presets.cfg (Windows) chưa đồng bộ application/product_version=\"{ver_txt}\"")
 
 # 4. skills.md & lerning.md structural markers
 for fname, s_tag, e_tag in [
@@ -359,8 +361,12 @@ PY
     echo "[OK] iOS IPA đồng bộ sẵn sàng tại $OUT_IPA"
     ;;
 
+  win-setup)
+    bash "$ROOT_DIR/tools/windows/build_windows_setup.sh"
+    ;;
+
   build-all)
-    echo "[loop.sh] === Đồng bộ 1:1 Web + Android APK + iOS IPA (Localhost Human Test) ==="
+    echo "[loop.sh] === Đồng bộ 1:1 Web + Android APK + iOS IPA + Windows setup.exe ==="
     "$ROOT_DIR/loop.sh" web-export
     "$ROOT_DIR/loop.sh" apk-debug
     if [ -f "$ROOT_DIR/build/ios/base/dr7-studio-base.ipa" ]; then
@@ -368,11 +374,24 @@ PY
     else
       echo "[INFO] Bỏ qua repack iOS IPA tự động vì chưa có build/ios/base/dr7-studio-base.ipa (cần tải 1 lần từ GitHub Actions macos-latest)."
     fi
+    if command -v makensis >/dev/null 2>&1; then
+      "$ROOT_DIR/loop.sh" win-setup
+    else
+      echo "[INFO] Bỏ qua build Windows setup.exe vì chưa cài 'makensis' (sudo apt-get install -y nsis)."
+    fi
     echo "[loop.sh] === Tóm tắt SHA-256 đồng bộ bản build ==="
     sha256sum "$ROOT_DIR/build/web/index.pck" "$ROOT_DIR/build/android/dr7-studio-debug.apk"
     if [ -f "$ROOT_DIR/build/ios/dr7-studio-unsigned.ipa" ]; then
       sha256sum "$ROOT_DIR/build/ios/dr7-studio-unsigned.ipa"
     fi
+    if [ -f "$ROOT_DIR/build/windows/dr7-studio-setup.exe" ]; then
+      sha256sum "$ROOT_DIR/build/windows/dr7-studio-setup.exe"
+    fi
+    ;;
+
+  deploy-staging)
+    shift || true
+    exec python3 "$ROOT_DIR/tools/alpha/deploy_alpha_r2_and_worker.py" "$@"
     ;;
 
   serve)
@@ -437,7 +456,7 @@ PY
     ;;
 
   *)
-    echo "Cách dùng: ./loop.sh {status|check|test|serve|web-export|apk-debug|ios-repack [base.ipa]|build-all|log-task <ID> <status> <summary>|--agy-session-start}" >&2
+    echo "Cách dùng: ./loop.sh {status|check|test|serve|web-export|apk-debug|ios-repack [base.ipa]|win-setup|build-all|deploy-staging [--sync-ios-base]|log-task <ID> <status> <summary>|--agy-session-start}" >&2
     exit 1
     ;;
 esac

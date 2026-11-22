@@ -118,7 +118,7 @@ Chi tiết kỹ thuật chốt tại [docs/adr/0001-architecture-and-scale-roadm
 
 ## Điều 8. Tiêu Chuẩn Developer, SemVer & Bộ Nhớ (`./loop.sh`)
 
-1. **Test, CI/CD & SemVer**: Mọi module (data, Godot prefab/layout, Rust/WASM, server transport, UI preview) phải pass `./loop.sh test` (`exit 0`) & `.github/workflows/ci.yml`. Đồng bộ SemVer tại `VERSION`, `state.json`, `project.godot`, `engines/rust_combat_sim/Cargo.toml`.
+1. **Test, CI/CD, Auto-Sync Staging & SemVer**: Mọi module (data, Godot prefab/layout, Rust/WASM, server transport, UI preview) phải pass `./loop.sh test` (`exit 0`) & `.github/workflows/ci.yml`. Đồng bộ SemVer tại `VERSION`, `state.json`, `project.godot`, `engines/rust_combat_sim/Cargo.toml`. Mọi lần push `main` phải tự động đồng bộ đủ 4 định dạng (`Web`, `Android APK`, `iOS IPA unsigned`, `Windows PC setup.exe`) + Worker lên `https://dr7-alpha-staging.hem-tra.workers.dev` qua job `deploy-alpha-staging` trong `ci.yml` (hoặc chạy tay `./loop.sh deploy-staging`) kèm xác minh SHA-256 live.
 2. **Quy tắc Đọc/Ghi File & Bộ Nhớ**:
    - Chạy `./loop.sh status` ngay đầu phiên; đọc `state.json` và giữ `AGENTS.md <= 24,000 bytes`.
    - Đọc `skills.md` trước khi làm atlas; chỉ ghi sau khi Owner nghiệm thu Human Test OK.

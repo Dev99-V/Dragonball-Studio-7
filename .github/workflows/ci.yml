@@ -4,6 +4,7 @@ on:
   push:
     branches: ["**"]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   verify:
@@ -114,3 +115,86 @@ jobs:
           name: dr7-studio-debug-apk
           path: build/android/dr7-studio-debug.apk
           retention-days: 7
+
+  deploy-alpha-staging:
+    name: Auto-Sync Alpha Staging (Web + APK + iOS IPA + Windows setup.exe -> Cloudflare R2/Worker)
+    needs: [verify, build-android-apk]
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: dr7-alpha-staging-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required Staging GitHub Secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          missing=""
+          for k in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID SUPABASE_URL SUPABASE_ANON_KEY; do
+            if [ -z "${!k:-}" ]; then
+              missing="${missing} ${k}"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Thiếu GitHub Actions Secrets để đồng bộ tự động lên Cloudflare Staging:${missing}"
+            echo "Hãy cấu hình 4 secrets này trong Settings -> Secrets and variables -> Actions của repo."
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js & Wrangler CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Wrangler CLI & NSIS (makensis)
+        run: |
+          npm install -g wrangler
+          sudo apt-get update -qq && sudo apt-get install -y -qq nsis
+
+      - name: Install Godot 4.7.2 & Export Templates
+        run: bash tools/godot/install_godot.sh --with-templates
+
+      - name: Download Android Debug APK from build-android-apk job
+        uses: actions/download-artifact@v4
+        with:
+          name: dr7-studio-debug-apk
+          path: build/android
+
+      - name: Export Godot 4.7.2 Web (Compatibility)
+        run: ./loop.sh web-export
+
+      - name: Export & Pack Windows PC Installer (setup.exe x64)
+        run: ./loop.sh win-setup
+
+      - name: Fetch Base iOS IPA from Private R2 & Repack 1:1 Unsigned IPA
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p build/ios/base
+          if ! (cd cloudflare/alpha-staging && wrangler r2 object get dr7-alpha-artifacts/base/dr7-studio-base.ipa --remote --file "$GITHUB_WORKSPACE/build/ios/base/dr7-studio-base.ipa"); then
+            echo "[INFO] base/dr7-studio-base.ipa chưa có trong R2, fallback lấy IPA bản trước từ manifest.json..."
+            (cd cloudflare/alpha-staging && wrangler r2 object get dr7-alpha-artifacts/manifest.json --remote --file /tmp/prev-manifest.json)
+            PREV_IPA_KEY="$(python3 -c 'import json; print(json.load(open("/tmp/prev-manifest.json"))["artifacts"]["ipa"]["r2_key"])')"
+            (cd cloudflare/alpha-staging && wrangler r2 object get "dr7-alpha-artifacts/${PREV_IPA_KEY}" --remote --file "$GITHUB_WORKSPACE/build/ios/base/dr7-studio-base.ipa")
+          fi
+          ./loop.sh ios-repack build/ios/base/dr7-studio-base.ipa
+
+      - name: Deploy All 4 Formats (Web/APK/IPA/Windows setup.exe) + Worker to Cloudflare Staging & Verify SHA-256
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python3 tools/alpha/deploy_alpha_r2_and_worker.py

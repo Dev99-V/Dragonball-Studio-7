@@ -18,6 +18,24 @@ const DAMAGE_TABLE := {
 	"attack_light": 200.0,
 	"attack_heavy": 320.0,
 	"power_up": 400.0,
+	"goku_light": 15.0,
+	"goku_heavy": 50.0,
+	"goku_gold_slash": 60.0,
+	"flurry_kick": 30.0,
+	"atomic_blast": 55.0,
+	"kamehameha": 360.0,
+}
+
+const ACTION_SPECS := {
+	"attack_light": {"min_dmg": 200.0, "max_dmg": 200.0, "default_dmg": 200.0, "mana_delta": 20.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 280.0, "check_los": false},
+	"attack_heavy": {"min_dmg": 320.0, "max_dmg": 320.0, "default_dmg": 320.0, "mana_delta": 20.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 280.0, "check_los": false},
+	"power_up": {"min_dmg": 400.0, "max_dmg": 400.0, "default_dmg": 400.0, "mana_delta": 0.0, "mana_cost": 100.0, "ranged": true, "pvp_range": 1400.0, "check_los": true},
+	"goku_light": {"min_dmg": 10.0, "max_dmg": 20.0, "default_dmg": 15.0, "mana_delta": 20.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 280.0, "check_los": false},
+	"goku_heavy": {"min_dmg": 50.0, "max_dmg": 50.0, "default_dmg": 50.0, "mana_delta": 20.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 280.0, "check_los": false},
+	"goku_gold_slash": {"min_dmg": 60.0, "max_dmg": 60.0, "default_dmg": 60.0, "mana_delta": 20.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 280.0, "check_los": false},
+	"flurry_kick": {"min_dmg": 30.0, "max_dmg": 30.0, "default_dmg": 30.0, "mana_delta": 8.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 300.0, "check_los": false},
+	"atomic_blast": {"min_dmg": 55.0, "max_dmg": 55.0, "default_dmg": 55.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": false},
+	"kamehameha": {"min_dmg": 360.0, "max_dmg": 360.0, "default_dmg": 360.0, "mana_delta": 0.0, "mana_cost": 80.0, "cast_window_ms": 5000, "ranged": true, "pvp_range": 1400.0, "check_los": true},
 }
 
 const DEFAULT_MONSTER_SLOTS := [
@@ -386,6 +404,7 @@ func _complete_peer_auth(pid: int, claims: Dictionary, req_map: String, req_zone
 	if not (pid in z["peer_ids"]):
 		z["peer_ids"].append(pid)
 	var spawn_y := _terrain_surface_y_at(spawn_x)
+	var init_mana := PLAYER_MAX_MANA if cid == "songoku" else 0.0
 	z["players"][uid] = {
 		"id": uid,
 		"kind": "player",
@@ -397,10 +416,11 @@ func _complete_peer_auth(pid: int, claims: Dictionary, req_map: String, req_zone
 		"act": "idle",
 		"hp": PLAYER_MAX_HP,
 		"max_hp": PLAYER_MAX_HP,
-		"mana": 0.0,
+		"mana": init_mana,
 		"max_mana": PLAYER_MAX_MANA,
 		"alive": true,
 		"respawn_timer_s": 0.0,
+		"kame_cast_paid_ms": 0,
 	}
 
 	_send_to_peer(pid, {
@@ -520,8 +540,17 @@ func _handle_combat_action(z: Dictionary, attacker_id: String, pkt: Dictionary) 
 	if not bool(attacker.get("alive", false)):
 		return
 	var action := str(pkt.get("action", "attack_light"))
-	if not DAMAGE_TABLE.has(action):
+	var now_ms := Time.get_ticks_msec()
+	if action == "kamehameha_cast":
+		if float(attacker.get("mana", 0.0)) + 0.001 < 80.0:
+			return
+		attacker["mana"] = maxf(0.0, float(attacker["mana"]) - 80.0)
+		attacker["kame_cast_paid_ms"] = now_ms
+		_emit_zone_snapshot(z)
 		return
+	if not ACTION_SPECS.has(action):
+		return
+	var spec: Dictionary = ACTION_SPECS[action]
 	var target_kind := str(pkt.get("target_kind", "player"))
 	var target_id := str(pkt.get("target_id", "")).strip_edges()
 	if target_id.is_empty():
@@ -543,32 +572,56 @@ func _handle_combat_action(z: Dictionary, attacker_id: String, pkt: Dictionary) 
 	if not bool(target.get("alive", false)):
 		return
 
-	# Authoritative Mana enforcement
-	if action == "power_up":
-		if float(attacker.get("mana", 0.0)) < 100.0:
-			return
-		attacker["mana"] = 0.0
+	# Authoritative Mana enforcement (supports piercing Kamehameha cast window)
+	var mana_cost := float(spec.get("mana_cost", 0.0))
+	if mana_cost > 0.0:
+		var cast_win := int(spec.get("cast_window_ms", 0))
+		var paid_ms := int(attacker.get("kame_cast_paid_ms", 0))
+		var already_paid := cast_win > 0 and paid_ms > 0 and (now_ms - paid_ms) <= cast_win
+		if not already_paid:
+			if float(attacker.get("mana", 0.0)) + 0.001 < mana_cost:
+				return
+			attacker["mana"] = maxf(0.0, float(attacker["mana"]) - mana_cost)
+			if cast_win > 0:
+				attacker["kame_cast_paid_ms"] = now_ms
 
 	# Authoritative distance & continuous terrain LOS check
+	var is_ranged := bool(spec.get("ranged", false))
 	var a_pos := Vector2(float(attacker["x"]), float(attacker["y"]) - 36.0)
 	var t_pos := Vector2(float(target["x"]), float(target["y"]) - 36.0)
 	if target_kind == "monster":
-		var pad := 1400.0 if action == "power_up" else 340.0
-		var px := float(pkt.get("x", attacker["x"]))
+		var pad := 1400.0 if is_ranged else 340.0
+		var raw_px: Variant = pkt.get("x", null)
+		var px := float(attacker["x"])
+		if raw_px is int or raw_px is float:
+			var fpx := float(raw_px)
+			if not is_nan(fpx) and not is_inf(fpx):
+				px = fpx
 		if px < float(target.get("zmin", target["x"])) - pad or px > float(target.get("zmax", target["x"])) + pad:
 			return
 	else:
 		var dist := a_pos.distance_to(t_pos)
-		var max_range := 1400.0 if action == "power_up" else 260.0
+		var max_range := float(spec.get("pvp_range", 280.0))
 		if dist > max_range:
 			return
-		if action == "power_up" and _terrain_blocks_segment(a_pos, t_pos):
+		if bool(spec.get("check_los", false)) and _terrain_blocks_segment(a_pos, t_pos):
 			return
 
-	var dmg := float(DAMAGE_TABLE[action])
+	var min_dmg := float(spec["min_dmg"])
+	var max_dmg := float(spec["max_dmg"])
+	var dmg := max_dmg
+	if max_dmg > min_dmg:
+		var raw_dmg: Variant = pkt.get("damage", null)
+		var req_dmg := float(spec.get("default_dmg", min_dmg))
+		if raw_dmg is int or raw_dmg is float:
+			var fdmg := float(raw_dmg)
+			if not is_nan(fdmg) and not is_inf(fdmg):
+				req_dmg = fdmg
+		dmg = clampf(req_dmg, min_dmg, max_dmg)
 	target["hp"] = maxf(0.0, float(target["hp"]) - dmg)
-	if action != "power_up":
-		attacker["mana"] = minf(PLAYER_MAX_MANA, float(attacker["mana"]) + 20.0)
+	var mana_delta := float(spec.get("mana_delta", 0.0))
+	if mana_delta > 0.0:
+		attacker["mana"] = minf(PLAYER_MAX_MANA, float(attacker["mana"]) + mana_delta)
 	if float(target["hp"]) <= 0.0:
 		target["alive"] = false
 		target["respawn_timer_s"] = PLAYER_RESPAWN_S if target_kind == "player" else MONSTER_RESPAWN_S
@@ -611,6 +664,7 @@ func _switch_peer_zone(pid: int, target_map: String, target_zone: int) -> void:
 	if not (pid in new_z["peer_ids"]):
 		new_z["peer_ids"].append(pid)
 	if preserved_player.is_empty():
+		var init_z_mana := PLAYER_MAX_MANA if str(pinfo["character_id"]) == "songoku" else 0.0
 		preserved_player = {
 			"id": uid,
 			"kind": "player",
@@ -622,10 +676,11 @@ func _switch_peer_zone(pid: int, target_map: String, target_zone: int) -> void:
 			"act": "idle",
 			"hp": PLAYER_MAX_HP,
 			"max_hp": PLAYER_MAX_HP,
-			"mana": 0.0,
+			"mana": init_z_mana,
 			"max_mana": PLAYER_MAX_MANA,
 			"alive": true,
 			"respawn_timer_s": 0.0,
+			"kame_cast_paid_ms": 0,
 		}
 	new_z["players"][uid] = preserved_player
 	_send_to_peer(pid, {"op": "zone_joined", "map_id": target_map, "zone_id": target_zone})

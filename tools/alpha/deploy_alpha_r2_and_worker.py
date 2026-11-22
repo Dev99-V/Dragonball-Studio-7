@@ -32,13 +32,26 @@ STAGING_URL = "https://dr7-alpha-staging.hem-tra.workers.dev"
 
 def load_env(path: pathlib.Path) -> dict[str, str]:
     env: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        s = line.strip()
-        if not s or s.startswith("#") or "=" not in s:
-            continue
-        k, v = s.split("=", 1)
-        env[k.strip()] = v.strip().strip('"').strip("'")
+    if path.is_file():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            s = line.strip()
+            if not s or s.startswith("#") or "=" not in s:
+                continue
+            k, v = s.split("=", 1)
+            env[k.strip()] = v.strip().strip('"').strip("'")
     return env
+
+
+def resolve_secret(env_file: dict[str, str], *keys: str) -> str:
+    for key in keys:
+        val = os.environ.get(key, "").strip()
+        if val:
+            return val
+    for key in keys:
+        val = env_file.get(key, "").strip()
+        if val:
+            return val
+    raise KeyError(f"Missing required config key (checked env & .env): {' / '.join(keys)}")
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -125,14 +138,15 @@ def download_and_sha256(url: str) -> tuple[int, int, str]:
 
 
 def main() -> int:
+    sync_ios_base = "--sync-ios-base" in sys.argv[1:]
     env = load_env(ENV_PATH)
     cf_env = {
-        "CLOUDFLARE_API_TOKEN": env["API_TOKEN_WANGLER"],
-        "CLOUDFLARE_ACCOUNT_ID": env["ID_ACOUNT_WANGLER"],
+        "CLOUDFLARE_API_TOKEN": resolve_secret(env, "CLOUDFLARE_API_TOKEN", "API_TOKEN_WANGLER"),
+        "CLOUDFLARE_ACCOUNT_ID": resolve_secret(env, "CLOUDFLARE_ACCOUNT_ID", "ID_ACOUNT_WANGLER"),
     }
-    parsed_sb = urllib.parse.urlparse(env["API_URL"].strip())
+    parsed_sb = urllib.parse.urlparse(resolve_secret(env, "SUPABASE_URL", "API_URL"))
     sb_base = f"{parsed_sb.scheme}://{parsed_sb.netloc}"
-    sb_anon = env["anon_public"]
+    sb_anon = resolve_secret(env, "SUPABASE_ANON_KEY", "anon_public")
 
     version = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
     commit_full = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=str(REPO_ROOT), text=True).strip()
@@ -142,8 +156,11 @@ def main() -> int:
 
     apk_path = REPO_ROOT / "build" / "android" / "dr7-studio-debug.apk"
     ipa_path = REPO_ROOT / "build" / "ios" / "dr7-studio-unsigned.ipa"
+    win_setup_path = REPO_ROOT / "build" / "windows" / "dr7-studio-setup.exe"
+    win_meta_path = REPO_ROOT / "build" / "windows" / "windows-build-meta.json"
+    ios_base_path = REPO_ROOT / "build" / "ios" / "base" / "dr7-studio-base.ipa"
     web_dir = REPO_ROOT / "build" / "web"
-    for req_p in (apk_path, ipa_path, web_dir / "index.html", web_dir / "index.wasm", web_dir / "index.pck"):
+    for req_p in (apk_path, ipa_path, win_setup_path, web_dir / "index.html", web_dir / "index.wasm", web_dir / "index.pck"):
         if not req_p.is_file():
             print(f"[FAIL] Missing build artifact: {req_p}", file=sys.stderr)
             return 1
@@ -156,14 +173,22 @@ def main() -> int:
         return 1
     print(f"[OK] R2 bucket '{BUCKET_NAME}' ready.")
 
+    if sync_ios_base and ios_base_path.is_file():
+        print(f"[deploy] Syncing base iOS IPA ({ios_base_path.stat().st_size} B) to R2: base/dr7-studio-base.ipa")
+        upload_r2_file("base/dr7-studio-base.ipa", ios_base_path, "application/octet-stream", cf_env)
+        print("[OK] Synced base/dr7-studio-base.ipa to R2 for Linux CI repack.")
+
     # 2. Upload artifacts FIRST under versioned prefix
     apk_sha = sha256_file(apk_path)
     ipa_sha = sha256_file(ipa_path)
+    win_sha = sha256_file(win_setup_path)
+    win_meta = json.loads(win_meta_path.read_text(encoding="utf-8")) if win_meta_path.is_file() else {}
     pck_sha = sha256_file(web_dir / "index.pck")
     wasm_sha = sha256_file(web_dir / "index.wasm")
 
     apk_key = f"{build_prefix}/dr7-studio-debug.apk"
     ipa_key = f"{build_prefix}/dr7-studio-unsigned.ipa"
+    win_key = f"{build_prefix}/dr7-studio-setup.exe"
     web_prefix = f"{build_prefix}/web"
 
     print(f"[deploy] Uploading APK ({apk_path.stat().st_size} B) to R2: {apk_key}")
@@ -171,6 +196,9 @@ def main() -> int:
 
     print(f"[deploy] Uploading unsigned IPA ({ipa_path.stat().st_size} B) to R2: {ipa_key}")
     upload_r2_file(ipa_key, ipa_path, "application/octet-stream", cf_env)
+
+    print(f"[deploy] Uploading Windows setup.exe ({win_setup_path.stat().st_size} B) to R2: {win_key}")
+    upload_r2_file(win_key, win_setup_path, "application/vnd.microsoft.portable-executable", cf_env)
 
     web_files = sorted(p for p in web_dir.iterdir() if p.is_file())
     print(f"[deploy] Uploading {len(web_files)} Godot Web files to R2: {web_prefix}/...")
@@ -206,6 +234,16 @@ def main() -> int:
                 "sha256": ipa_sha,
                 "signed": False,
                 "signing_type": "unsigned_pending_signing",
+            },
+            "windows": {
+                "r2_key": win_key,
+                "bytes": win_setup_path.stat().st_size,
+                "sha256": win_sha,
+                "arch": "x86_64",
+                "pck_bytes": win_meta.get("pck_bytes"),
+                "pck_sha256": win_meta.get("pck_sha256"),
+                "signed": False,
+                "signing_type": "unsigned_nsis_installer",
             },
             "web": {
                 "r2_prefix": web_prefix,
@@ -247,12 +285,19 @@ def main() -> int:
     ua_headers = {"User-Agent": "DR7-Alpha-Verifier/1.0"}
     with urllib.request.urlopen(urllib.request.Request(f"{STAGING_URL}/api/health", headers=ua_headers), timeout=20) as r:
         health = json.loads(r.read().decode("utf-8"))
-    assert health.get("ok") and health.get("r2_ready") and health.get("supabase_configured"), f"Bad health: {health}"
+    assert (
+        health.get("ok")
+        and health.get("r2_ready")
+        and health.get("supabase_configured")
+        and health.get("version") == version
+        and health.get("commit_short") == commit_short
+    ), f"Bad health or version mismatch (expected v{version}/{commit_short}): {health}"
     print(f"[OK] /api/health: {health}")
 
     for label, url, expected_sha, expected_bytes in [
         ("APK", f"{STAGING_URL}/download/apk", apk_sha, apk_path.stat().st_size),
         ("IPA(unsigned)", f"{STAGING_URL}/download/ipa", ipa_sha, ipa_path.stat().st_size),
+        ("Windows setup.exe", f"{STAGING_URL}/download/windows", win_sha, win_setup_path.stat().st_size),
         ("Web PCK", f"{STAGING_URL}/play/index.pck", pck_sha, (web_dir / "index.pck").stat().st_size),
         ("Web WASM", f"{STAGING_URL}/play/index.wasm", wasm_sha, (web_dir / "index.wasm").stat().st_size),
     ]:
@@ -265,11 +310,11 @@ def main() -> int:
             return 1
         print(f"[OK] Live download verified {label}: {got_bytes} B | SHA-256={got_sha}")
 
-    # Verify live /api/alpha/login for both users (when USER_1/USER_2 present in .env) + wrong password
+    # Verify live /api/alpha/login for both users (when USER_1/USER_2 present in env or .env) + wrong password
     for uname, env_key, expect_name in (("vinhadmin", "USER_1", "Vinh"), ("thaiadmin", "USER_2", "Thái")):
-        raw_v = env.get(env_key, "")
+        raw_v = os.environ.get(env_key, "").strip() or env.get(env_key, "")
         if not raw_v:
-            print(f"[INFO] Skipping live password login verify for {uname} ({env_key} not set in .env)")
+            print(f"[INFO] Skipping live password login verify for {uname} ({env_key} not set)")
             continue
         prefix = f"{uname}_"
         pwd = raw_v[len(prefix):] if raw_v.lower().startswith(prefix.lower()) else raw_v
@@ -281,7 +326,7 @@ def main() -> int:
         )
         with urllib.request.urlopen(req, timeout=20) as r:
             body = json.loads(r.read().decode("utf-8"))
-        assert body.get("display_name") == expect_name and body.get("character_id") == "drum" and body.get("access_token"), f"Login mismatch for {uname}"
+        assert body.get("display_name") == expect_name and body.get("character_id") in ("songoku", "drum") and body.get("access_token"), f"Login mismatch for {uname}: {body}"
         print(f"[OK] Live /api/alpha/login verified: {uname} -> display_name={body['display_name']} character_id={body['character_id']}")
 
     bad_req = urllib.request.Request(

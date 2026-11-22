@@ -65,6 +65,24 @@ const DAMAGE_TABLE = {
   attack_light: 200,
   attack_heavy: 320,
   power_up: 400,
+  goku_light: 15,
+  goku_heavy: 50,
+  goku_gold_slash: 60,
+  flurry_kick: 30,
+  atomic_blast: 55,
+  kamehameha: 360,
+};
+
+const ACTION_SPECS = {
+  attack_light: { min_dmg: 200, max_dmg: 200, default_dmg: 200, mana_delta: 20, mana_cost: 0, ranged: false, pvp_range: 280 },
+  attack_heavy: { min_dmg: 320, max_dmg: 320, default_dmg: 320, mana_delta: 20, mana_cost: 0, ranged: false, pvp_range: 280 },
+  power_up: { min_dmg: 400, max_dmg: 400, default_dmg: 400, mana_delta: 0, mana_cost: 100, ranged: true, pvp_range: 1400 },
+  goku_light: { min_dmg: 10, max_dmg: 20, default_dmg: 15, mana_delta: 20, mana_cost: 0, ranged: false, pvp_range: 280 },
+  goku_heavy: { min_dmg: 50, max_dmg: 50, default_dmg: 50, mana_delta: 20, mana_cost: 0, ranged: false, pvp_range: 280 },
+  goku_gold_slash: { min_dmg: 60, max_dmg: 60, default_dmg: 60, mana_delta: 20, mana_cost: 0, ranged: false, pvp_range: 280 },
+  flurry_kick: { min_dmg: 30, max_dmg: 30, default_dmg: 30, mana_delta: 8, mana_cost: 0, ranged: false, pvp_range: 300 },
+  atomic_blast: { min_dmg: 55, max_dmg: 55, default_dmg: 55, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 1400 },
+  kamehameha: { min_dmg: 360, max_dmg: 360, default_dmg: 360, mana_delta: 0, mana_cost: 80, cast_window_ms: 5000, ranged: true, pvp_range: 1400 },
 };
 
 const RATE_LIMIT_MAP = new Map();
@@ -183,9 +201,11 @@ function renderPortalHtml(manifest, origin, wsBackend) {
   const builtAt = manifest?.built_at_utc || "N/A";
   const apk = manifest?.artifacts?.apk || null;
   const ipa = manifest?.artifacts?.ipa || null;
+  const win = manifest?.artifacts?.windows || null;
   const web = manifest?.artifacts?.web || null;
   const apkTag = apk?.sha256 ? apk.sha256.slice(0, 12) : commit;
   const ipaTag = ipa?.sha256 ? ipa.sha256.slice(0, 12) : commit;
+  const winTag = win?.sha256 ? win.sha256.slice(0, 12) : commit;
   const webTag = web?.pck_sha256 ? web.pck_sha256.slice(0, 12) : commit;
 
   const esc = (s) =>
@@ -211,18 +231,19 @@ function renderPortalHtml(manifest, origin, wsBackend) {
     :root { --bg:#080d18; --card:#101828; --border:#2b3c58; --accent:#2bb8ff; --gold:#f5c443; --text:#eef4ff; --muted:#9fb0cc; }
     * { box-sizing:border-box; }
     body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:radial-gradient(circle at top,#13223b 0%,var(--bg) 62%); color:var(--text); min-height:100vh; padding:24px 16px 48px; }
-    .wrap { max-width:860px; margin:0 auto; }
+    .wrap { max-width:960px; margin:0 auto; }
     .hero { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:20px; box-shadow:0 14px 36px rgba(0,0,0,.35); }
     h1 { margin:0 0 8px; font-size:26px; letter-spacing:.2px; }
     .meta { color:var(--muted); font-size:14px; display:flex; flex-wrap:wrap; gap:12px; }
     .badge { display:inline-block; padding:3px 9px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid var(--border); background:#0c1424; }
     .badge-warn { border-color:#d48c28; color:#ffd479; background:rgba(212,140,40,.14); }
     .badge-ok { border-color:#26a869; color:#7cf0b4; background:rgba(38,168,105,.14); }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:16px; }
     .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px; }
     .card h2 { margin:0; font-size:19px; }
     .btn { display:inline-flex; align-items:center; justify-content:center; padding:12px 16px; border-radius:10px; font-weight:700; text-decoration:none; color:#04101d; background:linear-gradient(135deg,#3cd0ff,#1594e5); border:1px solid rgba(255,255,255,.35); }
     .btn-gold { background:linear-gradient(135deg,#ffd666,#e8a620); }
+    .btn-win { background:linear-gradient(135deg,#78e8a8,#24b36b); }
     .btn-muted { background:#1c2940; color:var(--text); border-color:var(--border); }
     .sha { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px; color:#b8cae8; word-break:break-all; background:#09101d; padding:8px 10px; border-radius:8px; border:1px solid #1d2b44; }
     .small { font-size:13px; color:var(--muted); line-height:1.5; }
@@ -257,6 +278,13 @@ function renderPortalHtml(manifest, origin, wsBackend) {
       </div>
 
       <div class="card">
+        <h2>Windows PC <span class="badge badge-warn">setup.exe x64</span></h2>
+        <div class="small">Bộ cài NSIS 64-bit không cần quyền Admin (cài vào user, kèm shortcut Desktop &amp; Gỡ cài đặt). Alpha chưa ký: nếu hiện SmartScreen bấm <b>More info → Run anyway</b>.<br/>
+        Kích thước: <b>${win ? `${esc(win.bytes.toLocaleString("en-US"))} B (${formatMiB(win.bytes)})` : "Chưa có"}</b></div>
+        ${win ? `<div class="sha">SHA-256: ${esc(win.sha256)}</div><a class="btn btn-win" href="/download/windows?v=${esc(winTag)}">Tải Windows Setup (.exe)</a>` : `<span class="badge badge-warn">Chưa upload setup.exe</span>`}
+      </div>
+
+      <div class="card">
         <h2>Godot Web (Compatibility)</h2>
         <div class="small">Chạy trực tiếp bản export Godot 4.7.2 Web từ Cloudflare R2 (không bị giới hạn 25 MiB của Workers Static Assets).<br/>
         WASM: <b>${web?.wasm_bytes ? formatMiB(web.wasm_bytes) : "N/A"}</b> · PCK: <b>${web?.pck_bytes ? formatMiB(web.pck_bytes) : "N/A"}</b></div>
@@ -266,7 +294,7 @@ function renderPortalHtml(manifest, origin, wsBackend) {
 
     <div class="foot">
       <b>Trạng thái Alpha & Chính sách:</b><br/>
-      • Tài khoản test nội bộ: <code>vinhadmin</code> (tên hiển thị <b>Vinh</b>) và <code>thaiadmin</code> (tên hiển thị <b>Thái</b>), mặc định tướng <b>Drum</b>. Hai tài khoản ngoại lệ này sẽ được gỡ trước khi thương mại hóa.<br/>
+      • Tài khoản test nội bộ: <code>vinhadmin</code> (tên hiển thị <b>Vinh</b>) và <code>thaiadmin</code> (tên hiển thị <b>Thái</b>), mặc định tướng <b>Son Goku</b>. Hai tài khoản ngoại lệ này sẽ được gỡ trước khi thương mại hóa.<br/>
       • Chính sách chặn IP (JP 100% / chặn tải VN) <b>chưa bật</b> trong giai đoạn Alpha nội bộ chưa thương mại theo chỉ đạo Owner.<br/>
       • Kiểm chứng tự động: <a style="color:#69d2ff" href="/manifest.json">${esc(origin)}/manifest.json</a> · <a style="color:#69d2ff" href="/api/health">${esc(origin)}/api/health</a>
     </div>
@@ -544,6 +572,7 @@ export class ZoneRoomDO {
       info.zone_key = z.key;
       z.sockets.add(ws);
       const sx = Math.max(-200, Math.min(6320, Number(claims.spawn_x || 560)));
+      const initMana = claims.character_id === "songoku" ? 100 : 0;
       z.players.set(claims.user_id, {
         id: claims.user_id,
         kind: "player",
@@ -555,10 +584,11 @@ export class ZoneRoomDO {
         act: "idle",
         hp: 1500,
         max_hp: 1500,
-        mana: 0,
+        mana: initMana,
         max_mana: 100,
         alive: true,
         respawn_at: 0,
+        kame_cast_paid_ms: 0,
       });
       this._send(ws, {
         op: "auth_ok",
@@ -609,10 +639,11 @@ export class ZoneRoomDO {
           act: "idle",
           hp: 1500,
           max_hp: 1500,
-          mana: 0,
+          mana: info.character_id === "songoku" ? 100 : 0,
           max_mana: 100,
           alive: true,
           respawn_at: 0,
+          kame_cast_paid_ms: 0,
         }
       );
       this._send(ws, { op: "zone_joined", map_id: targetMap, zone_id: targetZone });
@@ -670,28 +701,50 @@ export class ZoneRoomDO {
     if (op === "combat_action") {
       if (!p.alive) return;
       const action = String(pkt.action || "attack_light");
-      const dmg = DAMAGE_TABLE[action];
-      if (!dmg) return;
+      const nowMs = Date.now();
+      if (action === "kamehameha_cast") {
+        if (p.mana + 0.001 < 80) return;
+        p.mana = Math.max(0, p.mana - 80);
+        p.kame_cast_paid_ms = nowMs;
+        this._emitSnapshot(z);
+        return;
+      }
+      const spec = ACTION_SPECS[action];
+      if (!spec) return;
       const targetKind = String(pkt.target_kind || "player");
+      if (targetKind !== "player" && targetKind !== "monster") return;
       const targetId = String(pkt.target_id || "").trim();
       if (!targetId || (targetKind === "player" && targetId === info.user_id)) return;
       const target = targetKind === "player" ? z.players.get(targetId) : z.monsters.get(targetId);
       if (!target || !target.alive) return;
-      if (action === "power_up") {
-        if (p.mana < 100) return;
-        p.mana = 0;
+      if (spec.mana_cost > 0) {
+        const castWin = Number(spec.cast_window_ms || 0);
+        const paidMs = Number(p.kame_cast_paid_ms || 0);
+        const alreadyPaid = castWin > 0 && paidMs > 0 && nowMs - paidMs <= castWin;
+        if (!alreadyPaid) {
+          if (p.mana + 0.001 < spec.mana_cost) return;
+          p.mana = Math.max(0, p.mana - spec.mana_cost);
+          if (castWin > 0) p.kame_cast_paid_ms = nowMs;
+        }
       }
       if (targetKind === "monster") {
-        const pad = action === "power_up" ? 1400 : 340;
-        const px = Number(pkt.x ?? p.x ?? 0);
+        const pad = spec.ranged ? 1400 : 340;
+        const px = typeof pkt.x === "number" && Number.isFinite(pkt.x) ? pkt.x : Number(p.x ?? 0);
         if (px < (target.zmin ?? target.x) - pad || px > (target.zmax ?? target.x) + pad) return;
       } else {
         const dist = Math.hypot((p.x || 0) - (target.x || 0), (p.y || 0) - (target.y || 0));
-        const maxRange = action === "power_up" ? 1400 : 280;
+        const maxRange = Number(spec.pvp_range || 280);
         if (dist > maxRange) return;
       }
+      let dmg = spec.max_dmg;
+      if (spec.max_dmg > spec.min_dmg) {
+        const rawDmg = pkt.damage;
+        const parsedDmg = typeof rawDmg === "number" ? rawDmg : Number.NaN;
+        const safeDmg = Number.isFinite(parsedDmg) ? parsedDmg : spec.default_dmg;
+        dmg = Math.max(spec.min_dmg, Math.min(spec.max_dmg, safeDmg));
+      }
       target.hp = Math.max(0, target.hp - dmg);
-      if (action !== "power_up") p.mana = Math.min(p.max_mana, p.mana + 20);
+      if (spec.mana_delta > 0) p.mana = Math.min(p.max_mana, p.mana + spec.mana_delta);
       if (target.hp <= 0) {
         target.alive = false;
         target.respawn_at = Date.now() + (targetKind === "player" ? 3000 : 12000);
@@ -819,6 +872,23 @@ export default {
         contentType: "application/octet-stream",
         downloadName: "dr7-studio-unsigned.ipa",
         sha256: ipa.sha256,
+        extraHeaders: {
+          "X-DR7-Build-Commit": manifest.commit_short || "",
+          "X-DR7-Signing-Status": "unsigned",
+        },
+      });
+    }
+
+    if (path === "/download/windows" || path === "/download/dr7-studio-setup.exe") {
+      const manifest = await readManifest(env);
+      const win = manifest?.artifacts?.windows;
+      if (!win?.r2_key) return new Response("Windows setup.exe not available", { status: 404 });
+      const ver = manifest?.version || "alpha";
+      return serveR2Object(env, win.r2_key, {
+        method: request.method,
+        contentType: "application/vnd.microsoft.portable-executable",
+        downloadName: `DR7-Studio-v${ver}-Setup.exe`,
+        sha256: win.sha256,
         extraHeaders: {
           "X-DR7-Build-Commit": manifest.commit_short || "",
           "X-DR7-Signing-Status": "unsigned",

@@ -231,6 +231,70 @@ func run_test() -> void:
 		fail("Unchanged server HP snapshot must NOT overwrite local Drum PvE HP back to full")
 		return
 
+	# Regression for Sarcosuchus (g4) armor-break + online server respawn (Owner 2026-11-22):
+	# 1. Killing g4 while armor is 0 and hard-stunned must clear hard_stun/shield_break_icon.
+	# 2. Online client must NOT locally auto-respawn or rotate g4 -> dilophosaurus before server.
+	# 3. Server false -> true respawn MUST restore full stamina (100/100), peace state, idle anim, and home position.
+	var g4_slot: Dictionary = {}
+	for s_cand in fm_online.slots:
+		if str(s_cand.get("id", "")) == "g4":
+			g4_slot = s_cand
+			break
+	if g4_slot.is_empty():
+		fail("Expected g4 (sarcosuchus) slot in FieldCombatManager")
+		return
+	g4_slot["stamina"] = 0.0
+	g4_slot["stun_timer_s"] = 3.0
+	g4_slot["hard_stun_timer_s"] = 1.5
+	g4_slot["shield_break_icon_timer_s"] = 2.0
+	g4_slot["combat_state"] = "combat"
+	fm_online.call("_kill_slot_monster", g4_slot)
+	if float(g4_slot.get("hard_stun_timer_s", -1.0)) > 0.001 or float(g4_slot.get("shield_break_icon_timer_s", -1.0)) > 0.001:
+		fail("Killing monster must clear hard_stun_timer_s and shield_break_icon_timer_s")
+		return
+	fm_online._slot_local_hit_grace.clear()
+	startup.transport.packet_received.emit({
+		"op": "zone_snapshot",
+		"tick": 4,
+		"map_id": "rocky_plateau",
+		"zone_id": 0,
+		"entities": [
+			{"id": "uid-vinh", "kind": "player", "display_name": "Vinh", "character_id": "drum", "x": 560.0, "y": 840.0, "hp": 1500.0, "max_hp": 1500.0, "mana": 0.0, "max_mana": 100.0, "alive": true, "facing_left": false, "act": "idle"},
+			{"id": "g4", "kind": "monster", "character_id": "sarcosuchus", "x": 4125.0, "y": 945.0, "hp": 0.0, "max_hp": 1500.0, "alive": false},
+		],
+	})
+	# Step > 12s locally while network_authoritative=true -> MUST stay dead until server respawns it!
+	for _step_i in range(30):
+		fm_online.step(0.5)
+	if bool(g4_slot["alive"]) or str(g4_slot["character_id"]) != "sarcosuchus":
+		fail("Online client must NOT locally auto-respawn or rotate g4 species before server (alive=%s cid=%s)" % [str(g4_slot["alive"]), str(g4_slot["character_id"])])
+		return
+	# Server transitions g4 alive: false -> true with full 1500 HP
+	startup.transport.packet_received.emit({
+		"op": "zone_snapshot",
+		"tick": 5,
+		"map_id": "rocky_plateau",
+		"zone_id": 0,
+		"entities": [
+			{"id": "uid-vinh", "kind": "player", "display_name": "Vinh", "character_id": "drum", "x": 560.0, "y": 840.0, "hp": 1500.0, "max_hp": 1500.0, "mana": 0.0, "max_mana": 100.0, "alive": true, "facing_left": false, "act": "idle"},
+			{"id": "g4", "kind": "monster", "character_id": "sarcosuchus", "x": 4125.0, "y": 945.0, "hp": 1500.0, "max_hp": 1500.0, "alive": true},
+		],
+	})
+	var g4_node := g4_slot.get("node") as Node2D
+	var g4_spr := g4_node.get_node_or_null("Sprite") as AnimatedSprite2D if g4_node != null else null
+	if not bool(g4_slot["alive"]) or absf(float(g4_slot["hp"]) - 1500.0) > 0.1:
+		fail("Server respawn must resurrect g4 with 1500 HP, got alive=%s hp=%s" % [str(g4_slot["alive"]), str(g4_slot["hp"])])
+		return
+	if absf(float(g4_slot["stamina"]) - float(g4_slot["max_stamina"])) > 0.1:
+		fail("Server respawn MUST restore full armor/stamina on Sarcosuchus (got %.1f/%.1f)" % [float(g4_slot["stamina"]), float(g4_slot["max_stamina"])])
+		return
+	if str(g4_slot.get("combat_state", "")) != "peace" or float(g4_slot.get("stun_timer_s", 1.0)) > 0.001 or float(g4_slot.get("hard_stun_timer_s", 1.0)) > 0.001:
+		fail("Server respawn must reset g4 to peace with 0 stun timers (state=%s)" % str(g4_slot.get("combat_state", "")))
+		return
+	if g4_node == null or not g4_node.visible or g4_spr == null or String(g4_spr.animation) != "idle":
+		fail("Server respawn must make g4 visible and reset animation from ko -> idle (anim=%s)" % [String(g4_spr.animation) if g4_spr != null else "null"])
+		return
+
 	# (5d) Logout cleans up Arena and returns strictly to LOGIN
 	startup.logout_to_login("Đăng xuất thành công")
 	await process_frame

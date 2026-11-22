@@ -175,6 +175,57 @@ func run_test() -> void:
 		fail("Reconnect must resume monotonically without tick rollback (before=%d after=%d)" % [tick_before_dc, sync_thai.last_snapshot_tick])
 		return
 
+	# 7. Son Goku authoritative damage parity (prevents premature death on Pteranodon f1 & Sarcosuchus g4):
+	var tok_goku := _make_signed_token({"user_id": "uid-goku", "display_name": "GokuTest", "character_id": "songoku", "spawn_x": 1160.0})
+	var ws_goku = WebSocketTransportScript.new()
+	var sync_goku = ZoneClientSyncScript.new()
+	sync_goku.attach_transport(ws_goku)
+	ws_goku.connect_to_zone(ws_url, "rocky_plateau", 2, tok_goku)
+	for _wg in range(60):
+		ws_goku.poll_events()
+		if sync_goku.is_ready_to_play() and sync_goku.players_by_id.has("uid-goku"):
+			break
+		OS.delay_msec(25)
+	if not sync_goku.is_ready_to_play():
+		fail("Son Goku client must connect cleanly to Zone 2")
+		return
+	if absf(float(sync_goku.players_by_id["uid-goku"].get("mana", 0.0)) - 100.0) > 0.5:
+		fail("Son Goku must start with 100 Mana on server, got %s" % str(sync_goku.players_by_id["uid-goku"].get("mana")))
+		return
+	# 11 goku_light hits (15 dmg each = 165 total, matching Clips 1..5 armor break) on Pteranodon f1 (1000 HP) & Sarcosuchus g4 (1500 HP):
+	for _h in range(11):
+		sync_goku.send_combat_action("goku_light", "f1", "monster", Vector2(1160.0, 240.0), false, 15.0)
+		sync_goku.send_combat_action("goku_light", "g4", "monster", Vector2(4125.0, 945.0), false, 15.0)
+	_pump([ws_goku], 16, 20)
+	var f1_m: Dictionary = sync_goku.monsters_by_id.get("f1", {})
+	var g4_m: Dictionary = sync_goku.monsters_by_id.get("g4", {})
+	if not bool(f1_m.get("alive", false)) or absf(float(f1_m.get("hp", 0.0)) - 835.0) > 0.5:
+		fail("Pteranodon f1 must stay alive at 835 HP after 11 Goku light hits (was dying prematurely!), got alive=%s hp=%s" % [str(f1_m.get("alive")), str(f1_m.get("hp"))])
+		return
+	if not bool(g4_m.get("alive", false)) or absf(float(g4_m.get("hp", 0.0)) - 1335.0) > 0.5:
+		fail("Sarcosuchus g4 must stay alive at 1335 HP after 11 Goku light hits (was dying prematurely!), got alive=%s hp=%s" % [str(g4_m.get("alive")), str(g4_m.get("hp"))])
+		return
+	# Anti-cheat clamp + heavy / gold slash / flurry / atomic / piercing kamehameha
+	sync_goku.send_combat_action("goku_light", "f1", "monster", Vector2(1160.0, 240.0), false, 9999.0) # clamped to 20 -> 815
+	sync_goku.send_combat_action("goku_heavy", "f1", "monster", Vector2(1160.0, 240.0), false, 50.0) # -> 765
+	sync_goku.send_combat_action("goku_gold_slash", "f1", "monster", Vector2(1160.0, 240.0), false, 60.0) # -> 705
+	sync_goku.send_combat_action("flurry_kick", "f1", "monster", Vector2(1160.0, 240.0), false, 30.0) # -> 675
+	sync_goku.send_combat_action("atomic_blast", "f1", "monster", Vector2(200.0, 840.0), false, 55.0) # ranged -> 620
+	sync_goku.send_combat_action("kamehameha_cast", "", "self", Vector2(3100.0, 945.0), false, 0.0) # mana 100 -> 20
+	sync_goku.send_combat_action("kamehameha", "g4", "monster", Vector2(3100.0, 945.0), false, 360.0) # 1335 -> 975
+	sync_goku.send_combat_action("kamehameha", "f4", "monster", Vector2(3100.0, 945.0), false, 360.0) # piercing 1000 -> 640
+	_pump([ws_goku], 18, 20)
+	if absf(float(sync_goku.monsters_by_id["f1"].get("hp", 0.0)) - 620.0) > 0.5:
+		fail("f1 HP after clamped light(20)+heavy(50)+gold(60)+flurry(30)+atomic(55) must be 620, got %s" % str(sync_goku.monsters_by_id["f1"].get("hp")))
+		return
+	if absf(float(sync_goku.monsters_by_id["g4"].get("hp", 0.0)) - 975.0) > 0.5 or absf(float(sync_goku.monsters_by_id["f4"].get("hp", 0.0)) - 640.0) > 0.5:
+		fail("Piercing Kamehameha must hit both g4 (975) and f4 (640), got g4=%s f4=%s" % [str(sync_goku.monsters_by_id["g4"].get("hp")), str(sync_goku.monsters_by_id["f4"].get("hp"))])
+		return
+	if absf(float(sync_goku.players_by_id["uid-goku"].get("mana", 0.0)) - 20.0) > 0.5:
+		fail("Kamehameha cast must deduct 80 Mana once (100 -> 20), got %s" % str(sync_goku.players_by_id["uid-goku"].get("mana")))
+		return
+	ws_goku.close_connection("test_done")
+
 	ws_vinh.close_connection("test_done")
 	ws_thai.close_connection("test_done")
 	_stop_server()

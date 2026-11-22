@@ -1597,10 +1597,10 @@ func _on_zone_switched(_map_id: String, zone_id: int) -> void:
 		_zone_selector_syncing = false
 
 
-func _on_local_combat_action_emitted(action_kind: String, target_id: String, target_kind: String, origin_pos: Vector2, facing_left: bool) -> void:
+func _on_local_combat_action_emitted(action_kind: String, target_id: String, target_kind: String, origin_pos: Vector2, facing_left: bool, damage: float = -1.0) -> void:
 	if not alpha_session_active or zone_sync == null:
 		return
-	zone_sync.send_combat_action(action_kind, target_id, target_kind, origin_pos, facing_left)
+	zone_sync.send_combat_action(action_kind, target_id, target_kind, origin_pos, facing_left, damage)
 
 
 func _on_local_player_pve_damage_emitted(damage: float, new_hp: float, alive: bool) -> void:

@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-21T08:44:20Z",
+  "updated_at": "2026-11-22T13:48:11Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.18.0",
@@ -167,9 +167,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "SONGOKU-HERO-RELEASE-V0-18-0",
-    "status": "completed_owner_approved",
-    "summary": "Chot chinh thuc Son Goku (PIPE-022, v0.18.0): 34 clips than 4090x4090 Nearest 60Hz tai assets/songoku/ + 14 clips FX doc lap tai assets/fx/songoku_skills_fx/, prefab scenes/SongokuHero.tscn, HUD San Tap kinh mo, fix online Vinh/Thai, don sach /work, /review demo, Songoku/ va file thua; 0 junk & 100% parity Web/APK/IPA; ./loop.sh test & check exit 0.",
+    "active_task_id": "FIX-ONLINE-MONSTER-ARMOR-RESPAWN-PARITY",
+    "status": "completed",
+    "summary": "Sua dut diem loi quai chet ngang khi vo giap (Pteranodon/Sarcosuchus) va hoi sinh be giap vinh vien o che do Online: dong bo 1:1 ACTION_SPECS Son Goku (goku_light 10..20, goku_heavy 50, goku_gold_slash 60, flurry_kick 30, atomic_blast 55, kamehameha_cast/kamehameha 360) giua FieldCombatManager, ZoneClientSync, headless_zone_server.gd va cloudflare worker.js; reset day du stamina/peace/idle/position/timers trong _reset_slot_for_server_respawn; chan local auto-respawn khi network_authoritative=true; bo sung regression tests va LRN-128.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1390,6 +1390,24 @@
       "timestamp": "2026-11-21T08:44:20Z",
       "status": "completed_owner_approved",
       "summary": "Chot chinh thuc Son Goku (PIPE-022, v0.18.0): 34 clips than 4090x4090 Nearest 60Hz tai assets/songoku/ + 14 clips FX doc lap tai assets/fx/songoku_skills_fx/, prefab scenes/SongokuHero.tscn, HUD San Tap kinh mo, fix online Vinh/Thai, don sach /work, /review demo, Songoku/ va file thua; 0 junk & 100% parity Web/APK/IPA; ./loop.sh test & check exit 0."
+    },
+    {
+      "id": "CI-AUTO-SYNC-STAGING-V0-18-0",
+      "timestamp": "2026-11-22T10:42:26Z",
+      "status": "completed",
+      "summary": "Dong bo live v0.18.0 (commit ff254108) du 3 dinh dang Web/APK/IPA + base/dr7-studio-base.ipa + Worker moi (mac dinh Son Goku) len https://dr7-alpha-staging.hem-tra.workers.dev, xac minh 100% SHA-256 tai that; them job deploy-alpha-staging vao .github/workflows/ci.yml, lenh ./loop.sh deploy-staging va quy trinh bat buoc vao AGENTS.md Dieu 8.1."
+    },
+    {
+      "id": "WINDOWS-SETUP-EXE-4PLATFORM-SYNC-V0-18-0",
+      "timestamp": "2026-11-22T10:56:33Z",
+      "status": "completed",
+      "summary": "Bo sung bo cai Windows PC 64-bit setup.exe (Godot 4.7.2 preset.3 + NSIS MUI2 LZMA per-user khong can Admin, icon dr7_studio.ico, ./loop.sh win-setup) vao CI/CD ci.yml, Worker portal & R2 staging; build sach v0.18.0 (ff25410) va dong bo live du 4 dinh dang (APK 53.43MiB, IPA 50.39MiB, Windows setup.exe 51.40MiB SHA c6eadd1c1532..., Web PCK 26.66MiB) len https://dr7-alpha-staging.hem-tra.workers.dev xac minh 100% SHA-256."
+    },
+    {
+      "id": "FIX-ONLINE-MONSTER-ARMOR-RESPAWN-PARITY",
+      "timestamp": "2026-11-22T13:48:11Z",
+      "status": "completed",
+      "summary": "Sua dut diem loi quai chet ngang khi vo giap (Pteranodon/Sarcosuchus) va hoi sinh be giap vinh vien o che do Online: dong bo 1:1 ACTION_SPECS Son Goku (goku_light 10..20, goku_heavy 50, goku_gold_slash 60, flurry_kick 30, atomic_blast 55, kamehameha_cast/kamehameha 360) giua FieldCombatManager, ZoneClientSync, headless_zone_server.gd va cloudflare worker.js; reset day du stamina/peace/idle/position/timers trong _reset_slot_for_server_respawn; chan local auto-respawn khi network_authoritative=true; bo sung regression tests va LRN-128."
     }
   ],
   "quick_resume_commands": [
@@ -1734,5 +1752,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-21T08:44:20Z"
+  "last_updated_utc": "2026-11-22T13:48:11Z"
 }
