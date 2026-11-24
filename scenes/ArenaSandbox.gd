@@ -608,6 +608,14 @@ func _sync_field_pad_state() -> void:
 			float(player_node.get("flurry_cooldown_s")),
 			is_player_grounded_for_recover()
 		)
+		if player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion")) and mobile_pad.has_method(&"set_tapion_skill_cooldowns"):
+			mobile_pad.call(
+				&"set_tapion_skill_cooldowns",
+				float(player_node.get("kentaima_cooldown_s")),
+				float(player_node.get("mahasenko_cooldown_s")),
+				float(player_node.get("antamina_cooldown_s")),
+				float(player_node.get("bukadai_cooldown_s"))
+			)
 
 
 func _on_touch_action(action_name: String) -> void:
@@ -703,11 +711,46 @@ func _on_touch_action(action_name: String) -> void:
 		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_kamehameha", 100.0)):
 			_request_player_action("kame_ground_horiz")
 		_sync_field_pad_state()
+	elif action_name == "kentaima":
+		if player_node.has_method(&"trigger_kentaima") and bool(player_node.call(&"trigger_kentaima")):
+			_face_player_toward_pointed_target_if_any()
+			_request_player_action("kentaima_cast")
+		_sync_field_pad_state()
+	elif action_name == "mahasenko":
+		if player_node.has_method(&"trigger_mahasenko") and bool(player_node.call(&"trigger_mahasenko")):
+			_face_player_toward_pointed_target_if_any()
+			var sup_m := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+			var air_m := bool(player_node.call(&"is_airborne_flight")) or (player_node.position.y < sup_m - 18.0)
+			_request_player_action("mahasenko_air" if air_m else "mahasenko_ground")
+		_sync_field_pad_state()
+	elif action_name == "antamina":
+		if player_node.has_method(&"trigger_antamina") and bool(player_node.call(&"trigger_antamina")):
+			_face_player_toward_pointed_target_if_any()
+			_request_player_action("antamina_combo")
+		_sync_field_pad_state()
+	elif action_name == "bukadai":
+		if player_node.has_method(&"trigger_bukadai") and bool(player_node.call(&"trigger_bukadai")):
+			_face_player_toward_pointed_target_if_any()
+			_request_player_action("bukadai_rush")
+		_sync_field_pad_state()
 	elif action_name in ["attack_heavy"]:
 		if field_mode_enabled and field_manager != null and field_manager.active:
 			field_manager.request_player_heavy_action()
 		else:
 			_request_player_action(action_name)
+
+
+func _face_player_toward_pointed_target_if_any() -> void:
+	if player_node == null or field_manager == null or not field_manager.active:
+		return
+	if field_manager.has_method(&"get_pointed_or_nearest_enemy_pos"):
+		var tinfo: Dictionary = field_manager.call(&"get_pointed_or_nearest_enemy_pos")
+		if bool(tinfo.get("valid", false)):
+			var tpos: Vector2 = tinfo.get("pos", player_node.position)
+			var dx := tpos.x - player_node.position.x
+			if absf(dx) > 4.0:
+				player_facing_left = dx < 0.0
+				player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
 
 
 func _is_fighter_turning(fighter: Node) -> bool:
@@ -3777,8 +3820,9 @@ func _physics_process(delta: float) -> void:
 		if tab_just and field_mode_enabled and field_manager != null and field_manager.active:
 			field_manager.cycle_target_pointer()
 			_sync_field_pad_state()
+		var is_tap_kb := player_node != null and player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion"))
 		if v_just:
-			_on_touch_action("transform_ssj")
+			_on_touch_action("bukadai" if is_tap_kb else "transform_ssj")
 		if f_just:
 			_on_touch_action("fly_toggle")
 		if t_just:
@@ -3788,11 +3832,11 @@ func _physics_process(delta: float) -> void:
 		if k2_just:
 			_on_touch_action("energy_recover")
 		if k3_just:
-			_on_touch_action("flurry_kick")
+			_on_touch_action("kentaima" if is_tap_kb else "flurry_kick")
 		if k4_just:
-			_on_touch_action("atomic_blast")
+			_on_touch_action("mahasenko" if is_tap_kb else "atomic_blast")
 		if k5_just:
-			_on_touch_action("kamehameha")
+			_on_touch_action("antamina" if is_tap_kb else "kamehameha")
 		for action_name in [&"attack_light", &"attack_heavy", &"power_up"]:
 			if Input.is_action_just_pressed(action_name):
 				var aname := String(action_name)
@@ -4176,19 +4220,21 @@ func _update_hud() -> void:
 				alive_cnt += 1
 		var hero_txt := "Ẩn (bấm Hiện Tướng)"
 		if field_manager.player_spawned and player_node != null:
-			var h_name := "Son Goku" if _is_hero_songoku(player_node) else active_character_id.capitalize()
+			var is_tapion_hero := player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion"))
+			var h_name := "Tapion" if is_tapion_hero else ("Son Goku" if _is_hero_songoku(player_node) else active_character_id.capitalize())
 			if field_manager.player_dead:
 				hero_txt = "%s KO (%.1fs)" % [h_name, field_manager.player_respawn_timer_s]
 			else:
 				var imm_tag := " [BẤT TỬ]" if field_manager.player_immortal else ""
 				var extra_goku := ""
 				if _is_hero_songoku(player_node):
-					var f_tag := "SSJ1" if bool(player_node.get("is_ssj")) else "BASE"
+					var f_tag := "HERO" if is_tapion_hero else ("SSJ1" if bool(player_node.get("is_ssj")) else "BASE")
+					var combo_total := 10 if is_tapion_hero else 7
 					var fl_st := str(player_node.get("flight_state"))
 					var fl_tag := " | BAY:%s" % fl_st.to_upper() if fl_st != "ground" else ""
 					var ki_v := int(floor(float(player_node.get("ki"))))
 					var ki_m := int(round(float(player_node.get("max_ki"))))
-					extra_goku = " [%s · Đòn %d/7 · TL %d/100 · KI %d/%d%s]" % [f_tag, (int(player_node.get("combo_step")) % 7) + 1, int(floor(float(player_node.get("stamina")))), ki_v, ki_m, fl_tag]
+					extra_goku = " [%s · Đòn %d/%d · TL %d/100 · KI %d/%d%s]" % [f_tag, (int(player_node.get("combo_step")) % combo_total) + 1, combo_total, int(floor(float(player_node.get("stamina")))), ki_v, ki_m, fl_tag]
 				hero_txt = "%s%s %d/%d HP%s (%d,%d)" % [h_name, extra_goku, int(round(field_manager.player_hp)), int(round(field_manager.player_max_hp)), imm_tag, px, py]
 		var boss_txt := ""
 		var bslot: Dictionary = field_manager.boss_slot

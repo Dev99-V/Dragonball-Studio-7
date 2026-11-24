@@ -1,0 +1,46 @@
+{
+  "schema": "dr7-studio.master_approval_lock.v1",
+  "character_id": "tapion",
+  "status": "owner_approved_immutable_master",
+  "approved_at": "2026-11-24T10:23:35.577899+00:00",
+  "owner_message": "anh đã xem mẫu và anh thấy nét làm lại đã chuẩn anh chốt mẫu demo chuẩn gốc nhìn này để làm mốc cho những file source tham chiếu và phát triển ra",
+  "uploaded_confirmation_sha256": "0965b36e431bcc4fff03dd766d371e7ea1bc02a63fb43eec064a96abd58de071",
+  "rgba_identical_to_candidate": true,
+  "files": {
+    "master_125px": {
+      "path": "work/characters/tapion/approved-master/approved-master-125px.png",
+      "sha256": "0965b36e431bcc4fff03dd766d371e7ea1bc02a63fb43eec064a96abd58de071",
+      "canvas_size_px": [
+        288,
+        288
+      ],
+      "anchor_px": [
+        144,
+        248
+      ],
+      "body_bbox_px": [
+        108,
+        123,
+        68,
+        125
+      ],
+      "head_w_px": 56,
+      "foot_span_x": [
+        126,
+        163
+      ],
+      "stance_mid_x": 144.5,
+      "boot_y": 247,
+      "edge_acutance_sobel": 208.26,
+      "alpha_hardness_pct": 100.0
+    },
+    "master_1024_magenta": {
+      "path": "work/characters/tapion/approved-master/approved-master-1024-magenta.png",
+      "sha256": "c192330b206dfcaeecbbacde4b53bda6234238c33e8e4a485270d347ae7025de"
+    },
+    "master_1024_rgba": {
+      "path": "work/characters/tapion/approved-master/approved-master-1024-rgba.png",
+      "sha256": "50caea9a3afed7e5542e85b01dfc3430fc9f6d7aef9dfda0fba08de35e7c0c5b"
+    }
+  }
+}

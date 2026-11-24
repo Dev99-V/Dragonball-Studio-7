@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-22T13:48:11Z",
+  "updated_at": "2026-11-24T13:17:27Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.18.0",
@@ -167,9 +167,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "FIX-ONLINE-MONSTER-ARMOR-RESPAWN-PARITY",
-    "status": "completed",
-    "summary": "Sua dut diem loi quai chet ngang khi vo giap (Pteranodon/Sarcosuchus) va hoi sinh be giap vinh vien o che do Online: dong bo 1:1 ACTION_SPECS Son Goku (goku_light 10..20, goku_heavy 50, goku_gold_slash 60, flurry_kick 30, atomic_blast 55, kamehameha_cast/kamehameha 360) giua FieldCombatManager, ZoneClientSync, headless_zone_server.gd va cloudflare worker.js; reset day du stamina/peace/idle/position/timers trong _reset_slot_for_server_respawn; chan local auto-respawn khi network_authoritative=true; bo sung regression tests va LRN-128.",
+    "active_task_id": "TAPION-FULL-47-HUMAN-TEST",
+    "status": "ready_for_owner_human_test",
+    "summary": "Hoàn tất trọn bộ 47/47 file nguồn Tapion (review/tapion_demo: 34 clips thân / 142 unique frames trên 1 trang 3506x3214 Nearest 60Hz SHA-256 0902ce100019cd99... + 17 clips FX độc lập / 61 frames trên 1 trang 2338x2338 SHA-256 673654b7d5963594...), mở bộ lọc có kiểm soát review/ trong export_presets.cfg (LRN-129) để đóng gói đủ Tapion vào Godot Web/APK/IPA/Windows, vượt 136/136 Master QC Gate, pass 100% ./loop.sh test và push lên main chờ Owner Human Test.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1408,6 +1408,30 @@
       "timestamp": "2026-11-22T13:48:11Z",
       "status": "completed",
       "summary": "Sua dut diem loi quai chet ngang khi vo giap (Pteranodon/Sarcosuchus) va hoi sinh be giap vinh vien o che do Online: dong bo 1:1 ACTION_SPECS Son Goku (goku_light 10..20, goku_heavy 50, goku_gold_slash 60, flurry_kick 30, atomic_blast 55, kamehameha_cast/kamehameha 360) giua FieldCombatManager, ZoneClientSync, headless_zone_server.gd va cloudflare worker.js; reset day du stamina/peace/idle/position/timers trong _reset_slot_for_server_respawn; chan local auto-respawn khi network_authoritative=true; bo sung regression tests va LRN-128."
+    },
+    {
+      "id": "TAPION-MASTER-DEMO-V1",
+      "timestamp": "2026-11-24T10:15:52Z",
+      "status": "awaiting_owner_master_human_test",
+      "summary": "Dựng bản Demo Mẫu Chuẩn 125px của Tapion (review/tapion_demo) từ 'tapion/hướng nhìn chuẩn của nhân vật.png' theo chuẩn độ nét 1px Son Goku (route local:codex-cli, 68x125px trên khung 288x288, anchor [144,248], stance_mid=144.5, Sobel=208.260, alpha_hardness=100%, 0 pockets/spill) kèm clip đối chiếu trực tiếp source_raw_ref (Sobel=129.387); pass 100% ./loop.sh test và đồng bộ lên localhost:8080 (Human Test & Sân Tập Godot Web) chờ Owner duyệt mẫu chuẩn."
+    },
+    {
+      "id": "TAPION-MASTER-APPROVED",
+      "timestamp": "2026-11-24T10:23:35Z",
+      "status": "completed",
+      "summary": "Owner nghiệm thu & chốt mẫu chuẩn góc nhìn 125px của Tapion (68x125px trên khung 288x288, anchor [144,248], stance_mid=144.5, Sobel=208.260, alpha_hardness=100%, SHA-256 0965b36e431bcc4f...) làm Identity Anchor bất biến cho toàn bộ 47 file nguồn; chờ Owner chốt 4 thông số phân loại/walk/combo/skill để dựng bộ hoạt ảnh."
+    },
+    {
+      "id": "TAPION-PHASE1-HUMAN-TEST",
+      "timestamp": "2026-11-24T10:56:54Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoàn tất Tapion Tướng Đợt 1 (review/tapion_demo: 23 clips thân / 92 unique frames trên 1 trang 2922x2630 Nearest 60Hz SHA-256 52aa908f11fb1b58... + 4 clips FX độc lập tapion_skills_fx SHA-256 12fd15d7add570ce...): khóa bất biến mẫu chuẩn 125px (idle_04 SHA-256 0965b36e...), walk 8f góc 3/4, combat_move 400/500 px/s, nhảy/bay/tốc biến/hit/ko, Combo Kiếm 10 đòn (attack_light..attack_10 LOOP X2 + nổ bụi đất atk10_impact_fx), vượt 88/88 Master QC Gate, pass 100% ./loop.sh test và đồng bộ live lên localhost:8080 (Tab Human Test & Sân Tập Godot Web) chờ Owner nghiệm thu Đợt 1."
+    },
+    {
+      "id": "TAPION-FULL-47-HUMAN-TEST",
+      "timestamp": "2026-11-24T13:17:27Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoàn tất trọn bộ 47/47 file nguồn Tapion (review/tapion_demo: 34 clips thân / 142 unique frames trên 1 trang 3506x3214 Nearest 60Hz SHA-256 0902ce100019cd99... + 17 clips FX độc lập / 61 frames trên 1 trang 2338x2338 SHA-256 673654b7d5963594...), mở bộ lọc có kiểm soát review/ trong export_presets.cfg (LRN-129) để đóng gói đủ Tapion vào Godot Web/APK/IPA/Windows, vượt 136/136 Master QC Gate, pass 100% ./loop.sh test và push lên main chờ Owner Human Test."
     }
   ],
   "quick_resume_commands": [
@@ -1752,5 +1776,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-22T13:48:11Z"
+  "last_updated_utc": "2026-11-24T13:17:27Z"
 }

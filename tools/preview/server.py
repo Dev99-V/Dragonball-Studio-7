@@ -216,6 +216,24 @@ def load_review_content() -> dict:
         for anim in parsed["animations"].values():
             for frame in anim["frames"]:
                 frame["atlas_url"] = atlas_url
+        sha_atlases = {a.name: sha256_file(a) for a in atlas_files}
+        fx_tres_rel = str(ch.get("fx_tres_path") or "").replace("res://", "")
+        if fx_tres_rel:
+            fx_tres_p = (REPO_ROOT / fx_tres_rel).resolve()
+            fx_atlas_files = sorted(fx_tres_p.parent.glob("*-atlas-*.png")) if fx_tres_p.is_file() else []
+            if fx_tres_p.is_file() and fx_atlas_files:
+                fx_atlas_p = fx_atlas_files[0]
+                if ch.get("fx_atlas_sha256") and sha256_file(fx_atlas_p) != ch["fx_atlas_sha256"]:
+                    raise ValueError(f"Review FX atlas SHA-256 mismatch: {cid}")
+                fx_parsed = parse_tres(fx_tres_p)
+                fx_atlas_url = "/" + fx_atlas_p.relative_to(REPO_ROOT).as_posix()
+                for fx_name, fx_anim in fx_parsed["animations"].items():
+                    if fx_name not in parsed["animations"]:
+                        for frame in fx_anim["frames"]:
+                            frame["atlas_url"] = fx_atlas_url
+                        parsed["animations"][fx_name] = fx_anim
+                for fa in fx_atlas_files:
+                    sha_atlases[fa.name] = sha256_file(fa)
         tscn_candidates = sorted(godot_dir.glob("*.tscn"))
         tscn_parsed = parse_tscn(tscn_candidates[0]) if tscn_candidates else {}
         bundles.append({
@@ -228,7 +246,7 @@ def load_review_content() -> dict:
             "frames_2d": "res://" + tres_path.relative_to(REPO_ROOT).as_posix(),
             "export_json": "res://" + export_path.relative_to(REPO_ROOT).as_posix(),
             "sha256_tres": sha256_file(tres_path),
-            "sha256_atlases": {a.name: sha256_file(a) for a in atlas_files},
+            "sha256_atlases": sha_atlases,
             "frame_size": export["frame_size"],
             "anchor_px": export["anchor_px"],
             "default_clip": export["default_clip"],
@@ -683,9 +701,10 @@ def build_setups(bundles: list[dict], roster: dict | None = None) -> list[dict]:
     return out
 
 
-def verify_engine_localhost_parity() -> dict:
+def verify_engine_localhost_parity(bundles: list[dict] | None = None) -> dict:
     """Verify 100% Zero-Drift Parity between Engine files (.tres/.tscn/PNG) and Localhost API."""
-    bundles = discover_bundles()
+    if bundles is None:
+        bundles = discover_bundles()
     raw_roster = json.loads(ROSTER_JSON.read_text(encoding="utf-8")) if ROSTER_JSON.is_file() else {"characters": []}
     roster = load_finalized_roster(bundles)
     by_id = {b["id"]: b for b in bundles}
@@ -1160,7 +1179,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if req_path == "/api/bundles":
             bundles = discover_bundles()
             roster = load_finalized_roster(bundles)
-            parity = verify_engine_localhost_parity()
+            parity = verify_engine_localhost_parity(bundles)
             godot_bootstrap = get_godot_web_bootstrap_status()
             try:
                 rituals = load_rituals()

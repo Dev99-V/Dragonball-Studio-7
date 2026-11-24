@@ -1,5 +1,365 @@
 {
   "schema": "dr7-studio.review_roster.v1",
-  "note": "Trống — Son Goku đã chốt chính thức tại assets/songoku/ (v0.18.0); sẵn sàng đón nhân vật tiếp theo.",
-  "characters": []
+  "note": "Tapion Tướng — Trọn Bộ 47/47 File Nguồn (Human Test — 34 clips thân trên 1 trang PNG <=4096x4096 Nearest 60Hz + 17 clips FX độc lập trên 1 trang PNG <=4096x4096): đủ Turntable 8 góc, Sáo Ocarina (Idle + Khiên bảo vệ + Hồi phục tái tạo), Walk 8f, Combat Move, Nhảy/Bay/Tốc biến/Hit/KO, Combo Kiếm 1..10 (LOOP X2) và 4 Đại chiêu Mahasenko (Đất/Không), Antamina (1->5), Kentaima, Bukadai.",
+  "characters": [
+    {
+      "character_id": "tapion_demo",
+      "display_name": "Tapion (Trọn Bộ 47/47 Mẫu · 34 Clips Thân + 17 Clips FX) [Human Test]",
+      "role": "hero",
+      "faction": "review_demo",
+      "role_label": "Human Test — Tướng Tapion Đủ 47/47 Nguồn (34 Thân + 17 FX · Kiếm 1..10 · Khiên & Hồi Sáo · Mahasenko · Antamina · Kentaima · Bukadai)",
+      "tags": [
+        "human_test",
+        "hero",
+        "tapion",
+        "full_47_sources",
+        "goku_standard_125px"
+      ],
+      "status": "human_test_pending",
+      "owner_approved": false,
+      "combat_style": "sword_combo_10_ocarina_4_ultimates",
+      "default_clip": "idle",
+      "bundle_dir": "res://review/tapion_demo/godot_bundle",
+      "scene_2d": "res://review/tapion_demo/TapionDemo.tscn",
+      "avatar_path": "res://review/tapion_demo/avatar_tapion.png",
+      "canonical_identity": {
+        "source_path": "res://tapion/hướng nhìn chuẩn của nhân vật.png",
+        "sha256": "aa3896540b3e5b1e4308aa440a574d379aca707caf106298aa58b86ca2e4abb2"
+      },
+      "review_atlas_sha256": "0902ce100019cd9927cc7161671821ae2e3246d625cbaee5dd0a964102fb806a",
+      "atlas_sha256": "0902ce100019cd9927cc7161671821ae2e3246d625cbaee5dd0a964102fb806a",
+      "atlas_path": "review/tapion_demo/godot_bundle/godot/tapion_demo-atlas-00.png",
+      "atlas_size_px": [
+        3506,
+        3214
+      ],
+      "atlas_pages": 1,
+      "tres_path": "review/tapion_demo/godot_bundle/godot/tapion_demo.tres",
+      "tres_sha256": "0bbdc26ea8adee37c5dfb105e42b8237c73ffe2e818f4f3ac76d6584df4fcae5",
+      "fx_tres_path": "review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres",
+      "fx_atlas_path": "review/tapion_demo/fx_bundle/godot/tapion_skills_fx-atlas-00.png",
+      "fx_atlas_sha256": "673654b7d5963594e0bd543a82740464dbed18b3ed4e4a5775f73ee0374d9eeb",
+      "fx_atlas_size_px": [
+        2338,
+        2338
+      ],
+      "engine_export_path": "review/tapion_demo/godot_bundle/engine-export.json",
+      "prefab_path": "review/tapion_demo/TapionDemo.tscn",
+      "canvas_size_px": [
+        288,
+        288
+      ],
+      "anchor_px": [
+        144,
+        248
+      ],
+      "default_scale": 1.0,
+      "frame_count": 142,
+      "clip_count": 34,
+      "fx_clip_count": 17,
+      "clips": [
+        "idle",
+        "walk",
+        "turntable_360",
+        "combat_enter",
+        "idle_combat",
+        "combat_move",
+        "jump",
+        "fly_prep",
+        "fly_aura",
+        "teleport",
+        "teleport_dash_ground",
+        "teleport_dash_air",
+        "hit",
+        "ko",
+        "attack_light",
+        "attack_2",
+        "attack_3",
+        "attack_4",
+        "attack_5",
+        "attack_6",
+        "attack_7",
+        "attack_8",
+        "attack_9",
+        "attack_10",
+        "barrier_cast",
+        "energy_recover",
+        "mahasenko_ground",
+        "mahasenko_air",
+        "antamina_charge",
+        "antamina_rings",
+        "antamina_fire",
+        "antamina_combo",
+        "kentaima_cast",
+        "bukadai_rush"
+      ],
+      "present_clips": [
+        "idle",
+        "walk",
+        "turntable_360",
+        "combat_enter",
+        "idle_combat",
+        "combat_move",
+        "jump",
+        "fly_prep",
+        "fly_aura",
+        "teleport",
+        "teleport_dash_ground",
+        "teleport_dash_air",
+        "hit",
+        "ko",
+        "attack_light",
+        "attack_2",
+        "attack_3",
+        "attack_4",
+        "attack_5",
+        "attack_6",
+        "attack_7",
+        "attack_8",
+        "attack_9",
+        "attack_10",
+        "barrier_cast",
+        "energy_recover",
+        "mahasenko_ground",
+        "mahasenko_air",
+        "antamina_charge",
+        "antamina_rings",
+        "antamina_fire",
+        "antamina_combo",
+        "kentaima_cast",
+        "bukadai_rush"
+      ],
+      "effect_clips": [
+        "peace_aura_fx",
+        "tele_streak_h_fx",
+        "tele_streak_v_fx",
+        "atk10_impact_fx",
+        "barrier_dome_fx",
+        "mahasenko_hand_fx",
+        "mahasenko_beam_h_fx",
+        "mahasenko_beam_air_fx",
+        "mahasenko_impact_fx",
+        "antamina_stream_fx",
+        "antamina_impact_fx",
+        "kentaima_wave_fx",
+        "kentaima_impact_fx",
+        "bukadai_vanish_fx",
+        "bukadai_sphere_fx",
+        "bukadai_flash_fx",
+        "bukadai_impact_fx"
+      ],
+      "map_sync_metrics": {
+        "canvas_size_px": [
+          288,
+          288
+        ],
+        "foot_anchor_px": [
+          144,
+          248
+        ],
+        "body_only_bbox_px": {
+          "x": 108,
+          "y": 123,
+          "w": 68,
+          "h": 125
+        },
+        "full_fx_bbox_px": {
+          "x": 8,
+          "y": 10,
+          "w": 272,
+          "h": 268
+        },
+        "reference_ppu_64": 64,
+        "world_size_at_64ppu_m": {
+          "body_w_m": 1.0625,
+          "body_h_m": 1.9531,
+          "aura_w_m": 4.25,
+          "aura_h_m": 4.1875
+        },
+        "tile_32px_span": {
+          "body_tiles_w": 2.125,
+          "body_tiles_h": 3.90625,
+          "full_fx_tiles_w": 8.5,
+          "full_fx_tiles_h": 8.375
+        }
+      },
+      "pixel_sharpness_metrics": {
+        "texel_scale_ratio": "Native 1px gameplay, Nearest, whole-pose only (125px standing height)",
+        "edge_acutance_sobel": 208.26,
+        "single_pixel_run_fraction": 0.9852489244007375,
+        "alpha_hardness_pct": 100.0,
+        "visible_alpha_hardness_pct": 100.0,
+        "opaque_key_px": 0,
+        "enclosed_key_pockets": 0,
+        "outer_ring_spill_fraction": 0.0,
+        "reference_note": "Complete 47/47 source setup: 1-page body atlas 3506x3214 (34 clips, 142 unique frames) + 1-page FX atlas 2338x2338 (17 clips, 61 frames)."
+      },
+      "modes": {
+        "combined_1layer": {
+          "label": "Tapion Hero Trọn Bộ 47/47 Nguồn (34 Thân + 17 FX · 125px)",
+          "godot_prefab": "res://review/tapion_demo/TapionDemo.tscn",
+          "bundle_id": "tapion_demo_review"
+        }
+      },
+      "render_contract": {
+        "body_clips": [
+          "idle",
+          "walk",
+          "turntable_360",
+          "combat_enter",
+          "idle_combat",
+          "combat_move",
+          "jump",
+          "fly_prep",
+          "fly_aura",
+          "teleport",
+          "teleport_dash_ground",
+          "teleport_dash_air",
+          "hit",
+          "ko",
+          "attack_light",
+          "attack_2",
+          "attack_3",
+          "attack_4",
+          "attack_5",
+          "attack_6",
+          "attack_7",
+          "attack_8",
+          "attack_9",
+          "attack_10",
+          "barrier_cast",
+          "energy_recover",
+          "mahasenko_ground",
+          "mahasenko_air",
+          "antamina_charge",
+          "antamina_rings",
+          "antamina_fire",
+          "antamina_combo",
+          "kentaima_cast",
+          "bukadai_rush"
+        ],
+        "effect_clips": [
+          "peace_aura_fx",
+          "tele_streak_h_fx",
+          "tele_streak_v_fx",
+          "atk10_impact_fx",
+          "barrier_dome_fx",
+          "mahasenko_hand_fx",
+          "mahasenko_beam_h_fx",
+          "mahasenko_beam_air_fx",
+          "mahasenko_impact_fx",
+          "antamina_stream_fx",
+          "antamina_impact_fx",
+          "kentaima_wave_fx",
+          "kentaima_impact_fx",
+          "bukadai_vanish_fx",
+          "bukadai_sphere_fx",
+          "bukadai_flash_fx",
+          "bukadai_impact_fx"
+        ],
+        "locomotion": {
+          "kind": "ground",
+          "clip": "walk",
+          "walk_cycle_order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "default_scale": 1.0,
+          "screen_speed_px_per_second": 200,
+          "speed_px_per_second": 200.0,
+          "combat_speed_px_per_second": 500.0,
+          "combat_back_speed_px_per_second": 400.0,
+          "combat_fwd_speed_px_per_second": 500.0,
+          "flight_speed_px_per_second": 400.0,
+          "jump_height_px": 100.0
+        },
+        "game_states": {
+          "peace": {
+            "walk": true,
+            "idle": true,
+            "combat_move": false,
+            "idle_combat": false,
+            "attack": false
+          },
+          "combat": {
+            "walk": false,
+            "idle": false,
+            "combat_move": true,
+            "idle_combat": true,
+            "attack": true
+          }
+        },
+        "aura": {
+          "loop_clip": "peace_aura_fx",
+          "charge_clip": null,
+          "independent_clock": true,
+          "external_fx_tres": "res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres",
+          "peace_aura_clip": "peace_aura_fx"
+        },
+        "projectile": null,
+        "turning": {
+          "clip": null,
+          "method": "instant_flip",
+          "flip_h": true
+        },
+        "hero_mechanics": {
+          "forms": [
+            "konatsian_hero"
+          ],
+          "master_approved_locked": true,
+          "combat_combo_sequence": [
+            "attack_light",
+            "attack_2",
+            "attack_3",
+            "attack_4",
+            "attack_5",
+            "attack_6",
+            "attack_7",
+            "attack_8",
+            "attack_9",
+            "attack_10"
+          ],
+          "signature_skills": [
+            "barrier_cast",
+            "energy_recover",
+            "kentaima_cast",
+            "mahasenko_ground",
+            "mahasenko_air",
+            "antamina_combo",
+            "bukadai_rush"
+          ],
+          "attack_10_loop_x2": true,
+          "attack_10_ground_impact_fx": "atk10_impact_fx",
+          "flight_ki_max": 50.0,
+          "teleport_stamina_max": 100.0,
+          "combat_move_mode": "continuous_dash_with_analog_brake"
+        },
+        "facing_default": "right",
+        "skills_fx_tres": "res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres"
+      },
+      "motion_quality": {
+        "status": "reviewed_pending_owner",
+        "method": "codex_cli_complete_body_keyframes_full_47_sources",
+        "art_source": "host_image",
+        "atlas_sha256": "0902ce100019cd9927cc7161671821ae2e3246d625cbaee5dd0a964102fb806a",
+        "owner_approved": false,
+        "checks": {
+          "body_connections": true,
+          "whole_pose_sequence": true,
+          "perspective_turns": true,
+          "phase_timing": true,
+          "three_backgrounds": true,
+          "character_identity": true
+        },
+        "unresolved_structural_failures": [],
+        "naturalness_verdict": "pending_owner_human_test"
+      }
+    }
+  ]
 }

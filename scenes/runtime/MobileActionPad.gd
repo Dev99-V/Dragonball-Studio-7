@@ -24,6 +24,10 @@ const ACTION_LABELS := {
 	"flurry_kick": "Đá liên hoàn",
 	"atomic_blast": "Atomic",
 	"kamehameha": "Kamehameha",
+	"kentaima": "Kentaima (Sóng kiếm)",
+	"mahasenko": "Mahasenko (Đất/Không)",
+	"antamina": "Antamina (Đại chiêu)",
+	"bukadai": "Bukadai (Lao chém)",
 	"empty": "Trống",
 }
 
@@ -41,10 +45,14 @@ const SHORT_LABELS := {
 	"flurry_kick": "ĐÁ LH",
 	"atomic_blast": "ATOMIC",
 	"kamehameha": "KAME",
+	"kentaima": "KENTAIMA",
+	"mahasenko": "MAHASENKO",
+	"antamina": "ANTAMINA",
+	"bukadai": "BUKADAI",
 	"cycle_target": "TRỎ",
 }
 
-const ASSIGNABLE_ACTIONS := ["jump", "teleport", "transform_ssj", "flurry_kick", "atomic_blast", "kamehameha", "barrier", "energy_recover", "fly_toggle", "power_up", "attack_heavy", "pickup_items", "empty"]
+const ASSIGNABLE_ACTIONS := ["jump", "teleport", "transform_ssj", "kentaima", "mahasenko", "antamina", "bukadai", "flurry_kick", "atomic_blast", "kamehameha", "barrier", "energy_recover", "fly_toggle", "power_up", "attack_heavy", "pickup_items", "empty"]
 
 var analog_dir_x: int = 0
 var analog_dir_y: int = 0
@@ -80,6 +88,7 @@ var _pointer_kind: String = "enemy"
 var _hero_stamina: float = 100.0
 var _hero_max_stamina: float = 100.0
 var _hero_is_songoku: bool = false
+var _hero_is_tapion: bool = false
 var _hero_is_ssj: bool = false
 var _hero_can_attack: bool = true
 var _hero_fly_active: bool = false
@@ -89,6 +98,10 @@ var _hero_barrier_active_s: float = 0.0
 var _hero_barrier_cd: float = 0.0
 var _hero_recover_cd: float = 0.0
 var _hero_flurry_cd: float = 0.0
+var _hero_kentaima_cd: float = 0.0
+var _hero_mahasenko_cd: float = 0.0
+var _hero_antamina_cd: float = 0.0
+var _hero_bukadai_cd: float = 0.0
 var _hero_on_ground: bool = true
 
 # Analog drag tracking
@@ -382,7 +395,8 @@ func get_slot_binding(slot_id: int) -> String:
 func configure_for_character(char_id: String, available_clips: PackedStringArray, is_flying: bool) -> void:
 	_configured_char_id = char_id
 	_flight_mode = is_flying
-	_hero_is_songoku = (char_id == "songoku" or char_id == "songoku_hero_demo")
+	_hero_is_tapion = (char_id == "tapion_demo" or char_id == "tapion")
+	_hero_is_songoku = (char_id == "songoku" or char_id == "songoku_hero_demo" or _hero_is_tapion)
 	var avail := PackedStringArray(["attack_light"])
 	if is_flying or available_clips.has("jump"):
 		avail.append("jump")
@@ -394,11 +408,19 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 		avail.append("barrier")
 	if available_clips.has("energy_recover") or _hero_is_songoku:
 		avail.append("energy_recover")
-	if available_clips.has("flurry_kick") or _hero_is_songoku:
+	if _hero_is_tapion or available_clips.has("kentaima_cast"):
+		avail.append("kentaima")
+	if _hero_is_tapion or available_clips.has("mahasenko_ground"):
+		avail.append("mahasenko")
+	if _hero_is_tapion or available_clips.has("antamina_combo"):
+		avail.append("antamina")
+	if _hero_is_tapion or available_clips.has("bukadai_rush"):
+		avail.append("bukadai")
+	if available_clips.has("flurry_kick") or (not _hero_is_tapion and _hero_is_songoku):
 		avail.append("flurry_kick")
-	if available_clips.has("atomic_ground") or _hero_is_songoku:
+	if available_clips.has("atomic_ground") or (not _hero_is_tapion and _hero_is_songoku):
 		avail.append("atomic_blast")
-	if available_clips.has("kame_ground_horiz") or _hero_is_songoku:
+	if available_clips.has("kame_ground_horiz") or (not _hero_is_tapion and _hero_is_songoku):
 		avail.append("kamehameha")
 	if available_clips.has("fly_aura") or available_clips.has("fly_launch"):
 		avail.append("fly_toggle")
@@ -419,7 +441,16 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 	_slot_bindings[7] = "empty"
 	_slot_bindings[8] = "cycle_target"
 	_slot_bindings[10] = "empty"
-	if _hero_is_songoku:
+	if _hero_is_tapion:
+		# Full Tapion Skill Cluster: All 10-step Sword Combo + Teleport + 4 Signature Skills + Ocarina Barrier & Recover!
+		_slot_bindings[2] = "teleport"
+		_slot_bindings[3] = "kentaima"
+		_slot_bindings[4] = "mahasenko"
+		_slot_bindings[5] = "antamina"
+		_slot_bindings[6] = "bukadai"
+		_slot_bindings[7] = "barrier"
+		_slot_bindings[10] = "energy_recover"
+	elif _hero_is_songoku:
 		# Full Phase 2 Hero Skill Arc (ALL skills directly visible on screen: 2..7 + dedicated slot 10 `energy_recover`!)
 		_slot_bindings[2] = "transform_ssj"
 		_slot_bindings[3] = "teleport"
@@ -468,6 +499,14 @@ func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool
 	_refresh_slot_buttons()
 
 
+func set_tapion_skill_cooldowns(kenta_cd: float, maha_cd: float, anta_cd: float, buka_cd: float) -> void:
+	_hero_kentaima_cd = kenta_cd
+	_hero_mahasenko_cd = maha_cd
+	_hero_antamina_cd = anta_cd
+	_hero_bukadai_cd = buka_cd
+	_refresh_slot_buttons()
+
+
 func set_jump_available(enabled: bool, flight: bool = false) -> void:
 	_jump_enabled = enabled
 	_flight_mode = flight
@@ -503,7 +542,8 @@ func _refresh_slot_buttons() -> void:
 				btn.tooltip_text = "Đang ở dạng Base — Biến SSJ1 để tấn công"
 				btn.disabled = false
 			else:
-				btn.tooltip_text = "Đánh thường (Đòn %d/7)" % ((_hero_combo_step % 7) + 1) if _hero_is_songoku else "Đánh thường"
+				var c_max := 10 if _hero_is_tapion else 7
+				btn.tooltip_text = "Đánh thường (Đòn %d/%d)" % [((_hero_combo_step % c_max) + 1), c_max] if _hero_is_songoku else "Đánh thường"
 				btn.disabled = false
 			if vis != null:
 				vis.queue_redraw()
@@ -550,6 +590,18 @@ func _refresh_slot_buttons() -> void:
 			else:
 				btn.tooltip_text = "Gồng hồi (%.1fs)" % _hero_recover_cd
 			btn.disabled = (not _hero_is_ssj) or (not _hero_on_ground) or _hero_recover_cd > 0.0
+		elif act == "kentaima":
+			btn.tooltip_text = "Kentaima — Sóng kiếm bán nguyệt xanh" if _hero_kentaima_cd <= 0.0 else "Kentaima (%.1fs)" % _hero_kentaima_cd
+			btn.disabled = _hero_kentaima_cd > 0.0
+		elif act == "mahasenko":
+			btn.tooltip_text = "Mahasenko — Chưởng tia vàng (Đất ngang / Không chéo)" if _hero_mahasenko_cd <= 0.0 else "Mahasenko (%.1fs)" % _hero_mahasenko_cd
+			btn.disabled = _hero_mahasenko_cd > 0.0
+		elif act == "antamina":
+			btn.tooltip_text = "Antamina — Vòng năng lượng & luồng đạn 1→5" if _hero_antamina_cd <= 0.0 else "Antamina (%.1fs)" % _hero_antamina_cd
+			btn.disabled = _hero_antamina_cd > 0.0
+		elif act == "bukadai":
+			btn.tooltip_text = "Bukadai — Lao chém tốc độ & nổ cầu sét vàng" if _hero_bukadai_cd <= 0.0 else "Bukadai (%.1fs)" % _hero_bukadai_cd
+			btn.disabled = _hero_bukadai_cd > 0.0
 		else:
 			btn.tooltip_text = lbl
 			btn.disabled = false
@@ -742,8 +794,9 @@ class _SkillButtonVisual extends Control:
 				var locked_base: bool = bool(pad_owner._hero_is_songoku) and not bool(pad_owner._hero_can_attack)
 				var fist_col := Color(0.68, 0.72, 0.78, 0.58) if locked_base else accent_main
 				_draw_fist_icon(center + Vector2(0.0, -6.0), r * 0.34, fist_col)
+				var combo_max := 10 if bool(pad_owner._hero_is_tapion) else 7
 				if font != null:
-					var atk_txt := "KHÓA" if locked_base else ("ĐÁNH %d/7" % ((int(pad_owner._hero_combo_step) % 7) + 1) if bool(pad_owner._hero_is_songoku) else "ĐÁNH")
+					var atk_txt := "KHÓA" if locked_base else ("ĐÁNH %d/%d" % [((int(pad_owner._hero_combo_step) % combo_max) + 1), combo_max] if bool(pad_owner._hero_is_songoku) else "ĐÁNH")
 					draw_string(font, Vector2(center.x - 34.0, center.y + r * 0.54), atk_txt, HORIZONTAL_ALIGNMENT_CENTER, 68.0, 11, Color(0.96, 0.99, 1.0, 0.95))
 			return
 
@@ -823,6 +876,31 @@ class _SkillButtonVisual extends Control:
 			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_r / 10.0, 0.0, 1.0), 36, green_r, 2.8, true)
 			_draw_recover_icon(center + Vector2(0.0, -7.0), r * 0.40, green_r)
 			short_lbl = ("%ds" % int(ceilf(cd_r))) if cd_r > 0.05 else "HỒI 3S"
+		elif act == "kentaima":
+			var cd_kt: float = float(pad_owner._hero_kentaima_cd)
+			var cyan_kt := Color(0.24, 0.92, 1.0, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_kt / 1.5, 0.0, 1.0), 36, cyan_kt, 2.8, true)
+			draw_arc(center + Vector2(-r * 0.08, -6.0), r * 0.36, -PI * 0.42, PI * 0.42, 18, cyan_kt, 3.4, true)
+			draw_arc(center + Vector2(-r * 0.02, -6.0), r * 0.30, -PI * 0.36, PI * 0.36, 16, Color(0.92, 0.99, 1.0, 0.95 * alpha_mul), 1.8, true)
+			short_lbl = ("%.0fs" % ceilf(cd_kt)) if cd_kt > 0.05 else "KENTAIMA"
+		elif act == "mahasenko":
+			var cd_mh: float = float(pad_owner._hero_mahasenko_cd)
+			var gold_mh := Color(1.0, 0.88, 0.24, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_mh / 1.5, 0.0, 1.0), 36, gold_mh, 2.8, true)
+			_draw_kame_beam_icon(center + Vector2(0.0, -7.0), r * 0.46, gold_mh, alpha_mul)
+			short_lbl = ("%.0fs" % ceilf(cd_mh)) if cd_mh > 0.05 else "MAHASEN"
+		elif act == "antamina":
+			var cd_an: float = float(pad_owner._hero_antamina_cd)
+			var gold_an := Color(1.0, 0.82, 0.18, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_an / 2.0, 0.0, 1.0), 36, gold_an, 3.0, true)
+			_draw_ki_icon(center + Vector2(0.0, -7.0), r * 0.40, gold_an)
+			short_lbl = ("%.0fs" % ceilf(cd_an)) if cd_an > 0.05 else "ANTAMINA"
+		elif act == "bukadai":
+			var cd_bk: float = float(pad_owner._hero_bukadai_cd)
+			var yel_bk := Color(1.0, 0.94, 0.34, 0.98 * alpha_mul)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_bk / 1.8, 0.0, 1.0), 36, yel_bk, 2.8, true)
+			_draw_heavy_icon(center + Vector2(0.0, -6.0), r * 0.40, yel_bk)
+			short_lbl = ("%.0fs" % ceilf(cd_bk)) if cd_bk > 0.05 else "BUKADAI"
 		elif act == "pickup_items":
 			_draw_pickup_icon(center + Vector2(0.0, -6.0), r * 0.40, accent_col)
 

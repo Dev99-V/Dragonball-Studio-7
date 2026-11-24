@@ -1,0 +1,3258 @@
+{
+  "schema": "generate2dsprite.engine_export.v1",
+  "name": "tapion_demo",
+  "tool": {
+    "name": "export_engine.py",
+    "version": "0.4.0"
+  },
+  "source": {
+    "path": "../clips/animation-clips.json",
+    "sha256": "0d2f8f9c7c7ec8200b392a0701903085367b4b6f4d55a88551570ce1d8b49559",
+    "bytes": 303656,
+    "schema": "generate2dsprite.animation_clips.v2"
+  },
+  "targets": [
+    "godot-spriteframes"
+  ],
+  "frame_size": [
+    288,
+    288
+  ],
+  "anchor_px": [
+    144.0,
+    248.0
+  ],
+  "sampling": "nearest",
+  "pixel_art": true,
+  "art_source": "host_image",
+  "shadow": {
+    "rx": 28,
+    "ry": 6,
+    "opacity": 0.32
+  },
+  "default_clip": "idle",
+  "atlas": {
+    "max_size": 4096,
+    "padding": 2,
+    "extrude": 1,
+    "pages": [
+      {
+        "index": 0,
+        "size": [
+          3506,
+          3214
+        ],
+        "cells": 130,
+        "clips": [
+          "idle",
+          "walk",
+          "turntable_360",
+          "combat_enter",
+          "idle_combat",
+          "combat_move",
+          "jump",
+          "fly_prep",
+          "fly_aura",
+          "teleport",
+          "teleport_dash_ground",
+          "teleport_dash_air",
+          "hit",
+          "ko",
+          "attack_light",
+          "attack_2",
+          "attack_3",
+          "attack_4",
+          "attack_5",
+          "attack_6",
+          "attack_7",
+          "attack_8",
+          "attack_9",
+          "attack_10",
+          "barrier_cast",
+          "energy_recover",
+          "mahasenko_ground",
+          "mahasenko_air",
+          "antamina_charge",
+          "antamina_rings",
+          "antamina_fire",
+          "antamina_combo",
+          "kentaima_cast",
+          "bukadai_rush"
+        ]
+      }
+    ]
+  },
+  "scale": {
+    "pixel_size": 0.01,
+    "subject_height_px": 125.0,
+    "world_height": 1.25,
+    "source": "Godot default pixel size",
+    "subject_height_source": "--subject-height-px"
+  },
+  "clips": {
+    "idle": {
+      "frames": [
+        88,
+        87,
+        86,
+        84,
+        85,
+        84,
+        85,
+        86,
+        87
+      ],
+      "duration_ms": [
+        400,
+        100,
+        100,
+        233,
+        234,
+        233,
+        233,
+        100,
+        100
+      ],
+      "total_duration_ms": 1733,
+      "loop": true,
+      "loop_policy": "cycle",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          24,
+          6,
+          6,
+          14,
+          14,
+          14,
+          14,
+          6,
+          6
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 103.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        24,
+        6,
+        6,
+        14,
+        14,
+        14,
+        14,
+        6,
+        6
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          24.0,
+          6.0,
+          6.0,
+          14.0,
+          14.0,
+          14.0,
+          14.0,
+          6.0,
+          6.0
+        ]
+      }
+    },
+    "walk": {
+      "frames": [
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141
+      ],
+      "duration_ms": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "total_duration_ms": 800,
+      "loop": true,
+      "loop_policy": "cycle",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.0,
+        "frame_ticks": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "zero_tick_positions": [],
+        "even": true,
+        "cycle_ticks": 48.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          6.0,
+          6.0,
+          6.0,
+          6.0,
+          6.0,
+          6.0,
+          6.0,
+          6.0
+        ]
+      }
+    },
+    "turntable_360": {
+      "frames": [
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133
+      ],
+      "duration_ms": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "total_duration_ms": 1600,
+      "loop": true,
+      "loop_policy": "cycle",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.0,
+        "frame_ticks": [
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12
+        ],
+        "zero_tick_positions": [],
+        "even": true,
+        "cycle_ticks": 96.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0
+        ]
+      }
+    },
+    "combat_enter": {
+      "frames": [
+        87,
+        73,
+        89
+      ],
+      "duration_ms": [
+        67,
+        83,
+        67
+      ],
+      "total_duration_ms": 217,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          5,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 13.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        5,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          5.0,
+          4.0
+        ]
+      }
+    },
+    "idle_combat": {
+      "frames": [
+        89,
+        90,
+        91,
+        92
+      ],
+      "duration_ms": [
+        133,
+        117,
+        133,
+        117
+      ],
+      "total_duration_ms": 500,
+      "loop": true,
+      "loop_policy": "cycle",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          8,
+          7,
+          8,
+          7
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 30.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        8,
+        7,
+        8,
+        7
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          8.0,
+          7.0,
+          8.0,
+          7.0
+        ]
+      }
+    },
+    "combat_move": {
+      "frames": [
+        69,
+        70,
+        71,
+        72
+      ],
+      "duration_ms": [
+        100,
+        83,
+        84,
+        100
+      ],
+      "total_duration_ms": 367,
+      "loop": true,
+      "loop_policy": "cycle",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          6,
+          5,
+          5,
+          6
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 22.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        6,
+        5,
+        5,
+        6
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          6.0,
+          5.0,
+          5.0,
+          6.0
+        ]
+      }
+    },
+    "jump": {
+      "frames": [
+        93,
+        94,
+        95,
+        96,
+        97,
+        98
+      ],
+      "duration_ms": [
+        67,
+        100,
+        100,
+        100,
+        133,
+        83
+      ],
+      "total_duration_ms": 583,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          6,
+          6,
+          6,
+          8,
+          5
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 34.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        6,
+        6,
+        6,
+        8,
+        5
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          6.0,
+          6.0,
+          6.0,
+          8.0,
+          5.0
+        ]
+      }
+    },
+    "fly_prep": {
+      "frames": [
+        76,
+        77,
+        78,
+        79
+      ],
+      "duration_ms": [
+        83,
+        84,
+        83,
+        83
+      ],
+      "total_duration_ms": 333,
+      "loop": true,
+      "loop_policy": "cycle",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          5,
+          5,
+          5
+        ],
+        "zero_tick_positions": [],
+        "even": true,
+        "cycle_ticks": 19.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          5.0,
+          5.0,
+          5.0,
+          5.0
+        ]
+      }
+    },
+    "fly_aura": {
+      "frames": [
+        74,
+        75
+      ],
+      "duration_ms": [
+        67,
+        66
+      ],
+      "total_duration_ms": 133,
+      "loop": true,
+      "loop_policy": "cycle",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": true,
+        "cycle_ticks": 7.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0
+        ]
+      }
+    },
+    "teleport": {
+      "frames": [
+        122,
+        123,
+        124,
+        125,
+        124,
+        89
+      ],
+      "duration_ms": [
+        50,
+        50,
+        33,
+        34,
+        50,
+        66
+      ],
+      "total_duration_ms": 283,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          3,
+          3,
+          2,
+          2,
+          3,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 16.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        3,
+        3,
+        2,
+        2,
+        3,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          3.0,
+          3.0,
+          2.0,
+          2.0,
+          3.0,
+          4.0
+        ]
+      }
+    },
+    "teleport_dash_ground": {
+      "frames": [
+        122,
+        123,
+        124,
+        125,
+        124,
+        71
+      ],
+      "duration_ms": [
+        50,
+        50,
+        33,
+        34,
+        33,
+        67
+      ],
+      "total_duration_ms": 267,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          3,
+          3,
+          2,
+          2,
+          2,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 16.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        3,
+        3,
+        2,
+        2,
+        2,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          3.0,
+          3.0,
+          2.0,
+          2.0,
+          2.0,
+          4.0
+        ]
+      }
+    },
+    "teleport_dash_air": {
+      "frames": [
+        118,
+        119,
+        120,
+        121,
+        120,
+        118
+      ],
+      "duration_ms": [
+        50,
+        50,
+        33,
+        34,
+        33,
+        67
+      ],
+      "total_duration_ms": 267,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          3,
+          3,
+          2,
+          2,
+          2,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 16.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        3,
+        3,
+        2,
+        2,
+        2,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          3.0,
+          3.0,
+          2.0,
+          2.0,
+          2.0,
+          4.0
+        ]
+      }
+    },
+    "hit": {
+      "frames": [
+        80,
+        81,
+        82,
+        83
+      ],
+      "duration_ms": [
+        83,
+        100,
+        100,
+        117
+      ],
+      "total_duration_ms": 400,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          6,
+          6,
+          7
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 24.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        5,
+        6,
+        6,
+        7
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          5.0,
+          6.0,
+          6.0,
+          7.0
+        ]
+      }
+    },
+    "ko": {
+      "frames": [
+        82,
+        103,
+        104
+      ],
+      "duration_ms": [
+        117,
+        150,
+        400
+      ],
+      "total_duration_ms": 667,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          7,
+          9,
+          24
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 40.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        7,
+        9,
+        24
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          7.0,
+          9.0,
+          24.0
+        ]
+      }
+    },
+    "attack_light": {
+      "frames": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "duration_ms": [
+        67,
+        66,
+        67,
+        67,
+        66,
+        67
+      ],
+      "total_duration_ms": 400,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 200,
+          "at": 3,
+          "position": 3
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": true,
+        "cycle_ticks": 24.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          4.0,
+          4.0,
+          4.0,
+          4.0
+        ]
+      }
+    },
+    "attack_2": {
+      "frames": [
+        22,
+        23,
+        24,
+        25,
+        26
+      ],
+      "duration_ms": [
+        67,
+        66,
+        67,
+        83,
+        67
+      ],
+      "total_duration_ms": 350,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 67,
+          "at": 1,
+          "position": 1
+        },
+        {
+          "name": "hit",
+          "at_ms": 200,
+          "at": 3,
+          "position": 3
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          4,
+          5,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 21.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        4,
+        5,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          4.0,
+          5.0,
+          4.0
+        ]
+      }
+    },
+    "attack_3": {
+      "frames": [
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "duration_ms": [
+        67,
+        66,
+        67,
+        67,
+        66
+      ],
+      "total_duration_ms": 333,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 67,
+          "at": 1,
+          "position": 1
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": true,
+        "cycle_ticks": 19.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          4.0,
+          4.0,
+          4.0
+        ]
+      }
+    },
+    "attack_4": {
+      "frames": [
+        32,
+        33
+      ],
+      "duration_ms": [
+        67,
+        100
+      ],
+      "total_duration_ms": 167,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 67,
+          "at": 1,
+          "position": 1
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          6
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 10.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        6
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          6.0
+        ]
+      }
+    },
+    "attack_5": {
+      "frames": [
+        34,
+        35,
+        36
+      ],
+      "duration_ms": [
+        67,
+        66,
+        84
+      ],
+      "total_duration_ms": 217,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 67,
+          "at": 1,
+          "position": 1
+        },
+        {
+          "name": "hit",
+          "at_ms": 133,
+          "at": 2,
+          "position": 2
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          5
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 13.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        5
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          5.0
+        ]
+      }
+    },
+    "attack_6": {
+      "frames": [
+        37,
+        38,
+        39
+      ],
+      "duration_ms": [
+        67,
+        83,
+        83
+      ],
+      "total_duration_ms": 233,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 67,
+          "at": 1,
+          "position": 1
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          5,
+          5
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 13.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        5,
+        5
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          5.0,
+          5.0
+        ]
+      }
+    },
+    "attack_7": {
+      "frames": [
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "duration_ms": [
+        67,
+        66,
+        84,
+        66,
+        67
+      ],
+      "total_duration_ms": 350,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 67,
+          "at": 1,
+          "position": 1
+        },
+        {
+          "name": "hit",
+          "at_ms": 133,
+          "at": 2,
+          "position": 2
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          5,
+          4,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 21.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        5,
+        4,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          5.0,
+          4.0,
+          4.0
+        ]
+      }
+    },
+    "attack_8": {
+      "frames": [
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "duration_ms": [
+        67,
+        66,
+        84,
+        66,
+        67
+      ],
+      "total_duration_ms": 350,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 67,
+          "at": 1,
+          "position": 1
+        },
+        {
+          "name": "hit",
+          "at_ms": 133,
+          "at": 2,
+          "position": 2
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          5,
+          4,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 21.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        5,
+        4,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          5.0,
+          4.0,
+          4.0
+        ]
+      }
+    },
+    "attack_9": {
+      "frames": [
+        50,
+        51,
+        52,
+        53,
+        54
+      ],
+      "duration_ms": [
+        67,
+        66,
+        84,
+        66,
+        67
+      ],
+      "total_duration_ms": 350,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 133,
+          "at": 2,
+          "position": 2
+        },
+        {
+          "name": "hit",
+          "at_ms": 217,
+          "at": 3,
+          "position": 3
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          5,
+          4,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 21.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        5,
+        4,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          5.0,
+          4.0,
+          4.0
+        ]
+      }
+    },
+    "attack_10": {
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        13,
+        14,
+        15
+      ],
+      "duration_ms": [
+        67,
+        66,
+        67,
+        67,
+        66,
+        67,
+        67,
+        116
+      ],
+      "total_duration_ms": 583,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 200,
+          "at": 3,
+          "position": 3
+        },
+        {
+          "name": "hit",
+          "at_ms": 400,
+          "at": 6,
+          "position": 6
+        },
+        {
+          "name": "hit",
+          "at_ms": 467,
+          "at": 7,
+          "position": 7
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          7
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 34.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        7
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          4.0,
+          4.0,
+          4.0,
+          4.0,
+          4.0,
+          7.0
+        ]
+      }
+    },
+    "barrier_cast": {
+      "frames": [
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ],
+      "duration_ms": [
+        67,
+        83,
+        67,
+        83,
+        83,
+        84,
+        100,
+        100,
+        83
+      ],
+      "total_duration_ms": 750,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          5,
+          4,
+          5,
+          5,
+          5,
+          6,
+          6,
+          5
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 45.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        5,
+        4,
+        5,
+        5,
+        5,
+        6,
+        6,
+        5
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          5.0,
+          4.0,
+          5.0,
+          5.0,
+          5.0,
+          6.0,
+          6.0,
+          5.0
+        ]
+      }
+    },
+    "energy_recover": {
+      "frames": [
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        113,
+        114,
+        115,
+        116,
+        113,
+        114,
+        115,
+        116,
+        117
+      ],
+      "duration_ms": [
+        83,
+        100,
+        100,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        134
+      ],
+      "total_duration_ms": 2817,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          6,
+          6,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          8
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 169.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        5,
+        6,
+        6,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        12,
+        8
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          5.0,
+          6.0,
+          6.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          12.0,
+          8.0
+        ]
+      }
+    },
+    "mahasenko_ground": {
+      "frames": [
+        107,
+        108,
+        109
+      ],
+      "duration_ms": [
+        100,
+        83,
+        267
+      ],
+      "total_duration_ms": 450,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "custom:launch",
+          "at_ms": 183,
+          "at": 2,
+          "position": 2
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          6,
+          5,
+          16
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 27.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        6,
+        5,
+        16
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          6.0,
+          5.0,
+          16.0
+        ]
+      }
+    },
+    "mahasenko_air": {
+      "frames": [
+        105,
+        106
+      ],
+      "duration_ms": [
+        100,
+        267
+      ],
+      "total_duration_ms": 367,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "custom:launch",
+          "at_ms": 100,
+          "at": 1,
+          "position": 1
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          6,
+          16
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 22.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        6,
+        16
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          6.0,
+          16.0
+        ]
+      }
+    },
+    "antamina_charge": {
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "duration_ms": [
+        83,
+        84,
+        83,
+        100
+      ],
+      "total_duration_ms": 350,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          5,
+          5,
+          6
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 21.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        5,
+        5,
+        5,
+        6
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          5.0,
+          5.0,
+          5.0,
+          6.0
+        ]
+      }
+    },
+    "antamina_rings": {
+      "frames": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "duration_ms": [
+        83,
+        84,
+        83,
+        67
+      ],
+      "total_duration_ms": 317,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          5,
+          5,
+          4
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 19.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        5,
+        5,
+        5,
+        4
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          5.0,
+          5.0,
+          5.0,
+          4.0
+        ]
+      }
+    },
+    "antamina_fire": {
+      "frames": [
+        4,
+        5,
+        6,
+        5,
+        6
+      ],
+      "duration_ms": [
+        83,
+        84,
+        83,
+        83,
+        100
+      ],
+      "total_duration_ms": 433,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "custom:launch",
+          "at_ms": 0,
+          "at": 0,
+          "position": 0
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          5,
+          5,
+          5,
+          6
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 25.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        5,
+        5,
+        5,
+        5,
+        6
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          5.0,
+          5.0,
+          5.0,
+          5.0,
+          6.0
+        ]
+      }
+    },
+    "antamina_combo": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        7,
+        8,
+        9,
+        10,
+        4,
+        5,
+        6
+      ],
+      "duration_ms": [
+        67,
+        66,
+        67,
+        83,
+        84,
+        83,
+        83,
+        67,
+        133,
+        134,
+        166
+      ],
+      "total_duration_ms": 1033,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "custom:launch",
+          "at_ms": 600,
+          "at": 8,
+          "position": 8
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          4,
+          5,
+          5,
+          5,
+          5,
+          4,
+          8,
+          8,
+          10
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 61.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        4,
+        5,
+        5,
+        5,
+        5,
+        4,
+        8,
+        8,
+        10
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          4.0,
+          5.0,
+          5.0,
+          5.0,
+          5.0,
+          4.0,
+          8.0,
+          8.0,
+          10.0
+        ]
+      }
+    },
+    "kentaima_cast": {
+      "frames": [
+        99,
+        100,
+        101,
+        102
+      ],
+      "duration_ms": [
+        83,
+        84,
+        100,
+        133
+      ],
+      "total_duration_ms": 400,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "custom:launch",
+          "at_ms": 167,
+          "at": 2,
+          "position": 2
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          5,
+          6,
+          8
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 24.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        5,
+        5,
+        6,
+        8
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          5.0,
+          5.0,
+          6.0,
+          8.0
+        ]
+      }
+    },
+    "bukadai_rush": {
+      "frames": [
+        64,
+        65,
+        66,
+        67,
+        68,
+        89
+      ],
+      "duration_ms": [
+        67,
+        66,
+        67,
+        100,
+        67,
+        100
+      ],
+      "total_duration_ms": 467,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "hit",
+          "at_ms": 67,
+          "at": 1,
+          "position": 1
+        },
+        {
+          "name": "hit",
+          "at_ms": 200,
+          "at": 3,
+          "position": 3
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          4,
+          4,
+          4,
+          6,
+          4,
+          6
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 28.02,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        4,
+        4,
+        4,
+        6,
+        4,
+        6
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "ticks at 60 Hz",
+        "relative_durations": [
+          4.0,
+          4.0,
+          4.0,
+          6.0,
+          4.0,
+          6.0
+        ]
+      }
+    }
+  },
+  "states": {},
+  "unused_frames": [],
+  "mapping": {
+    "anchor_px": [
+      144.0,
+      248.0
+    ],
+    "frame_size": [
+      288,
+      288
+    ],
+    "anchor_normalized_top_left": [
+      0.5,
+      0.8611111111111112
+    ],
+    "sampling": "nearest",
+    "godot": {
+      "animated_sprite_2d": {
+        "centered": false,
+        "offset": [
+          -144.0,
+          -248.0
+        ],
+        "texture_filter": 1
+      },
+      "animated_sprite_3d": {
+        "centered": true,
+        "offset": [
+          0.0,
+          104.0
+        ],
+        "pixel_size": 0.01,
+        "texture_filter": 0
+      }
+    },
+    "unity": {
+      "pivot": [
+        0.5,
+        0.13888888888888884
+      ],
+      "pixels_per_unit": 100.0,
+      "filter_mode": "Point"
+    },
+    "phaser": {
+      "origin": [
+        0.5,
+        0.8611111111111112
+      ],
+      "pixel_art": true
+    },
+    "pixi": {
+      "anchor": [
+        0.5,
+        0.8611111111111112
+      ],
+      "scale_mode": "nearest"
+    },
+    "pitch_compensation": {
+      "applies_to": "yaw-only (fixed-y) billboards seen by a pitched camera",
+      "formula": "scale_y = 1 / cos(camera_pitch), applied about the anchor"
+    }
+  },
+  "files": [
+    {
+      "path": "godot/tapion_demo-atlas-00.png",
+      "sha256": "0902ce100019cd9927cc7161671821ae2e3246d625cbaee5dd0a964102fb806a",
+      "bytes": 2617479
+    },
+    {
+      "path": "godot/tapion_demo.tres",
+      "sha256": "0bbdc26ea8adee37c5dfb105e42b8237c73ffe2e818f4f3ac76d6584df4fcae5",
+      "bytes": 34150
+    },
+    {
+      "path": "godot/tapion_demo.tscn",
+      "sha256": "d223e5f9a6f0743c9107dba3d5281baf43b994ddc31236ae09dee8a924ccfb19",
+      "bytes": 305
+    }
+  ],
+  "qa": {
+    "status": "pass",
+    "method": "round trip: every written atlas, Aseprite JSON, SpriteFrames .tres, scene .tscn and Sprite3D contract was parsed back and compared with the source frames (exact RGBA), integer durations, loop flags, events and the shared anchor",
+    "notProven": [
+      "Imports into the Aseprite, Godot 4, Phaser, PixiJS and Unity editors or runtimes were not run; only parse-level round trips were checked.",
+      "Engine import settings (filter, compression, mipmaps) are not written; set them as engine-export.md describes.",
+      "Animation quality, timing feel and silhouette consistency are not judged."
+    ],
+    "checks": [
+      {
+        "id": "godot_spriteframes_roundtrip",
+        "status": "pass",
+        "value": {
+          "animations": 34
+        },
+        "threshold": null
+      },
+      {
+        "id": "godot_spriteframes_duration_error_ms",
+        "status": "pass",
+        "value": 0.6666666666666714,
+        "threshold": 1.0
+      },
+      {
+        "id": "atlas_max_side_px",
+        "status": "pass",
+        "value": 3506,
+        "threshold": 4096
+      },
+      {
+        "id": "source_frame_hashes",
+        "status": "pass",
+        "value": {
+          "verified": 142,
+          "frames": 142
+        },
+        "threshold": null
+      }
+    ],
+    "inputs": [
+      {
+        "path": "../clips/animation-clips.json",
+        "sha256": "0d2f8f9c7c7ec8200b392a0701903085367b4b6f4d55a88551570ce1d8b49559",
+        "bytes": 303656
+      },
+      {
+        "path": "../clips/frames/frame-00.png",
+        "sha256": "3ecd4b074e93ecbbac730e909385a43f10728a6d4795d6be259697499065a9cd",
+        "bytes": 14910
+      },
+      {
+        "path": "../clips/frames/frame-01.png",
+        "sha256": "b18329eeb5076016f8a3d75b11f4c6c21ef42074175b5c1aace04bd32fae66f7",
+        "bytes": 16238
+      },
+      {
+        "path": "../clips/frames/frame-02.png",
+        "sha256": "b608692dda16a35932c7d5196046ead7a22a610f1dde85487e47e3c3da6803b1",
+        "bytes": 15232
+      },
+      {
+        "path": "../clips/frames/frame-03.png",
+        "sha256": "fb665fa608d1d74ce55e3f01fbd5718f6838e74f4c13d699746da4dd12b22792",
+        "bytes": 19695
+      },
+      {
+        "path": "../clips/frames/frame-04.png",
+        "sha256": "f66a3127440a81ed1680705d316fdd957751c6d3fa8e6fc73218bcadc5cb3987",
+        "bytes": 15062
+      },
+      {
+        "path": "../clips/frames/frame-05.png",
+        "sha256": "500f88860fb2dc0307e7ae83a41e2cc64bac90f1ecaea171ae509b6fb073dd3b",
+        "bytes": 15576
+      },
+      {
+        "path": "../clips/frames/frame-06.png",
+        "sha256": "272a54b37872fe1bb6503150a5308488267c8fc4cf7748b756683f4f92f05a04",
+        "bytes": 14845
+      },
+      {
+        "path": "../clips/frames/frame-07.png",
+        "sha256": "ab0e5372853f25a9a183c42dc92b4ea56962d879b44a04ca1727a7d5692bf534",
+        "bytes": 23725
+      },
+      {
+        "path": "../clips/frames/frame-08.png",
+        "sha256": "2e83c55db55fc6d9f3330f6576dcc1626951fbb479b9158f3e5863d258bd670e",
+        "bytes": 29759
+      },
+      {
+        "path": "../clips/frames/frame-09.png",
+        "sha256": "95b5e65ecd735475d7f56bd4c94d240ec4a4a5f20f844ff46c234d2d9a2cb206",
+        "bytes": 26986
+      },
+      {
+        "path": "../clips/frames/frame-10.png",
+        "sha256": "12df6ab357a0be56a9dd21628cbd54e098b28e1011f40735a3c8620b1c678a79",
+        "bytes": 24492
+      },
+      {
+        "path": "../clips/frames/frame-11.png",
+        "sha256": "b47474d9ea34d83fd297a93d6c0827861112aff0ccbc03a9171c56dbb7ba5010",
+        "bytes": 15595
+      },
+      {
+        "path": "../clips/frames/frame-12.png",
+        "sha256": "3213138ac567d0e82fbb74f4460e3f2a05be77fe08f2adf2bcc5a54167e23d69",
+        "bytes": 13912
+      },
+      {
+        "path": "../clips/frames/frame-13.png",
+        "sha256": "286753abc290bdc78fe7652c1e1d6a1d134ce1ddc1333c49c1609f9c856dcf33",
+        "bytes": 13664
+      },
+      {
+        "path": "../clips/frames/frame-14.png",
+        "sha256": "7a9b820603fb034dace73b278418fe7c70adeb1ffc6b04ef56c272ccbb3c996d",
+        "bytes": 17721
+      },
+      {
+        "path": "../clips/frames/frame-15.png",
+        "sha256": "b93936a1a1a507b165e8190e8b29bb4339d406d08e92c7c41e4d19144e23c49b",
+        "bytes": 12363
+      },
+      {
+        "path": "../clips/frames/frame-16.png",
+        "sha256": "c16fee06ac2140fa0f538644f420dd6354900636a91c19ab8776fd8382a8f1ca",
+        "bytes": 14467
+      },
+      {
+        "path": "../clips/frames/frame-17.png",
+        "sha256": "0b1befcb598e6f5fdce358270a297a897cd63ed0bcadbb14da26207f0e60764f",
+        "bytes": 14575
+      },
+      {
+        "path": "../clips/frames/frame-18.png",
+        "sha256": "2664d7268d7fc8ef6c6bd9b845c96991134dd00496c72ff009f76afc8435a43f",
+        "bytes": 13665
+      },
+      {
+        "path": "../clips/frames/frame-19.png",
+        "sha256": "1272b4bc905584d5505dd533ea11dd9868d954f90c1ff522ec19635cc4d67796",
+        "bytes": 18719
+      },
+      {
+        "path": "../clips/frames/frame-20.png",
+        "sha256": "4bc76d012ebc0240200e2edc55ca53d2732b2333eef654f00a2183a19b45bd9e",
+        "bytes": 13343
+      },
+      {
+        "path": "../clips/frames/frame-21.png",
+        "sha256": "941231abf83fa7d1b40717ad24359886f89cca7640714b773d1e2435c7a7b88e",
+        "bytes": 12363
+      },
+      {
+        "path": "../clips/frames/frame-22.png",
+        "sha256": "40260d75e99412a968a62d19a46457094e6b32624e11cdc44f7da071c11e212e",
+        "bytes": 13474
+      },
+      {
+        "path": "../clips/frames/frame-23.png",
+        "sha256": "6738b0f602cf6933c93f104abe10a52c0931f263f4d15be9380b2cbbe791c5e7",
+        "bytes": 19837
+      },
+      {
+        "path": "../clips/frames/frame-24.png",
+        "sha256": "843a9c81db7a90f78efdcf264e960962a716be6b425a49ffd059c694172c6ed8",
+        "bytes": 13896
+      },
+      {
+        "path": "../clips/frames/frame-25.png",
+        "sha256": "fed75dff0397041171a803d5fb5818ad2ac50b5f15fba6373f9a6e86b04ada0c",
+        "bytes": 19177
+      },
+      {
+        "path": "../clips/frames/frame-26.png",
+        "sha256": "52dbc2d947fca2d1a77a5b2cce5b641d4f3e7539ad23cc954558dc44ce7d4282",
+        "bytes": 13365
+      },
+      {
+        "path": "../clips/frames/frame-27.png",
+        "sha256": "0b1befcb598e6f5fdce358270a297a897cd63ed0bcadbb14da26207f0e60764f",
+        "bytes": 14575
+      },
+      {
+        "path": "../clips/frames/frame-28.png",
+        "sha256": "ccb5358c31316c555099d9fbf4d34c004679c5025a833e2ac6bc660a6de3243a",
+        "bytes": 18619
+      },
+      {
+        "path": "../clips/frames/frame-29.png",
+        "sha256": "f1789be694647a2e25ae44593d641150f13a15adf481444598d2a6cd52274837",
+        "bytes": 14449
+      },
+      {
+        "path": "../clips/frames/frame-30.png",
+        "sha256": "a62c540d0d8e22eaa5e4ef5a7f486de9a3168dbe2938e0ff31ae72f8b398352d",
+        "bytes": 14056
+      },
+      {
+        "path": "../clips/frames/frame-31.png",
+        "sha256": "3213138ac567d0e82fbb74f4460e3f2a05be77fe08f2adf2bcc5a54167e23d69",
+        "bytes": 13912
+      },
+      {
+        "path": "../clips/frames/frame-32.png",
+        "sha256": "21e6a2c7e13735fbb2d3f515bb342fc99ac60d42d55405d02d328a08ca323db3",
+        "bytes": 14459
+      },
+      {
+        "path": "../clips/frames/frame-33.png",
+        "sha256": "595806796b66dabe7bacdcf77aca9e66122097efcfbe94d4b8a784941db5d71c",
+        "bytes": 16891
+      },
+      {
+        "path": "../clips/frames/frame-34.png",
+        "sha256": "2664d7268d7fc8ef6c6bd9b845c96991134dd00496c72ff009f76afc8435a43f",
+        "bytes": 13665
+      },
+      {
+        "path": "../clips/frames/frame-35.png",
+        "sha256": "308857f5e0dbb157a89418e3cd16148ff556cfdf2b14de9e6ca76329ce9e72ec",
+        "bytes": 17720
+      },
+      {
+        "path": "../clips/frames/frame-36.png",
+        "sha256": "524ccc85f15bfdf5186275ce8ff5136e85c0382bf846031e8989a72bae5a04f2",
+        "bytes": 17944
+      },
+      {
+        "path": "../clips/frames/frame-37.png",
+        "sha256": "0f3403a3a46016c74fc92bef049eb25b302c994103ca0e58d0651430198c22f5",
+        "bytes": 14024
+      },
+      {
+        "path": "../clips/frames/frame-38.png",
+        "sha256": "11b409f0c0392d3780e80d8cb3fecf7527fa424818fdbdc02af214b292d37594",
+        "bytes": 16038
+      },
+      {
+        "path": "../clips/frames/frame-39.png",
+        "sha256": "3665a2be6cf9d36900fdc3c822927ee8b560487eb70209e0d2a8a1bb35ef2e48",
+        "bytes": 13409
+      },
+      {
+        "path": "../clips/frames/frame-40.png",
+        "sha256": "40260d75e99412a968a62d19a46457094e6b32624e11cdc44f7da071c11e212e",
+        "bytes": 13474
+      },
+      {
+        "path": "../clips/frames/frame-41.png",
+        "sha256": "9cf1d860d76b89bec7c7dd296d9e753888a043a9b8312ae5f2f945ab811dc302",
+        "bytes": 31379
+      },
+      {
+        "path": "../clips/frames/frame-42.png",
+        "sha256": "bdf91046d6aeaa9f4fe0744d2e6f0692b88c0629cc9d6cde12668ed85e1cdbfb",
+        "bytes": 33505
+      },
+      {
+        "path": "../clips/frames/frame-43.png",
+        "sha256": "83f8f285898f72cf9b3c24bc76ad8afcc9a84b5b53c6077b291e5160a5d01c18",
+        "bytes": 30807
+      },
+      {
+        "path": "../clips/frames/frame-44.png",
+        "sha256": "3fe2168f5d172991fccfcdc9ef5ab2865f6c4968db2dfa8f1ba0097b670f319d",
+        "bytes": 25466
+      },
+      {
+        "path": "../clips/frames/frame-45.png",
+        "sha256": "8b28c4f09aa37c15cdb0a429a1444ddbcf123b6ecf8f07229a0871e33a76eb33",
+        "bytes": 14663
+      },
+      {
+        "path": "../clips/frames/frame-46.png",
+        "sha256": "17c37d045741221c92f84869e66f2303f6e657795f7584adcedb03417158a9fb",
+        "bytes": 24158
+      },
+      {
+        "path": "../clips/frames/frame-47.png",
+        "sha256": "95f0e240344d9bc8f1bc3cdc3796699007159c1fdc9aeda1a4663846a152ac41",
+        "bytes": 36558
+      },
+      {
+        "path": "../clips/frames/frame-48.png",
+        "sha256": "c90065a47a043a9372261bafb25080683fda6ba0ca419d3106a080280a0b30c8",
+        "bytes": 27178
+      },
+      {
+        "path": "../clips/frames/frame-49.png",
+        "sha256": "d16d9df6db0f827635763b0a688745633151a97e170ca1920d9a18e3cefefbac",
+        "bytes": 21464
+      },
+      {
+        "path": "../clips/frames/frame-50.png",
+        "sha256": "d16d9df6db0f827635763b0a688745633151a97e170ca1920d9a18e3cefefbac",
+        "bytes": 21464
+      },
+      {
+        "path": "../clips/frames/frame-51.png",
+        "sha256": "0f3403a3a46016c74fc92bef049eb25b302c994103ca0e58d0651430198c22f5",
+        "bytes": 14024
+      },
+      {
+        "path": "../clips/frames/frame-52.png",
+        "sha256": "09667fd06eb83737f2830c2a17c2cc9bdf42c6958de953bbb46cd12ab32fca89",
+        "bytes": 24640
+      },
+      {
+        "path": "../clips/frames/frame-53.png",
+        "sha256": "54b00a70b40f8018ebbaa86f57cb871bb0420eaa6eba5afacadfbdb3197c8445",
+        "bytes": 29211
+      },
+      {
+        "path": "../clips/frames/frame-54.png",
+        "sha256": "cc44fa39052a9c8d6f198d88ea88ed1d2b9abae468c3d51aa8487124b421da66",
+        "bytes": 15104
+      },
+      {
+        "path": "../clips/frames/frame-55.png",
+        "sha256": "e427a9c03226639e4dd4a83edb80badabaa013b63b53fbcb465ebceb6cb23a0e",
+        "bytes": 14341
+      },
+      {
+        "path": "../clips/frames/frame-56.png",
+        "sha256": "8425b81cff72b853eb71868ed201515de4570180564c483a74aa707fc060cad3",
+        "bytes": 11537
+      },
+      {
+        "path": "../clips/frames/frame-57.png",
+        "sha256": "db063f6c75d6c2f03bbda5c03dcf0b0d42928642ee7fb377564d31a36750c90d",
+        "bytes": 12775
+      },
+      {
+        "path": "../clips/frames/frame-58.png",
+        "sha256": "8f66e594df12b4013ab15d52a55b8de1748b5a1f0b3eaa461d915a23b2aedc82",
+        "bytes": 11989
+      },
+      {
+        "path": "../clips/frames/frame-59.png",
+        "sha256": "5e36eda082238d02f4adf7311d75e855d1004ae68b63d63552fd9149f6303117",
+        "bytes": 44363
+      },
+      {
+        "path": "../clips/frames/frame-60.png",
+        "sha256": "22760bf92be6145bdc7d2ec86246adc126c170132dcfd5bdc11925dd9c9ba849",
+        "bytes": 78349
+      },
+      {
+        "path": "../clips/frames/frame-61.png",
+        "sha256": "c9cfca1ed4d6beedddd800ebdca6faeb0832f5f97303b1a1573ac35e2c20ec91",
+        "bytes": 109128
+      },
+      {
+        "path": "../clips/frames/frame-62.png",
+        "sha256": "ca72bb24bdb4df0c7f2d5bd93a002f76c0a055cbb2973205c651151b4a07f9cb",
+        "bytes": 106099
+      },
+      {
+        "path": "../clips/frames/frame-63.png",
+        "sha256": "34f7d73221b04e52de61051a29bea5d5b04193b09d2cc7e5352644b10c59c7ff",
+        "bytes": 50654
+      },
+      {
+        "path": "../clips/frames/frame-64.png",
+        "sha256": "3b3b8a6a95bb78e8445e8e668aac5263340a768446b25ad332bc9c8928541867",
+        "bytes": 14800
+      },
+      {
+        "path": "../clips/frames/frame-65.png",
+        "sha256": "cdc2fcc2d6820ef2e51aaf9a64da5b03e618bb57d7755782a6eeb9ba0924e6c4",
+        "bytes": 21798
+      },
+      {
+        "path": "../clips/frames/frame-66.png",
+        "sha256": "79f92abb4afe6a651b0fc6648135cf62fe8cbcf47ed59c96ed64b1de1a31df76",
+        "bytes": 16089
+      },
+      {
+        "path": "../clips/frames/frame-67.png",
+        "sha256": "169c8f055cd17238ff268dea32de9fbd0221a55c61c463be7de10fa96dae74be",
+        "bytes": 22532
+      },
+      {
+        "path": "../clips/frames/frame-68.png",
+        "sha256": "17f30f1e455cb40b1fba3174aa25726fe68da8d6c9810cf52ad11b447a33ad32",
+        "bytes": 10081
+      },
+      {
+        "path": "../clips/frames/frame-69.png",
+        "sha256": "6fb96706dc298713be595c54117c360d07e7374b71d263e877784aa56b14efae",
+        "bytes": 11921
+      },
+      {
+        "path": "../clips/frames/frame-70.png",
+        "sha256": "94fa1932a8152b99ad59e9bdf5110a3a2d489524ef211a4175d1dd0ecc571bd5",
+        "bytes": 12667
+      },
+      {
+        "path": "../clips/frames/frame-71.png",
+        "sha256": "23d1420abc93738e4a5e7b33755757fc725d89b6ce944b155bccfab69d767cf6",
+        "bytes": 12622
+      },
+      {
+        "path": "../clips/frames/frame-72.png",
+        "sha256": "be8f8f686bec516d471566f9867c539584b22136d1922c305e0a18c08e2d8ac0",
+        "bytes": 13437
+      },
+      {
+        "path": "../clips/frames/frame-73.png",
+        "sha256": "3bb72350d69df11aa543c5fecd392ce46fc7b1a1191bed0b9dc3884b5a116f6b",
+        "bytes": 14670
+      },
+      {
+        "path": "../clips/frames/frame-74.png",
+        "sha256": "9ab920d082748d3822916d50cfe43afa0d86c002ebd20044dee03088a8504481",
+        "bytes": 61853
+      },
+      {
+        "path": "../clips/frames/frame-75.png",
+        "sha256": "ac7ff50efdfd74a23922d3343d0b8a3ea342601b0b9b50bb7862a4a0166fc8e0",
+        "bytes": 52544
+      },
+      {
+        "path": "../clips/frames/frame-76.png",
+        "sha256": "ca387fdaab7731e34cba91ead2768e450d67732a61e42ee8c9501af9466e6a45",
+        "bytes": 23935
+      },
+      {
+        "path": "../clips/frames/frame-77.png",
+        "sha256": "0687b5122ce05276b8805613521ff3404881e05ae5e10e55d38e94b3c14e80d5",
+        "bytes": 27259
+      },
+      {
+        "path": "../clips/frames/frame-78.png",
+        "sha256": "72b1dc6835c5c4350acea2ee3655b1fcede68c8653675abde659ef855579f554",
+        "bytes": 21692
+      },
+      {
+        "path": "../clips/frames/frame-79.png",
+        "sha256": "d17552ecc4bd6b2783dba37dc178201e3300efc9ef5df3f64aa28dbb59b54bf9",
+        "bytes": 27349
+      },
+      {
+        "path": "../clips/frames/frame-80.png",
+        "sha256": "571c23493c155f6051657a0c0ef6a0d9fb846b5d6c8ad57c4fa1588673b16a0d",
+        "bytes": 13761
+      },
+      {
+        "path": "../clips/frames/frame-81.png",
+        "sha256": "16d5bdda580e8e12f30921085c1658cc8ade02faa82b7047150e255512695bf7",
+        "bytes": 14752
+      },
+      {
+        "path": "../clips/frames/frame-82.png",
+        "sha256": "48df69986a30875bb7b97ae0c2d16a73479f141b9af8235d94b069c6d2ec422b",
+        "bytes": 14124
+      },
+      {
+        "path": "../clips/frames/frame-83.png",
+        "sha256": "573c7d3b6cf2f68eda573948a70276c2b552cca0aeffde33acb79295becd9f90",
+        "bytes": 17303
+      },
+      {
+        "path": "../clips/frames/frame-84.png",
+        "sha256": "5678918b5de4d9273bbe39ddac3881b5090c2f851b18d7bead34a0598b9ba03f",
+        "bytes": 14177
+      },
+      {
+        "path": "../clips/frames/frame-85.png",
+        "sha256": "e617b360b5d37bf3259488ee38811c16549d1ce849bd6117f29da7f27020ac58",
+        "bytes": 14340
+      },
+      {
+        "path": "../clips/frames/frame-86.png",
+        "sha256": "872857305d2b9eb0a177e5b8596940f73500dd8ff03dc7f48194681e913df0cd",
+        "bytes": 14542
+      },
+      {
+        "path": "../clips/frames/frame-87.png",
+        "sha256": "e427a9c03226639e4dd4a83edb80badabaa013b63b53fbcb465ebceb6cb23a0e",
+        "bytes": 14341
+      },
+      {
+        "path": "../clips/frames/frame-88.png",
+        "sha256": "0965b36e431bcc4fff03dd766d371e7ea1bc02a63fb43eec064a96abd58de071",
+        "bytes": 14274
+      },
+      {
+        "path": "../clips/frames/frame-89.png",
+        "sha256": "10ec01187fd05aa20c2124884257dca05a2e0b20f6da4237edf14ba03c77bda0",
+        "bytes": 13330
+      },
+      {
+        "path": "../clips/frames/frame-90.png",
+        "sha256": "00858dfb1ab0d39584c8cb93433dc2ccd5be249d4356b7cc30e8ca52b5bbe62c",
+        "bytes": 13085
+      },
+      {
+        "path": "../clips/frames/frame-91.png",
+        "sha256": "c4e7bb427838c0058cc04a145765f6e9b9a5838ceae5695b5114bc5fe1c579b5",
+        "bytes": 13615
+      },
+      {
+        "path": "../clips/frames/frame-92.png",
+        "sha256": "450545a9a5c122c7bf96bdb802d791605fd780be2bee08a8ee0b078bb6d22987",
+        "bytes": 13385
+      },
+      {
+        "path": "../clips/frames/frame-93.png",
+        "sha256": "3c5c91f40a582c8cdfdedb99513c85d6bca93e38e8582d6ebcfe1aae5c46c00b",
+        "bytes": 12766
+      },
+      {
+        "path": "../clips/frames/frame-94.png",
+        "sha256": "f53125477b2704eff270eae55190a44d48e2f558a1e5cd897935eb178190e675",
+        "bytes": 13850
+      },
+      {
+        "path": "../clips/frames/frame-95.png",
+        "sha256": "b05cabe808289ac2e772343f75faf33be575e557fad97a2d956f38c13392237e",
+        "bytes": 12167
+      },
+      {
+        "path": "../clips/frames/frame-96.png",
+        "sha256": "0aaf4216e4285b2febde85e1f255a922e0dc68513b1edcc158eb3dbfbde9fda3",
+        "bytes": 11516
+      },
+      {
+        "path": "../clips/frames/frame-97.png",
+        "sha256": "1fccab5b7d2cac724c3ef160e318355a62af2bceca55bd0b27ba7b735692611b",
+        "bytes": 10711
+      },
+      {
+        "path": "../clips/frames/frame-98.png",
+        "sha256": "3c5c91f40a582c8cdfdedb99513c85d6bca93e38e8582d6ebcfe1aae5c46c00b",
+        "bytes": 12766
+      },
+      {
+        "path": "../clips/frames/frame-99.png",
+        "sha256": "613e5750a22dd257a3f9500084f4f7dea9b47ef811c650f1dd6ad9969142e08a",
+        "bytes": 13818
+      },
+      {
+        "path": "../clips/frames/frame-100.png",
+        "sha256": "11a421f7171f20938e5d2008d80d49bd6e9713a4a88f327ad5dcfb7ca9c61070",
+        "bytes": 16074
+      },
+      {
+        "path": "../clips/frames/frame-101.png",
+        "sha256": "8f4ce82bcb270eb8cf3bc457117662a75fd901bab6869505a5dc0a236578dd85",
+        "bytes": 37894
+      },
+      {
+        "path": "../clips/frames/frame-102.png",
+        "sha256": "e9d7c14e899bb1f959be90723c646b0cf5df8be396e401083b37d6820c093e8b",
+        "bytes": 22498
+      },
+      {
+        "path": "../clips/frames/frame-103.png",
+        "sha256": "573c7d3b6cf2f68eda573948a70276c2b552cca0aeffde33acb79295becd9f90",
+        "bytes": 17303
+      },
+      {
+        "path": "../clips/frames/frame-104.png",
+        "sha256": "a687e3c1669c4f691eb39f28b563fad02a685d15c7aacd65093b868500e69052",
+        "bytes": 13572
+      },
+      {
+        "path": "../clips/frames/frame-105.png",
+        "sha256": "9499b859cb9792ca9b4344f06d47591689935f2a8e5d4fb479d7ec65faf677f4",
+        "bytes": 14033
+      },
+      {
+        "path": "../clips/frames/frame-106.png",
+        "sha256": "47e7413e8dd75af41762175acd6365933fa0b11890bdddae7a3a2a6ffdeeae38",
+        "bytes": 14127
+      },
+      {
+        "path": "../clips/frames/frame-107.png",
+        "sha256": "a01de3fcd7388be832fc1a5db181b2f1ab29de81b4ba6b020920941d77bd09f7",
+        "bytes": 16013
+      },
+      {
+        "path": "../clips/frames/frame-108.png",
+        "sha256": "c6e60cd4c2bf3da9b1e1aaf0df9ce86f1808baa46ab2f92d7d0321e6e7e657b6",
+        "bytes": 13708
+      },
+      {
+        "path": "../clips/frames/frame-109.png",
+        "sha256": "21b4258f2851a4f1bb14831a6ebf9eea7ccea5483a08b2589fcadc15de0de2ea",
+        "bytes": 15664
+      },
+      {
+        "path": "../clips/frames/frame-110.png",
+        "sha256": "0965b36e431bcc4fff03dd766d371e7ea1bc02a63fb43eec064a96abd58de071",
+        "bytes": 14274
+      },
+      {
+        "path": "../clips/frames/frame-111.png",
+        "sha256": "5678918b5de4d9273bbe39ddac3881b5090c2f851b18d7bead34a0598b9ba03f",
+        "bytes": 14177
+      },
+      {
+        "path": "../clips/frames/frame-112.png",
+        "sha256": "d1e1995be8e4039e73e0d2a093212bd9ce8ea9d3a62e69f9ace813292c1db657",
+        "bytes": 23114
+      },
+      {
+        "path": "../clips/frames/frame-113.png",
+        "sha256": "9115e9c270c98a1b04d90f710b07547752b8778bb91ec3abb57e2b0b0bb3b613",
+        "bytes": 41103
+      },
+      {
+        "path": "../clips/frames/frame-114.png",
+        "sha256": "7ff97dd2a5698f01eb2785fc7d36dd34e049c2f4dc837b964abb5403189e46c9",
+        "bytes": 44702
+      },
+      {
+        "path": "../clips/frames/frame-115.png",
+        "sha256": "65889e958b3564cb151647f2fe2fa69bd34e04c10f0092e6e4236b8b77fc4eeb",
+        "bytes": 43177
+      },
+      {
+        "path": "../clips/frames/frame-116.png",
+        "sha256": "89ef33e0e22d1735631fb5a5338a14a3e2af1b46442f1556a00506d13ffa0d90",
+        "bytes": 42715
+      },
+      {
+        "path": "../clips/frames/frame-117.png",
+        "sha256": "21744cd92dfabfec0d670e36a54592a3398d3b6dcc3ba2df351a080e0cda19f7",
+        "bytes": 24591
+      },
+      {
+        "path": "../clips/frames/frame-118.png",
+        "sha256": "e725dfb48aadb252b92726f2328a2350381a213dc8feea7864de2090a0ea5099",
+        "bytes": 12550
+      },
+      {
+        "path": "../clips/frames/frame-119.png",
+        "sha256": "6c587574e242d3e7942fa67b88dcd7e89752cdcc8b898883ab222cdf99972be5",
+        "bytes": 11095
+      },
+      {
+        "path": "../clips/frames/frame-120.png",
+        "sha256": "cd58530f3e0f4e1a3893773025195ddd19dd2f89ff77aac6e77e187776128ea7",
+        "bytes": 5992
+      },
+      {
+        "path": "../clips/frames/frame-121.png",
+        "sha256": "59cfd5c727f008195c0ac84c19b4dc3c48e48dbfee2a758417788d31a80d879a",
+        "bytes": 765
+      },
+      {
+        "path": "../clips/frames/frame-122.png",
+        "sha256": "f6e9b373fca97388a8d5aaccaa87e67a9e67961a31a9f23c17d3acae9168bade",
+        "bytes": 13333
+      },
+      {
+        "path": "../clips/frames/frame-123.png",
+        "sha256": "86d32f9a64163d926cf288c5be52c54ad0d972296428e4f76d8964d8f1a0f055",
+        "bytes": 13093
+      },
+      {
+        "path": "../clips/frames/frame-124.png",
+        "sha256": "a7ac6a120ad9e6b211839f8e413e06715b08f51fbe2f4d186d93516cf115bf54",
+        "bytes": 7134
+      },
+      {
+        "path": "../clips/frames/frame-125.png",
+        "sha256": "a898cbcf0d8647086b0037011ecc6ac8f864d7e612c4ee15c0653ba6f06f0d49",
+        "bytes": 805
+      },
+      {
+        "path": "../clips/frames/frame-126.png",
+        "sha256": "a046ac403d1c63adf687ef909505b45b191444faf9bbc34b8b0ce547dca644c5",
+        "bytes": 13754
+      },
+      {
+        "path": "../clips/frames/frame-127.png",
+        "sha256": "84f4cd4651cf9d2fdc0e3fcd807ce5a909e597ea54e9cb58a74427415cd2ae0a",
+        "bytes": 11390
+      },
+      {
+        "path": "../clips/frames/frame-128.png",
+        "sha256": "f9c0aa4fc626b77f11550036a1fd706071173b9e62e974ae378d57b3aee13d55",
+        "bytes": 14424
+      },
+      {
+        "path": "../clips/frames/frame-129.png",
+        "sha256": "490f1d54abad11dcb13eb04d525722ceb2f73651df803761aad0e662a4deffb1",
+        "bytes": 13859
+      },
+      {
+        "path": "../clips/frames/frame-130.png",
+        "sha256": "0965b36e431bcc4fff03dd766d371e7ea1bc02a63fb43eec064a96abd58de071",
+        "bytes": 14274
+      },
+      {
+        "path": "../clips/frames/frame-131.png",
+        "sha256": "fd47570abeca80039f24bb501aafeaad58317fd981fb906062637d4ed4a7639a",
+        "bytes": 11215
+      },
+      {
+        "path": "../clips/frames/frame-132.png",
+        "sha256": "63c49328a405b6c362ffc46675a1c7516ecbc584f4a4aec465fd4170cb7384c0",
+        "bytes": 13964
+      },
+      {
+        "path": "../clips/frames/frame-133.png",
+        "sha256": "4c94585c9fa4bb66c2814c168f3cd1e04d196eb6eb66eacdb1ae67b15ce404ee",
+        "bytes": 12757
+      },
+      {
+        "path": "../clips/frames/frame-134.png",
+        "sha256": "2db1a69014b04148b169b321ef00dcd010247229b5e284dfc74a61e54a3dcec9",
+        "bytes": 14712
+      },
+      {
+        "path": "../clips/frames/frame-135.png",
+        "sha256": "6b53362c274b098f99449e498a09aff5b428c884545531602f4c92dc2cb95d97",
+        "bytes": 14731
+      },
+      {
+        "path": "../clips/frames/frame-136.png",
+        "sha256": "e37d96c1b41e3cd063745c43d391ac113f34789c18a71ee9dfb6e827634371ac",
+        "bytes": 13935
+      },
+      {
+        "path": "../clips/frames/frame-137.png",
+        "sha256": "f8f73dfc841f00b72ca4f43a478110adde43f9fc4f1fb4061052ae4205e664ab",
+        "bytes": 14887
+      },
+      {
+        "path": "../clips/frames/frame-138.png",
+        "sha256": "17169a2de97daa435740a825cae9748645c84f5e90f04780c22da22a4f2a7dec",
+        "bytes": 13735
+      },
+      {
+        "path": "../clips/frames/frame-139.png",
+        "sha256": "b6dc7ff47df56e3484787aa1c217d221c664e8b39810c94b9ae63f89a6ed294e",
+        "bytes": 13609
+      },
+      {
+        "path": "../clips/frames/frame-140.png",
+        "sha256": "9018ad80090c007cb2655a21a3cfc4a3f3e7d1bfb1283026648f794ba1d07701",
+        "bytes": 13979
+      },
+      {
+        "path": "../clips/frames/frame-141.png",
+        "sha256": "f3f511da99e6711868502d442872a20a551d7ccecfd01c307dc30c41f15e40ca",
+        "bytes": 15831
+      }
+    ],
+    "outputs": [
+      {
+        "path": "godot/tapion_demo-atlas-00.png",
+        "sha256": "0902ce100019cd9927cc7161671821ae2e3246d625cbaee5dd0a964102fb806a"
+      },
+      {
+        "path": "godot/tapion_demo.tres",
+        "sha256": "0bbdc26ea8adee37c5dfb105e42b8237c73ffe2e818f4f3ac76d6584df4fcae5"
+      },
+      {
+        "path": "godot/tapion_demo.tscn",
+        "sha256": "d223e5f9a6f0743c9107dba3d5281baf43b994ddc31236ae09dee8a924ccfb19"
+      }
+    ],
+    "tool": {
+      "name": "export_engine.py",
+      "version": "0.4.0"
+    }
+  },
+  "render_contract": {
+    "body_clips": [
+      "idle",
+      "walk",
+      "turntable_360",
+      "combat_enter",
+      "idle_combat",
+      "combat_move",
+      "jump",
+      "fly_prep",
+      "fly_aura",
+      "teleport",
+      "teleport_dash_ground",
+      "teleport_dash_air",
+      "hit",
+      "ko",
+      "attack_light",
+      "attack_2",
+      "attack_3",
+      "attack_4",
+      "attack_5",
+      "attack_6",
+      "attack_7",
+      "attack_8",
+      "attack_9",
+      "attack_10",
+      "barrier_cast",
+      "energy_recover",
+      "mahasenko_ground",
+      "mahasenko_air",
+      "antamina_charge",
+      "antamina_rings",
+      "antamina_fire",
+      "antamina_combo",
+      "kentaima_cast",
+      "bukadai_rush"
+    ],
+    "effect_clips": [
+      "peace_aura_fx",
+      "tele_streak_h_fx",
+      "tele_streak_v_fx",
+      "atk10_impact_fx",
+      "barrier_dome_fx",
+      "mahasenko_hand_fx",
+      "mahasenko_beam_h_fx",
+      "mahasenko_beam_air_fx",
+      "mahasenko_impact_fx",
+      "antamina_stream_fx",
+      "antamina_impact_fx",
+      "kentaima_wave_fx",
+      "kentaima_impact_fx",
+      "bukadai_vanish_fx",
+      "bukadai_sphere_fx",
+      "bukadai_flash_fx",
+      "bukadai_impact_fx"
+    ],
+    "locomotion": {
+      "kind": "ground",
+      "clip": "walk",
+      "walk_cycle_order": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "default_scale": 1.0,
+      "screen_speed_px_per_second": 200,
+      "speed_px_per_second": 200.0,
+      "combat_speed_px_per_second": 500.0,
+      "combat_back_speed_px_per_second": 400.0,
+      "combat_fwd_speed_px_per_second": 500.0,
+      "flight_speed_px_per_second": 400.0,
+      "jump_height_px": 100.0
+    },
+    "game_states": {
+      "peace": {
+        "walk": true,
+        "idle": true,
+        "combat_move": false,
+        "idle_combat": false,
+        "attack": false
+      },
+      "combat": {
+        "walk": false,
+        "idle": false,
+        "combat_move": true,
+        "idle_combat": true,
+        "attack": true
+      }
+    },
+    "aura": {
+      "loop_clip": "peace_aura_fx",
+      "charge_clip": null,
+      "independent_clock": true,
+      "external_fx_tres": "res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres",
+      "peace_aura_clip": "peace_aura_fx"
+    },
+    "projectile": null,
+    "turning": {
+      "clip": null,
+      "method": "instant_flip",
+      "flip_h": true
+    },
+    "hero_mechanics": {
+      "forms": [
+        "konatsian_hero"
+      ],
+      "master_approved_locked": true,
+      "combat_combo_sequence": [
+        "attack_light",
+        "attack_2",
+        "attack_3",
+        "attack_4",
+        "attack_5",
+        "attack_6",
+        "attack_7",
+        "attack_8",
+        "attack_9",
+        "attack_10"
+      ],
+      "signature_skills": [
+        "barrier_cast",
+        "energy_recover",
+        "kentaima_cast",
+        "mahasenko_ground",
+        "mahasenko_air",
+        "antamina_combo",
+        "bukadai_rush"
+      ],
+      "attack_10_loop_x2": true,
+      "attack_10_ground_impact_fx": "atk10_impact_fx",
+      "flight_ki_max": 50.0,
+      "teleport_stamina_max": 100.0,
+      "combat_move_mode": "continuous_dash_with_analog_brake"
+    },
+    "facing_default": "right",
+    "skills_fx_tres": "res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres"
+  }
+}
