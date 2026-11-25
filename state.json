@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-24T13:17:27Z",
+  "updated_at": "2026-11-25T08:16:16Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.18.0",
@@ -169,7 +169,7 @@
   "current_focus": {
     "active_task_id": "TAPION-FULL-47-HUMAN-TEST",
     "status": "ready_for_owner_human_test",
-    "summary": "Hoàn tất trọn bộ 47/47 file nguồn Tapion (review/tapion_demo: 34 clips thân / 142 unique frames trên 1 trang 3506x3214 Nearest 60Hz SHA-256 0902ce100019cd99... + 17 clips FX độc lập / 61 frames trên 1 trang 2338x2338 SHA-256 673654b7d5963594...), mở bộ lọc có kiểm soát review/ trong export_presets.cfg (LRN-129) để đóng gói đủ Tapion vào Godot Web/APK/IPA/Windows, vượt 136/136 Master QC Gate, pass 100% ./loop.sh test và push lên main chờ Owner Human Test.",
+    "summary": "Hoàn tất toàn bộ 9 hạng mục nâng cấp Tapion & kỹ năng (polish_v3, LRN-138): fly_prep xanh dương đồng bộ fly_aura, barrier_dome_fx 5f theo frame cuối bản gốc vòng tròn bảo vệ.png (không ánh xạ xanh nhân vật), Mahasenko đảo thứ tự to dần + 2 tia đồng thời 2500px/s cách tay 20px sau mahasenko_hand_fx, Kentaima khóa mục tiêu 2500px/s + giảm 30% kentaima_impact_fx, nâng toàn bộ skill & vụ nổ lên layer đầu tiên (z=68..70 > Boss), attack_10 kích atk10_impact_fx dưới chân cả quái bay lẫn quái bộ ở frame 2..7 + mini-stun không cần bể giáp tới hết skill, Antamina 100 MP vận công antamina_fire xoay cầu antamina_flash_fx 1s -> bắn ngược 4->0 -> bay 0->4 3000px/s -> nổ antamina_impact_fx (bỏ anta_impact cũ), Bukadai tele tới mục tiêu khóa choáng 2s, chặn tung mọi skill tấn công vào không trung, và đổi tên hiển thị Atomic -> Antomic. Đạt 138/138 Master QC Gate, body atlas 17ef127ae118609b... (3506x3506, 34 clips, 144f) + FX atlas e5785733e68b0c56... (2338x2338, 18 clips, 63f), Web index.pck e74f6a9583b9... + APK d5621e2ad430..., pass 100% ./loop.sh test (exit 0) và đồng bộ 1:1 live trên localhost:8080.",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1429,9 +1429,9 @@
     },
     {
       "id": "TAPION-FULL-47-HUMAN-TEST",
-      "timestamp": "2026-11-24T13:17:27Z",
+      "timestamp": "2026-11-25T08:16:16Z",
       "status": "ready_for_owner_human_test",
-      "summary": "Hoàn tất trọn bộ 47/47 file nguồn Tapion (review/tapion_demo: 34 clips thân / 142 unique frames trên 1 trang 3506x3214 Nearest 60Hz SHA-256 0902ce100019cd99... + 17 clips FX độc lập / 61 frames trên 1 trang 2338x2338 SHA-256 673654b7d5963594...), mở bộ lọc có kiểm soát review/ trong export_presets.cfg (LRN-129) để đóng gói đủ Tapion vào Godot Web/APK/IPA/Windows, vượt 136/136 Master QC Gate, pass 100% ./loop.sh test và push lên main chờ Owner Human Test."
+      "summary": "Hoàn tất toàn bộ 9 hạng mục nâng cấp Tapion & kỹ năng (polish_v3, LRN-138): fly_prep xanh dương đồng bộ fly_aura, barrier_dome_fx 5f theo frame cuối bản gốc vòng tròn bảo vệ.png (không ánh xạ xanh nhân vật), Mahasenko đảo thứ tự to dần + 2 tia đồng thời 2500px/s cách tay 20px sau mahasenko_hand_fx, Kentaima khóa mục tiêu 2500px/s + giảm 30% kentaima_impact_fx, nâng toàn bộ skill & vụ nổ lên layer đầu tiên (z=68..70 > Boss), attack_10 kích atk10_impact_fx dưới chân cả quái bay lẫn quái bộ ở frame 2..7 + mini-stun không cần bể giáp tới hết skill, Antamina 100 MP vận công antamina_fire xoay cầu antamina_flash_fx 1s -> bắn ngược 4->0 -> bay 0->4 3000px/s -> nổ antamina_impact_fx (bỏ anta_impact cũ), Bukadai tele tới mục tiêu khóa choáng 2s, chặn tung mọi skill tấn công vào không trung, và đổi tên hiển thị Atomic -> Antomic. Đạt 138/138 Master QC Gate, body atlas 17ef127ae118609b... (3506x3506, 34 clips, 144f) + FX atlas e5785733e68b0c56... (2338x2338, 18 clips, 63f), Web index.pck e74f6a9583b9... + APK d5621e2ad430..., pass 100% ./loop.sh test (exit 0) và đồng bộ 1:1 live trên localhost:8080."
     }
   ],
   "quick_resume_commands": [
@@ -1776,5 +1776,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-24T13:17:27Z"
+  "last_updated_utc": "2026-11-25T08:16:16Z"
 }

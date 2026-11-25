@@ -10,22 +10,6 @@
   ],
   "frames": [
     {
-      "name": "anta_impact_00",
-      "file": "raw_frames/anta_impact_00.png"
-    },
-    {
-      "name": "anta_impact_01",
-      "file": "raw_frames/anta_impact_01.png"
-    },
-    {
-      "name": "anta_impact_02",
-      "file": "raw_frames/anta_impact_02.png"
-    },
-    {
-      "name": "anta_impact_03",
-      "file": "raw_frames/anta_impact_03.png"
-    },
-    {
       "name": "anta_stream_00",
       "file": "raw_frames/anta_stream_00.png"
     },
@@ -44,6 +28,22 @@
     {
       "name": "anta_stream_04",
       "file": "raw_frames/anta_stream_04.png"
+    },
+    {
+      "name": "antamina_flash_00",
+      "file": "raw_frames/antamina_flash_00.png"
+    },
+    {
+      "name": "antamina_impact_00",
+      "file": "raw_frames/antamina_impact_00.png"
+    },
+    {
+      "name": "antamina_impact_01",
+      "file": "raw_frames/antamina_impact_01.png"
+    },
+    {
+      "name": "antamina_impact_02",
+      "file": "raw_frames/antamina_impact_02.png"
     },
     {
       "name": "atk10_impact_00",
@@ -90,22 +90,6 @@
       "file": "raw_frames/barrier_dome_04.png"
     },
     {
-      "name": "bukadai_flash_00",
-      "file": "raw_frames/bukadai_flash_00.png"
-    },
-    {
-      "name": "bukadai_impact_00",
-      "file": "raw_frames/bukadai_impact_00.png"
-    },
-    {
-      "name": "bukadai_impact_01",
-      "file": "raw_frames/bukadai_impact_01.png"
-    },
-    {
-      "name": "bukadai_impact_02",
-      "file": "raw_frames/bukadai_impact_02.png"
-    },
-    {
       "name": "bukadai_sphere_00",
       "file": "raw_frames/bukadai_sphere_00.png"
     },
@@ -124,6 +108,30 @@
     {
       "name": "bukadai_vanish_00",
       "file": "raw_frames/bukadai_vanish_00.png"
+    },
+    {
+      "name": "fly_aura_fx_00",
+      "file": "raw_frames/fly_aura_fx_00.png"
+    },
+    {
+      "name": "fly_aura_fx_01",
+      "file": "raw_frames/fly_aura_fx_01.png"
+    },
+    {
+      "name": "fly_aura_fx_02",
+      "file": "raw_frames/fly_aura_fx_02.png"
+    },
+    {
+      "name": "fly_aura_fx_03",
+      "file": "raw_frames/fly_aura_fx_03.png"
+    },
+    {
+      "name": "fly_aura_fx_04",
+      "file": "raw_frames/fly_aura_fx_04.png"
+    },
+    {
+      "name": "fly_aura_fx_05",
+      "file": "raw_frames/fly_aura_fx_05.png"
     },
     {
       "name": "kenta_impact_00",
@@ -271,6 +279,26 @@
         6
       ]
     },
+    "fly_aura_fx": {
+      "loop_policy": "cycle",
+      "role": "fx",
+      "frames": [
+        "fly_aura_fx_00",
+        "fly_aura_fx_01",
+        "fly_aura_fx_02",
+        "fly_aura_fx_03",
+        "fly_aura_fx_04",
+        "fly_aura_fx_05"
+      ],
+      "ticks": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
     "tele_streak_h_fx": {
       "loop_policy": "oneshot",
       "role": "fx",
@@ -351,28 +379,28 @@
       "loop_policy": "oneshot",
       "role": "fx",
       "frames": [
-        "maha_beam_h_00",
+        "maha_beam_h_02",
         "maha_beam_h_01",
-        "maha_beam_h_02"
+        "maha_beam_h_00"
       ],
       "ticks": [
-        7,
         5,
-        5
+        5,
+        7
       ]
     },
     "mahasenko_beam_air_fx": {
       "loop_policy": "oneshot",
       "role": "fx",
       "frames": [
-        "maha_beam_air_00",
+        "maha_beam_air_02",
         "maha_beam_air_01",
-        "maha_beam_air_02"
+        "maha_beam_air_00"
       ],
       "ticks": [
-        7,
         5,
-        5
+        5,
+        7
       ]
     },
     "mahasenko_impact_fx": {
@@ -391,6 +419,34 @@
         4,
         4,
         4
+      ]
+    },
+    "antamina_flash_fx": {
+      "loop_policy": "cycle",
+      "role": "fx",
+      "frames": [
+        "antamina_flash_00"
+      ],
+      "ticks": [
+        4
+      ]
+    },
+    "antamina_stream_rev_fx": {
+      "loop_policy": "oneshot",
+      "role": "fx",
+      "frames": [
+        "anta_stream_04",
+        "anta_stream_03",
+        "anta_stream_02",
+        "anta_stream_01",
+        "anta_stream_00"
+      ],
+      "ticks": [
+        3,
+        3,
+        3,
+        3,
+        3
       ]
     },
     "antamina_stream_fx": {
@@ -415,15 +471,13 @@
       "loop_policy": "oneshot",
       "role": "fx",
       "frames": [
-        "anta_impact_00",
-        "anta_impact_01",
-        "anta_impact_02",
-        "anta_impact_03"
+        "antamina_impact_00",
+        "antamina_impact_01",
+        "antamina_impact_02"
       ],
       "ticks": [
-        4,
-        4,
-        4,
+        5,
+        5,
         5
       ]
     },
@@ -487,30 +541,6 @@
         5,
         5,
         4
-      ]
-    },
-    "bukadai_flash_fx": {
-      "loop_policy": "oneshot",
-      "role": "fx",
-      "frames": [
-        "bukadai_flash_00"
-      ],
-      "ticks": [
-        4
-      ]
-    },
-    "bukadai_impact_fx": {
-      "loop_policy": "oneshot",
-      "role": "fx",
-      "frames": [
-        "bukadai_impact_00",
-        "bukadai_impact_01",
-        "bukadai_impact_02"
-      ],
-      "ticks": [
-        5,
-        5,
-        5
       ]
     }
   }

@@ -1422,8 +1422,9 @@
       listEl.querySelectorAll('.clip-chip').forEach(btn => {
         btn.onclick = () => {
           state.activeClipName = btn.dataset.clip;
-          const hasAura = Boolean(b.render_contract?.aura?.loop_clip && b.animations[b.render_contract.aura.loop_clip]);
-          if(hasAura && ['power_up','aura_loop','ko'].includes(state.activeClipName)) {state.auraEnabled=state.activeClipName!=='ko';document.getElementById('chkIndependentAura').checked=state.auraEnabled;}
+          const clipAuraMap = b.render_contract?.aura?.clip_auras || {};
+          const hasAura = Boolean((b.render_contract?.aura?.loop_clip && b.animations[b.render_contract.aura.loop_clip]) || (clipAuraMap[state.activeClipName] && b.animations[clipAuraMap[state.activeClipName]]));
+          if(hasAura && ['power_up','aura_loop','fly_aura','ko'].includes(state.activeClipName)) {state.auraEnabled=state.activeClipName!=='ko';document.getElementById('chkIndependentAura').checked=state.auraEnabled;}
           state.stepIdx = 0;
           state.stepElapsedMs = 0;
           state.playing = true;
@@ -1585,12 +1586,16 @@
       if(contract.chilopoda)return chilopodaLayers(b,bodyName,index,tick,options);
       const fxTick=options.fxTicks===undefined?state.fxTicks:options.fxTicks;
       const layers=[];
-      const hasAuraLoop=Boolean(contract.aura?.loop_clip&&b.animations[contract.aura.loop_clip]);
+      const clipAuraName = contract.aura?.clip_auras?.[bodyName];
+      const peaceOnlyClips = contract.aura?.peace_only_clips;
+      const defaultLoopClip = (!peaceOnlyClips || peaceOnlyClips.includes(bodyName) || auraView) ? contract.aura?.loop_clip : null;
+      const activeLoopClip = (clipAuraName && b.animations[clipAuraName]) ? clipAuraName : defaultLoopClip;
+      const hasAuraLoop=Boolean(activeLoopClip&&b.animations[activeLoopClip]);
       const auraOn=hasAuraLoop&&(auraView||(options.auraEnabled===undefined?state.auraEnabled:options.auraEnabled));
       if(auraOn&&bodyName!=='ko') {
         const charge=b.animations[contract.aura.charge_clip];
-        const effect=charge&&bodyName==='power_up'&&tick<animationTickLength(charge)?charge:b.animations[contract.aura.loop_clip];
-        const frame=auraView?effect.frames[Math.min(stepIdx,effect.frames.length-1)]:sampleFxFrame(effect,effect===charge?tick:fxTick);
+        const effect=charge&&bodyName==='power_up'&&tick<animationTickLength(charge)?charge:b.animations[activeLoopClip];
+        const frame=(auraView||Boolean(clipAuraName))?effect.frames[index%effect.frames.length]:sampleFxFrame(effect,effect===charge?tick:fxTick);
         layers.push({layer:'Aura',bundle:b.id,frame});
       }
       layers.push({layer:'Body',bundle:b.id,frame:anim.frames[index]});

@@ -22,12 +22,12 @@ const ACTION_LABELS := {
 	"barrier": "Khiên 10s",
 	"energy_recover": "Gồng hồi",
 	"flurry_kick": "Đá liên hoàn",
-	"atomic_blast": "Atomic",
+	"atomic_blast": "Antomic",
 	"kamehameha": "Kamehameha",
 	"kentaima": "Kentaima (Sóng kiếm)",
-	"mahasenko": "Mahasenko (Đất/Không)",
-	"antamina": "Antamina (Đại chiêu)",
-	"bukadai": "Bukadai (Lao chém)",
+	"mahasenko": "Mahasenko (2 tia vàng)",
+	"antamina": "Antamina (100 MP)",
+	"bukadai": "Bukadai (Tele choáng 2s)",
 	"empty": "Trống",
 }
 
@@ -571,7 +571,7 @@ func _refresh_slot_buttons() -> void:
 				btn.tooltip_text = lbl
 				btn.disabled = false
 		elif act == "atomic_blast":
-			btn.tooltip_text = "Atomic Blast (Hồi 12s)" if _hero_atomic_cd <= 0.0 else "Atomic Blast (%.1fs)" % _hero_atomic_cd
+			btn.tooltip_text = "Antomic Blast (Hồi 12s)" if _hero_atomic_cd <= 0.0 else "Antomic Blast (%.1fs)" % _hero_atomic_cd
 			btn.disabled = (not _hero_is_ssj) or _hero_atomic_cd > 0.0
 		elif act == "kamehameha":
 			btn.tooltip_text = "Kamehameha (80 MP · Hiện có %d)" % int(floor(_current_mana))
@@ -591,16 +591,19 @@ func _refresh_slot_buttons() -> void:
 				btn.tooltip_text = "Gồng hồi (%.1fs)" % _hero_recover_cd
 			btn.disabled = (not _hero_is_ssj) or (not _hero_on_ground) or _hero_recover_cd > 0.0
 		elif act == "kentaima":
-			btn.tooltip_text = "Kentaima — Sóng kiếm bán nguyệt xanh" if _hero_kentaima_cd <= 0.0 else "Kentaima (%.1fs)" % _hero_kentaima_cd
+			btn.tooltip_text = "Kentaima — Sóng kiếm xanh 2500px/s khóa mục tiêu" if _hero_kentaima_cd <= 0.0 else "Kentaima (%.1fs)" % _hero_kentaima_cd
 			btn.disabled = _hero_kentaima_cd > 0.0
 		elif act == "mahasenko":
-			btn.tooltip_text = "Mahasenko — Chưởng tia vàng (Đất ngang / Không chéo)" if _hero_mahasenko_cd <= 0.0 else "Mahasenko (%.1fs)" % _hero_mahasenko_cd
+			btn.tooltip_text = "Mahasenko — Phóng 2 tia vàng 2500px/s vào mục tiêu" if _hero_mahasenko_cd <= 0.0 else "Mahasenko (%.1fs)" % _hero_mahasenko_cd
 			btn.disabled = _hero_mahasenko_cd > 0.0
 		elif act == "antamina":
-			btn.tooltip_text = "Antamina — Vòng năng lượng & luồng đạn 1→5" if _hero_antamina_cd <= 0.0 else "Antamina (%.1fs)" % _hero_antamina_cd
-			btn.disabled = _hero_antamina_cd > 0.0
+			if _hero_antamina_cd > 0.0:
+				btn.tooltip_text = "Antamina (%.1fs · 100 MP)" % _hero_antamina_cd
+			else:
+				btn.tooltip_text = "Antamina — Đại chiêu 3000px/s (100 MP · Hiện có %d)" % int(floor(_current_mana))
+			btn.disabled = _hero_antamina_cd > 0.0 or (_current_mana + 0.001 < 100.0)
 		elif act == "bukadai":
-			btn.tooltip_text = "Bukadai — Lao chém tốc độ & nổ cầu sét vàng" if _hero_bukadai_cd <= 0.0 else "Bukadai (%.1fs)" % _hero_bukadai_cd
+			btn.tooltip_text = "Bukadai — Tele chớp nhoáng & làm choáng địch 2s" if _hero_bukadai_cd <= 0.0 else "Bukadai (%.1fs)" % _hero_bukadai_cd
 			btn.disabled = _hero_bukadai_cd > 0.0
 		else:
 			btn.tooltip_text = lbl
@@ -847,7 +850,7 @@ class _SkillButtonVisual extends Control:
 			var gold_a := Color(1.0, 0.86, 0.20, 0.98 * alpha_mul)
 			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ready_a, 36, gold_a, 3.0, true)
 			_draw_atomic_orbs_icon(center + Vector2(0.0, -7.0), r * 0.42, gold_a)
-			short_lbl = ("%ds" % int(ceilf(cd_a))) if cd_a > 0.05 else "ATOMIC"
+			short_lbl = ("%ds" % int(ceilf(cd_a))) if cd_a > 0.05 else "ANTOMIC"
 		elif act == "kamehameha":
 			var mp_ratio: float = clampf(pad_owner._current_mana / 80.0, 0.0, 1.0)
 			var blue_k := Color(0.18, 0.72, 1.0, 0.98 * alpha_mul)
@@ -891,10 +894,12 @@ class _SkillButtonVisual extends Control:
 			short_lbl = ("%.0fs" % ceilf(cd_mh)) if cd_mh > 0.05 else "MAHASEN"
 		elif act == "antamina":
 			var cd_an: float = float(pad_owner._hero_antamina_cd)
+			var mp_an: float = clampf(pad_owner._current_mana / 100.0, 0.0, 1.0)
 			var gold_an := Color(1.0, 0.82, 0.18, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_an / 2.0, 0.0, 1.0), 36, gold_an, 3.0, true)
+			var ring_an: float = clampf(1.0 - cd_an / 2.0, 0.0, 1.0) if cd_an > 0.05 else mp_an
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_an, 36, gold_an if mp_an >= 1.0 else Color(0.95, 0.72, 0.22, 0.55), 3.0, true)
 			_draw_ki_icon(center + Vector2(0.0, -7.0), r * 0.40, gold_an)
-			short_lbl = ("%.0fs" % ceilf(cd_an)) if cd_an > 0.05 else "ANTAMINA"
+			short_lbl = ("%.0fs" % ceilf(cd_an)) if cd_an > 0.05 else ("ANTAMINA" if mp_an >= 1.0 else "%d/100" % int(floor(pad_owner._current_mana)))
 		elif act == "bukadai":
 			var cd_bk: float = float(pad_owner._hero_bukadai_cd)
 			var yel_bk := Color(1.0, 0.94, 0.34, 0.98 * alpha_mul)

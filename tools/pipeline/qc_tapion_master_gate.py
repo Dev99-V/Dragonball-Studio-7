@@ -55,6 +55,7 @@ def audit_frame(
     *,
     allow_fx_border: bool = False,
     check_grounded_stance: bool = False,
+    allow_soft_vfx_alpha: bool = False,
 ) -> Dict[str, object]:
     arr = np.array(Image.open(frame_path).convert("RGBA"), dtype=np.uint8)
     alpha = arr[:, :, 3]
@@ -62,7 +63,13 @@ def audit_frame(
     if not vis.any():
         return {"file": frame_path.name, "pass": False, "errors": ["empty_frame"]}
 
-    semi_alpha_px = int(((alpha > 0) & (alpha < 255)).sum())
+    if allow_soft_vfx_alpha:
+        # Per Điều 7.2: body pixels must remain 100% opaque (alpha==255); soft alpha is allowed ONLY on pale white or electric cyan-blue outer VFX aura!
+        r_a, g_a, b_a = arr[:, :, 0].astype(np.int16), arr[:, :, 1].astype(np.int16), arr[:, :, 2].astype(np.int16)
+        is_vfx_aura = ((r_a > 215) & (g_a > 220) & (b_a > 230)) | ((b_a >= 240) & (g_a >= 140) & (b_a > r_a + 30))
+        semi_alpha_px = int(((alpha > 0) & (alpha < 255) & (~is_vfx_aura)).sum())
+    else:
+        semi_alpha_px = int(((alpha > 0) & (alpha < 255)).sum())
     ys, xs = np.where(vis)
     y0, y1 = int(ys.min()), int(ys.max())
     x0, x1 = int(xs.min()), int(xs.max())

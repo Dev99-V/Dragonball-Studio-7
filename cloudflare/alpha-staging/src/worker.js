@@ -8,7 +8,7 @@
  */
 
 const DEFAULT_HERO_CID = "songoku";
-const ALLOWED_HERO_CIDS = new Set(["songoku", "drum"]);
+const ALLOWED_HERO_CIDS = new Set(["songoku", "drum", "tapion_demo", "tapion"]);
 
 function normalizeHeroCharacterId(raw) {
   const s = String(raw || "").trim();
@@ -71,6 +71,11 @@ const DAMAGE_TABLE = {
   flurry_kick: 30,
   atomic_blast: 55,
   kamehameha: 360,
+  kentaima: 60,
+  mahasenko: 65,
+  antamina_cast: 0,
+  antamina: 80,
+  bukadai: 85,
 };
 
 const ACTION_SPECS = {
@@ -83,6 +88,11 @@ const ACTION_SPECS = {
   flurry_kick: { min_dmg: 30, max_dmg: 30, default_dmg: 30, mana_delta: 8, mana_cost: 0, ranged: false, pvp_range: 300 },
   atomic_blast: { min_dmg: 55, max_dmg: 55, default_dmg: 55, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 1400 },
   kamehameha: { min_dmg: 360, max_dmg: 360, default_dmg: 360, mana_delta: 0, mana_cost: 80, cast_window_ms: 5000, ranged: true, pvp_range: 1400 },
+  kentaima: { min_dmg: 60, max_dmg: 60, default_dmg: 60, mana_delta: 10, mana_cost: 0, ranged: true, pvp_range: 1400 },
+  mahasenko: { min_dmg: 65, max_dmg: 65, default_dmg: 65, mana_delta: 10, mana_cost: 0, ranged: true, pvp_range: 1400 },
+  antamina_cast: { min_dmg: 0, max_dmg: 0, default_dmg: 0, mana_delta: 0, mana_cost: 100, ranged: true, pvp_range: 1400 },
+  antamina: { min_dmg: 80, max_dmg: 80, default_dmg: 80, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 1400 },
+  bukadai: { min_dmg: 85, max_dmg: 85, default_dmg: 85, mana_delta: 15, mana_cost: 0, ranged: false, pvp_range: 950 },
 };
 
 const RATE_LIMIT_MAP = new Map();

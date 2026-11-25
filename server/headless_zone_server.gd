@@ -24,6 +24,11 @@ const DAMAGE_TABLE := {
 	"flurry_kick": 30.0,
 	"atomic_blast": 55.0,
 	"kamehameha": 360.0,
+	"kentaima": 60.0,
+	"mahasenko": 65.0,
+	"antamina_cast": 0.0,
+	"antamina": 80.0,
+	"bukadai": 85.0,
 }
 
 const ACTION_SPECS := {
@@ -36,6 +41,11 @@ const ACTION_SPECS := {
 	"flurry_kick": {"min_dmg": 30.0, "max_dmg": 30.0, "default_dmg": 30.0, "mana_delta": 8.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 300.0, "check_los": false},
 	"atomic_blast": {"min_dmg": 55.0, "max_dmg": 55.0, "default_dmg": 55.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": false},
 	"kamehameha": {"min_dmg": 360.0, "max_dmg": 360.0, "default_dmg": 360.0, "mana_delta": 0.0, "mana_cost": 80.0, "cast_window_ms": 5000, "ranged": true, "pvp_range": 1400.0, "check_los": true},
+	"kentaima": {"min_dmg": 60.0, "max_dmg": 60.0, "default_dmg": 60.0, "mana_delta": 10.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": true},
+	"mahasenko": {"min_dmg": 65.0, "max_dmg": 65.0, "default_dmg": 65.0, "mana_delta": 10.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": true},
+	"antamina_cast": {"min_dmg": 0.0, "max_dmg": 0.0, "default_dmg": 0.0, "mana_delta": 0.0, "mana_cost": 100.0, "ranged": true, "pvp_range": 1400.0, "check_los": false},
+	"antamina": {"min_dmg": 80.0, "max_dmg": 80.0, "default_dmg": 80.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": false},
+	"bukadai": {"min_dmg": 85.0, "max_dmg": 85.0, "default_dmg": 85.0, "mana_delta": 15.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 950.0, "check_los": false},
 }
 
 const DEFAULT_MONSTER_SLOTS := [
@@ -501,7 +511,7 @@ func _handle_peer_packet(pid: int, pkt: Dictionary) -> void:
 			var req_cid := str(pkt.get("character_id", "")).strip_edges()
 			if req_cid == "songoku_hero_demo":
 				req_cid = "songoku"
-			if req_cid in ["songoku", "drum"]:
+			if req_cid in ["songoku", "drum", "tapion_demo", "tapion"]:
 				pdata["character_id"] = req_cid
 				pinfo["character_id"] = req_cid
 		var act := str(pkt.get("act", "idle")).strip_edges()

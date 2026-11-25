@@ -319,6 +319,22 @@
       "file": "raw_frames/fly_aura_01.png"
     },
     {
+      "name": "fly_aura_02",
+      "file": "raw_frames/fly_aura_02.png"
+    },
+    {
+      "name": "fly_aura_03",
+      "file": "raw_frames/fly_aura_03.png"
+    },
+    {
+      "name": "fly_aura_04",
+      "file": "raw_frames/fly_aura_04.png"
+    },
+    {
+      "name": "fly_aura_05",
+      "file": "raw_frames/fly_aura_05.png"
+    },
+    {
       "name": "fly_prep_00",
       "file": "raw_frames/fly_prep_00.png"
     },
@@ -345,10 +361,6 @@
     {
       "name": "hit_02",
       "file": "raw_frames/hit_02.png"
-    },
-    {
-      "name": "hit_03",
-      "file": "raw_frames/hit_03.png"
     },
     {
       "name": "idle_00",
@@ -425,10 +437,6 @@
     {
       "name": "kenta_cast_03",
       "file": "raw_frames/kenta_cast_03.png"
-    },
-    {
-      "name": "ko_00",
-      "file": "raw_frames/ko_00.png"
     },
     {
       "name": "ko_01",
@@ -745,9 +753,17 @@
       "role": "player",
       "frames": [
         "fly_aura_00",
-        "fly_aura_01"
+        "fly_aura_01",
+        "fly_aura_02",
+        "fly_aura_03",
+        "fly_aura_04",
+        "fly_aura_05"
       ],
       "ticks": [
+        4,
+        4,
+        4,
+        4,
         4,
         4
       ]
@@ -818,14 +834,12 @@
       "frames": [
         "hit_00",
         "hit_01",
-        "hit_02",
-        "hit_03"
+        "hit_02"
       ],
       "ticks": [
         5,
         6,
-        6,
-        7
+        6
       ]
     },
     "ko": {
@@ -833,12 +847,10 @@
       "role": "player",
       "frames": [
         "hit_02",
-        "ko_00",
         "ko_01"
       ],
       "ticks": [
         7,
-        9,
         24
       ]
     },

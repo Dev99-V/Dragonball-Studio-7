@@ -35,7 +35,7 @@ const MELEE_STRIKE_EDGE_PX := 85.0
 const HERO_MELEE_STRIKE_EDGE_PX := 20.0
 const DRAGON_BALL_TOTAL_DROP_PCT := 30.0
 const DOUBLE_TAP_WINDOW_S := 0.42
-const Z_LAYER_FX := 38
+const Z_LAYER_FX := 68
 const DRUM_SKILL_SPEED_PX_S := 1170.0
 const MONSTER_SKILL_SPEED_PX_S := 780.0
 const DEFAULT_EXPLOSION_SCALE := 0.68
@@ -112,8 +112,9 @@ var _player_hit_frames_fired: Array[int] = []
 var _player_gold_slash_pending: bool = false
 var _base_lock_notice_cd_s: float = 0.0
 
-# Phase 2 Son Goku Active Skills & Independent FX Runtime (Owner 2026-11-20)
+# Phase 2 Son Goku & Tapion Active Skills & Independent FX Runtime
 var _songoku_fx_frames: SpriteFrames = null
+var _tapion_fx_frames: SpriteFrames = null
 var _hero_skill_projectiles: Array[Dictionary] = []   # Atomic bolts (23/25)
 var _hero_kame_beams: Array[Dictionary] = []          # Kamehameha beams (31/32)
 var _hero_flurry_hits_fired: Array[int] = []
@@ -1001,6 +1002,7 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 		return {"intent": "idle"}
 	var is_goku: bool = _is_hero_songoku_node(p_node)
+	var is_tapion_auto: bool = p_node.has_method(&"is_hero_tapion") and bool(p_node.call(&"is_hero_tapion"))
 	var p_rect: Rect2 = _get_player_body_rect()
 	var m_rect: Rect2 = _get_slot_body_rect(tgt)
 	var p_core: Vector2 = _get_player_core_pos()
@@ -1010,8 +1012,8 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	var melee_r: float = _get_player_melee_strike_edge_px()
 	var is_busy: bool = bool(arena.call("_is_player_action_playing"))
 	var goku_is_ssj: bool = bool(p_node.get("is_ssj")) if is_goku else true
-	var can_kame: bool = is_goku and goku_is_ssj and player_mana + 0.001 >= 80.0 and float(p_node.get("kame_cooldown_s")) <= 0.0
-	var can_atomic: bool = is_goku and goku_is_ssj and float(p_node.get("atomic_cooldown_s")) <= 0.0
+	var can_kame: bool = (float(p_node.get("mahasenko_cooldown_s")) <= 0.0) if is_tapion_auto else (is_goku and goku_is_ssj and player_mana + 0.001 >= 80.0 and float(p_node.get("kame_cooldown_s")) <= 0.0)
+	var can_atomic: bool = (float(p_node.get("kentaima_cooldown_s")) <= 0.0 or (float(p_node.get("antamina_cooldown_s")) <= 0.0 and player_mana + 0.001 >= 100.0)) if is_tapion_auto else (is_goku and goku_is_ssj and float(p_node.get("atomic_cooldown_s")) <= 0.0)
 	var can_recover: bool = is_goku and goku_is_ssj and bool(arena.call("is_player_grounded_for_recover")) and float(p_node.get("recover_cooldown_s")) <= 0.0 and float(p_node.get("ki")) < float(p_node.get("max_ki")) - 5.0
 	var can_fly_auto: bool = (bool(p_node.call(&"can_fly")) and (not _auto_ki_ground_lock)) if is_goku else false
 	var dec: Dictionary = UtilityAIControllerScript.evaluate_hero_auto({
@@ -1042,10 +1044,17 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 	elif intent == "kamehameha":
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
-		request_player_kamehameha()
+		if is_tapion_auto:
+			arena.call("_on_touch_action", "mahasenko")
+		else:
+			request_player_kamehameha()
 	elif intent == "atomic_blast":
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
-		request_player_atomic_blast()
+		if is_tapion_auto:
+			var tap_act := "kentaima" if float(p_node.get("kentaima_cooldown_s")) <= 0.0 else "antamina"
+			arena.call("_on_touch_action", tap_act)
+		else:
+			request_player_atomic_blast()
 	elif intent == "energy_recover":
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 		request_player_energy_recover()
@@ -3277,6 +3286,15 @@ func _get_songoku_fx_frames() -> SpriteFrames:
 	return _songoku_fx_frames
 
 
+func _get_tapion_fx_frames() -> SpriteFrames:
+	if _tapion_fx_frames != null:
+		return _tapion_fx_frames
+	var fx_path := "res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres"
+	if ResourceLoader.exists(fx_path):
+		_tapion_fx_frames = load(fx_path) as SpriteFrames
+	return _tapion_fx_frames
+
+
 func _spawn_skill_explosion_33(world_pos: Vector2, scale_val: float = 1.0) -> void:
 	if arena == null:
 		return
@@ -3359,17 +3377,23 @@ func request_player_energy_recover() -> bool:
 	return true
 
 
+func resolve_skill_target() -> Dictionary:
+	refresh_pointer_valid()
+	return _resolve_player_attack_target(true)
+
+
 func request_player_flurry_kick() -> bool:
 	if not player_spawned or player_dead or arena == null or arena.player_node == null:
 		return false
 	if not _is_hero_songoku_node(arena.player_node):
 		return false
+	var tgt := resolve_skill_target()
+	if tgt.is_empty():
+		return false
 	if not bool(arena.player_node.call(&"trigger_flurry_kick")):
 		return false
 	_hero_flurry_hits_fired.clear()
-	var tgt := _resolve_player_attack_target(false)
-	if not tgt.is_empty():
-		_face_player_toward_x(_get_slot_core_pos(tgt).x)
+	_face_player_toward_x(_get_slot_core_pos(tgt).x)
 	arena.call("_request_player_action", "flurry_kick")
 	player_state_changed.emit()
 	return true
@@ -3380,19 +3404,19 @@ func request_player_atomic_blast() -> bool:
 		return false
 	if not _is_hero_songoku_node(arena.player_node):
 		return false
+	var tgt: Dictionary = resolve_skill_target()
+	if tgt.is_empty():
+		return false
 	if not bool(arena.player_node.call(&"trigger_atomic_blast")):
 		return false
 	_hero_atomic_fired = false
 	_hero_atomic_pending_bolts.clear()
 	_last_atomic_fire_log.clear()
-	refresh_pointer_valid()
-	var tgt: Dictionary = _resolve_player_attack_target(true)
 	_hero_atomic_target = tgt
 	var dy_tgt := 0.0
-	if not tgt.is_empty():
-		var tcore := _get_slot_core_pos(tgt)
-		_face_player_toward_x(tcore.x)
-		dy_tgt = tcore.y - _get_player_core_pos().y
+	var tcore := _get_slot_core_pos(tgt)
+	_face_player_toward_x(tcore.x)
+	dy_tgt = tcore.y - _get_player_core_pos().y
 	var sup_y: float = float(arena.call("get_nearest_support_y_below", arena.player_node.position.x, arena.player_node.position.y))
 	var pnode_a: Node2D = arena.player_node as Node2D
 	var airborne: bool = bool(pnode_a.call(&"is_airborne_flight")) or (pnode_a.position.y < sup_y - 18.0)
@@ -3417,6 +3441,9 @@ func request_player_kamehameha() -> bool:
 		return false
 	if not _is_hero_songoku_node(arena.player_node):
 		return false
+	var tgt: Dictionary = resolve_skill_target()
+	if tgt.is_empty():
+		return false
 	if player_mana + 0.001 < 80.0:
 		return false
 	if not bool(arena.player_node.call(&"trigger_kamehameha", player_mana)):
@@ -3428,14 +3455,11 @@ func request_player_kamehameha() -> bool:
 	_hero_kame_fired = false
 	_hero_kame_charging = true
 	_hero_kame_charge_elapsed_s = 0.0
-	refresh_pointer_valid()
-	var tgt: Dictionary = _resolve_player_attack_target(true)
 	_hero_kame_target = tgt
 	var dy_tgt := 0.0
-	if not tgt.is_empty():
-		var tcore := _get_slot_core_pos(tgt)
-		_face_player_toward_x(tcore.x)
-		dy_tgt = tcore.y - _get_player_core_pos().y
+	var tcore := _get_slot_core_pos(tgt)
+	_face_player_toward_x(tcore.x)
+	dy_tgt = tcore.y - _get_player_core_pos().y
 	var pnode_k: Node2D = arena.player_node as Node2D
 	var sup_y: float = float(arena.call("get_nearest_support_y_below", pnode_k.position.x, pnode_k.position.y))
 	var airborne: bool = bool(pnode_k.call(&"is_airborne_flight")) or (pnode_k.position.y < sup_y - 18.0)
@@ -3605,7 +3629,8 @@ func _step_hero_phase2_skills(delta: float) -> void:
 	var anim := String(pspr.animation)
 	var frame := pspr.frame
 
-	# 1. Energy Recovery (`06`, 3.0s): loops #2 -> #3 -> #4 -> #5 -> #2... cleanly for full 3s while restoring HP + Armor + Flight KI!
+	# 1. Energy Recovery (`06`, 3.0s): loops #2 -> #3 -> #4 -> #5 -> #2... (or Tapion #3..#14 -> #3) cleanly for full 3s while restoring HP + Armor + Flight KI!
+	var is_tapion_p2: bool = goku.has_method(&"is_hero_tapion") and bool(goku.call(&"is_hero_tapion"))
 	var rec_rem := float(goku.get("recover_timer_s"))
 	if rec_rem > 0.0:
 		player_hp = minf(player_max_hp, player_hp + 350.0 * delta)
@@ -3615,9 +3640,12 @@ func _step_hero_phase2_skills(delta: float) -> void:
 		var max_ki := float(goku.get("max_ki"))
 		goku.set("ki", minf(max_ki, cur_ki + 20.0 * delta))
 		goku.set("ki_exhausted", false)
-		# Loop middle golden-charge frames #2 -> #3 -> #4 -> #5 (wrap when entering #6 so #5 plays its FULL duration!)
-		if anim == "energy_recover" and frame >= 6 and rec_rem > 0.22:
-			pspr.set_frame_and_progress(2, 0.0)
+		if anim == "energy_recover" and rec_rem > 0.22:
+			if is_tapion_p2:
+				if frame >= 15:
+					pspr.set_frame_and_progress(3, 0.0)
+			elif frame >= 6:
+				pspr.set_frame_and_progress(2, 0.0)
 		player_state_changed.emit()
 
 	# 2. Flurry Kick (`26`, v10.2): auto-lunges forward, 30% slower kicks, +50px expanded AoE range (215x160px), stuns ALL enemies in range!
@@ -3868,21 +3896,39 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 	if fx_sf == null:
 		return
 	var goku: Node2D = arena.player_node as Node2D
+	var is_tapion_ov: bool = goku.has_method(&"is_hero_tapion") and bool(goku.call(&"is_hero_tapion"))
 	var c_sc: float = float(arena.char_scale)
 	var p_core: Vector2 = _get_player_core_pos()
 
-	# 1. Protective Barrier FX (05): burst sphere -> LOOP 10S rotating golden shield while Goku moves/fights freely!
+	# 1. Protective Barrier FX (05): burst sphere -> LOOP 10S rotating shield while Hero moves/fights freely!
+	#    Goku: golden `barrier_burst_fx` -> `barrier_loop_fx` (178px centered on p_core).
+	#    Tapion: electric-blue hollow `barrier_dome_fx` (204px -> exact ~153px ring diameter centered on p_core,
+	#    matching Goku's protective ring framing & 100% visible across ground/jump/fly/attack!).
 	var b_rem := float(goku.get("barrier_timer_s"))
 	if b_rem > 0.0:
-		var b_clip := &"barrier_burst_fx" if _hero_barrier_burst_s > 0.0 else &"barrier_loop_fx"
-		if fx_sf.has_animation(b_clip):
-			var fc := fx_sf.get_frame_count(b_clip)
-			if fc > 0:
-				var fi := int(floor(_sim_time_s * (15.0 if _hero_barrier_burst_s > 0.0 else 8.0))) % fc
-				var tex := fx_sf.get_frame_texture(b_clip, fi)
-				if tex != null:
-					var sz: float = 178.0 * c_sc
-					canvas.draw_texture_rect(tex, Rect2(p_core - Vector2(sz * 0.5, sz * 0.5), Vector2(sz, sz)), false, Color.WHITE)
+		if is_tapion_ov:
+			var pspr_b := goku.get_node_or_null("Sprite") as AnimatedSprite2D
+			var casting_bar := pspr_b != null and String(pspr_b.animation) == "barrier_cast" and pspr_b.is_playing() and pspr_b.frame < 8
+			if not casting_bar:
+				var tfx := _get_tapion_fx_frames()
+				if tfx != null and tfx.has_animation(&"barrier_dome_fx"):
+					var tfc := tfx.get_frame_count(&"barrier_dome_fx")
+					if tfc > 0:
+						var tfi := (tfc - 1) if (b_rem <= 0.25 and tfc >= 5) else (int(floor(_sim_time_s * 10.0)) % maxi(1, mini(4, tfc)))
+						var ttex := tfx.get_frame_texture(&"barrier_dome_fx", tfi)
+						if ttex != null:
+							var tsz: float = 228.0 * c_sc
+							canvas.draw_texture_rect(ttex, Rect2(p_core - Vector2(tsz * 0.5, tsz * 0.5), Vector2(tsz, tsz)), false, Color.WHITE)
+		else:
+			var b_clip := &"barrier_burst_fx" if _hero_barrier_burst_s > 0.0 else &"barrier_loop_fx"
+			if fx_sf.has_animation(b_clip):
+				var fc := fx_sf.get_frame_count(b_clip)
+				if fc > 0:
+					var fi := int(floor(_sim_time_s * (15.0 if _hero_barrier_burst_s > 0.0 else 8.0))) % fc
+					var tex := fx_sf.get_frame_texture(b_clip, fi)
+					if tex != null:
+						var sz: float = 178.0 * c_sc
+						canvas.draw_texture_rect(tex, Rect2(p_core - Vector2(sz * 0.5, sz * 0.5), Vector2(sz, sz)), false, Color.WHITE)
 
 	# 2. Kamehameha FRONT hand VFX (Sheet 28 exact pixel gather on #0..#1 + blazing front core orb on #2..#4, while rings+rays render BEHIND Goku!)
 	var pspr := goku.get_node_or_null("Sprite") as AnimatedSprite2D

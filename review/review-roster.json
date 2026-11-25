@@ -1,13 +1,13 @@
 {
   "schema": "dr7-studio.review_roster.v1",
-  "note": "Tapion Tướng — Trọn Bộ 47/47 File Nguồn (Human Test — 34 clips thân trên 1 trang PNG <=4096x4096 Nearest 60Hz + 17 clips FX độc lập trên 1 trang PNG <=4096x4096): đủ Turntable 8 góc, Sáo Ocarina (Idle + Khiên bảo vệ + Hồi phục tái tạo), Walk 8f, Combat Move, Nhảy/Bay/Tốc biến/Hit/KO, Combo Kiếm 1..10 (LOOP X2) và 4 Đại chiêu Mahasenko (Đất/Không), Antamina (1->5), Kentaima, Bukadai.",
+  "note": "Tapion Tướng — Trọn Bộ 47/47 File Nguồn (Human Test — 34 clips thân trên 1 trang PNG <=4096x4096 Nearest 60Hz + 18 clips FX độc lập trên 1 trang PNG <=4096x4096): đủ Turntable 8 góc, Sáo Ocarina (Idle + Khiên bảo vệ + Hồi phục tái tạo), Walk 8f, Combat Move, Nhảy/Bay 6f phấp phới + FlightAuraFX 6f độc lập/Tốc biến/Hit/KO, Combo Kiếm 1..10 (LOOP X2) và 4 Đại chiêu Mahasenko (Đất/Không), Antamina (1->5), Kentaima, Bukadai.",
   "characters": [
     {
       "character_id": "tapion_demo",
-      "display_name": "Tapion (Trọn Bộ 47/47 Mẫu · 34 Clips Thân + 17 Clips FX) [Human Test]",
+      "display_name": "Tapion (Trọn Bộ 47/47 Mẫu · 34 Clips Thân + 18 Clips FX) [Human Test]",
       "role": "hero",
       "faction": "review_demo",
-      "role_label": "Human Test — Tướng Tapion Đủ 47/47 Nguồn (34 Thân + 17 FX · Kiếm 1..10 · Khiên & Hồi Sáo · Mahasenko · Antamina · Kentaima · Bukadai)",
+      "role_label": "Human Test — Tướng Tapion Đủ 47/47 Nguồn (34 Thân + 18 FX · Kiếm 1..10 · Khiên & Hồi Sáo · Mahasenko · Antamina · Kentaima · Bukadai)",
       "tags": [
         "human_test",
         "hero",
@@ -26,19 +26,19 @@
         "source_path": "res://tapion/hướng nhìn chuẩn của nhân vật.png",
         "sha256": "aa3896540b3e5b1e4308aa440a574d379aca707caf106298aa58b86ca2e4abb2"
       },
-      "review_atlas_sha256": "0902ce100019cd9927cc7161671821ae2e3246d625cbaee5dd0a964102fb806a",
-      "atlas_sha256": "0902ce100019cd9927cc7161671821ae2e3246d625cbaee5dd0a964102fb806a",
+      "review_atlas_sha256": "17ef127ae118609b0c787842c1e454b6f3eba93792d31603bae3c6fc73caf1ca",
+      "atlas_sha256": "17ef127ae118609b0c787842c1e454b6f3eba93792d31603bae3c6fc73caf1ca",
       "atlas_path": "review/tapion_demo/godot_bundle/godot/tapion_demo-atlas-00.png",
       "atlas_size_px": [
         3506,
-        3214
+        3506
       ],
       "atlas_pages": 1,
       "tres_path": "review/tapion_demo/godot_bundle/godot/tapion_demo.tres",
-      "tres_sha256": "0bbdc26ea8adee37c5dfb105e42b8237c73ffe2e818f4f3ac76d6584df4fcae5",
+      "tres_sha256": "2ce1962dcfd2e13833cb25810d0b669e18e4a573cdc3ab17ed7972d1f3afca6b",
       "fx_tres_path": "review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres",
       "fx_atlas_path": "review/tapion_demo/fx_bundle/godot/tapion_skills_fx-atlas-00.png",
-      "fx_atlas_sha256": "673654b7d5963594e0bd543a82740464dbed18b3ed4e4a5775f73ee0374d9eeb",
+      "fx_atlas_sha256": "e5785733e68b0c561e99ee217d605f819524df78d7df852029b6bcfcd9791ac1",
       "fx_atlas_size_px": [
         2338,
         2338
@@ -54,9 +54,9 @@
         248
       ],
       "default_scale": 1.0,
-      "frame_count": 142,
+      "frame_count": 144,
       "clip_count": 34,
-      "fx_clip_count": 17,
+      "fx_clip_count": 18,
       "clips": [
         "idle",
         "walk",
@@ -131,6 +131,7 @@
       ],
       "effect_clips": [
         "peace_aura_fx",
+        "fly_aura_fx",
         "tele_streak_h_fx",
         "tele_streak_v_fx",
         "atk10_impact_fx",
@@ -139,14 +140,14 @@
         "mahasenko_beam_h_fx",
         "mahasenko_beam_air_fx",
         "mahasenko_impact_fx",
+        "antamina_flash_fx",
+        "antamina_stream_rev_fx",
         "antamina_stream_fx",
         "antamina_impact_fx",
         "kentaima_wave_fx",
         "kentaima_impact_fx",
         "bukadai_vanish_fx",
-        "bukadai_sphere_fx",
-        "bukadai_flash_fx",
-        "bukadai_impact_fx"
+        "bukadai_sphere_fx"
       ],
       "map_sync_metrics": {
         "canvas_size_px": [
@@ -192,11 +193,11 @@
         "opaque_key_px": 0,
         "enclosed_key_pockets": 0,
         "outer_ring_spill_fraction": 0.0,
-        "reference_note": "Complete 47/47 source setup: 1-page body atlas 3506x3214 (34 clips, 142 unique frames) + 1-page FX atlas 2338x2338 (17 clips, 61 frames)."
+        "reference_note": "Complete 47/47 source setup: 1-page body atlas 3506x3506 (34 clips, 144 unique frames) + 1-page FX atlas 2338x2338 (18 clips)."
       },
       "modes": {
         "combined_1layer": {
-          "label": "Tapion Hero Trọn Bộ 47/47 Nguồn (34 Thân + 17 FX · 125px)",
+          "label": "Tapion Hero Trọn Bộ 47/47 Nguồn (34 Thân + 18 FX · 125px)",
           "godot_prefab": "res://review/tapion_demo/TapionDemo.tscn",
           "bundle_id": "tapion_demo_review"
         }
@@ -240,6 +241,7 @@
         ],
         "effect_clips": [
           "peace_aura_fx",
+          "fly_aura_fx",
           "tele_streak_h_fx",
           "tele_streak_v_fx",
           "atk10_impact_fx",
@@ -248,14 +250,14 @@
           "mahasenko_beam_h_fx",
           "mahasenko_beam_air_fx",
           "mahasenko_impact_fx",
+          "antamina_flash_fx",
+          "antamina_stream_rev_fx",
           "antamina_stream_fx",
           "antamina_impact_fx",
           "kentaima_wave_fx",
           "kentaima_impact_fx",
           "bukadai_vanish_fx",
-          "bukadai_sphere_fx",
-          "bukadai_flash_fx",
-          "bukadai_impact_fx"
+          "bukadai_sphere_fx"
         ],
         "locomotion": {
           "kind": "ground",
@@ -300,7 +302,14 @@
           "charge_clip": null,
           "independent_clock": true,
           "external_fx_tres": "res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres",
-          "peace_aura_clip": "peace_aura_fx"
+          "peace_aura_clip": "peace_aura_fx",
+          "flight_aura_clip": "fly_aura_fx",
+          "peace_only_clips": [
+            "idle"
+          ],
+          "clip_auras": {
+            "fly_aura": "fly_aura_fx"
+          }
         },
         "projectile": null,
         "turning": {
@@ -347,7 +356,7 @@
         "status": "reviewed_pending_owner",
         "method": "codex_cli_complete_body_keyframes_full_47_sources",
         "art_source": "host_image",
-        "atlas_sha256": "0902ce100019cd9927cc7161671821ae2e3246d625cbaee5dd0a964102fb806a",
+        "atlas_sha256": "17ef127ae118609b0c787842c1e454b6f3eba93792d31603bae3c6fc73caf1ca",
         "owner_approved": false,
         "checks": {
           "body_connections": true,

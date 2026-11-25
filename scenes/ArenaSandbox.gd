@@ -528,6 +528,7 @@ func _step_songoku_teleport_midclip() -> void:
 		return
 	var anim := String(spr.animation)
 	if mode == "static" and anim == "teleport" and spr.frame >= 1:
+		var origin_tele_pos := player_node.position
 		player_node.set("pending_teleport_relocated", true)
 		player_node.set("pending_teleport_mode", "")
 		var relocated := false
@@ -554,7 +555,11 @@ func _step_songoku_teleport_midclip() -> void:
 		if not relocated:
 			var fallback_dir := -1.0 if player_facing_left else 1.0
 			_move_player_horizontal(fallback_dir * 160.0, false)
+		if player_node.has_method(&"spawn_teleport_streak_fx"):
+			var is_vert_static := absf(player_node.position.y - origin_tele_pos.y) > 48.0
+			player_node.call(&"spawn_teleport_streak_fx", origin_tele_pos, player_node.position, is_vert_static)
 	elif (mode == "dash_ground" or mode == "dash_air") and (anim == "teleport_dash_ground" or anim == "teleport_dash_air") and spr.frame >= 1:
+		var origin_dash_pos := player_node.position
 		player_node.set("pending_teleport_relocated", true)
 		player_node.set("pending_teleport_mode", "")
 		var dvec: Vector2 = player_node.get("pending_teleport_dir")
@@ -575,6 +580,9 @@ func _step_songoku_teleport_midclip() -> void:
 				player_vy = 0.0
 		else:
 			_spawn_ground_dust(player_node.position.x, max_y, 0.78)
+		if player_node.has_method(&"spawn_teleport_streak_fx"):
+			var is_vert_dash := absf(dvec.y) > absf(dvec.x) and absf(dvec.y) > 0.35
+			player_node.call(&"spawn_teleport_streak_fx", origin_dash_pos, player_node.position, is_vert_dash)
 
 
 func is_player_grounded_for_recover() -> bool:
@@ -712,26 +720,73 @@ func _on_touch_action(action_name: String) -> void:
 			_request_player_action("kame_ground_horiz")
 		_sync_field_pad_state()
 	elif action_name == "kentaima":
-		if player_node.has_method(&"trigger_kentaima") and bool(player_node.call(&"trigger_kentaima")):
-			_face_player_toward_pointed_target_if_any()
-			_request_player_action("kentaima_cast")
+		if not _is_fighter_turning(player_node) and not _is_player_action_playing() and float(player_node.get("recover_timer_s")) <= 0.0:
+			var tgt_k: Dictionary = {}
+			if field_mode_enabled and field_manager != null and field_manager.active:
+				tgt_k = field_manager.resolve_skill_target()
+				if tgt_k.is_empty():
+					_sync_field_pad_state()
+					return
+			if player_node.has_method(&"trigger_kentaima") and bool(player_node.call(&"trigger_kentaima")):
+				if player_node.has_method(&"set_locked_skill_target"):
+					player_node.call(&"set_locked_skill_target", tgt_k)
+				_face_player_toward_pointed_target_if_any()
+				_request_player_action("kentaima_cast")
 		_sync_field_pad_state()
 	elif action_name == "mahasenko":
-		if player_node.has_method(&"trigger_mahasenko") and bool(player_node.call(&"trigger_mahasenko")):
-			_face_player_toward_pointed_target_if_any()
-			var sup_m := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
-			var air_m := bool(player_node.call(&"is_airborne_flight")) or (player_node.position.y < sup_m - 18.0)
-			_request_player_action("mahasenko_air" if air_m else "mahasenko_ground")
+		if not _is_fighter_turning(player_node) and not _is_player_action_playing() and float(player_node.get("recover_timer_s")) <= 0.0:
+			var tgt_m: Dictionary = {}
+			if field_mode_enabled and field_manager != null and field_manager.active:
+				tgt_m = field_manager.resolve_skill_target()
+				if tgt_m.is_empty():
+					_sync_field_pad_state()
+					return
+			if player_node.has_method(&"trigger_mahasenko") and bool(player_node.call(&"trigger_mahasenko")):
+				if player_node.has_method(&"set_locked_skill_target"):
+					player_node.call(&"set_locked_skill_target", tgt_m)
+				_face_player_toward_pointed_target_if_any()
+				var sup_m := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+				var air_m := bool(player_node.call(&"is_airborne_flight")) or (player_node.position.y < sup_m - 18.0)
+				_request_player_action("mahasenko_air" if air_m else "mahasenko_ground")
 		_sync_field_pad_state()
 	elif action_name == "antamina":
-		if player_node.has_method(&"trigger_antamina") and bool(player_node.call(&"trigger_antamina")):
-			_face_player_toward_pointed_target_if_any()
-			_request_player_action("antamina_combo")
+		if not _is_fighter_turning(player_node) and not _is_player_action_playing() and float(player_node.get("recover_timer_s")) <= 0.0:
+			var tgt_a: Dictionary = {}
+			var cur_mp := 100.0
+			if field_mode_enabled and field_manager != null and field_manager.active:
+				tgt_a = field_manager.resolve_skill_target()
+				if tgt_a.is_empty():
+					_sync_field_pad_state()
+					return
+				cur_mp = 100.0 if bool(field_manager.player_infinite_mana) else float(field_manager.player_mana)
+				if cur_mp + 0.001 < 100.0:
+					_sync_field_pad_state()
+					return
+			if player_node.has_method(&"trigger_antamina") and bool(player_node.call(&"trigger_antamina", cur_mp)):
+				if field_mode_enabled and field_manager != null and field_manager.active:
+					if not bool(field_manager.player_infinite_mana):
+						field_manager.player_mana = maxf(0.0, field_manager.player_mana - 100.0)
+					field_manager._local_mana_grace_s = maxf(field_manager._local_mana_grace_s, 2.4)
+					field_manager.combat_action_emitted.emit("antamina_cast", "", "self", player_node.position, player_node.scale.x < 0.0, 0.0)
+					field_manager.player_state_changed.emit()
+				if player_node.has_method(&"set_locked_skill_target"):
+					player_node.call(&"set_locked_skill_target", tgt_a)
+				_face_player_toward_pointed_target_if_any()
+				_request_player_action("antamina_fire")
 		_sync_field_pad_state()
 	elif action_name == "bukadai":
-		if player_node.has_method(&"trigger_bukadai") and bool(player_node.call(&"trigger_bukadai")):
-			_face_player_toward_pointed_target_if_any()
-			_request_player_action("bukadai_rush")
+		if not _is_fighter_turning(player_node) and not _is_player_action_playing() and float(player_node.get("recover_timer_s")) <= 0.0:
+			var tgt_b: Dictionary = {}
+			if field_mode_enabled and field_manager != null and field_manager.active:
+				tgt_b = field_manager.resolve_skill_target()
+				if tgt_b.is_empty():
+					_sync_field_pad_state()
+					return
+			if player_node.has_method(&"trigger_bukadai") and bool(player_node.call(&"trigger_bukadai")):
+				if player_node.has_method(&"set_locked_skill_target"):
+					player_node.call(&"set_locked_skill_target", tgt_b)
+				_face_player_toward_pointed_target_if_any()
+				_request_player_action("bukadai_rush")
 		_sync_field_pad_state()
 	elif action_name in ["attack_heavy"]:
 		if field_mode_enabled and field_manager != null and field_manager.active:

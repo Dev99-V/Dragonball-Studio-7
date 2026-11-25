@@ -219,6 +219,11 @@ FX_CLIPS_SPEC: Dict[str, Dict[str, object]] = {
         "frames": [f"peace_aura_{i:02d}" for i in range(4)],
         "ticks": [6, 6, 6, 6],
     },
+    "fly_aura_fx": {
+        "loop_policy": "cycle", "role": "fx",
+        "frames": [f"fly_aura_fx_{i:02d}" for i in range(6)],
+        "ticks": [4, 4, 4, 4, 4, 4],
+    },
     "tele_streak_h_fx": {
         "loop_policy": "oneshot", "role": "fx",
         "frames": ["tele_streak_h_00"],
@@ -246,18 +251,28 @@ FX_CLIPS_SPEC: Dict[str, Dict[str, object]] = {
     },
     "mahasenko_beam_h_fx": {
         "loop_policy": "oneshot", "role": "fx",
-        "frames": [f"maha_beam_h_{i:02d}" for i in range(3)],
-        "ticks": [7, 5, 5],
+        "frames": ["maha_beam_h_02", "maha_beam_h_01", "maha_beam_h_00"],
+        "ticks": [5, 5, 7],
     },
     "mahasenko_beam_air_fx": {
         "loop_policy": "oneshot", "role": "fx",
-        "frames": [f"maha_beam_air_{i:02d}" for i in range(3)],
-        "ticks": [7, 5, 5],
+        "frames": ["maha_beam_air_02", "maha_beam_air_01", "maha_beam_air_00"],
+        "ticks": [5, 5, 7],
     },
     "mahasenko_impact_fx": {
         "loop_policy": "oneshot", "role": "fx",
         "frames": [f"maha_impact_{i:02d}" for i in range(5)],
         "ticks": [3, 4, 4, 4, 4],
+    },
+    "antamina_flash_fx": {
+        "loop_policy": "cycle", "role": "fx",
+        "frames": ["antamina_flash_00"],
+        "ticks": [4],
+    },
+    "antamina_stream_rev_fx": {
+        "loop_policy": "oneshot", "role": "fx",
+        "frames": ["anta_stream_04", "anta_stream_03", "anta_stream_02", "anta_stream_01", "anta_stream_00"],
+        "ticks": [3, 3, 3, 3, 3],
     },
     "antamina_stream_fx": {
         "loop_policy": "oneshot", "role": "fx",
@@ -266,8 +281,8 @@ FX_CLIPS_SPEC: Dict[str, Dict[str, object]] = {
     },
     "antamina_impact_fx": {
         "loop_policy": "oneshot", "role": "fx",
-        "frames": [f"anta_impact_{i:02d}" for i in range(4)],
-        "ticks": [4, 4, 4, 5],
+        "frames": [f"antamina_impact_{i:02d}" for i in range(3)],
+        "ticks": [5, 5, 5],
     },
     "kentaima_wave_fx": {
         "loop_policy": "oneshot", "role": "fx",
@@ -289,16 +304,6 @@ FX_CLIPS_SPEC: Dict[str, Dict[str, object]] = {
         "frames": [f"bukadai_sphere_{i:02d}" for i in range(4)],
         "ticks": [4, 5, 5, 4],
     },
-    "bukadai_flash_fx": {
-        "loop_policy": "oneshot", "role": "fx",
-        "frames": ["bukadai_flash_00"],
-        "ticks": [4],
-    },
-    "bukadai_impact_fx": {
-        "loop_policy": "oneshot", "role": "fx",
-        "frames": [f"bukadai_impact_{i:02d}" for i in range(3)],
-        "ticks": [5, 5, 5],
-    },
 }
 
 
@@ -311,6 +316,27 @@ def build_complete_fx_bundle() -> Dict[str, object]:
     fx_raw.mkdir(parents=True, exist_ok=True)
     for png in sorted(P2_FX_REG.glob("*.png")):
         shutil.copy2(png, fx_raw / png.name)
+    fly_aura_fx_dir = ROOT / "work" / "characters" / "tapion" / "fly_aura_6f" / "registered_fx_288"
+    if (fly_aura_fx_dir / "fly_aura_fx_00.png").is_file():
+        for fi in range(6):
+            shutil.copy2(fly_aura_fx_dir / f"fly_aura_fx_{fi:02d}.png", fx_raw / f"fly_aura_fx_{fi:02d}.png")
+    polish_v2_fx_dir = ROOT / "work" / "characters" / "tapion" / "polish_v2" / "fx_registered_288"
+    if polish_v2_fx_dir.is_dir():
+        for fx_p in sorted(polish_v2_fx_dir.glob("*.png")):
+            shutil.copy2(fx_p, fx_raw / fx_p.name)
+
+    # Owner polish_v3 FX reorganization:
+    # - Remove old starburst `anta_impact_00..03`
+    # - Rename `bukadai_flash_00` -> `antamina_flash_00` (spinning hand orb during 1s antamina_fire charge)
+    # - Rename `bukadai_impact_00..02` -> `antamina_impact_00..02` (synchronized Antamina impact dome)
+    for old_star in sorted(fx_raw.glob("anta_impact_*.png")):
+        old_star.unlink()
+    if (fx_raw / "bukadai_flash_00.png").is_file():
+        shutil.move(str(fx_raw / "bukadai_flash_00.png"), str(fx_raw / "antamina_flash_00.png"))
+    for bi in range(3):
+        bp = fx_raw / f"bukadai_impact_{bi:02d}.png"
+        if bp.is_file():
+            shutil.move(str(bp), str(fx_raw / f"antamina_impact_{bi:02d}.png"))
 
     fx_manifest = {
         "schema": "generate2dsprite.animation_clips.v2",
@@ -366,7 +392,7 @@ def main() -> int:
     shutil.copy2(MASTER_125, RAW_DIR / "turntable_04.png")
     shutil.copy2(MASTER_125, RAW_DIR / "recover_00.png")
 
-    # 2. Register Phase 1 frames (preserving exact Phase 1 calibration!)
+    # 2. Register Phase 1 frames (preserving exact Phase 1 calibration, with walk_v2 equal-125px & left-shoulder hilt override!)
     for fid, spec in p1b.FRAME_SPECS.items():
         im = p1b.register_frame(
             fid,
@@ -382,6 +408,61 @@ def main() -> int:
         im.save(dst)
         for cp_id in p1b.SHARED_COPIES.get(fid, []):
             shutil.copy2(dst, RAW_DIR / f"{cp_id}.png")
+
+    # Remove obsolete hit_03 / ko_00 raw files if left over from earlier builds
+    for stale_fn in ("hit_03.png", "ko_00.png"):
+        stale_p = RAW_DIR / stale_fn
+        if stale_p.exists():
+            stale_p.unlink()
+
+    # Override fly_aura_00..05 with 6-frame aura-free wind-fluttering body synced 1:1 to canonical idle!
+    fly_body_6f_dir = ROOT / "work" / "characters" / "tapion" / "fly_aura_6f" / "registered_body_288"
+    if (fly_body_6f_dir / "fly_aura_05.png").is_file():
+        fly_b_frames = []
+        for fi in range(6):
+            fp = fly_body_6f_dir / f"fly_aura_{fi:02d}.png"
+            shutil.copy2(fp, RAW_DIR / f"fly_aura_{fi:02d}.png")
+            fly_b_frames.append(Image.open(fp).convert("RGBA"))
+        p1b.render_3bg_filmstrip(
+            fly_b_frames,
+            ROOT / "work" / "characters" / "tapion" / "phase1" / "qa_filmstrips_3bg" / "filmstrip_3bg_fly_aura.png",
+            title="fly_aura (6 steps — aura detached to fly_aura_fx, hair/scarf/coat fluttering, idle-synced)",
+        )
+
+    walk_v2_reg = ROOT / "work" / "characters" / "tapion" / "walk_v2" / "registered_288"
+    if (walk_v2_reg / "walk_00.png").is_file():
+        walk_v2_frames = []
+        for wi in range(8):
+            wp = walk_v2_reg / f"walk_{wi:02d}.png"
+            shutil.copy2(wp, RAW_DIR / f"walk_{wi:02d}.png")
+            walk_v2_frames.append(Image.open(wp).convert("RGBA"))
+        p1b.render_3bg_filmstrip(
+            walk_v2_frames,
+            ROOT / "work" / "characters" / "tapion" / "phase1" / "qa_filmstrips_3bg" / "filmstrip_3bg_walk.png",
+            title="walk (8 steps — equal 125px, left-shoulder hilt +X, Goku 3-stage gait)",
+        )
+
+    jump_v2_dir = ROOT / "work" / "characters" / "tapion" / "jump_v2"
+    if (jump_v2_dir / "jump_03.png").is_file() and (jump_v2_dir / "jump_04.png").is_file():
+        shutil.copy2(jump_v2_dir / "jump_03.png", RAW_DIR / "jump_03.png")
+        shutil.copy2(jump_v2_dir / "jump_04.png", RAW_DIR / "jump_04.png")
+        jump_v2_frames = [Image.open(RAW_DIR / f"jump_{ji:02d}.png").convert("RGBA") for ji in range(6)]
+        p1b.render_3bg_filmstrip(
+            jump_v2_frames,
+            ROOT / "work" / "characters" / "tapion" / "phase1" / "qa_filmstrips_3bg" / "filmstrip_3bg_jump.png",
+            title="jump (6 steps — frames #3 & #4 synced 1:1 to canonical idle)",
+        )
+
+    atk1_v2_reg = ROOT / "work" / "characters" / "tapion" / "atk1_v2" / "registered_288"
+    if (atk1_v2_reg / "atk1_03.png").is_file() and (atk1_v2_reg / "atk1_04.png").is_file():
+        shutil.copy2(atk1_v2_reg / "atk1_03.png", RAW_DIR / "atk1_03.png")
+        shutil.copy2(atk1_v2_reg / "atk1_04.png", RAW_DIR / "atk1_04.png")
+        atk1_v2_frames = [Image.open(RAW_DIR / f"atk1_{ai:02d}.png").convert("RGBA") for ai in range(6)]
+        p1b.render_3bg_filmstrip(
+            atk1_v2_frames,
+            ROOT / "work" / "characters" / "tapion" / "phase1" / "qa_filmstrips_3bg" / "filmstrip_3bg_attack_light.png",
+            title="attack_light (6 steps — #3 both arms + crescent, #4 2-handed arc -> #5, idle-synced)",
+        )
 
     for air_id, src_id, lift_px in [("atk10_02", "atk1_02", 18), ("atk10_03", "atk5_01", 16), ("atk10_04", "atk1_05", 6)]:
         arr = np.array(Image.open(RAW_DIR / f"{src_id}.png").convert("RGBA"))
@@ -405,6 +486,39 @@ def main() -> int:
         im = register_p2_body_frame(fid, spec)
         im.save(RAW_DIR / f"{fid}.png")
 
+    # 3B. Apply Canonical Right-Shoulder Sword & Empty Crimson Scabbard Overrides (Waves 1, 2, 3 — Owner 2026-11-25)!
+    for w_dir in (
+        ROOT / "work" / "characters" / "tapion" / "sword_fix_w1" / "registered_288",
+        ROOT / "work" / "characters" / "tapion" / "sword_fix_w2" / "registered_288",
+        ROOT / "work" / "characters" / "tapion" / "sword_fix_w3" / "registered_288",
+    ):
+        if w_dir.is_dir():
+            for wp in sorted(w_dir.glob("*.png")):
+                shutil.copy2(wp, RAW_DIR / wp.name)
+
+    # Re-synchronize ALL shared & lifted copies from the updated canonical frames!
+    shutil.copy2(RAW_DIR / "idle_04.png", RAW_DIR / "turntable_04.png")
+    shutil.copy2(RAW_DIR / "idle_04.png", RAW_DIR / "recover_00.png")
+    shutil.copy2(RAW_DIR / "idle_00.png", RAW_DIR / "recover_01.png")
+    shutil.copy2(RAW_DIR / "idle_03.png", RAW_DIR / "barrier_00.png")
+    for src_id, cp_list in p1b.SHARED_COPIES.items():
+        src_p = RAW_DIR / f"{src_id}.png"
+        if src_p.is_file():
+            for cp_id in cp_list:
+                shutil.copy2(src_p, RAW_DIR / f"{cp_id}.png")
+
+    # 3C. Apply polish_v2 Owner Feedback Fixes (fly_prep 50% thinner pale aura, atk2_04, atk5_01, atk8_04, barrier_00/#02 size sync, energy_recover rebuild)!
+    polish_v2_dir = ROOT / "work" / "characters" / "tapion" / "polish_v2" / "registered_288"
+    if polish_v2_dir.is_dir():
+        for wp in sorted(polish_v2_dir.glob("*.png")):
+            shutil.copy2(wp, RAW_DIR / wp.name)
+
+    for air_id, src_id, lift_px in [("atk10_02", "atk1_02", 18), ("atk10_03", "atk5_01", 16), ("atk10_04", "atk1_05", 6)]:
+        arr = np.array(Image.open(RAW_DIR / f"{src_id}.png").convert("RGBA"))
+        lifted = np.zeros_like(arr)
+        lifted[:-lift_px, :, :] = arr[lift_px:, :, :]
+        Image.fromarray(lifted, mode="RGBA").save(RAW_DIR / f"{air_id}.png")
+
     # 4. Run Master QC Gate across ALL registered body frames!
     canon_pal, _ = qc_gate.load_master_palette()
     qc_results = []
@@ -419,12 +533,13 @@ def main() -> int:
         "maha_gnd_00", "maha_gnd_01", "maha_gnd_02",
     }
     skip_special_ids = {"source_raw_00", "tele_ground_02", "tele_ground_03", "tele_air_02", "tele_air_03", "bukadai_04", "anta_rng_03"}
-    fx_body_prefixes = ("atk", "fly_", "barrier_04", "barrier_05", "barrier_06", "barrier_07", "barrier_08", "recover_0", "anta_chg_03", "anta_rng_", "kenta_cast_01", "kenta_cast_02", "kenta_cast_03", "bukadai_01", "bukadai_02", "bukadai_03")
+    fx_body_prefixes = ("atk", "fly_prep_", "barrier_04", "barrier_05", "barrier_06", "barrier_07", "barrier_08", "recover_0", "anta_chg_03", "anta_rng_", "kenta_cast_01", "kenta_cast_02", "kenta_cast_03", "bukadai_01", "bukadai_02", "bukadai_03")
     for png in sorted(RAW_DIR.glob("*.png")):
         if png.stem in skip_special_ids:
             continue
         allow_fx = png.stem.startswith(fx_body_prefixes)
-        res = qc_gate.audit_frame(png, canon_pal, allow_fx_border=allow_fx, check_grounded_stance=(png.stem in grounded_stance_ids))
+        allow_soft = png.stem.startswith("fly_prep_")
+        res = qc_gate.audit_frame(png, canon_pal, allow_fx_border=allow_fx, check_grounded_stance=(png.stem in grounded_stance_ids), allow_soft_vfx_alpha=allow_soft)
         qc_results.append(res)
         if not res["pass"]:
             qc_fails.append(res)
@@ -481,8 +596,8 @@ def main() -> int:
         },
         "fly_aura": {
             "loop_policy": "cycle", "role": "player",
-            "frames": ["fly_aura_00", "fly_aura_01"],
-            "ticks": [4, 4],
+            "frames": [f"fly_aura_{i:02d}" for i in range(6)],
+            "ticks": [4, 4, 4, 4, 4, 4],
         },
         "teleport": {
             "loop_policy": "oneshot", "role": "player",
@@ -501,13 +616,13 @@ def main() -> int:
         },
         "hit": {
             "loop_policy": "oneshot", "role": "player",
-            "frames": ["hit_00", "hit_01", "hit_02", "hit_03"],
-            "ticks": [5, 6, 6, 7],
+            "frames": ["hit_00", "hit_01", "hit_02"],
+            "ticks": [5, 6, 6],
         },
         "ko": {
             "loop_policy": "oneshot", "role": "player",
-            "frames": ["hit_02", "ko_00", "ko_01"],
-            "ticks": [7, 9, 24],
+            "frames": ["hit_02", "ko_01"],
+            "ticks": [7, 24],
         },
         "attack_light": {
             "loop_policy": "oneshot", "role": "player",
@@ -714,6 +829,15 @@ autoplay = "peace_aura_fx"
 centered = false
 offset = Vector2(-144, -248)
 
+[node name="FlightAuraFX" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = -1
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"fly_aura_fx"
+centered = false
+offset = Vector2(-144, -248)
+
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 texture_filter = 1
 sprite_frames = ExtResource("2_frames")
@@ -729,11 +853,11 @@ texture_filter = 1
 sprite_frames = ExtResource("3_fx_frames")
 animation = &"barrier_dome_fx"
 centered = false
-offset = Vector2(-144, -248)
+offset = Vector2(-144, -206)
 
 [node name="HandMuzzleFX" type="AnimatedSprite2D" parent="."]
 visible = false
-z_index = 5
+z_index = 70
 texture_filter = 1
 sprite_frames = ExtResource("3_fx_frames")
 animation = &"mahasenko_hand_fx"
@@ -742,7 +866,7 @@ offset = Vector2(-144, -176)
 
 [node name="GroundImpactFX" type="AnimatedSprite2D" parent="."]
 visible = false
-z_index = 6
+z_index = 70
 texture_filter = 1
 sprite_frames = ExtResource("3_fx_frames")
 animation = &"atk10_impact_fx"
@@ -782,6 +906,11 @@ script = ExtResource("4_anim")
             "independent_clock": True,
             "external_fx_tres": "res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres",
             "peace_aura_clip": "peace_aura_fx",
+            "flight_aura_clip": "fly_aura_fx",
+            "peace_only_clips": ["idle"],
+            "clip_auras": {
+                "fly_aura": "fly_aura_fx",
+            },
         },
         "projectile": None,
         "turning": {"clip": None, "method": "instant_flip", "flip_h": True},
@@ -817,14 +946,14 @@ script = ExtResource("4_anim")
 
     review_roster = {
         "schema": "dr7-studio.review_roster.v1",
-        "note": "Tapion Tướng — Trọn Bộ 47/47 File Nguồn (Human Test — 34 clips thân trên 1 trang PNG <=4096x4096 Nearest 60Hz + 17 clips FX độc lập trên 1 trang PNG <=4096x4096): đủ Turntable 8 góc, Sáo Ocarina (Idle + Khiên bảo vệ + Hồi phục tái tạo), Walk 8f, Combat Move, Nhảy/Bay/Tốc biến/Hit/KO, Combo Kiếm 1..10 (LOOP X2) và 4 Đại chiêu Mahasenko (Đất/Không), Antamina (1->5), Kentaima, Bukadai.",
+        "note": f"Tapion Tướng — Trọn Bộ 47/47 File Nguồn (Human Test — {len(body_clip_names)} clips thân trên 1 trang PNG <=4096x4096 Nearest 60Hz + {len(fx_clip_names)} clips FX độc lập trên 1 trang PNG <=4096x4096): đủ Turntable 8 góc, Sáo Ocarina (Idle + Khiên bảo vệ + Hồi phục tái tạo), Walk 8f, Combat Move, Nhảy/Bay 6f phấp phới + FlightAuraFX 6f độc lập/Tốc biến/Hit/KO, Combo Kiếm 1..10 (LOOP X2) và 4 Đại chiêu Mahasenko (Đất/Không), Antamina (1->5), Kentaima, Bukadai.",
         "characters": [
             {
                 "character_id": "tapion_demo",
-                "display_name": "Tapion (Trọn Bộ 47/47 Mẫu · 34 Clips Thân + 17 Clips FX) [Human Test]",
+                "display_name": f"Tapion (Trọn Bộ 47/47 Mẫu · {len(body_clip_names)} Clips Thân + {len(fx_clip_names)} Clips FX) [Human Test]",
                 "role": "hero",
                 "faction": "review_demo",
-                "role_label": "Human Test — Tướng Tapion Đủ 47/47 Nguồn (34 Thân + 17 FX · Kiếm 1..10 · Khiên & Hồi Sáo · Mahasenko · Antamina · Kentaima · Bukadai)",
+                "role_label": f"Human Test — Tướng Tapion Đủ 47/47 Nguồn ({len(body_clip_names)} Thân + {len(fx_clip_names)} FX · Kiếm 1..10 · Khiên & Hồi Sáo · Mahasenko · Antamina · Kentaima · Bukadai)",
                 "tags": ["human_test", "hero", "tapion", "full_47_sources", "goku_standard_125px"],
                 "status": "human_test_pending",
                 "owner_approved": False,
@@ -877,11 +1006,11 @@ script = ExtResource("4_anim")
                     "opaque_key_px": 0,
                     "enclosed_key_pockets": 0,
                     "outer_ring_spill_fraction": 0.0,
-                    "reference_note": f"Complete 47/47 source setup: 1-page body atlas {atlas_im.width}x{atlas_im.height} (34 clips, {len(used_frame_names)} unique frames) + 1-page FX atlas {fx_info['fx_atlas_size'][0]}x{fx_info['fx_atlas_size'][1]} (17 clips, 61 frames).",
+                    "reference_note": f"Complete 47/47 source setup: 1-page body atlas {atlas_im.width}x{atlas_im.height} ({len(body_clip_names)} clips, {len(used_frame_names)} unique frames) + 1-page FX atlas {fx_info['fx_atlas_size'][0]}x{fx_info['fx_atlas_size'][1]} ({len(fx_clip_names)} clips).",
                 },
                 "modes": {
                     "combined_1layer": {
-                        "label": "Tapion Hero Trọn Bộ 47/47 Nguồn (34 Thân + 17 FX · 125px)",
+                        "label": f"Tapion Hero Trọn Bộ 47/47 Nguồn ({len(body_clip_names)} Thân + {len(fx_clip_names)} FX · 125px)",
                         "godot_prefab": "res://review/tapion_demo/TapionDemo.tscn",
                         "bundle_id": "tapion_demo_review",
                     }

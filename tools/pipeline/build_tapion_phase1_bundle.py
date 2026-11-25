@@ -358,18 +358,17 @@ FRAME_SPECS: Dict[str, Dict[str, object]] = {
     "fly_prep_01": {"h": 116, "y1": 246, "fx": True, "body_h": True},
     "fly_prep_02": {"h": 116, "y1": 246, "fx": True, "body_h": True},
     "fly_prep_03": {"h": 116, "y1": 246, "fx": True, "body_h": True},
-    "fly_aura_00": {"h": 104, "y1": 246, "fx": True, "body_h": True, "cx": 152.0},
-    "fly_aura_01": {"h": 104, "y1": 246, "fx": True, "body_h": True, "cx": 152.0},
+    "fly_aura_00": {"h": 84, "y1": 246, "fx": True, "body_h": True, "cx": 148.0},
+    "fly_aura_01": {"h": 86, "y1": 246, "fx": True, "body_h": True, "cx": 148.0},
     # Teleport ground & air prep
     "tele_ground_00": {"h": 114, "y1": 247, "stance": True, "hw": 56},
     "tele_ground_01": {"h": 120, "y1": 247, "stance": True, "hw": 56},
     "tele_air_00": {"h": 106, "y1": 238, "hw": 56},
     "tele_air_01": {"h": 114, "y1": 240, "hw": 56},
-    # Hit & KO (ko_00 copies hit_03; ko_01 rests solidly on y1=248!)
+    # Hit (3 frames: #0..#2; #3 removed per Owner) & KO (#0=hit_02, #1=ko_01 resting solidly on y1=248; former #1 ko_00 removed per Owner!)
     "hit_00": {"h": 108, "y1": 247},
     "hit_01": {"h": 128, "y1": 247},
     "hit_02": {"h": 94,  "y1": 242},
-    "hit_03": {"h": 78,  "y1": 247},
     "ko_01":  {"h": 62,  "y1": 248},
     # 10-Step Sword Combo (atk1..atk10)
     "atk1_00": {"h": 112, "y1": 247, "stance": True},
@@ -411,7 +410,6 @@ FRAME_SPECS: Dict[str, Dict[str, object]] = {
 
 SHARED_COPIES: Dict[str, List[str]] = {
     "jump_00": ["jump_05"],
-    "hit_03": ["ko_00"],
     "atk1_01": ["atk3_00"],
     "atk1_02": ["atk5_00", "atk10_02"],
     "atk2_00": ["atk7_00"],
