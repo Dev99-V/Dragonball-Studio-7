@@ -1,0 +1,78 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/TapionHeroFighter2D.gd" id="1_fighter"]
+[ext_resource type="SpriteFrames" path="res://assets/tapion/godot_bundle/godot/tapion.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" path="res://assets/fx/tapion_skills_fx/tapion_skills_fx.tres" id="3_fx_frames"]
+[ext_resource type="Script" path="res://scenes/SkillAnimator2D.gd" id="4_anim"]
+
+[node name="TapionHero" type="Node2D"]
+texture_filter = 1
+script = ExtResource("1_fighter")
+character_id = &"tapion"
+engine_export_json = "res://assets/tapion/godot_bundle/engine-export.json"
+
+[node name="PeaceAuraFX" type="AnimatedSprite2D" parent="."]
+z_index = -1
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"peace_aura_fx"
+autoplay = "peace_aura_fx"
+centered = false
+offset = Vector2(-144, -248)
+
+[node name="FlightAuraFX" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = -1
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"fly_aura_fx"
+centered = false
+offset = Vector2(-144, -248)
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+autoplay = "idle"
+centered = false
+offset = Vector2(-144, -248)
+
+[node name="BarrierDomeFX" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 4
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"barrier_dome_fx"
+centered = false
+offset = Vector2(-144, -206)
+
+[node name="HandMuzzleFX" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 70
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"mahasenko_hand_fx"
+centered = false
+offset = Vector2(-144, -176)
+
+[node name="AntaminaChargeFX" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 69
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"antamina_charge_orb_fx"
+centered = false
+offset = Vector2(-144, -176)
+position = Vector2(73, -62)
+
+[node name="GroundImpactFX" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 70
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"atk10_impact_fx"
+centered = false
+offset = Vector2(-144, -248)
+
+[node name="SkillAnimator" type="Node2D" parent="."]
+script = ExtResource("4_anim")

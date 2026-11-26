@@ -1,0 +1,278 @@
+{
+  "schema": "dr7-studio.owner_approval_receipt.v1",
+  "status": "owner_approved",
+  "workflow_id": "PIPE-024",
+  "character_id": "tapion",
+  "display_name": "Tapion",
+  "approved_revision": "pruned-30body-19fx-final / v0.19.0",
+  "release_version": "0.19.0",
+  "approved_at": "2026-11-26T08:02:33.720116+00:00",
+  "owner_message": "ok anh chốt 2 nhân vật kèm map cell giúp anh chốt theo qui trình , các hoạt ảnh dư thừa không sử dụng của tapion cũng dọn dẹp giúp anh xác định các hoạt ảnh đang sử dụng của tapion, sau khi chốt chưa push chạy ci/cd cần xuất 1 subagent chạy riêng 1 nhánh test logic kỹ thuật xem còn lỗi bug ẩn nào không nếu sạch và pass thì bắt đàu push chạy ci/cd đồng bộ 4 clinet",
+  "atlas_path": "assets/tapion/godot_bundle/godot/tapion-atlas-00.png",
+  "atlas_sha256": "ee9b4f059e8ebdb811520263922f2c2b90beed3b76eb5a8043101306aae7a96d",
+  "atlas_size_px": [
+    3506,
+    3214
+  ],
+  "tres_path": "assets/tapion/godot_bundle/godot/tapion.tres",
+  "tres_sha256": "bebf8f619aafe2a2fb71459be9ec2149812e43fd6e977c8dbd73c150a6c1aab1",
+  "prefab_path": "scenes/TapionHero.tscn",
+  "prefab_sha256": "e50816e84c951a866c2475adf613510afbf614772d56847276db262f0d417fa0",
+  "skills_fx_atlas_path": "assets/fx/tapion_skills_fx/tapion_skills_fx-atlas-00.png",
+  "skills_fx_atlas_sha256": "66519055a9f2e3604c3ed24cbff8827e0dd55afcd083b1867b7cee5cc399713e",
+  "skills_fx_atlas_size_px": [
+    2630,
+    2630
+  ],
+  "skills_fx_tres_path": "assets/fx/tapion_skills_fx/tapion_skills_fx.tres",
+  "skills_fx_tres_sha256": "cd4f49bfc6b88ba4b0ea75455e4c31103eccb7cf0987c2be18c5d438ad5b71c0",
+  "avatar_path": "assets/tapion/avatar_tapion.png",
+  "avatar_sha256": "9889afaa0ed3a54710734d80c828b35e5fd7577a1ebda87e25eb73d468e6ec96",
+  "pruned_unused_clips": {
+    "body_removed": [
+      "antamina_charge",
+      "antamina_fire",
+      "antamina_rings",
+      "turntable_360"
+    ],
+    "body_frames_removed": [
+      "anta_chg_03",
+      "anta_fire_00",
+      "anta_fire_01",
+      "anta_fire_02",
+      "anta_rng_03",
+      "turntable_00",
+      "turntable_01",
+      "turntable_02",
+      "turntable_03",
+      "turntable_04",
+      "turntable_05",
+      "turntable_06",
+      "turntable_07"
+    ],
+    "fx_removed": [
+      "antamina_flash_fx"
+    ],
+    "fx_frames_removed": [
+      "antamina_flash_00"
+    ]
+  },
+  "canvas_size_px": [
+    288,
+    288
+  ],
+  "foot_anchor_px": [
+    144,
+    248
+  ],
+  "body_only_bbox_px": {
+    "x": 108,
+    "y": 123,
+    "w": 68,
+    "h": 125
+  },
+  "full_fx_bbox_px": {
+    "x": 8,
+    "y": 10,
+    "w": 272,
+    "h": 268
+  },
+  "present_clips": [
+    "idle",
+    "walk",
+    "combat_enter",
+    "idle_combat",
+    "combat_move",
+    "jump",
+    "fly_prep",
+    "fly_aura",
+    "teleport",
+    "teleport_dash_ground",
+    "teleport_dash_air",
+    "hit",
+    "ko",
+    "attack_light",
+    "attack_2",
+    "attack_3",
+    "attack_4",
+    "attack_5",
+    "attack_6",
+    "attack_7",
+    "attack_8",
+    "attack_9",
+    "attack_10",
+    "barrier_cast",
+    "energy_recover",
+    "mahasenko_ground",
+    "mahasenko_air",
+    "antamina_combo",
+    "kentaima_cast",
+    "bukadai_rush"
+  ],
+  "effect_clips": [],
+  "external_fx_clips": [
+    "peace_aura_fx",
+    "fly_aura_fx",
+    "tele_streak_h_fx",
+    "tele_streak_v_fx",
+    "atk10_impact_fx",
+    "barrier_dome_fx",
+    "mahasenko_hand_fx",
+    "mahasenko_beam_h_fx",
+    "mahasenko_beam_air_fx",
+    "mahasenko_impact_fx",
+    "antamina_charge_orb_fx",
+    "antamina_stream_rev_fx",
+    "antamina_stream_fx",
+    "antamina_impact_fx",
+    "kentaima_wave_fx",
+    "kentaima_impact_fx",
+    "bukadai_vanish_fx",
+    "bukadai_sphere_fx",
+    "kentai_burn_fx"
+  ],
+  "not_applicable_clips": {
+    "run": "Tapion uses walk (Peace 200px/s) and combat_move continuous dash (Combat 400 back / 500 fwd px/s) instead of a separate run clip.",
+    "guard": "guard/win excluded project-wide per Owner rule.",
+    "win": "guard/win excluded project-wide per Owner rule.",
+    "attack_heavy": "Heavy combo finisher is covered by attack_10 (LOOP X2 sword slam + atk10_impact_fx).",
+    "power_up": "Ocarina buff/recovery is covered by barrier_cast and energy_recover.",
+    "aura_loop": "Peace/Flight aura FX live in independent atlas assets/fx/tapion_skills_fx/ (peace_aura_fx, fly_aura_fx).",
+    "turn": "Owner scoped new characters to instant horizontal flip without dedicated turn clip."
+  },
+  "render_contract": {
+    "body_clips": [
+      "idle",
+      "walk",
+      "combat_enter",
+      "idle_combat",
+      "combat_move",
+      "jump",
+      "fly_prep",
+      "fly_aura",
+      "teleport",
+      "teleport_dash_ground",
+      "teleport_dash_air",
+      "hit",
+      "ko",
+      "attack_light",
+      "attack_2",
+      "attack_3",
+      "attack_4",
+      "attack_5",
+      "attack_6",
+      "attack_7",
+      "attack_8",
+      "attack_9",
+      "attack_10",
+      "barrier_cast",
+      "energy_recover",
+      "mahasenko_ground",
+      "mahasenko_air",
+      "antamina_combo",
+      "kentaima_cast",
+      "bukadai_rush"
+    ],
+    "effect_clips": [],
+    "locomotion": {
+      "kind": "ground",
+      "clip": "walk",
+      "walk_cycle_order": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "default_scale": 1.0,
+      "screen_speed_px_per_second": 200,
+      "speed_px_per_second": 200.0,
+      "combat_speed_px_per_second": 500.0,
+      "combat_back_speed_px_per_second": 400.0,
+      "combat_fwd_speed_px_per_second": 500.0,
+      "flight_speed_px_per_second": 520.0,
+      "jump_height_px": 100.0
+    },
+    "game_states": {
+      "peace": {
+        "walk": true,
+        "idle": true,
+        "combat_move": false,
+        "idle_combat": false,
+        "attack": false
+      },
+      "combat": {
+        "walk": false,
+        "idle": false,
+        "combat_move": true,
+        "idle_combat": true,
+        "attack": true
+      }
+    },
+    "aura": {
+      "loop_clip": "peace_aura_fx",
+      "charge_clip": null,
+      "independent_clock": true,
+      "external_fx_tres": "res://assets/fx/tapion_skills_fx/tapion_skills_fx.tres",
+      "peace_aura_clip": "peace_aura_fx",
+      "flight_aura_clip": "fly_aura_fx",
+      "peace_only_clips": [
+        "idle"
+      ],
+      "clip_auras": {
+        "fly_aura": "fly_aura_fx"
+      }
+    },
+    "projectile": null,
+    "turning": {
+      "clip": null,
+      "method": "instant_flip",
+      "flip_h": true
+    },
+    "hero_mechanics": {
+      "forms": [
+        "konatsian_hero"
+      ],
+      "master_approved_locked": true,
+      "combat_combo_sequence": [
+        "attack_light",
+        "attack_2",
+        "attack_3",
+        "attack_4",
+        "attack_5",
+        "attack_6",
+        "attack_7",
+        "attack_8",
+        "attack_9",
+        "attack_10"
+      ],
+      "combo_frame_ms": 60,
+      "combo_link_gap_ms": 40,
+      "signature_skills": [
+        "barrier_cast",
+        "energy_recover",
+        "kentaima_cast",
+        "mahasenko_ground",
+        "mahasenko_air",
+        "antamina_combo",
+        "bukadai_rush"
+      ],
+      "attack_10_loop_x2": true,
+      "attack_10_ground_impact_fx": "atk10_impact_fx",
+      "skill_max_range_px": 1175.0,
+      "antamina_unlimited_range": true,
+      "antamina_charge_duration_sec": 3.0,
+      "antamina_orb_frame_ms": 80,
+      "antamina_locked_facing_overhead_uturn": true,
+      "kentai_micro_burn_fx": "kentai_burn_fx",
+      "flight_ki_max": 50.0,
+      "teleport_stamina_max": 100.0,
+      "combat_move_mode": "continuous_dash_with_analog_brake"
+    },
+    "facing_default": "right",
+    "skills_fx_tres": "res://assets/fx/tapion_skills_fx/tapion_skills_fx.tres"
+  }
+}

@@ -1,17 +1,17 @@
 {
   "schema": "dr7-studio.owner_approval_receipt.v1",
   "status": "owner_approved",
-  "workflow_id": "PIPE-022",
+  "workflow_id": "PIPE-023",
   "character_id": "songoku",
   "display_name": "Son Goku",
-  "approved_revision": "phase2-v10.6-final / v0.18.0",
-  "release_version": "0.18.0",
-  "approved_at": "2026-11-21T08:36:13.899612+00:00",
-  "owner_message": "ok giúp anh chốt toàn bộ hoạt ảnh hiện tại của Son Goku (Đợt 1 v10.6 · 34 Clips làm đúng theo qui trình dọn dẹp các file thừa kiểm tra apk, ipa, xem đồng bộ chưa có file rác dư thừa nặng bundle không sau đó push và chay cicd update version để sang nhân vật tiếp theo",
+  "approved_revision": "genki-v2-round5-final / v0.19.0",
+  "release_version": "0.19.0",
+  "approved_at": "2026-11-26T08:05:09.802381+00:00",
+  "owner_message": "ok anh chốt 2 nhân vật kèm map cell giúp anh chốt theo qui trình , các hoạt ảnh dư thừa không sử dụng của tapion cũng dọn dẹp giúp anh xác định các hoạt ảnh đang sử dụng của tapion, sau khi chốt chưa push chạy ci/cd cần xuất 1 subagent chạy riêng 1 nhánh test logic kỹ thuật xem còn lỗi bug ẩn nào không nếu sạch và pass thì bắt đàu push chạy ci/cd đồng bộ 4 clinet",
   "atlas_path": "assets/songoku/godot_bundle/godot/songoku-atlas-00.png",
-  "atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
+  "atlas_sha256": "fad40dd11f7d7dce7ddbac8ce33c50cbce7d120fe8961037b022c2c6bee9acd6",
   "tres_path": "assets/songoku/godot_bundle/godot/songoku.tres",
-  "tres_sha256": "b5d45d0c1f3aafdb2b45830bd27684f8bf80394e9fa10a8d26ea9f81902756e8",
+  "tres_sha256": "97d53c6dbf8e744f282fc482cc67dc384cae68c0783e22399f990efd14d2ce3b",
   "prefab_path": "scenes/SongokuHero.tscn",
   "prefab_sha256": "4a77fbf793b4fc7bc41881cb0420f920eabdbb3b7732735939b0cdf6478a5bbc",
   "skills_fx_atlas_path": "assets/fx/songoku_skills_fx/songoku_skills_fx-atlas-00.png",
@@ -72,7 +72,8 @@
     "kame_ground_up",
     "kame_air_horiz",
     "kame_air_down",
-    "atomic_ground_up"
+    "atomic_ground_up",
+    "genki_cast"
   ],
   "effect_clips": [],
   "not_applicable_clips": {
@@ -119,7 +120,8 @@
       "kame_ground_up",
       "kame_air_horiz",
       "kame_air_down",
-      "atomic_ground_up"
+      "atomic_ground_up",
+      "genki_cast"
     ],
     "effect_clips": [],
     "locomotion": {
@@ -315,9 +317,26 @@
       "atomic_bolts_per_hand": 3,
       "kamehameha_charge_duration_sec": 2.0,
       "kamehameha_blue_light_reflection": true,
-      "kamehameha_beam_scale_mul": 1.2
+      "kamehameha_beam_scale_mul": 1.2,
+      "genki_air_only": true,
+      "genki_mana_cost": 100.0,
+      "genki_cooldown_sec": 15.0,
+      "genki_charge_duration_sec": 5.0,
+      "genki_aoe_radius_px": 700.0,
+      "genki_base_damage": 400.0,
+      "genki_per_player_bonus": 5.0,
+      "genki_max_bonus_players": 20,
+      "genki_cc_immune_while_casting": true
     },
     "facing_default": "right",
-    "skills_fx_tres": "res://assets/fx/songoku_skills_fx/songoku_skills_fx.tres"
-  }
+    "skills_fx_tres": "res://assets/fx/songoku_skills_fx/songoku_skills_fx.tres",
+    "genki_fx_tres": "res://assets/fx/genki_fx/genki_fx.tres"
+  },
+  "supersedes": "PIPE-022",
+  "previous_approval_archive": "docs/releases/songoku-v0.18.0-approval.json",
+  "previous_atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
+  "genki_fx_atlas_path": "assets/fx/genki_fx/genki_fx-atlas-00.png",
+  "genki_fx_atlas_sha256": "ee47e4e7a3eb6aca6418c8b4bf20485a75a79bcbf535e7f71aff5f6625c6dfd9",
+  "genki_fx_tres_path": "assets/fx/genki_fx/genki_fx.tres",
+  "genki_fx_tres_sha256": "6970661fc4c4d0e0f304d89097493d214c42761b7284249f48a11fbe8b4887b7"
 }

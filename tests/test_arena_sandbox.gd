@@ -299,8 +299,8 @@ func run_test() -> void:
 	for _re in arena.roster_characters:
 		if _re is Dictionary and str(_re.get("faction", "")) != "review_demo" and str(_re.get("status", "")) != "human_test_pending":
 			finalized_count += 1
-	if finalized_count != 12:
-		fail("Expected 12 finalized characters including Floating Camera and Son Goku, got " + str(finalized_count) + " (total=" + str(arena.roster_characters.size()) + ")")
+	if finalized_count != 13:
+		fail("Expected 13 finalized characters including Floating Camera, Son Goku and Tapion, got " + str(finalized_count) + " (total=" + str(arena.roster_characters.size()) + ")")
 		return
 
 	for entry in arena.roster_characters:

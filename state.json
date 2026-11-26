@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-26T07:28:59Z",
+  "updated_at": "2026-11-26T08:05:09Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.18.0",
+    "version": "0.19.0",
     "version_history": [
       {
         "version": "0.1.0",
@@ -129,6 +129,11 @@
         "version": "0.18.0",
         "date": "2026-11-21T08:36:13.899612+00:00",
         "summary": "Chốt chính thức tướng Son Goku (PIPE-022 · 34 clips thân trên 1 trang 4090x4090 Nearest 60Hz + 14 clips FX độc lập assets/fx/songoku_skills_fx, khóa stance_mid chống rung chân, HUD Sân Tập kính mờ chuẩn mẫu, fix online Cloudflare Vinh/Thái, dọn sạch /work, /review và file thừa; đồng bộ 4 nền tảng Web/APK/IPA)."
+      },
+      {
+        "version": "0.19.0",
+        "date": "2026-11-26T08:05:09.802381+00:00",
+        "summary": "Owner chốt chính thức v0.19.0: Son Goku Genki + AI sinh tồn (PIPE-023 · 35 clips thân 206f + 27f genki_fx đơn điệu 6->192px đủ tia tụ lực, 24/24 Base Lock), Tapion Hero cắt gọn hoàn chỉnh (PIPE-024 · 30 clip thân 136f + 19 clip FX 74f, bỏ 4 clip thân & 1 clip FX dư, Antamina khóa hướng vòng cung, tầm K70E 1175px, PK Tàn Sát), Đấu Trường Cell Solo PvP 1-view K70E 2400x1080 (sàn 6 điểm rắn, 2 cột z=80 không va chạm, 0 quái, nút chuyển map nhanh), dọn sạch review/tapion_demo/, tapion/, Genki/, work/ và ảnh mẫu gốc; kiểm định độc lập bằng QA subagent trước khi push CI/CD 4 nền tảng."
       }
     ],
     "genre": "2D Dragon Ball Real-Time Mass Action / RPG",
@@ -167,11 +172,11 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "POLISH-R5",
-    "status": "done",
-    "summary": "Fix Genki FX monotonic core growth (6->192px, 12f charge, zero pop/shrink), lock sphere center (192,192), and keep crisp blue auxiliary gather rays/arcs on all 4 final hold frames (charge_6a..6d)",
+    "active_task_id": "FINALIZE-v0.19.0",
+    "status": "in_progress_qa_gate",
+    "summary": "Chốt chính thức Son Goku (PIPE-023), Tapion cắt gọn 30/19 clips (PIPE-024), Đấu Trường Cell (cell_arena), dọn sạch work/review/raw và chuẩn bị QA subagent nhánh riêng trước khi push CI/CD 4 nền tảng.",
     "next_steps_summary": [
-      "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
+      "13/13 nhân vật đã hoàn thiện & chốt trên assets/roster.json; đang kiểm định độc lập qua QA subagent trước khi push main v0.19.0."
     ],
     "review_artifacts": [],
     "preview_url": "http://localhost:8080/?tab=arena"
@@ -1462,6 +1467,12 @@
       "timestamp": "2026-11-26T07:28:59Z",
       "status": "done",
       "summary": "Fix Genki FX monotonic core growth (6->192px, 12f charge, zero pop/shrink), lock sphere center (192,192), and keep crisp blue auxiliary gather rays/arcs on all 4 final hold frames (charge_6a..6d)"
+    },
+    {
+      "id": "FINALIZE-v0.19.0",
+      "timestamp": "2026-11-26T08:05:09Z",
+      "status": "completed",
+      "summary": "Chốt chính thức v0.19.0: cắt gọn Tapion 34->30 clip thân (136f) & 20->19 clip FX (74f) sang assets/tapion + assets/fx/tapion_skills_fx + scenes/TapionHero.tscn (PIPE-024); chốt Son Goku Genki + Cell Arena (PIPE-023); đồng bộ SemVer 0.19.0; chuyển test_antamina_genki_cell_arena.gd vào tests/; dọn sạch review/tapion_demo/, tapion/, Genki/, work/, docs/releases/archive/ và ảnh mẫu root."
     }
   ],
   "quick_resume_commands": [
@@ -1470,10 +1481,10 @@
     "./loop.sh test"
   ],
   "session_resume": {
-    "next_action": "Đã chốt Floating Camera v0.16.0 (11/11 nhân vật), dọn sạch review/ và /work; sẵn sàng nhiệm vụ mới.",
-    "asset_status": "11/11 nhân vật + Bộ 7 Ngọc Rồng 1x (32x32) + Shenron Summon v5 giữ nguyên SHA-256; đã dọn sạch review/, work/ và file nháp root.",
+    "next_action": "Chốt v0.19.0 (Son Goku PIPE-023 + Tapion PIPE-024 + Cell Arena), chạy QA subagent độc lập trước khi push CI/CD 4 nền tảng.",
+    "asset_status": "13/13 nhân vật (gồm Son Goku 35 clips + Tapion 30 clips cắt gọn) + Cell Arena 1-view K70E + Bộ 7 Ngọc Rồng + Shenron Summon v5; đã dọn sạch review/tapion_demo/, tapion/, Genki/, work/ và ảnh mẫu gốc.",
     "architecture_adr": "docs/adr/0001-architecture-and-scale-roadmap.md",
-    "approval_file": "assets/floating_camera/owner_approval.json",
+    "approval_file": "assets/tapion/owner_approval.json",
     "ritual_approval_file": "assets/rituals/shenron_summon/owner_approval.json",
     "cleanup_report": "docs/releases/v0.16.0-release-finalization.json",
     "verification": "tests/test_compatibility_shaders.gd",
@@ -1491,7 +1502,7 @@
     "review_evidence": "docs/contracts/",
     "latest_delivery": "assets/roster.json",
     "preview_url": "http://localhost:8080/?tab=arena",
-    "local_version": "0.16.0",
+    "local_version": "0.19.0",
     "handoff_guide": "docs/adr/0001-architecture-and-scale-roadmap.md"
   },
   "approved_workflows": [
@@ -1703,13 +1714,43 @@
       "character_id": "songoku",
       "display_name": "Son Goku",
       "approved_at": "2026-11-21T08:36:13.899612+00:00",
-      "approval_file": "assets/songoku/owner_approval.json",
+      "approval_file": "docs/releases/songoku-v0.18.0-approval.json",
       "atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
       "tres_sha256": "b5d45d0c1f3aafdb2b45830bd27684f8bf80394e9fa10a8d26ea9f81902756e8",
       "prefab_sha256": "4a77fbf793b4fc7bc41881cb0420f920eabdbb3b7732735939b0cdf6478a5bbc",
       "revision": "phase2-v10.6-final / v0.18.0",
       "summary": "Son Goku Hero v0.18.0 (34 clips thân 196 frames trên 1 trang 4090x4090 Nearest 60Hz + 14 clips FX độc lập 1 trang; 24/24 Base Lock, khóa stance_mid, kame_ground_up gọn theo #5, agu_06 cầu nối & agu_07 đứng tấn 2 tay lên trời chuẩn #2, atomic_ground [90x6,100,90]ms & atomic_ground_up [90x7,100]ms, va chạm địa hình Điều 7.8, HUD Sân Tập kính mờ & fix đồng bộ online).",
-      "approved_atlas_path": "docs/releases/archive/songoku-v0.18.0-atlas-00.png"
+      "superseded_by": "PIPE-023",
+      "archived_atlas_purged": true
+    },
+    {
+      "id": "PIPE-023",
+      "character_id": "songoku",
+      "display_name": "Son Goku",
+      "approved_at": "2026-11-26T08:05:09.802381+00:00",
+      "approval_file": "assets/songoku/owner_approval.json",
+      "supersedes": "PIPE-022",
+      "atlas_sha256": "fad40dd11f7d7dce7ddbac8ce33c50cbce7d120fe8961037b022c2c6bee9acd6",
+      "tres_sha256": "97d53c6dbf8e744f282fc482cc67dc384cae68c0783e22399f990efd14d2ce3b",
+      "prefab_sha256": "4a77fbf793b4fc7bc41881cb0420f920eabdbb3b7732735939b0cdf6478a5bbc",
+      "genki_fx_atlas_sha256": "ee47e4e7a3eb6aca6418c8b4bf20485a75a79bcbf535e7f71aff5f6625c6dfd9",
+      "genki_fx_tres_sha256": "6970661fc4c4d0e0f304d89097493d214c42761b7284249f48a11fbe8b4887b7",
+      "revision": "genki-v2-round5-final / v0.19.0",
+      "summary": "Son Goku Hero v0.19.0: thêm 10f genki_cast + 27f genki_fx đơn điệu 6->192px giữ đủ tia tụ lực xanh, AI sinh tồn (<30% hồi máu, <10% khiên), Đấu Trường Cell 1-view K70E 2400x1080; giữ nguyên 24/24 Base Goku lock."
+    },
+    {
+      "id": "PIPE-024",
+      "character_id": "tapion",
+      "display_name": "Tapion",
+      "approved_at": "2026-11-26T08:05:09.802381+00:00",
+      "approval_file": "assets/tapion/owner_approval.json",
+      "atlas_sha256": "ee9b4f059e8ebdb811520263922f2c2b90beed3b76eb5a8043101306aae7a96d",
+      "tres_sha256": "bebf8f619aafe2a2fb71459be9ec2149812e43fd6e977c8dbd73c150a6c1aab1",
+      "prefab_sha256": "e50816e84c951a866c2475adf613510afbf614772d56847276db262f0d417fa0",
+      "skills_fx_atlas_sha256": "66519055a9f2e3604c3ed24cbff8827e0dd55afcd083b1867b7cee5cc399713e",
+      "skills_fx_tres_sha256": "cd4f49bfc6b88ba4b0ea75455e4c31103eccb7cf0987c2be18c5d438ad5b71c0",
+      "revision": "pruned-30body-19fx-final / v0.19.0",
+      "summary": "Tapion Hero v0.19.0: dọn bỏ 4 clip thân dư (turntable_360, antamina_charge, antamina_rings, antamina_fire) & 1 clip FX dư (antamina_flash_fx), còn đúng 30 clip thân (136f, 3506x3214) + 19 clip FX (74f, 2630x2630), Antamina khóa hướng vòng cung qua đầu, tầm chiêu K70E 1175px, đốt lửa xanh ~10px kentai_burn_fx & chế độ PK Tàn Sát."
     }
   ],
   "approved_item_workflows": [
@@ -1797,15 +1838,15 @@
     "url": "http://localhost:8080/?tab=arena",
     "status": "running",
     "verified_http_status": 200,
-    "active_characters": 11,
+    "active_characters": 13,
     "items_in_catalog": 1,
     "drum_in_roster": true,
     "drum_clips": 11,
     "default_scale": 1.0,
     "arena_url": "http://localhost:8080",
-    "release_version": "0.16.0",
+    "release_version": "0.19.0",
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-26T07:28:59Z"
+  "last_updated_utc": "2026-11-26T08:05:09Z"
 }

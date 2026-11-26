@@ -421,6 +421,7 @@ PY
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_floating_camera_actions.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_shenron_summon.gd
       "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_dragon_ball_items.gd
+      "$ROOT_DIR/tools/godot/godot" --headless --path "$ROOT_DIR" --script res://tests/test_antamina_genki_cell_arena.gd
       RAN_SUITES+=("Godot 4")
       if command -v xvfb-run >/dev/null 2>&1; then
         echo "[loop.sh] Đang chạy Godot Compatibility Shader GPU Tests (opengl3)..."

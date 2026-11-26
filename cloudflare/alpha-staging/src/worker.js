@@ -8,11 +8,12 @@
  */
 
 const DEFAULT_HERO_CID = "songoku";
-const ALLOWED_HERO_CIDS = new Set(["songoku", "drum", "tapion_demo", "tapion"]);
+const ALLOWED_HERO_CIDS = new Set(["songoku", "drum", "tapion"]);
 
 function normalizeHeroCharacterId(raw) {
   const s = String(raw || "").trim();
   if (!s || s === "drum" || s === "songoku_hero_demo") return DEFAULT_HERO_CID;
+  if (s === "tapion_demo") return "tapion";
   return ALLOWED_HERO_CIDS.has(s) ? s : DEFAULT_HERO_CID;
 }
 

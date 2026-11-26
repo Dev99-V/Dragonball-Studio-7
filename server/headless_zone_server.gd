@@ -517,7 +517,9 @@ func _handle_peer_packet(pid: int, pkt: Dictionary) -> void:
 			var req_cid := str(pkt.get("character_id", "")).strip_edges()
 			if req_cid == "songoku_hero_demo":
 				req_cid = "songoku"
-			if req_cid in ["songoku", "drum", "tapion_demo", "tapion"]:
+			elif req_cid == "tapion_demo":
+				req_cid = "tapion"
+			if req_cid in ["songoku", "drum", "tapion"]:
 				pdata["character_id"] = req_cid
 				pinfo["character_id"] = req_cid
 		if pkt.has("pk_tan_sat"):

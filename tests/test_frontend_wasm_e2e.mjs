@@ -222,9 +222,10 @@ if (apiPayload.godot_web_ready) {
 }
 assert.ok(apiPayload.roster.characters.some(c => c.character_id === 'floating_camera'), 'Floating Camera must be finalized in roster.json');
 assert.ok(apiPayload.roster.characters.some(c => c.character_id === 'songoku'), 'Son Goku must be finalized in roster.json');
-assert.equal(T.state.releaseRosterCount, 12, 'Finalized roster must include all 12 approved characters');
+assert.ok(apiPayload.roster.characters.some(c => c.character_id === 'tapion'), 'Tapion must be finalized in roster.json');
+assert.equal(T.state.releaseRosterCount, 13, 'Finalized roster must include all 13 approved characters');
 const activeReviewCount = apiPayload.review?.roster?.characters?.length || 0;
-assert.equal(T.state.api.roster.characters.length, 12 + activeReviewCount, 'UI roster list must include all 12 finalized characters plus active review demos');
+assert.equal(T.state.api.roster.characters.length, 13 + activeReviewCount, 'UI roster list must include all 13 finalized characters plus active review demos');
 T.selectCharacter('floating_camera');
 assert.equal(T.state.activeChar.character_id, 'floating_camera', 'Floating Camera must select inside Human Test');
 assert.deepEqual(Array.from(T.getBodyDims(T.state.activeChar)), [70, 74], 'Floating Camera body bbox must be 70x74');

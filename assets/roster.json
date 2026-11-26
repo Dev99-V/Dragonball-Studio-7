@@ -2629,7 +2629,7 @@
       "display_name": "Son Goku",
       "faction": "saiyan_heroes",
       "combat_role": "hero",
-      "role_label": "Playable Hero — Son Goku (Base / SSJ1 · 7-Hit Combo · Teleport · Flight · Barrier · Energy Recover · Flurry Kick · Atomic Blast · Kamehameha)",
+      "role_label": "Playable Hero — Son Goku (Base / SSJ1 · 7-Hit Combo · Teleport · Flight · Barrier · Energy Recover · Flurry Kick · Atomic Blast · Kamehameha · Genki)",
       "tags": [
         "hero",
         "songoku",
@@ -2644,13 +2644,18 @@
       "atlas_stage": "finalized_owner_approved",
       "owner_animation_approval": {
         "status": "owner_approved",
-        "workflow_id": "PIPE-022",
-        "revision": "phase2-v10.6-final",
-        "release_version": "0.18.0",
-        "approved_at": "2026-11-21T08:36:13.899612+00:00",
-        "owner_message": "ok giúp anh chốt toàn bộ hoạt ảnh hiện tại của Son Goku (Đợt 1 v10.6 · 34 Clips làm đúng theo qui trình dọn dẹp các file thừa kiểm tra apk, ipa, xem đồng bộ chưa có file rác dư thừa nặng bundle không sau đó push và chay cicd update version để sang nhân vật tiếp theo",
+        "workflow_id": "PIPE-023",
+        "revision": "genki-v2-round5-final",
+        "release_version": "0.19.0",
+        "approved_at": "2026-11-26T08:05:09.802381+00:00",
+        "owner_message": "ok anh chốt 2 nhân vật kèm map cell giúp anh chốt theo qui trình , các hoạt ảnh dư thừa không sử dụng của tapion cũng dọn dẹp giúp anh xác định các hoạt ảnh đang sử dụng của tapion, sau khi chốt chưa push chạy ci/cd cần xuất 1 subagent chạy riêng 1 nhánh test logic kỹ thuật xem còn lỗi bug ẩn nào không nếu sạch và pass thì bắt đàu push chạy ci/cd đồng bộ 4 clinet",
         "approval_file": "assets/songoku/owner_approval.json",
-        "atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0"
+        "atlas_sha256": "fad40dd11f7d7dce7ddbac8ce33c50cbce7d120fe8961037b022c2c6bee9acd6",
+        "previous_workflow_id": "PIPE-022",
+        "previous_approval_archive": [
+          "docs/releases/songoku-v0.18.0-approval.json"
+        ],
+        "previous_atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0"
       },
       "canonical_identity": {
         "path": "assets/songoku/source/raw_frames/idle_base_00.png",
@@ -2706,7 +2711,7 @@
         "opaque_key_px": 0,
         "enclosed_key_pockets": 0,
         "outer_ring_spill_fraction": 0.0,
-        "reference_note": "Combined 1-Layer 4090x4090 1-page atlas (34 clips, 196 frames, 60Hz, stance_mid locked) + independent skills FX atlas (14 clips, 53 frames, 1 page)."
+        "reference_note": "Combined 1-Layer 4090x4090 1-page atlas (35 clips, 206 frames, 60Hz, stance_mid locked) + independent skills FX atlas (14 clips, 53 frames) + dedicated Genki FX atlas (5 clips, 27 frames, monotonic 6->192px)."
       },
       "present_clips": [
         "idle",
@@ -3012,19 +3017,25 @@
       },
       "modes": {
         "combined_1layer": {
-          "label": "Combined 1-Layer Son Goku Hero (Base + SSJ1 · 125px · 34 clips)",
+          "label": "Combined 1-Layer Son Goku Hero (Base + SSJ1 · 125px · 35 clips incl. Genki)",
           "godot_prefab": "res://scenes/SongokuHero.tscn",
           "bundle_id": "songoku"
         }
       },
       "motion_quality": {
-        "status": "reviewed_pending_owner",
-        "owner_approved": false,
+        "status": "owner_approved",
+        "owner_approved": true,
+        "owner_accepted_motion": true,
+        "naturalness_verdict": "owner_approved",
+        "workflow_id": "PIPE-023",
+        "revision": "genki-v2-round5-final",
+        "approved_at": "2026-11-26T08:05:09.802381+00:00",
+        "owner_message": "ok anh chốt 2 nhân vật kèm map cell giúp anh chốt theo qui trình , các hoạt ảnh dư thừa không sử dụng của tapion cũng dọn dẹp giúp anh xác định các hoạt ảnh đang sử dụng của tapion, sau khi chốt chưa push chạy ci/cd cần xuất 1 subagent chạy riêng 1 nhánh test logic kỹ thuật xem còn lỗi bug ẩn nào không nếu sạch và pass thì bắt đàu push chạy ci/cd đồng bộ 4 clinet",
         "method": "imagegen_complete_body_keyframes",
         "turn_method": "instant_flip",
         "atlas_sha256": "fad40dd11f7d7dce7ddbac8ce33c50cbce7d120fe8961037b022c2c6bee9acd6",
         "previous_revision_atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
-        "reviewed_at": "2026-11-26T04:32:00Z",
+        "reviewed_at": "2026-11-26T08:05:09.802381+00:00",
         "checks": {
           "body_connections": true,
           "whole_pose_sequence": true,
@@ -3035,9 +3046,315 @@
         },
         "unresolved_structural_failures": [],
         "review_evidence": "assets/songoku/clips/review/filmstrip-34.png",
-        "notes": "Appended 6-frame SSJ1 genki_cast clip (4 arm-raise + 2 downward 25deg throw) preserving 100% of 34 existing clips & 24/24 Base SHA-256 lock; pending Owner Human Test."
+        "notes": "Owner-approved 10-frame genki_cast (canonical idle_combat face/hair, ~5px subtle hovering leg sway from #2, 3-frame downward 25deg throw) + 27-frame monotonic genki_fx (6->192px with continuous blue gather rays), preserving 24/24 Base Goku lock."
+      },
+      "role": "hero"
+    },
+    {
+      "character_id": "tapion",
+      "display_name": "Tapion",
+      "faction": "konatsian_heroes",
+      "role": "hero",
+      "combat_role": "hero",
+      "role_label": "Playable Hero — Tapion (10-Hit Sword Combo · Ocarina Barrier/Recover · Kentaima Burn · Mahasenko · Antamina U-Turn · Bukadai)",
+      "tags": [
+        "hero",
+        "tapion",
+        "konatsian",
+        "sword_combo_10",
+        "playable",
+        "pixel_art",
+        "60hz",
+        "combined_1layer"
+      ],
+      "avatar_path": "res://assets/tapion/avatar_tapion.png",
+      "status": "finalized_owner_approved",
+      "atlas_stage": "finalized_owner_approved",
+      "owner_animation_approval": {
+        "status": "owner_approved",
+        "workflow_id": "PIPE-024",
+        "revision": "pruned-30body-19fx-final",
+        "release_version": "0.19.0",
+        "approved_at": "2026-11-26T08:05:09.802381+00:00",
+        "owner_message": "ok anh chốt 2 nhân vật kèm map cell giúp anh chốt theo qui trình , các hoạt ảnh dư thừa không sử dụng của tapion cũng dọn dẹp giúp anh xác định các hoạt ảnh đang sử dụng của tapion, sau khi chốt chưa push chạy ci/cd cần xuất 1 subagent chạy riêng 1 nhánh test logic kỹ thuật xem còn lỗi bug ẩn nào không nếu sạch và pass thì bắt đàu push chạy ci/cd đồng bộ 4 clinet",
+        "approval_file": "assets/tapion/owner_approval.json",
+        "atlas_sha256": "ee9b4f059e8ebdb811520263922f2c2b90beed3b76eb5a8043101306aae7a96d"
+      },
+      "canonical_identity": {
+        "path": "assets/tapion/source/master_approved.png",
+        "sha256": "3affadfdb5cdf861c0f615840319850bded84c53bfe9d0f29219a44af41280ad",
+        "master_approved_lock": "assets/tapion/master_approved_lock.json"
+      },
+      "facing_contract": {
+        "camera_view": "side_view_2d_three_quarter",
+        "default_atlas_facing": "right(+X)",
+        "left_facing_rule": "Instant horizontal flip with locked foot stance_mid around anchor_x=144, boot_y=247. Antamina locks facing for entire charge/fire/end and arcs overhead U-turn behind Tapion if target crosses.",
+        "locomotion_vector_rule": "Peace walk 200px/s, Combat Move continuous dash (back 400px/s, fwd 500px/s), Flight 520px/s (+30%)."
+      },
+      "map_sync_metrics": {
+        "canvas_size_px": [
+          288,
+          288
+        ],
+        "foot_anchor_px": [
+          144,
+          248
+        ],
+        "body_only_bbox_px": {
+          "x": 108,
+          "y": 123,
+          "w": 68,
+          "h": 125
+        },
+        "full_fx_bbox_px": {
+          "x": 8,
+          "y": 10,
+          "w": 272,
+          "h": 268
+        },
+        "reference_ppu_64": 64,
+        "world_size_at_64ppu_m": {
+          "body_w_m": 1.0625,
+          "body_h_m": 1.9531,
+          "aura_w_m": 4.25,
+          "aura_h_m": 4.1875
+        },
+        "tile_32px_span": {
+          "body_tiles_w": 2.125,
+          "body_tiles_h": 3.90625,
+          "full_fx_tiles_w": 8.5,
+          "full_fx_tiles_h": 8.375
+        }
+      },
+      "pixel_sharpness_metrics": {
+        "texel_scale_ratio": "Native 1px gameplay, Nearest, whole-pose only (125px standing height)",
+        "edge_acutance_sobel": 266.819,
+        "single_pixel_run_fraction": 0.9847630974744312,
+        "alpha_hardness_pct": 100.0,
+        "visible_alpha_hardness_pct": 100.0,
+        "opaque_key_px": 0,
+        "enclosed_key_pockets": 0,
+        "outer_ring_spill_fraction": 0.0,
+        "reference_note": "Combined 1-Layer 3506x3214 1-page atlas (30 active clips, 136 frames, 60Hz Nearest; 4 unused clips / 13 frames pruned) + independent FX atlas 2630x2630 (19 active clips, 74 frames; antamina_flash_fx pruned)."
+      },
+      "present_clips": [
+        "idle",
+        "walk",
+        "combat_enter",
+        "idle_combat",
+        "combat_move",
+        "jump",
+        "fly_prep",
+        "fly_aura",
+        "teleport",
+        "teleport_dash_ground",
+        "teleport_dash_air",
+        "hit",
+        "ko",
+        "attack_light",
+        "attack_2",
+        "attack_3",
+        "attack_4",
+        "attack_5",
+        "attack_6",
+        "attack_7",
+        "attack_8",
+        "attack_9",
+        "attack_10",
+        "barrier_cast",
+        "energy_recover",
+        "mahasenko_ground",
+        "mahasenko_air",
+        "antamina_combo",
+        "kentaima_cast",
+        "bukadai_rush"
+      ],
+      "effect_clips": [],
+      "missing_provisional_clips": [
+        "run",
+        "guard",
+        "attack_heavy",
+        "power_up",
+        "aura_loop",
+        "win"
+      ],
+      "not_applicable_clips": {
+        "run": "Tapion uses walk (Peace 200px/s) and combat_move continuous dash (Combat 400 back / 500 fwd px/s) instead of a separate run clip.",
+        "guard": "guard/win excluded project-wide per Owner rule.",
+        "win": "guard/win excluded project-wide per Owner rule.",
+        "attack_heavy": "Heavy combo finisher is covered by attack_10 (LOOP X2 sword slam + atk10_impact_fx).",
+        "power_up": "Ocarina buff/recovery is covered by barrier_cast and energy_recover.",
+        "aura_loop": "Peace/Flight aura FX live in independent atlas assets/fx/tapion_skills_fx/ (peace_aura_fx, fly_aura_fx).",
+        "turn": "Owner scoped new characters to instant horizontal flip without dedicated turn clip."
+      },
+      "render_contract": {
+        "body_clips": [
+          "idle",
+          "walk",
+          "combat_enter",
+          "idle_combat",
+          "combat_move",
+          "jump",
+          "fly_prep",
+          "fly_aura",
+          "teleport",
+          "teleport_dash_ground",
+          "teleport_dash_air",
+          "hit",
+          "ko",
+          "attack_light",
+          "attack_2",
+          "attack_3",
+          "attack_4",
+          "attack_5",
+          "attack_6",
+          "attack_7",
+          "attack_8",
+          "attack_9",
+          "attack_10",
+          "barrier_cast",
+          "energy_recover",
+          "mahasenko_ground",
+          "mahasenko_air",
+          "antamina_combo",
+          "kentaima_cast",
+          "bukadai_rush"
+        ],
+        "effect_clips": [],
+        "locomotion": {
+          "kind": "ground",
+          "clip": "walk",
+          "walk_cycle_order": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "default_scale": 1.0,
+          "screen_speed_px_per_second": 200,
+          "speed_px_per_second": 200.0,
+          "combat_speed_px_per_second": 500.0,
+          "combat_back_speed_px_per_second": 400.0,
+          "combat_fwd_speed_px_per_second": 500.0,
+          "flight_speed_px_per_second": 520.0,
+          "jump_height_px": 100.0
+        },
+        "game_states": {
+          "peace": {
+            "walk": true,
+            "idle": true,
+            "combat_move": false,
+            "idle_combat": false,
+            "attack": false
+          },
+          "combat": {
+            "walk": false,
+            "idle": false,
+            "combat_move": true,
+            "idle_combat": true,
+            "attack": true
+          }
+        },
+        "aura": {
+          "loop_clip": "peace_aura_fx",
+          "charge_clip": null,
+          "independent_clock": true,
+          "external_fx_tres": "res://assets/fx/tapion_skills_fx/tapion_skills_fx.tres",
+          "peace_aura_clip": "peace_aura_fx",
+          "flight_aura_clip": "fly_aura_fx",
+          "peace_only_clips": [
+            "idle"
+          ],
+          "clip_auras": {
+            "fly_aura": "fly_aura_fx"
+          }
+        },
+        "projectile": null,
+        "turning": {
+          "clip": null,
+          "method": "instant_flip",
+          "flip_h": true
+        },
+        "hero_mechanics": {
+          "forms": [
+            "konatsian_hero"
+          ],
+          "master_approved_locked": true,
+          "combat_combo_sequence": [
+            "attack_light",
+            "attack_2",
+            "attack_3",
+            "attack_4",
+            "attack_5",
+            "attack_6",
+            "attack_7",
+            "attack_8",
+            "attack_9",
+            "attack_10"
+          ],
+          "combo_frame_ms": 60,
+          "combo_link_gap_ms": 40,
+          "signature_skills": [
+            "barrier_cast",
+            "energy_recover",
+            "kentaima_cast",
+            "mahasenko_ground",
+            "mahasenko_air",
+            "antamina_combo",
+            "bukadai_rush"
+          ],
+          "attack_10_loop_x2": true,
+          "attack_10_ground_impact_fx": "atk10_impact_fx",
+          "skill_max_range_px": 1175.0,
+          "antamina_unlimited_range": true,
+          "antamina_charge_duration_sec": 3.0,
+          "antamina_orb_frame_ms": 80,
+          "antamina_locked_facing_overhead_uturn": true,
+          "kentai_micro_burn_fx": "kentai_burn_fx",
+          "flight_ki_max": 50.0,
+          "teleport_stamina_max": 100.0,
+          "combat_move_mode": "continuous_dash_with_analog_brake"
+        },
+        "facing_default": "right",
+        "skills_fx_tres": "res://assets/fx/tapion_skills_fx/tapion_skills_fx.tres"
+      },
+      "modes": {
+        "combined_1layer": {
+          "label": "Combined 1-Layer Tapion Hero (125px · 30 active body clips + 19 independent FX clips)",
+          "godot_prefab": "res://scenes/TapionHero.tscn",
+          "bundle_id": "tapion"
+        }
+      },
+      "motion_quality": {
+        "status": "owner_approved",
+        "owner_approved": true,
+        "owner_accepted_motion": true,
+        "naturalness_verdict": "owner_approved",
+        "workflow_id": "PIPE-024",
+        "revision": "pruned-30body-19fx-final",
+        "approved_at": "2026-11-26T08:05:09.802381+00:00",
+        "owner_message": "ok anh chốt 2 nhân vật kèm map cell giúp anh chốt theo qui trình , các hoạt ảnh dư thừa không sử dụng của tapion cũng dọn dẹp giúp anh xác định các hoạt ảnh đang sử dụng của tapion, sau khi chốt chưa push chạy ci/cd cần xuất 1 subagent chạy riêng 1 nhánh test logic kỹ thuật xem còn lỗi bug ẩn nào không nếu sạch và pass thì bắt đàu push chạy ci/cd đồng bộ 4 clinet",
+        "method": "imagegen_complete_body_keyframes",
+        "turn_method": "instant_flip",
+        "atlas_sha256": "ee9b4f059e8ebdb811520263922f2c2b90beed3b76eb5a8043101306aae7a96d",
+        "reviewed_at": "2026-11-26T08:05:09.802381+00:00",
+        "checks": {
+          "body_connections": true,
+          "whole_pose_sequence": true,
+          "perspective_turns": true,
+          "phase_timing": true,
+          "three_backgrounds": true,
+          "character_identity": true
+        },
+        "unresolved_structural_failures": [],
+        "review_evidence": "assets/tapion/clips/review/filmstrip-00.png",
+        "notes": "Owner-approved Tapion Hero promoted from review/tapion_demo to official assets/tapion & assets/fx/tapion_skills_fx after pruning 4 unused body clips (turntable_360, antamina_charge, antamina_rings, antamina_fire) and 1 unused FX clip (antamina_flash_fx)."
       }
     }
   ],
-  "updated_at": "2026-11-21T08:36:13.899612+00:00"
+  "updated_at": "2026-11-26T08:05:09.802381+00:00"
 }

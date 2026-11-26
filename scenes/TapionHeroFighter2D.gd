@@ -391,8 +391,8 @@ func _ensure_tapion_fx_nodes() -> void:
 				_skills_fx_frames = _ground_impact_fx.sprite_frames
 			if not _ground_impact_fx.animation_finished.is_connected(_on_ground_impact_finished):
 				_ground_impact_fx.animation_finished.connect(_on_ground_impact_finished)
-	if _skills_fx_frames == null and ResourceLoader.exists("res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres"):
-		_skills_fx_frames = load("res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres") as SpriteFrames
+	if _skills_fx_frames == null and ResourceLoader.exists("res://assets/fx/tapion_skills_fx/tapion_skills_fx.tres"):
+		_skills_fx_frames = load("res://assets/fx/tapion_skills_fx/tapion_skills_fx.tres") as SpriteFrames
 	if _antamina_charge_fx == null:
 		_antamina_charge_fx = get_node_or_null("AntaminaChargeFX") as AnimatedSprite2D
 		if _antamina_charge_fx == null and _skills_fx_frames != null:
@@ -1186,7 +1186,7 @@ func _process(delta: float) -> void:
 					fm.call(&"try_proc_an_nguc_on_slot", tgt_b2)
 			_spawn_oneshot_fx(&"bukadai_sphere_fx", hit_core, -1.0 if scale.x < 0.0 else 1.0, "center")
 	else:
-		if anim not in ["kentaima_cast", "mahasenko_ground", "mahasenko_air", "antamina_fire", "antamina_combo", "bukadai_rush"]:
+		if anim not in ["kentaima_cast", "mahasenko_ground", "mahasenko_air", "antamina_combo", "bukadai_rush"]:
 			_skill_fx_fired_for_cast = false
 			_bukadai_dashed_for_cast = false
 			if not _antamina_phase.is_empty():

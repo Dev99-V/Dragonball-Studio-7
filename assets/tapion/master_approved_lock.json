@@ -1,0 +1,35 @@
+{
+  "schema": "dr7-studio.master_approval_lock.v1",
+  "character_id": "tapion",
+  "status": "owner_approved_immutable_master",
+  "approved_at": "2026-11-24T10:23:35.577899+00:00",
+  "owner_message": "anh đã xem mẫu và anh thấy nét làm lại đã chuẩn anh chốt mẫu demo chuẩn gốc nhìn này để làm mốc cho những file source tham chiếu và phát triển ra",
+  "uploaded_confirmation_sha256": "3affadfdb5cdf861c0f615840319850bded84c53bfe9d0f29219a44af41280ad",
+  "master_125px": {
+    "path": "assets/tapion/source/master_approved.png",
+    "sha256": "3affadfdb5cdf861c0f615840319850bded84c53bfe9d0f29219a44af41280ad",
+    "canvas_size_px": [
+      288,
+      288
+    ],
+    "anchor_px": [
+      144,
+      248
+    ],
+    "body_bbox_px": [
+      108,
+      123,
+      68,
+      125
+    ],
+    "head_w_px": 56,
+    "foot_span_x": [
+      126,
+      163
+    ],
+    "stance_mid_x": 144.5,
+    "boot_y": 247,
+    "edge_acutance_sobel": 208.26,
+    "alpha_hardness_pct": 100.0
+  }
+}

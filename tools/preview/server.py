@@ -981,6 +981,8 @@ def build_godot_zip_bytes() -> bytes:
     if ASSETS_DIR.exists():
         for export_json in sorted(ASSETS_DIR.rglob("engine-export.json")):
             include_paths.append(export_json.parent)
+        for av_png in sorted(ASSETS_DIR.glob("*/avatar_*.png")):
+            include_paths.append(av_png)
     added_rel_paths: set[str] = set()
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         for item in include_paths:

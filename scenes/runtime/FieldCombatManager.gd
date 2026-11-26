@@ -3589,7 +3589,7 @@ func _get_songoku_fx_frames() -> SpriteFrames:
 func _get_tapion_fx_frames() -> SpriteFrames:
 	if _tapion_fx_frames != null:
 		return _tapion_fx_frames
-	var fx_path := "res://review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres"
+	var fx_path := "res://assets/fx/tapion_skills_fx/tapion_skills_fx.tres"
 	if ResourceLoader.exists(fx_path):
 		_tapion_fx_frames = load(fx_path) as SpriteFrames
 	return _tapion_fx_frames

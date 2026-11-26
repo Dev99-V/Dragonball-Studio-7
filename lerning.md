@@ -1087,4 +1087,13 @@
   - Căn chuẩn từng frame theo đúng đường kính lõi `core_diam` và khóa cứng tâm lõi về `(192, 192) ± 2.5px` (không dịch tâm khi tia ngoài chạm biên): **`genki_charge_fx` 12 frame @ 120ms** tăng trưởng đơn điệu mượt **`6 → 18 → 30 → 42 → 54 → 66 → 84 → 102 → 120 → 144 → 168 → 192 px`** (0 co ngược, 0 nhảy bậc), nối liên tục `C0` (`scale_mul 0.86 → 1.00 → 1.22+`) sang **`genki_charge_hold_fx` 4 frame @ 120ms** (`192 px` + tia phụ trợ xoay liên tục) trên 1 trang [genki_fx-atlas-00.png](file:///workspaces/Dragonball-Studio-7/assets/fx/genki_fx/genki_fx-atlas-00.png) (`2330×1942`, `27` frames / `5` clips, `60Hz Nearest`).
   - Duyệt 3 nền (`qa_genki_fx_r5_charge_12f_3bg.png` & `qa_genki_fx_r5_hold_4f_3bg.png`), pass `76/76 verify_antamina_and_genki.gd` + full `./loop.sh test` (`exit 0`) + Web/APK export đồng bộ 1:1.
 
+### [LRN-147] Quy trình cắt gọn hoạt ảnh dư Tapion (`34→30` thân / `20→19` FX) & Chốt phát hành `v0.19.0` (`PIPE-023`, `PIPE-024`, Đấu Trường Cell) (2026-11-26)
+- **Kiểm toán tham chiếu trước khi chuyển chính thức (`assets/tapion/` & `assets/fx/tapion_skills_fx/`)**:
+  - Quét 100% mã nguồn runtime (`scenes/`, `server/`, `cloudflare/`, `tests/`), xác định chính xác `4` clip thân dư (`turntable_360`, `antamina_charge`, `antamina_rings`, `antamina_fire` — `13` frame không tham chiếu; bỏ chuỗi thừa `"antamina_fire"` ở `TapionHeroFighter2D.gd:1189`) và `1` clip FX dư (`antamina_flash_fx` — `1` frame).
+  - Đóng gói sạch bằng [promote_tapion_official.py](file:///workspaces/Dragonball-Studio-7/tools/pipeline/promote_tapion_official.py): giảm atlas thân từ `3506×3506` (`34` clips / `149` frames) xuống `3506×3214` (`30` clips / `136` frames, `60Hz Nearest`, `Sobel=266.819`, `alpha=100%`), atlas FX `2630×2630` (`19` clips / `74` frames), tạo prefab chính thức [scenes/TapionHero.tscn](file:///workspaces/Dragonball-Studio-7/scenes/TapionHero.tscn).
+- **Bài học phát hiện sớm khi chốt tướng mới**:
+  - `ArenaSandbox.get_playable_hero_entries()` lọc theo `role == "hero"` còn `FieldCombatManager` lọc `combat_role == "hero"`; mọi tướng chính thức trong `assets/roster.json` bắt buộc khai báo cả hai trường `"role": "hero"` & `"combat_role": "hero"`.
+  - `tools/preview/server.py::build_godot_zip_bytes()` chỉ quét `engine-export.json` nên cần bổ sung `assets/*/avatar_*.png` để avatar tướng chính thức (`assets/tapion/avatar_tapion.png`) có mặt đầy đủ trong gói ZIP Godot.
+  - Luôn chuyển kịch bản kiểm thử từ `/work` sang `tests/test_antamina_genki_cell_arena.gd` TRƯỚC khi xóa `/work`, và nối thẳng vào `./loop.sh test` để CI/CD kiểm định tự động ở mọi phiên bản sau.
+
 <!-- LERNING_ENTRIES_END -->
