@@ -566,6 +566,11 @@ func _get_slot_feet_world(slot: Dictionary) -> Vector2:
 	return global_position
 
 
+func _is_local_controlled_player() -> bool:
+	var arena := _find_arena_node()
+	return arena == null or arena.get("player_node") == self
+
+
 func _face_toward_x(tx: float) -> void:
 	var dx := tx - global_position.x
 	if absf(dx) <= 4.0:
@@ -574,7 +579,7 @@ func _face_toward_x(tx: float) -> void:
 	var left := dx < 0.0
 	scale = Vector2(-sc if left else sc, sc)
 	var arena := _find_arena_node()
-	if arena != null:
+	if arena != null and arena.get("player_node") == self:
 		arena.set("player_facing_left", left)
 
 
@@ -943,7 +948,7 @@ func _update_antamina_charge_and_fire(delta: float, anim: String, sc: float) -> 
 	# Enforce locked facing throughout entire Antamina (charging -> firing -> ending)!
 	scale = Vector2(_antamina_locked_facing_sign * sc, sc)
 	var arena_lock := _find_arena_node()
-	if arena_lock != null:
+	if arena_lock != null and arena_lock.get("player_node") == self:
 		arena_lock.set("player_facing_left", _antamina_locked_facing_sign < 0.0)
 	var tgt := _resolve_active_target(true)
 
@@ -1104,6 +1109,8 @@ func _process(delta: float) -> void:
 	_update_peace_aura_visibility()
 	_update_flight_aura_visibility()
 	_update_barrier_dome_visibility(delta)
+	if not _is_local_controlled_player():
+		return
 	_step_active_projectiles(delta)
 
 	if sprite == null:

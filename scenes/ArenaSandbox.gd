@@ -1698,6 +1698,11 @@ func switch_map(map_id: String) -> bool:
 	_update_walkable_bounds()
 	_sync_map_switch_button()
 
+	_camera_shake_timer_s = 0.0
+	_camera_shake_amp_px = 0.0
+	if _arena_camera != null and is_instance_valid(_arena_camera):
+		_arena_camera.offset = Vector2.ZERO
+
 	if field_mode_enabled and field_manager != null:
 		var saved_cid := active_character_id if not active_character_id.is_empty() else DEFAULT_HERO_ID
 		var had_player := bool(field_manager.player_spawned)
@@ -1714,6 +1719,10 @@ func switch_map(map_id: String) -> bool:
 		var px := clampf(player_spawn_x, walkable_min_x, walkable_max_x)
 		player_node.position = Vector2(px, _ground_y_at(px))
 		player_vy = 0.0
+
+	var sync_target_map := zone_sync.pending_map_id if (zone_sync != null and not zone_sync.pending_map_id.is_empty()) else (zone_sync.current_map_id if zone_sync != null else "")
+	if alpha_session_active and zone_sync != null and sync_target_map != current_map_id:
+		zone_sync.request_zone_switch(current_map_id, zone_sync.current_zone_id)
 
 	_update_follow_camera()
 	_update_hud()
@@ -1836,9 +1845,16 @@ func set_field_hero_visible(visible_flag: bool, hero_char_id: String = "", custo
 	_ensure_field_manager()
 	var wanted_cid := hero_char_id.strip_edges()
 	if wanted_cid.is_empty():
-		wanted_cid = DEFAULT_HERO_ID
-	var resolved_cid := wanted_cid if not _find_character_entry(wanted_cid).is_empty() else "drum"
+		var cur_entry := _find_character_entry(active_character_id)
+		var cur_role := str(cur_entry.get("role", cur_entry.get("combat_role", ""))).to_lower()
+		if not active_character_id.is_empty() and (cur_role == "hero" or active_character_id == DEFAULT_HERO_ID):
+			wanted_cid = active_character_id
+		else:
+			wanted_cid = DEFAULT_HERO_ID
+	var resolved_cid := wanted_cid if not _find_character_entry(wanted_cid).is_empty() else (DEFAULT_HERO_ID if not _find_character_entry(DEFAULT_HERO_ID).is_empty() else "drum")
 	active_character_id = resolved_cid
+	if field_manager != null and field_manager.has_method(&"reset_hero_combat_state"):
+		field_manager.reset_hero_combat_state(true)
 	if visible_flag:
 		if _spawn_field_hero(resolved_cid):
 			if custom_spawn_x > -900000.0 and player_node != null:
@@ -1865,6 +1881,10 @@ func set_field_hero_visible(visible_flag: bool, hero_char_id: String = "", custo
 				else:
 					hero_avatar_panel.visible = false
 	else:
+		_camera_shake_timer_s = 0.0
+		_camera_shake_amp_px = 0.0
+		if _arena_camera != null and is_instance_valid(_arena_camera):
+			_arena_camera.offset = Vector2.ZERO
 		_clear_fighter(player_node)
 		player_node = null
 		field_manager.player_spawned = false
@@ -1970,6 +1990,8 @@ func _setup_alpha_session_hud() -> void:
 func _on_zone_snapshot_applied(_tick: int, _payload: Dictionary) -> void:
 	if not alpha_session_active or field_manager == null or zone_sync == null:
 		return
+	if zone_sync.current_map_id != current_map_id:
+		return
 	var local_uid := str(alpha_session_profile.get("user_id", zone_sync.local_user_id))
 	field_manager.sync_from_zone_snapshot(zone_sync.players_by_id, zone_sync.monsters_by_id, local_uid)
 	queue_redraw()
@@ -1977,6 +1999,8 @@ func _on_zone_snapshot_applied(_tick: int, _payload: Dictionary) -> void:
 
 func _on_zone_combat_event(ev: Dictionary) -> void:
 	if not alpha_session_active or field_manager == null or zone_sync == null:
+		return
+	if zone_sync.current_map_id != current_map_id:
 		return
 	var local_uid := str(alpha_session_profile.get("user_id", zone_sync.local_user_id))
 	field_manager.apply_network_combat_event(ev, local_uid)
@@ -2024,7 +2048,7 @@ func step_alpha_network(delta: float, move_dir: int = 0) -> void:
 					net_transport.connect_to_zone(ws_url, zone_sync.current_map_id, zone_sync.current_zone_id, jwt)
 		return
 	_net_reconnect_accum_s = 0.0
-	if player_node == null or not zone_sync.is_ready_to_play():
+	if player_node == null or not zone_sync.is_ready_to_play() or zone_sync.current_map_id != current_map_id:
 		return
 	var pspr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
 	var cur_act := String(pspr.animation) if pspr != null else "idle"
@@ -3971,7 +3995,8 @@ func _reconcile_chilopoda_terrain(node: Node2D, char_id: String, min_b: float, m
 
 
 func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_req: bool = false, drop_req: bool = false, is_run: bool = false, analog_vec: Vector2 = Vector2.ZERO) -> void:
-	_step_camera_micro_shake(delta)
+	if DisplayServer.get_name() == "headless":
+		_step_camera_micro_shake(delta)
 	if player_node == null or delta <= 0.0:
 		return
 	_step_player_light_cooldown(delta)
@@ -4230,6 +4255,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
 		return
+	_step_camera_micro_shake(delta)
 
 	if _wish_notice_timer_s > 0.0:
 		_wish_notice_timer_s = maxf(0.0, _wish_notice_timer_s - delta)
@@ -4476,7 +4502,7 @@ func _is_point_over_hud_controls(screen_pos: Vector2) -> bool:
 		return true
 	if mobile_pad != null and is_instance_valid(mobile_pad) and bool(mobile_pad.call("is_screen_point_over_pad", screen_pos)):
 		return true
-	for ctrl in [logout_button, zone_selector, hero_selector, summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, infinite_mana_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, boss_selector, boss_spawn_button]:
+	for ctrl in [logout_button, zone_selector, hero_selector, summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, infinite_mana_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, boss_selector, boss_spawn_button, pk_toggle_button, map_switch_button, hero_avatar_panel]:
 		if ctrl != null and is_instance_valid(ctrl) and (ctrl as Control).visible:
 			if (ctrl as Control).get_global_rect().has_point(screen_pos):
 				return true
@@ -4513,6 +4539,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var kev := event as InputEventKey
 	if not kev.pressed or kev.echo:
+		return
+	if field_mode_enabled:
 		return
 	if kev.keycode == KEY_1:
 		set_character_scale(1.0)

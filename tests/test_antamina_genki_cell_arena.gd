@@ -429,6 +429,97 @@ func _initialize() -> void:
 	_check((fm.get("slots") as Array).size() == 14, "Rocky Plateau restored all 14 field monsters (slots=%d)" % (fm.get("slots") as Array).size())
 	_check(pil_sp == null or not pil_sp.visible, "Cell Arena foreground pillars hidden on Rocky Plateau")
 
+	# =========================================================================
+	# PART 8: QA SUBAGENT REGRESSION LOCK (BUGS #1, #2, #3, #4, #7, #8)
+	# =========================================================================
+	# 8.1: Hero switch mid-Genki / mid-Atomic / mid-Kamehameha clears ALL hero combat state (Bug #1)
+	arena.set_field_hero_visible(true, "songoku")
+	await process_frame
+	var g_qa: Node2D = arena.player_node
+	g_qa.set("is_ssj", true)
+	g_qa.set("flight_state", "hovering")
+	g_qa.set("hover_timer_s", 3.0)
+	g_qa.set("ki", 50.0)
+	g_qa.set("genki_cooldown_s", 0.0)
+	var gy_qa: float = float(arena.call(&"get_nearest_support_y_below", 900.0, 200.0))
+	g_qa.position = Vector2(900.0, gy_qa - 220.0)
+	fm.set("player_mana", 100.0)
+	_check(bool(fm.call(&"request_player_genki")), "QA-8.1: Goku started Genki before hero switch")
+	arena.set_field_hero_visible(true, "tapion")
+	await process_frame
+	_check(str(fm.get("_genki_phase")) == "" and (fm.get("_genki_wisps") as Array).is_empty() and (fm.get("_hero_atomic_pending_bolts") as Array).is_empty() and not bool(fm.get("_hero_kame_charging")), "QA-8.1: Switching Goku -> Tapion mid-Genki resets all Goku skill state cleanly")
+
+	# 8.2: Remote online Tapion NEVER runs local combat/facing logic (Bug #2)
+	arena.set_field_hero_visible(true, "songoku")
+	await process_frame
+	arena.set("player_facing_left", false)
+	var tap_prefab: PackedScene = load("res://scenes/TapionHero.tscn")
+	var remote_tap := tap_prefab.instantiate() as Node2D
+	remote_tap.position = Vector2(1200.0, gy_qa)
+	arena.fighters_layer.add_child(remote_tap)
+	var s0_qa: Dictionary = (fm.get("slots") as Array)[0]
+	s0_qa["alive"] = true
+	s0_qa["hp"] = 1500.0
+	var hp_before_remote := float(s0_qa["hp"])
+	var rspr := remote_tap.get_node_or_null("Sprite") as AnimatedSprite2D
+	if rspr != null:
+		rspr.play(&"kentaima_cast")
+		rspr.frame = 2
+	for _ri in range(10):
+		remote_tap._process(1.0 / 60.0)
+	_check(absf(float(s0_qa["hp"]) - hp_before_remote) < 0.01 and not bool(arena.get("player_facing_left")), "QA-8.2: Remote Tapion never damages local slots or hijacks local player_facing_left")
+	remote_tap.queue_free()
+
+	# 8.3: Airborne Auto-Battle <30% HP stays in fast_drop until grounded and triggers energy_recover (Bug #3)
+	arena.set_field_hero_visible(true, "tapion")
+	await process_frame
+	var t_qa: Node2D = arena.player_node
+	t_qa.position = Vector2(900.0, gy_qa - 220.0)
+	t_qa.set("flight_state", "hovering")
+	t_qa.set("hover_timer_s", 3.0)
+	t_qa.set("recover_timer_s", 0.0)
+	t_qa.set("recover_cooldown_s", 0.0)
+	t_qa.set("mahasenko_cooldown_s", 9.0)
+	t_qa.set("kentaima_cooldown_s", 9.0)
+	t_qa.set("antamina_cooldown_s", 9.0)
+	fm.set("player_hp", 250.0)
+	fm.set("player_mana", 0.0)
+	var recovered_after_drop := false
+	for _di in range(120):
+		var dec_drop: Dictionary = fm.call(&"step_hero_auto_battle", 1.0 / 60.0)
+		if str(dec_drop.get("intent", "")) == "energy_recover" or float(t_qa.get("recover_timer_s")) > 0.0:
+			recovered_after_drop = true
+			break
+	_check(recovered_after_drop, "QA-8.3: Airborne Tapion at 25%% HP completes fast_drop continuously and casts energy_recover")
+
+	# 8.4: Field mode keyboard 3/Q do NOT mutate hero scale or swap hero to monster (Bug #4)
+	var orig_sc_qa: float = float(arena.get("char_scale"))
+	var ev3 := InputEventKey.new()
+	ev3.keycode = KEY_3
+	ev3.pressed = true
+	arena._unhandled_input(ev3)
+	var evq := InputEventKey.new()
+	evq.keycode = KEY_Q
+	evq.pressed = true
+	arena._unhandled_input(evq)
+	_check(absf(float(arena.get("char_scale")) - orig_sc_qa) < 0.001 and str(arena.get("active_character_id")) == "tapion", "QA-8.4: Field mode ignores legacy sandbox 3/Q scale & monster-swap hotkeys")
+
+	# 8.5: Hide/Show Hero preserves Tapion & clears micro-shake cleanly (Bug #7)
+	arena.call(&"trigger_camera_micro_shake", 5.0, 0.25)
+	arena.set_field_hero_visible(false)
+	_check(float(arena.get("_camera_shake_timer_s")) == 0.0, "QA-8.5a: Hiding hero resets active camera micro-shake immediately")
+	arena.set_field_hero_visible(true)
+	await process_frame
+	_check(str(arena.get("active_character_id")) == "tapion" and bool(arena.player_node.call(&"is_hero_tapion")), "QA-8.5b: Re-showing hero preserves active Tapion instead of resetting to Son Goku")
+
+	# 8.6: Mobile HUD hit-test covers pk_toggle_button & map_switch_button (Bug #8)
+	var pk_btn := arena.get("pk_toggle_button") as Control
+	var mp_btn := arena.get("map_switch_button") as Control
+	if pk_btn != null and pk_btn.visible:
+		_check(bool(arena.call(&"_is_point_over_hud_controls", pk_btn.get_global_rect().get_center())), "QA-8.6a: pk_toggle_button blocks touch target passthrough")
+	if mp_btn != null and mp_btn.visible:
+		_check(bool(arena.call(&"_is_point_over_hud_controls", mp_btn.get_global_rect().get_center())), "QA-8.6b: map_switch_button blocks touch target passthrough")
+
 	if _fails.is_empty():
 		print("=== ALL TAPION, GENKI & CELL ARENA CHECKS PASSED ===")
 		quit(0)

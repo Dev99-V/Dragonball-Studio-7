@@ -173,10 +173,10 @@
   },
   "current_focus": {
     "active_task_id": "FINALIZE-v0.19.0",
-    "status": "in_progress_qa_gate",
-    "summary": "Chốt chính thức Son Goku (PIPE-023), Tapion cắt gọn 30/19 clips (PIPE-024), Đấu Trường Cell (cell_arena), dọn sạch work/review/raw và chuẩn bị QA subagent nhánh riêng trước khi push CI/CD 4 nền tảng.",
+    "status": "completed",
+    "summary": "Đã chốt chính thức v0.19.0: Son Goku Genki + AI sinh tồn (PIPE-023), Tapion cắt gọn 30 clip thân / 19 clip FX (PIPE-024), Đấu Trường Cell 1-view K70E (cell_arena), dọn sạch work/review/raw, vượt qua QA subagent độc lập (sửa sạch 8 lỗi ẩn + 2 lỗi biên online) và đồng bộ CI/CD 4 nền tảng.",
     "next_steps_summary": [
-      "13/13 nhân vật đã hoàn thiện & chốt trên assets/roster.json; đang kiểm định độc lập qua QA subagent trước khi push main v0.19.0."
+      "13/13 nhân vật + Đấu Trường Cell đã chốt chính thức trên main v0.19.0; sẵn sàng nhận nhiệm vụ tiếp theo từ Owner."
     ],
     "review_artifacts": [],
     "preview_url": "http://localhost:8080/?tab=arena"

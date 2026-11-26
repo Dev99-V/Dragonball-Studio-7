@@ -249,8 +249,50 @@ static func _get_slot_stats(slot: Dictionary) -> Dictionary:
 	return MONSTER_STATS.get(str(slot.get("character_id", "")), {})
 
 
+func reset_hero_combat_state(clear_marks: bool = true) -> void:
+	## Resets all hero-scoped cast/skill/combat state cleanly on hero swap, hide, or map reset.
+	_player_melee_pending = false
+	_player_power_pending = false
+	_player_power_target = {}
+	_player_combo_attack_info = {}
+	_player_hit_frames_fired.clear()
+	_player_gold_slash_pending = false
+	player_hard_stun_timer_s = 0.0
+	player_armor_broken_timer_s = 0.0
+	player_shield_break_icon_timer_s = 0.0
+	_hero_skill_projectiles.clear()
+	_hero_kame_beams.clear()
+	_hero_flurry_hits_fired.clear()
+	_hero_atomic_fired = false
+	_hero_atomic_air_down = false
+	_hero_atomic_mode = "ground_horiz"
+	_hero_atomic_target = {}
+	_hero_atomic_pending_bolts.clear()
+	_hero_atomic_muzzle_flashes.clear()
+	_hero_kame_fired = false
+	_hero_kame_charging = false
+	_hero_kame_charge_elapsed_s = 0.0
+	_hero_kame_mode = "ground_horiz"
+	_hero_kame_target = {}
+	_hero_barrier_burst_s = 0.0
+	_genki_phase = ""
+	_genki_elapsed_s = 0.0
+	_genki_throw_released = false
+	_genki_contrib_count = 0
+	_genki_wisp_spawn_accum_s = 0.0
+	_genki_cc_notice_cd_s = 0.0
+	_genki_ambient_flash_s = 0.0
+	_genki_wisps.clear()
+	_genki_projectiles.clear()
+	_genki_explosions.clear()
+	cancel_auto_approach()
+	if clear_marks:
+		clear_all_tapion_marks()
+
+
 func clear_all() -> void:
 	active = false
+	reset_hero_combat_state(false)
 	for s in _get_combat_slots():
 		var n := s.get("node") as Node2D
 		if n != null and is_instance_valid(n):
@@ -278,16 +320,6 @@ func clear_all() -> void:
 	_explosion_nodes.clear()
 	hit_impacts.clear()
 	floating_texts.clear()
-	_genki_phase = ""
-	_genki_elapsed_s = 0.0
-	_genki_throw_released = false
-	_genki_contrib_count = 0
-	_genki_wisp_spawn_accum_s = 0.0
-	_genki_cc_notice_cd_s = 0.0
-	_genki_ambient_flash_s = 0.0
-	_genki_wisps.clear()
-	_genki_projectiles.clear()
-	_genki_explosions.clear()
 	player_hit_flash_s = 0.0
 	player_hit_shake_s = 0.0
 	pointer_pulse_s = 0.0
@@ -298,7 +330,6 @@ func clear_all() -> void:
 	_last_tap_slot_id = ""
 	_last_tap_item = null
 	_last_tap_time_s = -99.0
-	cancel_auto_approach()
 	pointer_slot_id = ""
 	pointer_item_node = null
 	pointer_kind = "enemy"
@@ -1150,7 +1181,7 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	var rec_cd_ok: bool = is_goku and goku_is_ssj and float(p_node.get("recover_timer_s")) <= 0.0 and float(p_node.get("recover_cooldown_s")) <= 0.0
 	var grounded_for_rec: bool = bool(arena.call("is_player_grounded_for_recover"))
 	var can_hp_recover_auto: bool = rec_cd_ok and grounded_for_rec
-	var need_land_for_hp_rec: bool = rec_cd_ok and (not grounded_for_rec) and bool(p_node.call(&"is_airborne_flight"))
+	var need_land_for_hp_rec: bool = rec_cd_ok and (not grounded_for_rec)
 
 	var tgt: Dictionary = _select_auto_battle_target()
 	if tgt.is_empty():
@@ -1164,7 +1195,8 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 				request_player_energy_recover()
 				return {"intent": "energy_recover", "reason": "auto_low_hp_recover"}
 			if hp_ratio < 0.30 and need_land_for_hp_rec:
-				p_node.call(&"trigger_fast_drop_from_flight")
+				if bool(p_node.call(&"is_airborne_flight")):
+					p_node.call(&"trigger_fast_drop_from_flight")
 				arena.call("step_player_movement", delta, 0, 1, false, true, false, Vector2(0.0, 1.0))
 				return {"intent": "fast_drop", "reason": "auto_low_hp_land_to_recover"}
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
@@ -1249,7 +1281,7 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	elif intent == "fast_drop":
 		var fvec_drop: Vector2 = dec.get("fly_vec", Vector2(0.0, 1.0))
 		var mdir_drop: int = int(dec.get("move_dir", 0))
-		if is_goku:
+		if is_goku and bool(p_node.call(&"is_airborne_flight")):
 			p_node.call(&"trigger_fast_drop_from_flight")
 		arena.call("step_player_movement", delta, mdir_drop, 1, false, true, false, fvec_drop)
 	elif intent == "fly_chase":
@@ -3763,6 +3795,8 @@ func request_player_flurry_kick() -> bool:
 		return false
 	if not _is_hero_songoku_node(arena.player_node):
 		return false
+	if arena.player_node.has_method(&"is_hero_tapion") and bool(arena.player_node.call(&"is_hero_tapion")):
+		return false
 	var tgt := resolve_skill_target()
 	if tgt.is_empty():
 		return false
@@ -3779,6 +3813,8 @@ func request_player_atomic_blast() -> bool:
 	if not player_spawned or player_dead or arena == null or arena.player_node == null:
 		return false
 	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	if arena.player_node.has_method(&"is_hero_tapion") and bool(arena.player_node.call(&"is_hero_tapion")):
 		return false
 	var tgt: Dictionary = resolve_skill_target()
 	if tgt.is_empty():
@@ -3816,6 +3852,8 @@ func request_player_kamehameha() -> bool:
 	if not player_spawned or player_dead or arena == null or arena.player_node == null:
 		return false
 	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	if arena.player_node.has_method(&"is_hero_tapion") and bool(arena.player_node.call(&"is_hero_tapion")):
 		return false
 	var tgt: Dictionary = resolve_skill_target()
 	if tgt.is_empty():
@@ -4109,6 +4147,10 @@ func _step_hero_phase2_skills(delta: float) -> void:
 			elif frame >= 6:
 				pspr.set_frame_and_progress(2, 0.0)
 		player_state_changed.emit()
+
+	# Tapion handles all offensive signature skills inside TapionHeroFighter2D; never advance Goku-only Phase 2 skills on Tapion.
+	if is_tapion_p2:
+		return
 
 	# 2. Flurry Kick (`26`, v10.2): auto-lunges forward, 30% slower kicks, +50px expanded AoE range (215x160px), stuns ALL enemies in range!
 	if anim == "flurry_kick" and pspr.is_playing():

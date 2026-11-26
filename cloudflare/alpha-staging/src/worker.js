@@ -90,13 +90,13 @@ const ACTION_SPECS = {
   goku_gold_slash: { min_dmg: 60, max_dmg: 60, default_dmg: 60, mana_delta: 20, mana_cost: 0, ranged: false, pvp_range: 280 },
   flurry_kick: { min_dmg: 30, max_dmg: 30, default_dmg: 30, mana_delta: 8, mana_cost: 0, ranged: false, pvp_range: 300 },
   atomic_blast: { min_dmg: 55, max_dmg: 55, default_dmg: 55, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 1400 },
-  kamehameha: { min_dmg: 360, max_dmg: 360, default_dmg: 360, mana_delta: 0, mana_cost: 80, cast_window_ms: 5000, ranged: true, pvp_range: 1400 },
+  kamehameha: { min_dmg: 360, max_dmg: 360, default_dmg: 360, mana_delta: 0, mana_cost: 80, cast_window_ms: 5000, cast_key: "kame_cast_paid_ms", ranged: true, pvp_range: 1400 },
   genki_cast: { min_dmg: 0, max_dmg: 0, default_dmg: 0, mana_delta: 0, mana_cost: 100, ranged: true, pvp_range: 1050 },
-  genki: { min_dmg: 400, max_dmg: 500, default_dmg: 400, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 1050 },
+  genki: { min_dmg: 400, max_dmg: 500, default_dmg: 400, mana_delta: 0, mana_cost: 100, cast_window_ms: 9500, cast_key: "genki_cast_paid_ms", ranged: true, pvp_range: 1050 },
   kentaima: { min_dmg: 60, max_dmg: 60, default_dmg: 60, mana_delta: 10, mana_cost: 0, ranged: true, pvp_range: 1240 },
   mahasenko: { min_dmg: 65, max_dmg: 65, default_dmg: 65, mana_delta: 10, mana_cost: 0, ranged: true, pvp_range: 1240 },
   antamina_cast: { min_dmg: 0, max_dmg: 0, default_dmg: 0, mana_delta: 0, mana_cost: 100, ranged: true, pvp_range: 99999, unlimited_range: true },
-  antamina: { min_dmg: 80, max_dmg: 104, default_dmg: 80, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 99999, unlimited_range: true },
+  antamina: { min_dmg: 80, max_dmg: 104, default_dmg: 80, mana_delta: 0, mana_cost: 100, cast_window_ms: 8500, cast_key: "antamina_cast_paid_ms", max_hits_per_cast: 7, ranged: true, pvp_range: 99999, unlimited_range: true },
   bukadai: { min_dmg: 85, max_dmg: 85, default_dmg: 85, mana_delta: 15, mana_cost: 0, ranged: false, pvp_range: 1240 },
 };
 
@@ -431,20 +431,22 @@ export class ZoneRoomDO {
     const key = this._zoneKey(m, zid);
     if (this.zones.has(key)) return this.zones.get(key);
     const monsters = new Map();
-    for (const d of DEFAULT_MONSTERS) {
-      monsters.set(d.id, {
-        id: d.id,
-        kind: "monster",
-        character_id: d.character_id,
-        x: d.x,
-        y: d.y,
-        zmin: d.zmin,
-        zmax: d.zmax,
-        hp: d.hp,
-        max_hp: d.hp,
-        alive: true,
-        respawn_at: 0,
-      });
+    if (m !== "cell_arena") {
+      for (const d of DEFAULT_MONSTERS) {
+        monsters.set(d.id, {
+          id: d.id,
+          kind: "monster",
+          character_id: d.character_id,
+          x: d.x,
+          y: d.y,
+          zmin: d.zmin,
+          zmax: d.zmax,
+          hp: d.hp,
+          max_hp: d.hp,
+          alive: true,
+          respawn_at: 0,
+        });
+      }
     }
     const zObj = { key, map_id: m, zone_id: zid, tick: 0, force_pvp_mode: false, players: new Map(), monsters, sockets: new Set() };
     this.zones.set(key, zObj);
@@ -480,8 +482,8 @@ export class ZoneRoomDO {
         } else if (now >= p.respawn_at) {
           p.alive = true;
           p.hp = p.max_hp;
-          p.x = 560;
-          p.y = 840;
+          p.x = z.map_id === "cell_arena" ? 1200 : 560;
+          p.y = z.map_id === "cell_arena" ? 935.2 : 840;
           p.act = "idle";
           p.respawn_at = 0;
           changed = true;
@@ -636,7 +638,11 @@ export class ZoneRoomDO {
       info.zone_id = zoneId;
       info.zone_key = z.key;
       z.sockets.add(ws);
-      const sx = Math.max(-200, Math.min(6320, Number(claims.spawn_x || 560)));
+      const isCellAuth = mapId === "cell_arena";
+      const sx = isCellAuth
+        ? Math.max(24, Math.min(2376, Number(claims.spawn_x || 1200)))
+        : Math.max(-200, Math.min(6320, Number(claims.spawn_x || 560)));
+      const sy = isCellAuth ? 935.2 : 840;
       const initMana = claims.character_id === "songoku" ? 100 : 0;
       z.players.set(claims.user_id, {
         id: claims.user_id,
@@ -644,7 +650,7 @@ export class ZoneRoomDO {
         display_name: claims.display_name,
         character_id: claims.character_id,
         x: sx,
-        y: 840,
+        y: sy,
         facing_left: false,
         act: "idle",
         hp: 1500,
@@ -664,7 +670,7 @@ export class ZoneRoomDO {
         map_id: mapId,
         zone_id: zoneId,
         spawn_x: sx,
-        spawn_y: 840,
+        spawn_y: sy,
         ws_backend: "cloudflare_do_staging_relay",
       });
       this._emitSnapshot(z);
@@ -679,9 +685,11 @@ export class ZoneRoomDO {
     if (op === "join_zone") {
       const targetMap = String(pkt.map_id || "rocky_plateau").trim() || "rocky_plateau";
       const targetZone = Math.max(0, Math.min(19, Number(pkt.zone_id ?? 0) | 0));
+      let oldMap = "";
       let preserved = null;
       if (info.zone_key && this.zones.has(info.zone_key)) {
         const oldZ = this.zones.get(info.zone_key);
+        oldMap = String(oldZ.map_id || "");
         preserved = oldZ.players.get(info.user_id) || null;
         oldZ.players.delete(info.user_id);
         oldZ.sockets.delete(ws);
@@ -692,6 +700,13 @@ export class ZoneRoomDO {
       info.zone_id = targetZone;
       info.zone_key = newZ.key;
       newZ.sockets.add(ws);
+      const defX = targetMap === "cell_arena" ? 1200 : 560;
+      const defY = targetMap === "cell_arena" ? 935.2 : 840;
+      if (preserved && oldMap !== targetMap) {
+        preserved.x = defX;
+        preserved.y = defY;
+        preserved.act = "idle";
+      }
       newZ.players.set(
         info.user_id,
         preserved || {
@@ -699,8 +714,8 @@ export class ZoneRoomDO {
           kind: "player",
           display_name: info.display_name,
           character_id: info.character_id,
-          x: 560,
-          y: 840,
+          x: defX,
+          y: defY,
           facing_left: false,
           act: "idle",
           hp: 1500,
@@ -736,8 +751,9 @@ export class ZoneRoomDO {
         }
         return;
       }
-      const rx = Math.max(-216, Math.min(6336, Number(pkt.x ?? p.x)));
-      const ry = Math.max(40, Math.min(1060, Number(pkt.y ?? p.y)));
+      const isCellArena = z.map_id === "cell_arena";
+      const rx = Math.max(isCellArena ? 24 : -216, Math.min(isCellArena ? 2376 : 6336, Number(pkt.x ?? p.x)));
+      const ry = Math.max(40, Math.min(isCellArena ? 982 : 1060, Number(pkt.y ?? p.y)));
       p.x = Math.round(rx * 10) / 10;
       p.y = Math.round(ry * 10) / 10;
       p.facing_left = Boolean(pkt.facing_left ?? p.facing_left);
@@ -791,9 +807,19 @@ export class ZoneRoomDO {
         this._emitSnapshot(z);
         return;
       }
-      if (action === "antamina_cast" || action === "genki_cast") {
+      if (action === "antamina_cast") {
         if (p.mana + 0.001 < 100) return;
         p.mana = Math.max(0, p.mana - 100);
+        p.antamina_cast_paid_ms = nowMs;
+        p.antamina_shots_left = 7;
+        this._emitSnapshot(z);
+        return;
+      }
+      if (action === "genki_cast") {
+        if (p.mana + 0.001 < 100) return;
+        p.mana = Math.max(0, p.mana - 100);
+        p.genki_cast_paid_ms = nowMs;
+        p.genki_hit_targets = new Set();
         this._emitSnapshot(z);
         return;
       }
@@ -811,12 +837,29 @@ export class ZoneRoomDO {
       }
       if (spec.mana_cost > 0) {
         const castWin = Number(spec.cast_window_ms || 0);
-        const paidMs = Number(p.kame_cast_paid_ms || 0);
-        const alreadyPaid = castWin > 0 && paidMs > 0 && nowMs - paidMs <= castWin;
+        const castKey = spec.cast_key || "kame_cast_paid_ms";
+        const paidMs = Number(p[castKey] || 0);
+        let alreadyPaid = castWin > 0 && paidMs > 0 && nowMs - paidMs <= castWin;
+        if (alreadyPaid && action === "antamina" && Number(p.antamina_shots_left || 0) <= 0) {
+          alreadyPaid = false;
+        }
+        if (alreadyPaid && action === "genki" && p.genki_hit_targets instanceof Set && p.genki_hit_targets.has(`${targetKind}:${targetId}`)) {
+          return;
+        }
         if (!alreadyPaid) {
           if (p.mana + 0.001 < spec.mana_cost) return;
           p.mana = Math.max(0, p.mana - spec.mana_cost);
-          if (castWin > 0) p.kame_cast_paid_ms = nowMs;
+          if (castWin > 0) {
+            p[castKey] = nowMs;
+            if (action === "antamina") p.antamina_shots_left = 7;
+            if (action === "genki") p.genki_hit_targets = new Set();
+          }
+        }
+        if (action === "antamina") {
+          p.antamina_shots_left = Math.max(0, Number(p.antamina_shots_left || 1) - 1);
+        } else if (action === "genki") {
+          if (!(p.genki_hit_targets instanceof Set)) p.genki_hit_targets = new Set();
+          p.genki_hit_targets.add(`${targetKind}:${targetId}`);
         }
       }
       if (targetKind === "monster") {

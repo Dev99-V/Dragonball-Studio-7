@@ -42,13 +42,13 @@ const ACTION_SPECS := {
 	"goku_gold_slash": {"min_dmg": 60.0, "max_dmg": 60.0, "default_dmg": 60.0, "mana_delta": 20.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 280.0, "check_los": false},
 	"flurry_kick": {"min_dmg": 30.0, "max_dmg": 30.0, "default_dmg": 30.0, "mana_delta": 8.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 300.0, "check_los": false},
 	"atomic_blast": {"min_dmg": 55.0, "max_dmg": 55.0, "default_dmg": 55.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": false},
-	"kamehameha": {"min_dmg": 360.0, "max_dmg": 360.0, "default_dmg": 360.0, "mana_delta": 0.0, "mana_cost": 80.0, "cast_window_ms": 5000, "ranged": true, "pvp_range": 1400.0, "check_los": true},
+	"kamehameha": {"min_dmg": 360.0, "max_dmg": 360.0, "default_dmg": 360.0, "mana_delta": 0.0, "mana_cost": 80.0, "cast_window_ms": 5000, "cast_key": "kame_cast_paid_ms", "ranged": true, "pvp_range": 1400.0, "check_los": true},
 	"genki_cast": {"min_dmg": 0.0, "max_dmg": 0.0, "default_dmg": 0.0, "mana_delta": 0.0, "mana_cost": 100.0, "ranged": true, "pvp_range": 1050.0, "check_los": false},
-	"genki": {"min_dmg": 400.0, "max_dmg": 500.0, "default_dmg": 400.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1050.0, "check_los": false},
+	"genki": {"min_dmg": 400.0, "max_dmg": 500.0, "default_dmg": 400.0, "mana_delta": 0.0, "mana_cost": 100.0, "cast_window_ms": 9500, "cast_key": "genki_cast_paid_ms", "ranged": true, "pvp_range": 1050.0, "check_los": false},
 	"kentaima": {"min_dmg": 60.0, "max_dmg": 60.0, "default_dmg": 60.0, "mana_delta": 10.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1240.0, "check_los": true},
 	"mahasenko": {"min_dmg": 65.0, "max_dmg": 65.0, "default_dmg": 65.0, "mana_delta": 10.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1240.0, "check_los": true},
 	"antamina_cast": {"min_dmg": 0.0, "max_dmg": 0.0, "default_dmg": 0.0, "mana_delta": 0.0, "mana_cost": 100.0, "ranged": true, "pvp_range": 99999.0, "unlimited_range": true, "check_los": false},
-	"antamina": {"min_dmg": 80.0, "max_dmg": 104.0, "default_dmg": 80.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 99999.0, "unlimited_range": true, "check_los": false},
+	"antamina": {"min_dmg": 80.0, "max_dmg": 104.0, "default_dmg": 80.0, "mana_delta": 0.0, "mana_cost": 100.0, "cast_window_ms": 8500, "cast_key": "antamina_cast_paid_ms", "max_hits_per_cast": 7, "ranged": true, "pvp_range": 99999.0, "unlimited_range": true, "check_los": false},
 	"bukadai": {"min_dmg": 85.0, "max_dmg": 85.0, "default_dmg": 85.0, "mana_delta": 15.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 1240.0, "check_los": false},
 }
 
@@ -189,6 +189,47 @@ func _terrain_blocks_segment(from_pos: Vector2, to_pos: Vector2) -> bool:
 	return false
 
 
+const CELL_ARENA_FLOOR_PROFILE := [
+	{"x": 0.0, "y": 981.1},
+	{"x": 245.7, "y": 981.1},
+	{"x": 399.7, "y": 935.2},
+	{"x": 2000.3, "y": 935.2},
+	{"x": 2156.1, "y": 977.4},
+	{"x": 2400.0, "y": 977.4},
+]
+
+
+func _cell_arena_surface_y_at(world_x: float) -> float:
+	if world_x <= float(CELL_ARENA_FLOOR_PROFILE[0]["x"]):
+		return float(CELL_ARENA_FLOOR_PROFILE[0]["y"])
+	for i in range(CELL_ARENA_FLOOR_PROFILE.size() - 1):
+		var a: Dictionary = CELL_ARENA_FLOOR_PROFILE[i]
+		var b: Dictionary = CELL_ARENA_FLOOR_PROFILE[i + 1]
+		var ax := float(a["x"])
+		var bx := float(b["x"])
+		if world_x <= bx:
+			var span := maxf(0.0001, bx - ax)
+			return lerpf(float(a["y"]), float(b["y"]), clampf((world_x - ax) / span, 0.0, 1.0))
+	return float(CELL_ARENA_FLOOR_PROFILE[CELL_ARENA_FLOOR_PROFILE.size() - 1]["y"])
+
+
+func _terrain_surface_y_for_map(map_id: String, world_x: float) -> float:
+	if map_id == "cell_arena":
+		return _cell_arena_surface_y_at(world_x)
+	return _terrain_surface_y_at(world_x)
+
+
+func _terrain_blocks_segment_for_map(map_id: String, from_pos: Vector2, to_pos: Vector2) -> bool:
+	if map_id != "cell_arena":
+		return _terrain_blocks_segment(from_pos, to_pos)
+	for i in range(9):
+		var t := float(i) / 8.0
+		var pt := from_pos.lerp(to_pos, t)
+		if pt.y > _cell_arena_surface_y_at(pt.x) + 0.001:
+			return true
+	return false
+
+
 func _zone_key(map_id: String, zone_id: int) -> String:
 	return "%s:%d" % [map_id, clampi(zone_id, 0, MAX_ZONES_PER_MAP - 1)]
 
@@ -199,21 +240,22 @@ func _get_or_create_zone(map_id: String, zone_id: int) -> Dictionary:
 	if zones.has(key):
 		return zones[key]
 	var mons := {}
-	for m in DEFAULT_MONSTER_SLOTS:
-		var mid := str(m["id"])
-		mons[mid] = {
-			"id": mid,
-			"kind": "monster",
-			"character_id": str(m["character_id"]),
-			"x": float(m["x"]),
-			"y": float(m["y"]),
-			"zmin": float(m.get("zmin", float(m["x"]) - 300.0)),
-			"zmax": float(m.get("zmax", float(m["x"]) + 300.0)),
-			"hp": float(m["hp"]),
-			"max_hp": float(m["hp"]),
-			"alive": true,
-			"respawn_timer_s": 0.0,
-		}
+	if map_id != "cell_arena":
+		for m in DEFAULT_MONSTER_SLOTS:
+			var mid := str(m["id"])
+			mons[mid] = {
+				"id": mid,
+				"kind": "monster",
+				"character_id": str(m["character_id"]),
+				"x": float(m["x"]),
+				"y": float(m["y"]),
+				"zmin": float(m.get("zmin", float(m["x"]) - 300.0)),
+				"zmax": float(m.get("zmax", float(m["x"]) + 300.0)),
+				"hp": float(m["hp"]),
+				"max_hp": float(m["hp"]),
+				"alive": true,
+				"respawn_timer_s": 0.0,
+			}
 	var z := {
 		"key": key,
 		"map_id": map_id,
@@ -418,14 +460,15 @@ func _complete_peer_auth(pid: int, claims: Dictionary, req_map: String, req_zone
 	pinfo["zone_key"] = str(z["key"])
 	if not (pid in z["peer_ids"]):
 		z["peer_ids"].append(pid)
-	var spawn_y := _terrain_surface_y_at(spawn_x)
+	var eff_spawn_x := clampf(spawn_x, 24.0, 2376.0) if map_id == "cell_arena" else spawn_x
+	var spawn_y := _terrain_surface_y_for_map(map_id, eff_spawn_x)
 	var init_mana := PLAYER_MAX_MANA if cid == "songoku" else 0.0
 	z["players"][uid] = {
 		"id": uid,
 		"kind": "player",
 		"display_name": dname,
 		"character_id": cid,
-		"x": spawn_x,
+		"x": eff_spawn_x,
 		"y": spawn_y,
 		"facing_left": false,
 		"act": "idle",
@@ -446,7 +489,7 @@ func _complete_peer_auth(pid: int, claims: Dictionary, req_map: String, req_zone
 		"character_id": cid,
 		"map_id": map_id,
 		"zone_id": zone_id,
-		"spawn_x": spawn_x,
+		"spawn_x": eff_spawn_x,
 		"spawn_y": spawn_y,
 	})
 	_emit_zone_snapshot(z)
@@ -502,8 +545,11 @@ func _handle_peer_packet(pid: int, pkt: Dictionary) -> void:
 	if op == "intent":
 		if not bool(pdata["alive"]):
 			return
-		var req_x := clampf(float(pkt.get("x", pdata["x"])), _stage_left_x + 24.0, _stage_right_x - 24.0)
-		var max_y := _terrain_surface_y_at(req_x)
+		var map_id_now := str(z.get("map_id", "rocky_plateau"))
+		var min_bx := 24.0 if map_id_now == "cell_arena" else (_stage_left_x + 24.0)
+		var max_bx := 2376.0 if map_id_now == "cell_arena" else (_stage_right_x - 24.0)
+		var req_x := clampf(float(pkt.get("x", pdata["x"])), min_bx, max_bx)
+		var max_y := _terrain_surface_y_for_map(map_id_now, req_x)
 		var req_y := clampf(float(pkt.get("y", pdata["y"])), 40.0, max_y)
 		# Authoritative speed/step clamp (prevents blatant teleport-hacking while allowing legit Drum teleport)
 		var cur_pos := Vector2(float(pdata["x"]), float(pdata["y"]))
@@ -573,10 +619,20 @@ func _handle_combat_action(z: Dictionary, attacker_id: String, pkt: Dictionary) 
 		attacker["kame_cast_paid_ms"] = now_ms
 		_emit_zone_snapshot(z)
 		return
-	if action == "antamina_cast" or action == "genki_cast":
+	if action == "antamina_cast":
 		if float(attacker.get("mana", 0.0)) + 0.001 < 100.0:
 			return
 		attacker["mana"] = maxf(0.0, float(attacker["mana"]) - 100.0)
+		attacker["antamina_cast_paid_ms"] = now_ms
+		attacker["antamina_shots_left"] = 7
+		_emit_zone_snapshot(z)
+		return
+	if action == "genki_cast":
+		if float(attacker.get("mana", 0.0)) + 0.001 < 100.0:
+			return
+		attacker["mana"] = maxf(0.0, float(attacker["mana"]) - 100.0)
+		attacker["genki_cast_paid_ms"] = now_ms
+		attacker["genki_hit_targets"] = {}
 		_emit_zone_snapshot(z)
 		return
 	if not ACTION_SPECS.has(action):
@@ -606,18 +662,35 @@ func _handle_combat_action(z: Dictionary, attacker_id: String, pkt: Dictionary) 
 	if not bool(target.get("alive", false)):
 		return
 
-	# Authoritative Mana enforcement (supports piercing Kamehameha cast window)
+	# Authoritative Mana enforcement (supports paid cast windows for Kamehameha, Antamina, and Genki)
 	var mana_cost := float(spec.get("mana_cost", 0.0))
 	if mana_cost > 0.0:
 		var cast_win := int(spec.get("cast_window_ms", 0))
-		var paid_ms := int(attacker.get("kame_cast_paid_ms", 0))
+		var cast_key := str(spec.get("cast_key", "kame_cast_paid_ms"))
+		var paid_ms := int(attacker.get(cast_key, 0))
 		var already_paid := cast_win > 0 and paid_ms > 0 and (now_ms - paid_ms) <= cast_win
+		if already_paid and action == "antamina" and int(attacker.get("antamina_shots_left", 0)) <= 0:
+			already_paid = false
+		if already_paid and action == "genki":
+			var hit_map: Dictionary = attacker.get("genki_hit_targets", {})
+			if hit_map.has("%s:%s" % [target_kind, target_id]):
+				return
 		if not already_paid:
 			if float(attacker.get("mana", 0.0)) + 0.001 < mana_cost:
 				return
 			attacker["mana"] = maxf(0.0, float(attacker["mana"]) - mana_cost)
 			if cast_win > 0:
-				attacker["kame_cast_paid_ms"] = now_ms
+				attacker[cast_key] = now_ms
+				if action == "antamina":
+					attacker["antamina_shots_left"] = 7
+				elif action == "genki":
+					attacker["genki_hit_targets"] = {}
+		if action == "antamina":
+			attacker["antamina_shots_left"] = maxi(0, int(attacker.get("antamina_shots_left", 1)) - 1)
+		elif action == "genki":
+			var gm: Dictionary = attacker.get("genki_hit_targets", {})
+			gm["%s:%s" % [target_kind, target_id]] = true
+			attacker["genki_hit_targets"] = gm
 
 	# Authoritative distance & continuous terrain LOS check
 	var is_ranged := bool(spec.get("ranged", false))
@@ -640,7 +713,7 @@ func _handle_combat_action(z: Dictionary, attacker_id: String, pkt: Dictionary) 
 		var max_range := float(spec.get("pvp_range", 280.0))
 		if not unlimited_range and dist > max_range:
 			return
-		if bool(spec.get("check_los", false)) and _terrain_blocks_segment(a_pos, t_pos):
+		if bool(spec.get("check_los", false)) and _terrain_blocks_segment_for_map(str(z.get("map_id", "rocky_plateau")), a_pos, t_pos):
 			return
 
 	var min_dmg := float(spec["min_dmg"])
@@ -684,9 +757,11 @@ func _switch_peer_zone(pid: int, target_map: String, target_zone: int) -> void:
 	var pinfo: Dictionary = peers[pid]
 	var uid := str(pinfo["user_id"])
 	var old_key := str(pinfo.get("zone_key", ""))
+	var old_map := ""
 	var preserved_player: Dictionary = {}
 	if zones.has(old_key):
 		var old_z: Dictionary = zones[old_key]
+		old_map = str(old_z.get("map_id", ""))
 		if old_z["players"].has(uid):
 			preserved_player = old_z["players"][uid].duplicate(true)
 			old_z["players"].erase(uid)
@@ -699,6 +774,8 @@ func _switch_peer_zone(pid: int, target_map: String, target_zone: int) -> void:
 	pinfo["zone_key"] = str(new_z["key"])
 	if not (pid in new_z["peer_ids"]):
 		new_z["peer_ids"].append(pid)
+	var default_sx := 1200.0 if target_map == "cell_arena" else 560.0
+	var default_sy := _terrain_surface_y_for_map(target_map, default_sx)
 	if preserved_player.is_empty():
 		var init_z_mana := PLAYER_MAX_MANA if str(pinfo["character_id"]) == "songoku" else 0.0
 		preserved_player = {
@@ -706,8 +783,8 @@ func _switch_peer_zone(pid: int, target_map: String, target_zone: int) -> void:
 			"kind": "player",
 			"display_name": str(pinfo["display_name"]),
 			"character_id": str(pinfo["character_id"]),
-			"x": 560.0,
-			"y": _terrain_surface_y_at(560.0),
+			"x": default_sx,
+			"y": default_sy,
 			"facing_left": false,
 			"act": "idle",
 			"hp": PLAYER_MAX_HP,
@@ -719,6 +796,10 @@ func _switch_peer_zone(pid: int, target_map: String, target_zone: int) -> void:
 			"respawn_timer_s": 0.0,
 			"kame_cast_paid_ms": 0,
 		}
+	elif old_map != target_map:
+		preserved_player["x"] = default_sx
+		preserved_player["y"] = default_sy
+		preserved_player["act"] = "idle"
 	new_z["players"][uid] = preserved_player
 	_send_to_peer(pid, {"op": "zone_joined", "map_id": target_map, "zone_id": target_zone})
 	_emit_zone_snapshot(new_z)
@@ -750,10 +831,12 @@ func _step_active_zones(dt: float) -> void:
 			if not bool(p["alive"]):
 				p["respawn_timer_s"] = maxf(0.0, float(p["respawn_timer_s"]) - dt)
 				if float(p["respawn_timer_s"]) <= 0.0:
+					var rmap := str(z.get("map_id", "rocky_plateau"))
+					var rsx := 1200.0 if rmap == "cell_arena" else 560.0
 					p["alive"] = true
 					p["hp"] = float(p["max_hp"])
-					p["x"] = 560.0
-					p["y"] = _terrain_surface_y_at(560.0)
+					p["x"] = rsx
+					p["y"] = _terrain_surface_y_for_map(rmap, rsx)
 					p["act"] = "idle"
 		# Step monster respawns
 		for m_val in z["monsters"].values():
