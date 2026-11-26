@@ -2,7 +2,7 @@
   "schema": "generate2dsprite.animation_clips.v2",
   "source_manifest": {
     "path": "../source/clips-manifest.json",
-    "file_sha256": "4b5621a4f3d787d642f2a03f12a48b1495007209d2d29818dd5bda9fae7c7543",
+    "file_sha256": "a1a3b4da80919c33a68f5c1a5477f4ab5ebf521b8c23a11d0cbeb37a331adc23",
     "copy": "source-manifest.json"
   },
   "frame_size": [
@@ -3997,6 +3997,126 @@
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-195.png"
+    },
+    {
+      "index": 196,
+      "name": "genki_00",
+      "source": {
+        "path": "../source/raw_frames/genki_00.png",
+        "file_sha256": "b7bde883f419b5257a48cd666d8a5add76c4f1a0a6cf0edbd83c4e8c65238a72",
+        "bytes": 14227,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "22bceb4acbc1a8013d567547bac21dae88a7204d38e344056d13a273550338f0",
+      "transparent_pixel_count": 78312,
+      "visible_pixel_count": 4632,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-196.png"
+    },
+    {
+      "index": 197,
+      "name": "genki_01",
+      "source": {
+        "path": "../source/raw_frames/genki_01.png",
+        "file_sha256": "9e098c6fe32f3200b7cfb9de23c00cf81aff28efbfea158250c3f566de1f0216",
+        "bytes": 13736,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "85edcf78cbe4aca9fcf4f5e311a816617d0173917b3125e7a1e0c302928ff05d",
+      "transparent_pixel_count": 78491,
+      "visible_pixel_count": 4453,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-197.png"
+    },
+    {
+      "index": 198,
+      "name": "genki_02",
+      "source": {
+        "path": "../source/raw_frames/genki_02.png",
+        "file_sha256": "cf4defd0f8b92decd72ac824a4277e6b25106a98999e22a71d7e5f076a96a00e",
+        "bytes": 15152,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "2f02730c6900c5c372a47b8f098230fb18df503c73f584c6f42229d1218f98d5",
+      "transparent_pixel_count": 78326,
+      "visible_pixel_count": 4618,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-198.png"
+    },
+    {
+      "index": 199,
+      "name": "genki_03",
+      "source": {
+        "path": "../source/raw_frames/genki_03.png",
+        "file_sha256": "780fc625c4304ca59dc3360006b9a73596b53550cc56e4bd1e43f02aa4f44a81",
+        "bytes": 16834,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "c6bb9e5a7dfb73cc014df58a8907fc6033d452069df78b0fe21c1fae2985fe3d",
+      "transparent_pixel_count": 77767,
+      "visible_pixel_count": 5177,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-199.png"
+    },
+    {
+      "index": 200,
+      "name": "genki_04",
+      "source": {
+        "path": "../source/raw_frames/genki_04.png",
+        "file_sha256": "010fb60662196f643e3f815b8e70a7dfc8747bd4383649238b90f570ad8f2d0c",
+        "bytes": 19135,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "52b8cdd7ccbfdcddf2b7e29168512bb1905f5d1b16c525aad1da4616bce056bc",
+      "transparent_pixel_count": 76723,
+      "visible_pixel_count": 6221,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-200.png"
+    },
+    {
+      "index": 201,
+      "name": "genki_05",
+      "source": {
+        "path": "../source/raw_frames/genki_05.png",
+        "file_sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
+        "bytes": 16383,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "5b7dbafe00847716c4a97103ac5acf0c1c80e5872f6c2f151f5f68ea3f789ae3",
+      "transparent_pixel_count": 77613,
+      "visible_pixel_count": 5331,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-201.png"
     }
   ],
   "clips": {
@@ -9907,6 +10027,171 @@
         "alpha_mae": 9.137008,
         "changed_visible_pixels": 6868
       }
+    },
+    "genki_cast": {
+      "frames": [
+        196,
+        197,
+        198,
+        199,
+        200,
+        201
+      ],
+      "duration_ms": [
+        83,
+        84,
+        100,
+        133,
+        100,
+        233
+      ],
+      "loop": false,
+      "total_duration_ms": 733,
+      "nominal_fps": null,
+      "average_fps": 8.185538881309686,
+      "loop_policy": "oneshot",
+      "timing_source": "ticks",
+      "ticks": [
+        5,
+        5,
+        6,
+        8,
+        6,
+        14
+      ],
+      "tick_hz": 60,
+      "events_ms": [
+        {
+          "name": "custom:genki_throw",
+          "at_ms": 400,
+          "at": 4,
+          "position": 4,
+          "at_tick": 24
+        }
+      ],
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          5,
+          6,
+          8,
+          6,
+          14
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 43.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "holds": [],
+      "preview": {
+        "file": "clips/clip-34.webp",
+        "decoded_frames": [
+          {
+            "index": 0,
+            "start_ms": 0,
+            "duration_ms": 83,
+            "clip_positions": [
+              0
+            ]
+          },
+          {
+            "index": 1,
+            "start_ms": 83,
+            "duration_ms": 84,
+            "clip_positions": [
+              1
+            ]
+          },
+          {
+            "index": 2,
+            "start_ms": 167,
+            "duration_ms": 100,
+            "clip_positions": [
+              2
+            ]
+          },
+          {
+            "index": 3,
+            "start_ms": 267,
+            "duration_ms": 133,
+            "clip_positions": [
+              3
+            ]
+          },
+          {
+            "index": 4,
+            "start_ms": 400,
+            "duration_ms": 100,
+            "clip_positions": [
+              4
+            ]
+          },
+          {
+            "index": 5,
+            "start_ms": 500,
+            "duration_ms": 233,
+            "clip_positions": [
+              5
+            ]
+          }
+        ],
+        "decoded_frame_count": 6,
+        "total_duration_ms": 733,
+        "native_loop_count": 1,
+        "timeline_verified": true,
+        "alpha_and_visible_rgb_exact": true,
+        "hidden_rgb_guaranteed": false,
+        "lossless": true,
+        "file_sha256": "6ebda6aec23177bbfdc4dfd66b80db66fe244b2560effe8d8a7df4cf3c0da510"
+      },
+      "transitions": [
+        {
+          "from_position": 0,
+          "to_position": 1,
+          "premultiplied_rgb_mae": 5.237288,
+          "alpha_mae": 6.440791,
+          "changed_visible_pixels": 5588
+        },
+        {
+          "from_position": 1,
+          "to_position": 2,
+          "premultiplied_rgb_mae": 5.914657,
+          "alpha_mae": 5.789026,
+          "changed_visible_pixels": 5474
+        },
+        {
+          "from_position": 2,
+          "to_position": 3,
+          "premultiplied_rgb_mae": 10.796561,
+          "alpha_mae": 16.73376,
+          "changed_visible_pixels": 7619
+        },
+        {
+          "from_position": 3,
+          "to_position": 4,
+          "premultiplied_rgb_mae": 11.827397,
+          "alpha_mae": 16.921296,
+          "changed_visible_pixels": 8451
+        },
+        {
+          "from_position": 4,
+          "to_position": 5,
+          "premultiplied_rgb_mae": 10.969184,
+          "alpha_mae": 11.282914,
+          "changed_visible_pixels": 7609
+        }
+      ],
+      "last_to_first": {
+        "applies_to_playback": false,
+        "premultiplied_rgb_mae": 10.378786,
+        "alpha_mae": 15.196578,
+        "changed_visible_pixels": 7453
+      }
     }
   },
   "states": {
@@ -10053,7 +10338,7 @@
     "requested_scale": 1,
     "annotated_with_shared_root": true,
     "not_a_runtime_atlas": true,
-    "file_sha256": "f8f0eb6c8eac9eaa9a2a3a82968bf5ce7f8d70ea9348d343b5dab798ecc7dcd4"
+    "file_sha256": "82f6c426db3432cd731af625be07edc9de020d32d1d35fbfb7de99c1898329fc"
   },
   "review": {
     "scale": 1,
@@ -10403,6 +10688,16 @@
         ],
         "positions_shown": 8,
         "truncated": false
+      },
+      "genki_cast": {
+        "file": "review/filmstrip-34.png",
+        "backgrounds": [
+          "light",
+          "dark",
+          "checker"
+        ],
+        "positions_shown": 6,
+        "truncated": false
       }
     },
     "onion": {
@@ -10608,6 +10903,12 @@
         "file": "review/onion-33.png",
         "background": "checker",
         "positions_shown": 8,
+        "truncated": false
+      },
+      "genki_cast": {
+        "file": "review/onion-34.png",
+        "background": "checker",
+        "positions_shown": 6,
         "truncated": false
       }
     },
@@ -11198,9 +11499,26 @@
           ],
           "mirrored_offset_px": 0,
           "turn_slide_px": 2.0
+        },
+        {
+          "clip": "genki_cast",
+          "frame": 196,
+          "anchor_screen_x": 1368,
+          "rows": [
+            [
+              3232,
+              3520
+            ],
+            [
+              3536,
+              3824
+            ]
+          ],
+          "mirrored_offset_px": 0,
+          "turn_slide_px": 2.0
         }
       ],
-      "clips_shown": 34,
+      "clips_shown": 35,
       "truncated": false
     }
   },
@@ -11225,13 +11543,13 @@
       {
         "id": "png_byte_copy",
         "status": "pass",
-        "value": 196,
+        "value": 202,
         "threshold": null
       },
       {
         "id": "webp_timeline",
         "status": "pass",
-        "value": 34,
+        "value": 35,
         "threshold": null
       },
       {
@@ -11268,8 +11586,8 @@
     "inputs": [
       {
         "path": "../source/clips-manifest.json",
-        "sha256": "4b5621a4f3d787d642f2a03f12a48b1495007209d2d29818dd5bda9fae7c7543",
-        "bytes": 31090
+        "sha256": "a1a3b4da80919c33a68f5c1a5477f4ab5ebf521b8c23a11d0cbeb37a331adc23",
+        "bytes": 31989
       },
       {
         "path": "../source/raw_frames/idle_base_00.png",
@@ -12250,6 +12568,36 @@
         "path": "../source/raw_frames/agu_07.png",
         "sha256": "98ffd3a9ccdd718849e2d3dde2e82de3e36ad79ff5e612d40668463bbcfbcd71",
         "bytes": 18722
+      },
+      {
+        "path": "../source/raw_frames/genki_00.png",
+        "sha256": "b7bde883f419b5257a48cd666d8a5add76c4f1a0a6cf0edbd83c4e8c65238a72",
+        "bytes": 14227
+      },
+      {
+        "path": "../source/raw_frames/genki_01.png",
+        "sha256": "9e098c6fe32f3200b7cfb9de23c00cf81aff28efbfea158250c3f566de1f0216",
+        "bytes": 13736
+      },
+      {
+        "path": "../source/raw_frames/genki_02.png",
+        "sha256": "cf4defd0f8b92decd72ac824a4277e6b25106a98999e22a71d7e5f076a96a00e",
+        "bytes": 15152
+      },
+      {
+        "path": "../source/raw_frames/genki_03.png",
+        "sha256": "780fc625c4304ca59dc3360006b9a73596b53550cc56e4bd1e43f02aa4f44a81",
+        "bytes": 16834
+      },
+      {
+        "path": "../source/raw_frames/genki_04.png",
+        "sha256": "010fb60662196f643e3f815b8e70a7dfc8747bd4383649238b90f570ad8f2d0c",
+        "bytes": 19135
+      },
+      {
+        "path": "../source/raw_frames/genki_05.png",
+        "sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
+        "bytes": 16383
       }
     ],
     "outputs": [
@@ -13234,6 +13582,36 @@
         "bytes": 18722
       },
       {
+        "path": "frames/frame-196.png",
+        "sha256": "b7bde883f419b5257a48cd666d8a5add76c4f1a0a6cf0edbd83c4e8c65238a72",
+        "bytes": 14227
+      },
+      {
+        "path": "frames/frame-197.png",
+        "sha256": "9e098c6fe32f3200b7cfb9de23c00cf81aff28efbfea158250c3f566de1f0216",
+        "bytes": 13736
+      },
+      {
+        "path": "frames/frame-198.png",
+        "sha256": "cf4defd0f8b92decd72ac824a4277e6b25106a98999e22a71d7e5f076a96a00e",
+        "bytes": 15152
+      },
+      {
+        "path": "frames/frame-199.png",
+        "sha256": "780fc625c4304ca59dc3360006b9a73596b53550cc56e4bd1e43f02aa4f44a81",
+        "bytes": 16834
+      },
+      {
+        "path": "frames/frame-200.png",
+        "sha256": "010fb60662196f643e3f815b8e70a7dfc8747bd4383649238b90f570ad8f2d0c",
+        "bytes": 19135
+      },
+      {
+        "path": "frames/frame-201.png",
+        "sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
+        "bytes": 16383
+      },
+      {
         "path": "clips/clip-00.webp",
         "sha256": "19a83e00f8406c2955d7d4ccf2f963caedfe5ad435f51f190233e7d40ce106c3",
         "bytes": 95876
@@ -13404,9 +13782,14 @@
         "bytes": 108890
       },
       {
+        "path": "clips/clip-34.webp",
+        "sha256": "6ebda6aec23177bbfdc4dfd66b80db66fe244b2560effe8d8a7df4cf3c0da510",
+        "bytes": 76966
+      },
+      {
         "path": "contact-sheet.png",
-        "sha256": "f8f0eb6c8eac9eaa9a2a3a82968bf5ce7f8d70ea9348d343b5dab798ecc7dcd4",
-        "bytes": 2894749
+        "sha256": "82f6c426db3432cd731af625be07edc9de020d32d1d35fbfb7de99c1898329fc",
+        "bytes": 2988112
       },
       {
         "path": "review/filmstrip-00.png",
@@ -13749,9 +14132,19 @@
         "bytes": 144910
       },
       {
+        "path": "review/filmstrip-34.png",
+        "sha256": "c8c64bf0a16dcfa371147912ba610ed0f688c72ff94fe20e34869e670f300c2b",
+        "bytes": 287748
+      },
+      {
+        "path": "review/onion-34.png",
+        "sha256": "0f9353e86509cff21e3f2cbdadbcddbbe0004f74aeb045ccd23b6fdaeab0c41a",
+        "bytes": 105942
+      },
+      {
         "path": "review/turn-test.png",
-        "sha256": "f7461fda8e0bb90805893de0071148ef6793cd031b36424d821cd465d1cbc8b2",
-        "bytes": 1050226
+        "sha256": "aafb020a8e500905fe3268acae54c247bc4d556789272791aed1b69c14193ce0",
+        "bytes": 1075897
       }
     ],
     "tool": {

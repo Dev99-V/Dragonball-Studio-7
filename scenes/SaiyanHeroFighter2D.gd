@@ -67,6 +67,13 @@ const KAME_BEAM_SCALE_MUL: float = 1.20
 const KAME_HOLD_S: float = 0.0
 const KAME_FADE_S: float = 0.18
 const KAME_CHARGE_SPEED_SCALE: float = 1.00
+const GENKI_MANA_COST: float = 100.0
+const GENKI_COOLDOWN_S: float = 15.0
+const GENKI_CHARGE_DURATION_S: float = 5.0
+const GENKI_AOE_RADIUS_PX: float = 700.0
+const GENKI_BASE_DAMAGE: float = 400.0
+const GENKI_PER_PLAYER_BONUS: float = 5.0
+const GENKI_MAX_BONUS_PLAYERS: int = 20
 const HERO_MAX_MANA: float = 100.0
 const TELEPORT_STATIC_COST: float = 75.0
 const TELEPORT_DASH_COST: float = 25.0
@@ -136,6 +143,8 @@ var recover_cooldown_s: float = 0.0
 var flurry_cooldown_s: float = 0.0      # Flurry kick cooldown (applies hard stun + yellow stars ring)
 var atomic_cooldown_s: float = 0.0      # Atomic blast 12s cooldown
 var kame_cooldown_s: float = 0.0        # Kamehameha brief recast lock (250 Mana gated)
+var genki_cooldown_s: float = 0.0       # Genki Spirit Bomb 15s cooldown (air-only, 100 MP, 5s charge)
+var genki_casting: bool = false         # Active during 5s overhead charge & downward throw (CC-immune, mid-air suspended)
 
 # Teleport mid-clip pending state
 var pending_teleport_mode: String = ""   # "static" | "dash_ground" | "dash_air"
@@ -145,6 +154,14 @@ var pending_teleport_relocated: bool = false
 
 func is_hero_songoku() -> bool:
 	return true
+
+
+func get_flight_speed_px_s() -> float:
+	return FLIGHT_SPEED_PX_S
+
+
+func get_combo_link_cooldown_s() -> float:
+	return COMBO_LINK_COOLDOWN_S
 
 
 func is_in_combat() -> bool:
@@ -242,6 +259,8 @@ func reset_hero_state() -> void:
 	flurry_cooldown_s = 0.0
 	atomic_cooldown_s = 0.0
 	kame_cooldown_s = 0.0
+	genki_cooldown_s = 0.0
+	genki_casting = false
 	pending_teleport_mode = ""
 	pending_teleport_relocated = false
 	hero_state_changed.emit()
@@ -320,7 +339,11 @@ func step_hero_timers(delta: float, has_move_input: bool, on_ground: bool, holdi
 	stamina = minf(max_stamina, stamina + STAMINA_REGEN_PER_S * delta)
 	var prev_ki := ki
 	var prev_ki_ex := ki_exhausted
-	if flight_state == "flying" or flight_state == "hovering":
+	if genki_casting:
+		# Mid-air Genki channel: suspend altitude cleanly without draining Flight KI or triggering 3s auto-drop!
+		flight_state = "hovering"
+		hover_timer_s = HOVER_TIMEOUT_S
+	elif flight_state == "flying" or flight_state == "hovering":
 		# Orange KI flight resource: drains 5 KI/s while flying/hovering; hitting 0 forces immediate fall!
 		ki = maxf(0.0, ki - KI_FLY_DRAIN_PER_S * delta)
 		if ki <= 0.0:
@@ -359,6 +382,8 @@ func step_hero_timers(delta: float, has_move_input: bool, on_ground: bool, holdi
 		atomic_cooldown_s = maxf(0.0, atomic_cooldown_s - delta)
 	if kame_cooldown_s > 0.0:
 		kame_cooldown_s = maxf(0.0, kame_cooldown_s - delta)
+	if genki_cooldown_s > 0.0:
+		genki_cooldown_s = maxf(0.0, genki_cooldown_s - delta)
 
 	if jump_land_hold_s > 0.0:
 		jump_land_hold_s = maxf(0.0, jump_land_hold_s - delta)
@@ -397,7 +422,9 @@ func step_hero_timers(delta: float, has_move_input: bool, on_ground: bool, holdi
 			hover_timer_s = HOVER_TIMEOUT_S
 			hero_state_changed.emit()
 	elif flight_state == "hovering":
-		if not is_ssj:
+		if genki_casting:
+			hover_timer_s = HOVER_TIMEOUT_S
+		elif not is_ssj:
 			flight_state = "falling"
 			hover_timer_s = 0.0
 			hero_state_changed.emit()
@@ -607,6 +634,28 @@ func trigger_kamehameha(current_mana: float) -> bool:
 		hover_timer_s = HOVER_TIMEOUT_S
 	hero_state_changed.emit()
 	return true
+
+
+func is_genki_cc_immune() -> bool:
+	return genki_casting
+
+
+func trigger_genki(current_mana: float, is_airborne_now: bool) -> bool:
+	if not is_ssj or not is_airborne_now or genki_casting or genki_cooldown_s > 0.0 or current_mana + 0.001 < GENKI_MANA_COST:
+		return false
+	genki_cooldown_s = GENKI_COOLDOWN_S
+	genki_casting = true
+	flight_state = "hovering"
+	hover_timer_s = HOVER_TIMEOUT_S
+	enter_combat()
+	hero_state_changed.emit()
+	return true
+
+
+func cancel_genki_on_death() -> void:
+	if genki_casting:
+		genki_casting = false
+		hero_state_changed.emit()
 
 
 func try_consume_stamina(cost: float) -> bool:

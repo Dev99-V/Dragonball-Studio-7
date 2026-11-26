@@ -8,6 +8,7 @@ signal player_state_changed()
 signal pointer_changed(kind: String)
 signal combat_action_emitted(action_kind: String, target_id: String, target_kind: String, origin_pos: Vector2, facing_left: bool, damage: float)
 signal player_pve_damage_emitted(damage: float, new_hp: float, alive: bool)
+signal pk_mode_changed(enabled: bool)
 
 const UtilityAIControllerScript := preload("res://scenes/UtilityAIController.gd")
 const OverheadBarsDrawScript := preload("res://scenes/runtime/OverheadBarsDraw.gd")
@@ -115,6 +116,7 @@ var _base_lock_notice_cd_s: float = 0.0
 # Phase 2 Son Goku & Tapion Active Skills & Independent FX Runtime
 var _songoku_fx_frames: SpriteFrames = null
 var _tapion_fx_frames: SpriteFrames = null
+var _genki_fx_frames: SpriteFrames = null
 var _hero_skill_projectiles: Array[Dictionary] = []   # Atomic bolts (23/25)
 var _hero_kame_beams: Array[Dictionary] = []          # Kamehameha beams (31/32)
 var _hero_flurry_hits_fired: Array[int] = []
@@ -131,6 +133,31 @@ var _hero_kame_charge_elapsed_s: float = 0.0
 var _hero_kame_mode: String = "ground_horiz"
 var _hero_kame_target: Dictionary = {}
 var _hero_barrier_burst_s: float = 0.0
+
+# Son Goku Genki (Spirit Bomb) runtime constants & state (Owner 2026-11-26)
+const GENKI_BASE_DAMAGE: float = 400.0
+const GENKI_PER_PLAYER_BONUS: float = 5.0
+const GENKI_MAX_CONTRIB_PLAYERS: int = 20
+const GENKI_AOE_RADIUS_PX: float = 700.0
+const GENKI_CHARGE_DURATION_S: float = 5.0
+const GENKI_THROW_DURATION_S: float = 0.48
+const GENKI_THROW_WINDUP_S: float = 0.12
+const GENKI_THROW_RELEASE_S: float = 0.14
+const GENKI_THROW_ARC_END_S: float = 0.28
+const GENKI_MIN_LAND_OFFSET_PX: float = 50.0
+const GENKI_MAX_LAND_OFFSET_PX: float = 200.0
+const GENKI_DEFAULT_LAND_OFFSET_PX: float = 188.0
+const GENKI_ORB_FLIGHT_SPEED_PX_S: float = 760.0
+var _genki_phase: String = "" # "", "charging", "throwing"
+var _genki_elapsed_s: float = 0.0
+var _genki_throw_released: bool = false
+var _genki_locked_facing_x: float = 1.0
+var _genki_contrib_count: int = 0
+var _genki_wisp_spawn_accum_s: float = 0.0
+var _genki_cc_notice_cd_s: float = 0.0
+var _genki_wisps: Array[Dictionary] = []
+var _genki_projectiles: Array[Dictionary] = []
+var _genki_explosions: Array[Dictionary] = []
 
 var slots: Array[Dictionary] = []
 var boss_slot: Dictionary = {}
@@ -163,10 +190,17 @@ var _last_tap_slot_id: String = ""
 var _last_tap_item: Node2D = null
 var _last_tap_time_s: float = -99.0
 
+const TAPION_SKILL_MAX_RANGE_PX := 1175.0 # Exact K70E 2460x1080 red-line horizontal cast radius (AGENTS.md Điều 7.7)
+
+var pk_tan_sat_enabled: bool = false
+var pk_special_mode_override: bool = false
+
 var auto_approach_active: bool = false
 var _auto_approach_kind: String = ""
 var _auto_approach_slot_id: String = ""
 var _auto_approach_item: Node2D = null
+var _auto_approach_skill_action: String = ""
+var _auto_approach_range_px: float = 0.0
 var _auto_approach_timeout_s: float = 0.0
 
 # Auto-Battle Flight KI hysteresis (Owner v10.2):
@@ -238,6 +272,15 @@ func clear_all() -> void:
 	_explosion_nodes.clear()
 	hit_impacts.clear()
 	floating_texts.clear()
+	_genki_phase = ""
+	_genki_elapsed_s = 0.0
+	_genki_throw_released = false
+	_genki_contrib_count = 0
+	_genki_wisp_spawn_accum_s = 0.0
+	_genki_cc_notice_cd_s = 0.0
+	_genki_wisps.clear()
+	_genki_projectiles.clear()
+	_genki_explosions.clear()
 	player_hit_flash_s = 0.0
 	player_hit_shake_s = 0.0
 	pointer_pulse_s = 0.0
@@ -259,7 +302,76 @@ func cancel_auto_approach() -> void:
 	_auto_approach_kind = ""
 	_auto_approach_slot_id = ""
 	_auto_approach_item = null
+	_auto_approach_skill_action = ""
+	_auto_approach_range_px = 0.0
 	_auto_approach_timeout_s = 0.0
+
+
+func set_pk_tan_sat_enabled(enabled: bool) -> void:
+	if pk_tan_sat_enabled == enabled:
+		return
+	pk_tan_sat_enabled = enabled
+	if not enabled and auto_approach_active and not _auto_approach_slot_id.is_empty():
+		var ap_slot := _find_slot_by_id(_auto_approach_slot_id)
+		if not ap_slot.is_empty() and not can_attack_slot(ap_slot):
+			cancel_auto_approach()
+	refresh_pointer_valid()
+	pk_mode_changed.emit(pk_tan_sat_enabled)
+	player_state_changed.emit()
+	if arena != null:
+		arena.queue_redraw()
+
+
+func set_pk_special_mode_override(enabled: bool) -> void:
+	if pk_special_mode_override == enabled:
+		return
+	pk_special_mode_override = enabled
+	refresh_pointer_valid()
+	player_state_changed.emit()
+	if arena != null:
+		arena.queue_redraw()
+
+
+func is_remote_player_hostile(slot: Dictionary) -> bool:
+	if slot.is_empty() or not bool(slot.get("is_remote_player", false)):
+		return false
+	return pk_tan_sat_enabled or pk_special_mode_override or bool(slot.get("pk_tan_sat", false))
+
+
+func can_attack_slot(slot: Dictionary) -> bool:
+	if slot.is_empty() or not bool(slot.get("alive", false)) or not is_instance_valid(slot.get("node")):
+		return false
+	if bool(slot.get("is_remote_player", false)):
+		return is_remote_player_hostile(slot)
+	return true
+
+
+func is_target_in_tapion_skill_range(tgt: Dictionary, range_px: float = TAPION_SKILL_MAX_RANGE_PX) -> bool:
+	if tgt.is_empty() or not can_attack_slot(tgt) or arena == null or arena.player_node == null:
+		return false
+	return absf(_get_slot_core_pos(tgt).x - _get_player_core_pos().x) <= range_px
+
+
+func start_skill_auto_approach(action_name: String, tgt: Dictionary, range_px: float = TAPION_SKILL_MAX_RANGE_PX) -> void:
+	if tgt.is_empty() or not can_attack_slot(tgt) or arena == null or arena.player_node == null:
+		return
+	var sid := str(tgt.get("id", ""))
+	var already_same := auto_approach_active and _auto_approach_kind == "skill" and _auto_approach_slot_id == sid and _auto_approach_skill_action == action_name
+	auto_approach_active = true
+	_auto_approach_kind = "skill"
+	_auto_approach_slot_id = sid
+	_auto_approach_item = null
+	_auto_approach_skill_action = action_name
+	_auto_approach_range_px = range_px
+	_auto_approach_timeout_s = 10.0
+	if not already_same:
+		floating_texts.append({
+			"pos": arena.player_node.position + Vector2(0.0, -142.0),
+			"text": "Ngoài tầm — tiến lại gần!",
+			"color": Color(1.0, 0.86, 0.34, 1.0),
+			"elapsed_s": 0.0,
+			"duration_s": 0.85,
+		})
 
 
 func reset_auto_battle_ki_lock() -> void:
@@ -296,6 +408,15 @@ func start_field(spawn_player_immediately: bool = false, spawn_monsters: bool = 
 	_hero_kame_charge_elapsed_s = 0.0
 	_hero_kame_target = {}
 	_hero_barrier_burst_s = 0.0
+	_genki_phase = ""
+	_genki_elapsed_s = 0.0
+	_genki_throw_released = false
+	_genki_contrib_count = 0
+	_genki_wisp_spawn_accum_s = 0.0
+	_genki_cc_notice_cd_s = 0.0
+	_genki_wisps.clear()
+	_genki_projectiles.clear()
+	_genki_explosions.clear()
 	if arena != null and arena.player_node != null and _is_hero_songoku_node(arena.player_node):
 		player_max_mana = 100.0
 		player_mana = 100.0
@@ -387,6 +508,9 @@ func _create_and_spawn_slot(spec: Dictionary, is_flying: bool) -> void:
 		"orbit_dir": 1.0 if (slots.size() % 2 == 0) else -1.0,
 		"hit_flash_s": 0.0,
 		"hit_shake_s": 0.0,
+		"kentai_timer_s": 0.0,
+		"an_nguc_stacks": 0,
+		"_local_dead_time_s": -999.0,
 		"combat_state": "peace",
 		"aggro_target_id": "",
 		"committed_target_id": "",
@@ -466,6 +590,9 @@ func _spawn_slot_monster(slot: Dictionary, cid: String) -> void:
 	slot["turn_lock_s"] = 0.0
 	slot["hit_flash_s"] = 0.0
 	slot["hit_shake_s"] = 0.0
+	slot["kentai_timer_s"] = 0.0
+	slot["an_nguc_stacks"] = 0
+	slot["_local_dead_time_s"] = -999.0
 	if is_boss:
 		inst.name = "FieldBoss_drum"
 		inst.z_index = int(arena.Z_LAYER_BOSS)
@@ -533,6 +660,9 @@ func step(delta: float) -> void:
 		var sb_t: float = float(s_sb.get("shield_break_icon_timer_s", 0.0))
 		if sb_t > 0.0:
 			s_sb["shield_break_icon_timer_s"] = maxf(0.0, sb_t - delta)
+		var kt_t: float = float(s_sb.get("kentai_timer_s", 0.0))
+		if kt_t > 0.0:
+			s_sb["kentai_timer_s"] = maxf(0.0, kt_t - delta)
 	_step_boss_spawn_schedule(delta)
 	for slot in slots:
 		_step_slot(slot, delta)
@@ -703,6 +833,9 @@ func spawn_boss(boss_cid: String = "drum", forced_spawn_x: float = -999999.0) ->
 		"orbit_dir": -1.0,
 		"hit_flash_s": 0.0,
 		"hit_shake_s": 0.0,
+		"kentai_timer_s": 0.0,
+		"an_nguc_stacks": 0,
+		"_local_dead_time_s": -999.0,
 		"combat_state": "peace",
 		"aggro_target_id": "",
 		"committed_target_id": "",
@@ -886,6 +1019,9 @@ func _face_player_toward_x(target_x: float) -> void:
 	var pnode := arena.player_node as Node2D
 	if pnode == null:
 		return
+	# Lock Tapion's facing during entire Antamina charge/fire/end (Owner 2026-11-26)
+	if pnode.has_method(&"is_antamina_active") and bool(pnode.call(&"is_antamina_active")):
+		return
 	var dx: float = target_x - pnode.position.x
 	if absf(dx) <= 4.0:
 		return
@@ -1012,8 +1148,12 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	var melee_r: float = _get_player_melee_strike_edge_px()
 	var is_busy: bool = bool(arena.call("_is_player_action_playing"))
 	var goku_is_ssj: bool = bool(p_node.get("is_ssj")) if is_goku else true
-	var can_kame: bool = (float(p_node.get("mahasenko_cooldown_s")) <= 0.0) if is_tapion_auto else (is_goku and goku_is_ssj and player_mana + 0.001 >= 80.0 and float(p_node.get("kame_cooldown_s")) <= 0.0)
-	var can_atomic: bool = (float(p_node.get("kentaima_cooldown_s")) <= 0.0 or (float(p_node.get("antamina_cooldown_s")) <= 0.0 and player_mana + 0.001 >= 100.0)) if is_tapion_auto else (is_goku and goku_is_ssj and float(p_node.get("atomic_cooldown_s")) <= 0.0)
+	var in_tapion_range: bool = absf(m_core.x - p_core.x) <= TAPION_SKILL_MAX_RANGE_PX
+	var tap_can_maha: bool = is_tapion_auto and in_tapion_range and float(p_node.get("mahasenko_cooldown_s")) <= 0.0
+	var tap_can_kentai: bool = is_tapion_auto and in_tapion_range and float(p_node.get("kentaima_cooldown_s")) <= 0.0
+	var tap_can_anta: bool = is_tapion_auto and float(p_node.get("antamina_cooldown_s")) <= 0.0 and player_mana + 0.001 >= 100.0
+	var can_kame: bool = tap_can_maha if is_tapion_auto else (is_goku and goku_is_ssj and player_mana + 0.001 >= 80.0 and float(p_node.get("kame_cooldown_s")) <= 0.0)
+	var can_atomic: bool = (tap_can_kentai or tap_can_anta) if is_tapion_auto else (is_goku and goku_is_ssj and float(p_node.get("atomic_cooldown_s")) <= 0.0)
 	var can_recover: bool = is_goku and goku_is_ssj and bool(arena.call("is_player_grounded_for_recover")) and float(p_node.get("recover_cooldown_s")) <= 0.0 and float(p_node.get("ki")) < float(p_node.get("max_ki")) - 5.0
 	var can_fly_auto: bool = (bool(p_node.call(&"can_fly")) and (not _auto_ki_ground_lock)) if is_goku else false
 	var dec: Dictionary = UtilityAIControllerScript.evaluate_hero_auto({
@@ -1051,7 +1191,7 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	elif intent == "atomic_blast":
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 		if is_tapion_auto:
-			var tap_act := "kentaima" if float(p_node.get("kentaima_cooldown_s")) <= 0.0 else "antamina"
+			var tap_act := "kentaima" if tap_can_kentai else "antamina"
 			arena.call("_on_touch_action", tap_act)
 		else:
 			request_player_atomic_blast()
@@ -1129,9 +1269,37 @@ func _step_auto_approach(delta: float) -> void:
 		arena.call("step_player_movement", delta, move_dir, 0, jump_req, false, false, Vector2.ZERO)
 		return
 
+	if _auto_approach_kind == "skill":
+		var tgt_s := _find_slot_by_id(_auto_approach_slot_id)
+		if tgt_s.is_empty() or not can_attack_slot(tgt_s) or _auto_approach_skill_action.is_empty():
+			cancel_auto_approach()
+			return
+		var m_core_s := _get_slot_core_pos(tgt_s)
+		var p_core_s := _get_player_core_pos()
+		var dx_s := m_core_s.x - p_core_s.x
+		var stop_range := maxf(80.0, _auto_approach_range_px - 20.0)
+		if absf(dx_s) <= stop_range:
+			var queued_skill := _auto_approach_skill_action
+			pointer_kind = "enemy"
+			pointer_slot_id = str(tgt_s.get("id", ""))
+			pointer_item_node = null
+			_face_player_toward_x(m_core_s.x)
+			cancel_auto_approach()
+			arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+			arena.call("_on_touch_action", queued_skill)
+			return
+		var move_dir_s := -1 if dx_s < -8.0 else (1 if dx_s > 8.0 else 0)
+		var jump_req_s := false
+		if move_dir_s != 0:
+			if not bool(arena.call("_can_cross_terrain_step", pnode.position.x, pnode.position.x + float(move_dir_s) * 28.0, pnode.position.y, false)):
+				jump_req_s = true
+		var is_fly_s := _is_hero_songoku_node(pnode) and bool(pnode.call(&"is_airborne_flight"))
+		arena.call("step_player_movement", delta, move_dir_s, 0, jump_req_s, false, false, Vector2(float(move_dir_s), 0.0) if is_fly_s else Vector2.ZERO)
+		return
+
 	if _auto_approach_kind == "enemy":
 		var tgt := _find_slot_by_id(_auto_approach_slot_id)
-		if tgt.is_empty() or not bool(tgt.get("alive", false)) or not is_instance_valid(tgt.get("node")):
+		if tgt.is_empty() or not can_attack_slot(tgt):
 			cancel_auto_approach()
 			return
 		var p_node := arena.player_node as Node2D
@@ -1337,7 +1505,7 @@ func request_player_primary_action() -> bool:
 
 	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
 		var pointed_tgt := _find_slot_by_id(pointer_slot_id)
-		if not pointed_tgt.is_empty() and bool(pointed_tgt.get("alive", false)) and is_instance_valid(pointed_tgt.get("node")):
+		if not pointed_tgt.is_empty() and can_attack_slot(pointed_tgt):
 			var p_rect := _get_player_body_rect()
 			var m_rect := _get_slot_body_rect(pointed_tgt)
 			var m_core := _get_slot_core_pos(pointed_tgt)
@@ -1436,6 +1604,8 @@ func _compute_contact_edge_point(rect_a: Rect2, rect_b: Rect2) -> Vector2:
 
 func _emit_slot_combat_action(action_kind: String, tgt: Dictionary, origin_pos: Vector2, dmg: float, mana_grace_s: float = 0.45) -> bool:
 	var is_remote_p := bool(tgt.get("is_remote_player", false))
+	if is_remote_p and not is_remote_player_hostile(tgt):
+		return true
 	var tgt_id := str(tgt.get("user_id", tgt.get("id", ""))) if is_remote_p else str(tgt.get("id", ""))
 	if mana_grace_s > 0.0:
 		_local_mana_grace_s = maxf(_local_mana_grace_s, mana_grace_s)
@@ -1448,7 +1618,7 @@ func _emit_slot_combat_action(action_kind: String, tgt: Dictionary, origin_pos: 
 
 func _execute_player_melee_hit(hit_kind: String = "melee", damage_override: float = -1.0, is_crit_gold: bool = false, stamina_dmg_override: float = -1.0) -> void:
 	var tgt := _resolve_player_attack_target(false)
-	if tgt.is_empty():
+	if tgt.is_empty() or not can_attack_slot(tgt):
 		return
 	var p_rect := _get_player_body_rect()
 	var m_rect := _get_slot_body_rect(tgt)
@@ -1658,6 +1828,8 @@ func _trigger_slot_single_hit_anim(slot: Dictionary) -> void:
 func apply_damage_to_slot(slot: Dictionary, dmg: float, stamina_dmg: float = STAMINA_PER_HIT, hit_pos: Vector2 = Vector2(-99999.0, -99999.0), hit_kind: String = "melee", spawn_power_explosion: bool = false, impact_dir: Vector2 = Vector2.RIGHT, attacker_id: String = "local") -> void:
 	if slot.is_empty() or not bool(slot.get("alive", false)):
 		return
+	if bool(slot.get("is_remote_player", false)) and not is_remote_player_hostile(slot):
+		return
 	if network_authoritative and bool(slot.get("is_remote_player", false)):
 		var rfx_pos := hit_pos if hit_pos.x > -90000.0 else _get_slot_core_pos(slot)
 		slot["hit_flash_s"] = 0.16
@@ -1737,11 +1909,13 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 	if player_immortal:
 		return
 	var fx_pos := hit_pos if hit_pos.x > -90000.0 else _get_player_core_pos()
+	var genki_cc_immune: bool = (arena != null and arena.player_node != null and arena.player_node.has_method(&"is_genki_cc_immune") and bool(arena.player_node.call(&"is_genki_cc_immune")))
 	player_hit_flash_s = 0.19
 	player_hit_shake_s = 0.09 * HIT_SHAKE_SCALE_MUL
 	var armor_broke_now := false
+	var already_armor_broken := player_armor_broken_timer_s > 0.0
 	var prev_armor := player_armor
-	if prev_armor > 0.0 and player_armor_broken_timer_s <= 0.0:
+	if (not genki_cc_immune) and prev_armor > 0.0 and not already_armor_broken:
 		var armor_dmg := PLAYER_ARMOR_DMG_PER_HIT
 		if hit_kind == "heavy" or hit_kind == "skill":
 			armor_dmg = 35.0
@@ -1768,7 +1942,7 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 			if arena.has_method(&"_trigger_songoku_auto_transform_on_hit"):
 				arena.call(&"_trigger_songoku_auto_transform_on_hit")
 				auto_transformed_now = true
-		elif entered_combat and not armor_broke_now and not bool(arena.call("_is_player_action_playing")):
+		elif entered_combat and not genki_cc_immune and not armor_broke_now and not already_armor_broken and not bool(arena.call("_is_player_action_playing")):
 			arena.call("_play_fighter_clip", arena.player_node, "combat_enter")
 	player_hp = maxf(0.0, player_hp - dmg)
 	_local_hp_grace_s = 0.45
@@ -1779,7 +1953,12 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 		_player_gold_slash_pending = false
 		_player_power_pending = false
 		cancel_auto_approach()
+		cancel_genki_on_player_death()
+		# Tapion death clears all Ấn ngục & Kentai stacks on targets in map!
+		clear_all_tapion_marks()
 		if arena.player_node != null:
+			if arena.player_node.has_method(&"cancel_antamina_interrupt"):
+				arena.player_node.call(&"cancel_antamina_interrupt")
 			if arena.player_node.has_method(&"reset_combo"):
 				arena.player_node.call(&"reset_combo")
 			if _is_hero_songoku_node(arena.player_node):
@@ -1792,11 +1971,24 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 			if arena.player_node.has_meta(&"_arena_queued_action"):
 				arena.player_node.remove_meta(&"_arena_queued_action")
 			arena.call("_play_fighter_clip", arena.player_node, "ko")
-	elif armor_broke_now and not auto_transformed_now:
-		# v6 T5: Armor-break HIT reaction (`08`) triggers STRICTLY ONCE when armor transitions >0 -> 0!
+	elif (not genki_cc_immune) and (armor_broke_now or already_armor_broken) and not auto_transformed_now:
+		# Broken-armor HIT reaction replays 1:1 in parallel with EVERY incoming hit while armor is broken (Owner 2026-11-26)!
+		# Also cancels Tapion's active Antamina channel WITHOUT losing any target's "Ấn ngục" stacks!
 		if arena != null and arena.player_node != null and _is_hero_songoku_node(arena.player_node):
-			arena.player_node.set("armor_hit_timer_s", 0.42)
-			arena.call("_play_fighter_clip", arena.player_node, "hit")
+			if arena.player_node.has_method(&"cancel_antamina_interrupt"):
+				arena.player_node.call(&"cancel_antamina_interrupt")
+			if arena.player_node.has_meta(&"_arena_queued_action"):
+				arena.player_node.remove_meta(&"_arena_queued_action")
+			_player_melee_pending = false
+			_player_gold_slash_pending = false
+			var hit_dur := float(arena.call("_get_clip_duration_s", arena.player_node, "hit"))
+			arena.player_node.set("armor_hit_timer_s", maxf(0.24, hit_dur))
+			var hspr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+			if hspr != null and hspr.sprite_frames != null and hspr.sprite_frames.has_animation(&"hit"):
+				arena.call("_play_fighter_clip", arena.player_node, "hit")
+				hspr.frame = 0
+				hspr.frame_progress = 0.0
+				hspr.play(&"hit")
 	player_pve_damage_emitted.emit(dmg, player_hp, not player_dead)
 	player_state_changed.emit()
 
@@ -1807,6 +1999,9 @@ func _kill_slot_monster(slot: Dictionary) -> void:
 	slot["stun_timer_s"] = 0.0
 	slot["hard_stun_timer_s"] = 0.0
 	slot["shield_break_icon_timer_s"] = 0.0
+	slot["kentai_timer_s"] = 0.0
+	slot["an_nguc_stacks"] = 0
+	slot["_local_dead_time_s"] = _sim_time_s
 	slot["action_clip"] = ""
 	slot["action_timer_s"] = 0.0
 	slot["respawn_timer_s"] = BOSS_DRUM_RESPAWN_DELAY_S if is_boss else RESPAWN_MONSTER_DELAY_S
@@ -1912,8 +2107,9 @@ func _step_slot(slot: Dictionary, delta: float) -> void:
 				mnode.visible = false
 		if bool(slot.get("is_boss", false)):
 			return
-		# In authoritative online sessions, server controls monster respawn (prevents local early-respawn double-KO & species/max_hp drift).
-		if network_authoritative:
+		# In authoritative online sessions, server controls monster respawn ONLY while WSS connection is live.
+		# If connection dropped on a downloaded client, fall back cleanly to local respawn timer so monsters never stay dead forever!
+		if network_authoritative and _is_authoritative_network_connected():
 			return
 		slot["respawn_timer_s"] = float(slot["respawn_timer_s"]) - delta
 		if float(slot["respawn_timer_s"]) <= 0.0:
@@ -2361,7 +2557,7 @@ func _step_homing_projectiles(delta: float) -> void:
 		var target_slot: Dictionary = {}
 		if bool(pr["is_player"]):
 			target_slot = _find_slot_by_id(str(pr["target_slot_id"]))
-			if not target_slot.is_empty() and bool(target_slot["alive"]) and is_instance_valid(target_slot["node"]):
+			if not target_slot.is_empty() and can_attack_slot(target_slot):
 				tgt_node = target_slot["node"] as Node2D
 				tgt_cid = str(target_slot["character_id"])
 				tgt_sc = float(target_slot["scale_val"])
@@ -2571,7 +2767,7 @@ func _find_nearest_alive_slot_in_melee() -> Dictionary:
 	var best: Dictionary = {}
 	var best_gap := MELEE_STRIKE_EDGE_PX
 	for s in _get_combat_slots():
-		if not bool(s["alive"]):
+		if not can_attack_slot(s):
 			continue
 		var gap := _compute_slot_edge_gap(s)
 		if gap <= best_gap:
@@ -2583,13 +2779,13 @@ func _find_nearest_alive_slot_in_melee() -> Dictionary:
 func _resolve_player_attack_target(allow_far: bool) -> Dictionary:
 	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
 		var ps := _find_slot_by_id(pointer_slot_id)
-		if not ps.is_empty() and bool(ps["alive"]):
+		if not ps.is_empty() and can_attack_slot(ps):
 			if allow_far or _compute_slot_edge_gap(ps) <= MELEE_STRIKE_EDGE_PX:
 				return ps
 	var best: Dictionary = {}
 	var best_gap := 99999.0 if allow_far else MELEE_STRIKE_EDGE_PX
 	for s in _get_combat_slots():
-		if not bool(s["alive"]):
+		if not can_attack_slot(s):
 			continue
 		var gap := _compute_slot_edge_gap(s)
 		if gap <= best_gap:
@@ -2602,7 +2798,7 @@ func _gather_pointer_candidates() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var ref_x: float = arena.player_node.position.x if (player_spawned and arena.player_node != null) else (arena._arena_camera.position.x if arena._arena_camera != null else 960.0)
 	for s in _get_combat_slots():
-		if bool(s["alive"]) and is_instance_valid(s["node"]):
+		if can_attack_slot(s):
 			var sn := s["node"] as Node2D
 			out.append({"kind": "enemy", "id": str(s["id"]), "node": sn, "dist": absf(sn.position.x - ref_x)})
 	for item_n in arena._dropped_item_nodes:
@@ -2677,7 +2873,7 @@ func select_target_at_world_pos(world_pos: Vector2) -> Dictionary:
 	var best_dist := 999999.0
 
 	for s in _get_combat_slots():
-		if not bool(s["alive"]) or not is_instance_valid(s["node"]):
+		if not can_attack_slot(s):
 			continue
 		var mnode := s["node"] as Node2D
 		if bool(arena.call("silhouette_contains_point", mnode, str(s["character_id"]), float(s["scale_val"]), world_pos, 18.0)):
@@ -2808,10 +3004,11 @@ func draw_overlays(canvas: CanvasItem) -> void:
 			p_ki = float(arena.player_node.get("ki"))
 			p_max_ki = float(arena.player_node.get("max_ki"))
 			p_ki_ex = bool(arena.player_node.get("ki_exhausted"))
-		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0, p_ki, p_max_ki, p_ki_ex, player_shield_break_icon_timer_s > 0.0, _shield_break_flash_alpha(player_shield_break_icon_timer_s))
+		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0, p_ki, p_max_ki, p_ki_ex, player_shield_break_icon_timer_s > 0.0, _shield_break_flash_alpha(player_shield_break_icon_timer_s), false, pk_tan_sat_enabled)
 		if player_hard_stun_timer_s > 0.0:
 			OverheadBarsDrawScript.draw_stun_stars_ring(canvas, Vector2(p_cx, p_rect.position.y), _sim_time_s)
 		_draw_hero_phase2_fx_overlays(canvas)
+	_draw_hero_genki_world_fx(canvas)
 
 	# 2. All alive monsters + Boss Drum + Remote Players (Vinh / Thái)
 	for s in _get_combat_slots():
@@ -2821,6 +3018,12 @@ func draw_overlays(canvas: CanvasItem) -> void:
 		var e_top := m_rect.position.y - 14.0
 		var e_cx := _get_slot_core_pos(s).x
 		if bool(s.get("is_remote_player", false)):
+			var rk_t := float(s.get("kentai_timer_s", 0.0))
+			var ran_s := int(s.get("an_nguc_stacks", 0))
+			if rk_t > 0.0:
+				OverheadBarsDrawScript.draw_kentai_green_burn_fx(canvas, m_rect, _sim_time_s)
+			var r_hostile := is_remote_player_hostile(s)
+			var r_pk_flag := bool(s.get("pk_tan_sat", false))
 			OverheadBarsDrawScript.draw_player_bars(
 				canvas,
 				e_cx,
@@ -2830,15 +3033,34 @@ func draw_overlays(canvas: CanvasItem) -> void:
 				float(s.get("mana", 0.0)),
 				float(s.get("max_mana", PLAYER_MAX_MANA)),
 				str(s.get("display_name", "")),
-				true
+				true,
+				-1.0,
+				100.0,
+				false,
+				-1.0,
+				50.0,
+				false,
+				false,
+				0.0,
+				r_hostile,
+				r_pk_flag
 			)
+			if rk_t > 0.0 or ran_s > 0:
+				OverheadBarsDrawScript.draw_tapion_mark_badges(canvas, e_cx, e_top - 78.0, rk_t, ran_s, _sim_time_s)
 			continue
 		var stunned := float(s["stun_timer_s"]) > 0.0 or float(s.get("hard_stun_timer_s", 0.0)) > 0.0
 		var is_boss := bool(s.get("is_boss", false))
 		var lbl := str(s.get("display_name", "Drum")) if is_boss else str(s["character_id"])
 		var m_cstate := "combat" if is_boss else str(s.get("combat_state", "peace"))
 		var sb_rem: float = float(s.get("shield_break_icon_timer_s", 0.0))
+		var k_rem: float = float(s.get("kentai_timer_s", 0.0))
+		var an_stacks: int = int(s.get("an_nguc_stacks", 0))
+		if k_rem > 0.0:
+			OverheadBarsDrawScript.draw_kentai_green_burn_fx(canvas, m_rect, _sim_time_s)
 		OverheadBarsDrawScript.draw_enemy_bars(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, lbl, is_boss, m_cstate, sb_rem > 0.0, _shield_break_flash_alpha(sb_rem))
+		if k_rem > 0.0 or an_stacks > 0:
+			var mark_y := e_top - (64.0 if sb_rem > 0.0 else 50.0)
+			OverheadBarsDrawScript.draw_tapion_mark_badges(canvas, e_cx, mark_y, k_rem, an_stacks, _sim_time_s)
 		if float(s.get("hard_stun_timer_s", 0.0)) > 0.0:
 			OverheadBarsDrawScript.draw_stun_stars_ring(canvas, Vector2(e_cx, m_rect.position.y), _sim_time_s)
 
@@ -2959,7 +3181,11 @@ func sync_from_zone_snapshot(players_by_id: Dictionary, monsters_by_id: Dictiona
 				if not alive_srv and not player_dead and player_hp <= 0.0:
 					player_dead = true
 					player_respawn_timer_s = RESPAWN_PLAYER_DELAY_S
+					cancel_genki_on_player_death()
+					clear_all_tapion_marks()
 					if arena.player_node != null:
+						if arena.player_node.has_method(&"cancel_antamina_interrupt"):
+							arena.player_node.call(&"cancel_antamina_interrupt")
 						if _is_hero_songoku_node(arena.player_node):
 							arena.player_node.set("flight_state", "falling")
 							arena.player_node.set("hover_timer_s", 0.0)
@@ -3019,6 +3245,12 @@ func sync_from_zone_snapshot(players_by_id: Dictionary, monsters_by_id: Dictiona
 		rslot["mana"] = float(pdata.get("mana", 0.0))
 		rslot["max_mana"] = float(pdata.get("max_mana", PLAYER_MAX_MANA))
 		rslot["alive"] = bool(pdata.get("alive", true))
+		var prev_rpk := bool(rslot.get("pk_tan_sat", false))
+		var next_rpk := bool(pdata.get("pk_tan_sat", false))
+		rslot["pk_tan_sat"] = next_rpk
+		if prev_rpk != next_rpk:
+			refresh_pointer_valid()
+			arena.queue_redraw()
 		rslot["target_pos"] = Vector2(float(pdata.get("x", 560.0)), float(pdata.get("y", arena.ground_y)))
 		rslot["facing_left"] = bool(pdata.get("facing_left", false))
 		var act := str(pdata.get("act", "idle"))
@@ -3055,19 +3287,36 @@ func sync_from_zone_snapshot(players_by_id: Dictionary, monsters_by_id: Dictiona
 		var prev_srv_hp: float = float(slot.get("_last_srv_hp", -1.0))
 		var srv_alive: bool = bool(mdata.get("alive", true))
 		var srv_hp: float = clampf(float(mdata.get("hp", slot.get("hp", 1000.0))), 0.0, float(slot.get("max_hp", 1500.0)))
+		var explicit_respawn: bool = srv_alive and not prev_srv_alive
+		if float(_slot_local_hit_grace.get(mid, 0.0)) > 0.0 and not explicit_respawn:
+			# Preserve server death state during grace without swallowing an upcoming false->true respawn transition!
+			if not srv_alive:
+				slot["_last_srv_alive"] = false
+				slot["_last_srv_hp"] = srv_hp
+			continue
 		slot["_last_srv_alive"] = srv_alive
 		slot["_last_srv_hp"] = srv_hp
-		if float(_slot_local_hit_grace.get(mid, 0.0)) > 0.0:
-			continue
 		var hp_changed := prev_srv_hp < 0.0 or absf(srv_hp - prev_srv_hp) > 0.01
 		if hp_changed and bool(slot.get("alive", false)):
 			slot["hp"] = srv_hp
 		if not srv_alive and bool(slot.get("alive", false)):
 			slot["hp"] = 0.0
 			_kill_slot_monster(slot)
-		elif srv_alive and not prev_srv_alive and not bool(slot.get("alive", false)):
-			# Only resurrect on explicit server false -> true respawn transition (never from stale pre-kill snapshot!)
-			_reset_slot_for_server_respawn(slot, srv_hp, str(mdata.get("character_id", "")))
+		elif srv_alive and not bool(slot.get("alive", false)):
+			var dead_age_s := _sim_time_s - float(slot.get("_local_dead_time_s", _sim_time_s))
+			# Resurrect immediately on explicit server false->true transition, OR self-heal after full 12s
+			# if local kill desynced from server (prevents monsters staying permanently dead on downloaded clients!).
+			if explicit_respawn or dead_age_s >= RESPAWN_MONSTER_DELAY_S:
+				_reset_slot_for_server_respawn(slot, srv_hp, str(mdata.get("character_id", "")))
+
+
+func _is_authoritative_network_connected() -> bool:
+	if arena == null:
+		return false
+	var tr: Variant = arena.get("net_transport")
+	if tr == null:
+		return false
+	return bool(tr.get("is_connected_state"))
 
 
 func _reset_slot_for_server_respawn(slot: Dictionary, srv_hp: float, srv_cid: String = "") -> void:
@@ -3089,6 +3338,9 @@ func _reset_slot_for_server_respawn(slot: Dictionary, srv_hp: float, srv_cid: St
 	slot["hard_stun_timer_s"] = 0.0
 	slot["hit_anim_timer_s"] = 0.0
 	slot["shield_break_icon_timer_s"] = 0.0
+	slot["kentai_timer_s"] = 0.0
+	slot["an_nguc_stacks"] = 0
+	slot["_local_dead_time_s"] = -999.0
 	slot["respawn_timer_s"] = 0.0
 	slot["ko_hide_timer_s"] = 0.0
 	slot["cooldown_s"] = 0.25
@@ -3171,10 +3423,13 @@ func _spawn_remote_player_slot(uid: String, cid: String, pdata: Dictionary) -> D
 		"max_stamina": 100.0,
 		"stun_timer_s": 0.0,
 		"alive": bool(pdata.get("alive", true)),
+		"pk_tan_sat": bool(pdata.get("pk_tan_sat", false)),
 		"facing_left": f_left,
 		"target_pos": Vector2(px, py),
 		"hit_flash_s": 0.0,
 		"hit_shake_s": 0.0,
+		"kentai_timer_s": 0.0,
+		"an_nguc_stacks": 0,
 		"remote_act": str(pdata.get("act", "idle")),
 	}
 
@@ -3208,7 +3463,7 @@ func apply_network_combat_event(ev: Dictionary, local_uid: String) -> void:
 	var hit_kind := "melee"
 	if action == "power_up":
 		hit_kind = "skill"
-	elif action in ["attack_heavy", "goku_heavy", "goku_gold_slash", "atomic_blast", "kamehameha"]:
+	elif action in ["attack_heavy", "goku_heavy", "goku_gold_slash", "atomic_blast", "kamehameha", "genki"]:
 		hit_kind = "heavy"
 
 	if attacker_id == local_uid and ev.has("attacker_mana"):
@@ -3226,15 +3481,23 @@ func apply_network_combat_event(ev: Dictionary, local_uid: String) -> void:
 			_spawn_powerup_explosion(fx_pos, DEFAULT_EXPLOSION_SCALE)
 		elif action in ["atomic_blast", "kamehameha"]:
 			_spawn_skill_explosion_33(fx_pos, 1.2 if action == "kamehameha" else 1.05)
+		elif action == "genki":
+			_spawn_genki_explosion_fx(fx_pos, 1.0)
 		elif action == "flurry_kick":
 			apply_hard_stun_to_player(1.6)
+		elif action == "bukadai":
+			apply_hard_stun_to_player(2.0)
 		if ev.has("target_hp"):
 			player_hp = clampf(float(ev["target_hp"]), 0.0, player_max_hp)
 			_last_srv_local_hp = player_hp
 			if player_hp <= 0.0 and not player_dead:
 				player_dead = true
 				player_respawn_timer_s = RESPAWN_PLAYER_DELAY_S
+				cancel_genki_on_player_death()
+				clear_all_tapion_marks()
 				if arena.player_node != null:
+					if arena.player_node.has_method(&"cancel_antamina_interrupt"):
+						arena.player_node.call(&"cancel_antamina_interrupt")
 					if _is_hero_songoku_node(arena.player_node):
 						arena.player_node.set("flight_state", "falling")
 						arena.player_node.set("hover_timer_s", 0.0)
@@ -3267,6 +3530,8 @@ func apply_network_combat_event(ev: Dictionary, local_uid: String) -> void:
 			_spawn_powerup_explosion(fx_pos2, DEFAULT_EXPLOSION_SCALE)
 		elif action in ["atomic_blast", "kamehameha"] and attacker_id != local_uid:
 			_spawn_skill_explosion_33(fx_pos2, 1.2 if action == "kamehameha" else 1.05)
+		elif action == "genki" and attacker_id != local_uid:
+			_spawn_genki_explosion_fx(fx_pos2, 1.0)
 		if float(tgt_slot.get("hp", 1.0)) <= 0.0 and not bool(tgt_slot.get("is_remote_player", false)) and bool(tgt_slot.get("alive", false)):
 			tgt_slot["_last_srv_alive"] = false
 			_kill_slot_monster(tgt_slot)
@@ -3293,6 +3558,15 @@ func _get_tapion_fx_frames() -> SpriteFrames:
 	if ResourceLoader.exists(fx_path):
 		_tapion_fx_frames = load(fx_path) as SpriteFrames
 	return _tapion_fx_frames
+
+
+func _get_genki_fx_frames() -> SpriteFrames:
+	if _genki_fx_frames != null:
+		return _genki_fx_frames
+	var fx_path := "res://assets/fx/genki_fx/genki_fx.tres"
+	if ResourceLoader.exists(fx_path):
+		_genki_fx_frames = load(fx_path) as SpriteFrames
+	return _genki_fx_frames
 
 
 func _spawn_skill_explosion_33(world_pos: Vector2, scale_val: float = 1.0) -> void:
@@ -3323,6 +3597,8 @@ func _spawn_skill_explosion_33(world_pos: Vector2, scale_val: float = 1.0) -> vo
 func apply_hard_stun_to_slot(slot: Dictionary, duration_s: float) -> void:
 	if slot.is_empty() or not bool(slot.get("alive", false)):
 		return
+	if bool(slot.get("is_remote_player", false)) and not is_remote_player_hostile(slot):
+		return
 	slot["hard_stun_timer_s"] = maxf(float(slot.get("hard_stun_timer_s", 0.0)), duration_s)
 	slot["action_clip"] = ""
 	slot["action_timer_s"] = 0.0
@@ -3341,11 +3617,76 @@ func apply_hard_stun_to_player(duration_s: float) -> void:
 		return
 	if arena != null and arena.player_node != null and arena.player_node.has_method(&"is_barrier_active") and bool(arena.player_node.call(&"is_barrier_active")):
 		return
+	# Goku Genki (Spirit Bomb): immune to ALL adverse status effects/CC during charge & throw, while still taking HP damage!
+	if arena != null and arena.player_node != null and arena.player_node.has_method(&"is_genki_cc_immune") and bool(arena.player_node.call(&"is_genki_cc_immune")):
+		if _genki_cc_notice_cd_s <= 0.0:
+			_genki_cc_notice_cd_s = 0.65
+			floating_texts.append({
+				"pos": _get_player_core_pos() + Vector2(0.0, -30.0),
+				"text": "MIỄN KHỐNG CHẾ!",
+				"color": Color(0.45, 0.92, 1.0, 1.0),
+				"elapsed_s": 0.0,
+				"duration_s": 0.55,
+			})
+		return
 	player_hard_stun_timer_s = maxf(player_hard_stun_timer_s, duration_s)
 	if arena != null and arena.player_node != null:
+		# Crowd control cancels active Antamina channel WITHOUT losing any target's "Ấn ngục" stacks!
+		if arena.player_node.has_method(&"cancel_antamina_interrupt"):
+			arena.player_node.call(&"cancel_antamina_interrupt")
 		var pspr := arena.player_node.get_node_or_null("Sprite") as AnimatedSprite2D
 		if pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"hit"):
 			pspr.play(&"hit")
+
+
+func apply_kentai_debuff_to_slot(slot: Dictionary, duration_s: float = 5.0) -> void:
+	if slot.is_empty() or not bool(slot.get("alive", false)):
+		return
+	if bool(slot.get("is_remote_player", false)) and not is_remote_player_hostile(slot):
+		return
+	slot["kentai_timer_s"] = maxf(float(slot.get("kentai_timer_s", 0.0)), duration_s)
+	var pos := _get_slot_core_pos(slot)
+	floating_texts.append({
+		"pos": pos + Vector2(0.0, -34.0),
+		"text": "KENTAI 5s",
+		"color": Color(0.24, 1.0, 0.58, 1.0),
+		"elapsed_s": 0.0,
+		"duration_s": 0.65,
+	})
+
+
+func try_proc_an_nguc_on_slot(slot: Dictionary) -> int:
+	if slot.is_empty() or not bool(slot.get("alive", false)):
+		return 0
+	if float(slot.get("kentai_timer_s", 0.0)) <= 0.0:
+		return int(slot.get("an_nguc_stacks", 0))
+	slot["kentai_timer_s"] = 0.0
+	var next_stacks := mini(5, int(slot.get("an_nguc_stacks", 0)) + 1)
+	slot["an_nguc_stacks"] = next_stacks
+	var pos := _get_slot_core_pos(slot)
+	var txt := "SUY YẾU! (5/5)" if next_stacks >= 5 else "ẤN NGỤC %d/5" % next_stacks
+	var col := Color(1.0, 0.84, 0.24, 1.0) if next_stacks >= 5 else Color(0.88, 0.42, 1.0, 1.0)
+	floating_texts.append({
+		"pos": pos + Vector2(0.0, -44.0),
+		"text": txt,
+		"color": col,
+		"elapsed_s": 0.0,
+		"duration_s": 0.90 if next_stacks >= 5 else 0.72,
+	})
+	return next_stacks
+
+
+func consume_an_nguc_weakened(slot: Dictionary) -> void:
+	if slot.is_empty():
+		return
+	slot["an_nguc_stacks"] = 0
+
+
+func clear_all_tapion_marks() -> void:
+	## Clears Kentai & Ấn ngục stacks on ALL targets (called ONLY on Tapion death, zone switch, or leaving map!).
+	for s in _get_combat_slots():
+		s["kentai_timer_s"] = 0.0
+		s["an_nguc_stacks"] = 0
 
 
 func request_player_barrier() -> bool:
@@ -3479,6 +3820,92 @@ func request_player_kamehameha() -> bool:
 			_hero_kame_mode = "ground_horiz"
 			clip = "kame_ground_horiz"
 	arena.call("_request_player_action", clip)
+	player_state_changed.emit()
+	return true
+
+
+func count_genki_contributing_players() -> Array[Dictionary]:
+	## Returns up to 20 alive other players in the map (NEVER counts monsters or Boss Drum; STILL counts hostile PK players!).
+	var out: Array[Dictionary] = []
+	for rp_val in remote_player_slots.values():
+		var rp: Dictionary = rp_val as Dictionary
+		if rp.is_empty():
+			continue
+		if not bool(rp.get("alive", true)):
+			continue
+		var rnode := rp.get("node") as Node2D
+		if rnode == null or not is_instance_valid(rnode):
+			continue
+		out.append(rp)
+		if out.size() >= GENKI_MAX_CONTRIB_PLAYERS:
+			break
+	return out
+
+
+func get_genki_contributing_player_count() -> int:
+	return mini(GENKI_MAX_CONTRIB_PLAYERS, count_genki_contributing_players().size())
+
+
+func get_genki_current_damage() -> float:
+	var n_contrib: int = _genki_contrib_count if not _genki_phase.is_empty() else get_genki_contributing_player_count()
+	return GENKI_BASE_DAMAGE + float(mini(GENKI_MAX_CONTRIB_PLAYERS, maxi(0, n_contrib))) * GENKI_PER_PLAYER_BONUS
+
+
+func is_genki_active() -> bool:
+	return not _genki_phase.is_empty()
+
+
+func cancel_genki_on_player_death() -> void:
+	## Owner rule 2026-11-26: if Goku dies during Genki charge/throw, Genki is immediately lost.
+	_genki_phase = ""
+	_genki_elapsed_s = 0.0
+	_genki_throw_released = false
+	_genki_contrib_count = 0
+	_genki_wisp_spawn_accum_s = 0.0
+	_genki_wisps.clear()
+	_genki_projectiles.clear()
+	if arena != null and arena.player_node != null and arena.player_node.has_method(&"cancel_genki_on_death"):
+		arena.player_node.call(&"cancel_genki_on_death")
+
+
+func request_player_genki() -> bool:
+	if not player_spawned or player_dead or arena == null or arena.player_node == null:
+		return false
+	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	if arena.player_node.has_method(&"is_hero_tapion") and bool(arena.player_node.call(&"is_hero_tapion")):
+		return false
+	if not _genki_phase.is_empty():
+		return false
+	# Air-only requirement (Owner 2026-11-26)
+	var airborne_ok: bool = arena.has_method(&"is_player_airborne_for_genki") and bool(arena.call(&"is_player_airborne_for_genki"))
+	if not airborne_ok:
+		floating_texts.append({
+			"pos": _get_player_core_pos() + Vector2(0.0, -34.0),
+			"text": "CHỈ DÙNG TRÊN KHÔNG!",
+			"color": Color(0.45, 0.92, 1.0, 1.0),
+			"elapsed_s": 0.0,
+			"duration_s": 0.70,
+		})
+		return false
+	var eff_mana: float = 100.0 if player_infinite_mana else player_mana
+	if eff_mana + 0.001 < 100.0:
+		return false
+	if not arena.player_node.has_method(&"trigger_genki") or not bool(arena.player_node.call(&"trigger_genki", eff_mana, true)):
+		return false
+	if not player_infinite_mana:
+		player_mana = maxf(0.0, player_mana - 100.0)
+	_local_mana_grace_s = maxf(_local_mana_grace_s, 2.4)
+	cancel_auto_approach()
+	_genki_phase = "charging"
+	_genki_elapsed_s = 0.0
+	_genki_throw_released = false
+	_genki_locked_facing_x = -1.0 if arena.player_node.scale.x < 0.0 else 1.0
+	_genki_contrib_count = get_genki_contributing_player_count()
+	_genki_wisp_spawn_accum_s = 0.0
+	_genki_wisps.clear()
+	combat_action_emitted.emit("genki_cast", "", "self", arena.player_node.position, _genki_locked_facing_x < 0.0, 0.0)
+	arena.call("_request_player_action", "genki_cast")
 	player_state_changed.emit()
 	return true
 
@@ -3660,7 +4087,7 @@ func _step_hero_phase2_skills(delta: float) -> void:
 				_hero_flurry_hits_fired.append(hf)
 				var p_core: Vector2 = _get_player_core_pos()
 				for s in _get_combat_slots():
-					if not bool(s.get("alive", false)) or not is_instance_valid(s.get("node")):
+					if not can_attack_slot(s):
 						continue
 					var s_core: Vector2 = _get_slot_core_pos(s)
 					var dx: float = (s_core.x - p_core.x) * face_x
@@ -3731,6 +4158,9 @@ func _step_hero_phase2_skills(delta: float) -> void:
 		_hero_kame_charging = false
 		_hero_kame_charge_elapsed_s = 0.0
 
+	# 5. Son Goku Genki (Spirit Bomb): 5.0s mid-air overhead charge + cyan wisps from up to 20 players + downward ground throw (50..200px ahead)!
+	_step_hero_genki_cast(delta, goku, pspr, c_sc)
+
 
 func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 	# Atomic Blast curved quadratic Bezier bolts with AGENTS.md Điều 7.8 solid terrain collision (ignore_terrain=false)
@@ -3743,7 +4173,7 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 		var spd: float = float(pr["speed"])
 		var step_dist: float = spd * delta
 		var hit_done := false
-		var has_live_tgt: bool = (not tgt.is_empty()) and bool(tgt.get("alive", false)) and is_instance_valid(tgt.get("node"))
+		var has_live_tgt: bool = (not tgt.is_empty()) and can_attack_slot(tgt)
 		var start_p_arc: Vector2 = pr.get("start_pos", old_p) as Vector2
 		var end_p_arc: Vector2 = _get_slot_core_pos(tgt) if has_live_tgt else (pr.get("end_pos", old_p + dir_v * 900.0) as Vector2)
 		pr["end_pos"] = end_p_arc
@@ -3779,7 +4209,7 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 				hit_done = true
 		else:
 			for s in _get_combat_slots():
-				if not bool(s.get("alive", false)) or not is_instance_valid(s.get("node")):
+				if not can_attack_slot(s):
 					continue
 				var sc: Vector2 = _get_slot_core_pos(s)
 				if new_p.distance_to(sc) <= 72.0:
@@ -3825,7 +4255,7 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 			var hit_ids: Array = bm.get("hit_ids", [])
 			var target_impacted: bool = false
 			for s in _get_combat_slots():
-				if not bool(s.get("alive", false)) or not is_instance_valid(s.get("node")):
+				if not can_attack_slot(s):
 					continue
 				var sid := str(s.get("id", ""))
 				if hit_ids.has(sid):
@@ -3851,6 +4281,8 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 			bm["fade_age_s"] = float(bm.get("fade_age_s", 0.0)) + delta
 			if float(bm["fade_age_s"]) >= float(bm.get("fade_s", 0.18)):
 				_hero_kame_beams.remove_at(j)
+
+	_step_hero_genki_projectiles_and_explosions(delta)
 
 
 func _draw_hero_phase2_back_fx_overlays(canvas: CanvasItem) -> void:
@@ -4050,3 +4482,323 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 				var fh: float = 128.0 * beam_mul * c_sc
 				canvas.draw_texture_rect(t_fade, Rect2(0.0, -fh * 0.5, b_len, fh), false, Color.WHITE)
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+	# 5. Son Goku Genki overhead Spirit Bomb, blue top-down reflection on Goku, and incoming cyan energy wisps from players!
+	_draw_hero_genki_charge_and_reflection(canvas, goku, c_sc)
+
+
+func _get_genki_orb_pos(goku: Node2D, c_sc: float) -> Vector2:
+	# Elevated directly above Goku's raised hands matching Owner's reference (image copy 4.png)
+	return goku.position + Vector2(0.0, -210.0 * c_sc)
+
+
+func _step_hero_genki_cast(delta: float, goku: Node2D, pspr: AnimatedSprite2D, c_sc: float) -> void:
+	if _genki_cc_notice_cd_s > 0.0:
+		_genki_cc_notice_cd_s = maxf(0.0, _genki_cc_notice_cd_s - delta)
+	# Advance active cyan energy wisps toward the overhead Genki orb
+	var orb_now: Vector2 = _get_genki_orb_pos(goku, c_sc)
+	for wi in range(_genki_wisps.size() - 1, -1, -1):
+		var w: Dictionary = _genki_wisps[wi]
+		w["age_s"] = float(w.get("age_s", 0.0)) + delta
+		w["end_pos"] = orb_now
+		if float(w["age_s"]) >= float(w.get("dur_s", 0.65)):
+			_genki_wisps.remove_at(wi)
+
+	if _genki_phase.is_empty():
+		return
+	if player_dead or goku == null or not is_instance_valid(goku):
+		cancel_genki_on_player_death()
+		return
+
+	# Keep Goku locked to his initial Genki facing direction & suspended in mid-air
+	goku.scale.x = absf(goku.scale.x) * _genki_locked_facing_x
+	if arena != null:
+		arena.player_facing_left = _genki_locked_facing_x < 0.0
+
+	if _genki_phase == "charging":
+		_genki_elapsed_s += delta
+		var contribs: Array[Dictionary] = count_genki_contributing_players()
+		_genki_contrib_count = mini(GENKI_MAX_CONTRIB_PLAYERS, contribs.size())
+
+		# Exact pose choreography from Owner's reference (image copy 4.png):
+		# #0 ready stance -> #1 arms bent raising -> #2 BOTH arms high overhead held for full 5.0s!
+		if pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"genki_cast"):
+			if String(pspr.animation) != "genki_cast" or not pspr.is_playing():
+				pspr.play(&"genki_cast")
+			var target_f: int = 2
+			if _genki_elapsed_s < 0.14:
+				target_f = 0
+			elif _genki_elapsed_s < 0.28:
+				target_f = 1
+			pspr.set_frame_and_progress(target_f, 0.0)
+
+		# Continuously emit bright cyan energy streaks from every contributing player (up to 20, incl. PK hostile, excl. monsters/boss!)
+		_genki_wisp_spawn_accum_s += delta
+		if _genki_wisp_spawn_accum_s >= 0.11:
+			_genki_wisp_spawn_accum_s = 0.0
+			for ci in range(contribs.size()):
+				var rp: Dictionary = contribs[ci]
+				var rp_core: Vector2 = _get_slot_core_pos(rp)
+				var jitter := Vector2(
+					sin(_sim_time_s * 17.3 + float(ci) * 2.1) * 22.0,
+					cos(_sim_time_s * 13.7 + float(ci) * 1.7) * 18.0 - 16.0
+				)
+				var start_p: Vector2 = rp_core + jitter
+				var mid_p: Vector2 = (start_p + orb_now) * 0.5 + Vector2(0.0, -90.0 - 35.0 * absf(sin(float(ci) * 1.3 + _sim_time_s * 2.0)))
+				_genki_wisps.append({
+					"start_pos": start_p,
+					"ctrl_pos": mid_p,
+					"end_pos": orb_now,
+					"age_s": 0.0,
+					"dur_s": 0.58 + 0.08 * fposmod(float(ci) * 0.37 + _sim_time_s, 1.0),
+					"from_player": true,
+				})
+			# Cap wisp buffer safely for mobile 60 FPS
+			while _genki_wisps.size() > 96:
+				_genki_wisps.remove_at(0)
+
+		if _genki_elapsed_s >= GENKI_CHARGE_DURATION_S:
+			_genki_phase = "throwing"
+			_genki_elapsed_s = 0.0
+			_genki_throw_released = false
+			if pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"genki_cast"):
+				pspr.set_frame_and_progress(3, 0.0)
+
+	elif _genki_phase == "throwing":
+		_genki_elapsed_s += delta
+		# Exact 3-frame throw choreography from image copy 4.png:
+		# #3 wind-up lunge -> #4 downward hurl + sweeping motion arc (releases orb!) -> #5 crouched follow-through!
+		if pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"genki_cast"):
+			if String(pspr.animation) != "genki_cast" or not pspr.is_playing():
+				pspr.play(&"genki_cast")
+			var throw_f: int = 3
+			if _genki_elapsed_s >= GENKI_THROW_ARC_END_S:
+				throw_f = 5
+			elif _genki_elapsed_s >= GENKI_THROW_WINDUP_S:
+				throw_f = 4
+			pspr.set_frame_and_progress(throw_f, 0.0)
+
+		if (not _genki_throw_released) and _genki_elapsed_s >= GENKI_THROW_RELEASE_S:
+			_genki_throw_released = true
+			_launch_genki_orb(goku, c_sc)
+
+		if _genki_elapsed_s >= GENKI_THROW_DURATION_S:
+			_genki_phase = ""
+			_genki_elapsed_s = 0.0
+			_genki_throw_released = false
+			goku.set("genki_casting", false)
+			if pspr != null:
+				if pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"fly_prep"):
+					pspr.play(&"fly_prep")
+				else:
+					pspr.stop()
+
+
+func _launch_genki_orb(goku: Node2D, c_sc: float) -> void:
+	## Throws Genki downward in front of Goku (50..200px ahead onto ground), NEVER aiming at pointed target!
+	var face_x: float = _genki_locked_facing_x
+	var start_pos: Vector2 = goku.position + Vector2(face_x * 56.0, -142.0 * c_sc)
+	var desired_land_x: float = goku.position.x + face_x * GENKI_DEFAULT_LAND_OFFSET_PX
+	var min_x: float = float(arena.walkable_min_x) + 32.0 if arena != null else desired_land_x - 500.0
+	var max_x: float = float(arena.walkable_max_x) - 32.0 if arena != null else desired_land_x + 500.0
+	var land_x: float = clampf(desired_land_x, min_x, max_x)
+	# Ensure landing offset stays in front within [50, 200] px whenever map bounds allow
+	var dx_ahead: float = (land_x - goku.position.x) * face_x
+	if dx_ahead < GENKI_MIN_LAND_OFFSET_PX:
+		land_x = clampf(goku.position.x + face_x * GENKI_MIN_LAND_OFFSET_PX, min_x, max_x)
+	elif dx_ahead > GENKI_MAX_LAND_OFFSET_PX:
+		land_x = clampf(goku.position.x + face_x * GENKI_MAX_LAND_OFFSET_PX, min_x, max_x)
+	var land_y: float = goku.position.y + 180.0
+	if arena != null and arena.has_method(&"get_nearest_support_y_below"):
+		land_y = float(arena.call(&"get_nearest_support_y_below", land_x, goku.position.y))
+	var land_pos := Vector2(land_x, land_y)
+	var final_dmg: float = GENKI_BASE_DAMAGE + float(mini(GENKI_MAX_CONTRIB_PLAYERS, maxi(0, _genki_contrib_count))) * GENKI_PER_PLAYER_BONUS
+	var dist_total: float = maxf(64.0, start_pos.distance_to(land_pos))
+	_genki_projectiles.append({
+		"start_pos": start_pos,
+		"pos": start_pos,
+		"land_pos": land_pos,
+		"caster_x": goku.position.x,
+		"face_x": face_x,
+		"t": 0.0,
+		"dur_s": maxf(0.18, dist_total / GENKI_ORB_FLIGHT_SPEED_PX_S),
+		"age_s": 0.0,
+		"damage": final_dmg,
+		"contrib_count": _genki_contrib_count,
+		"scale_mul": 1.0 + 0.012 * float(_genki_contrib_count),
+	})
+
+
+func _spawn_genki_explosion_fx(ground_pos: Vector2, scale_val: float = 1.0) -> void:
+	_genki_explosions.append({
+		"pos": ground_pos,
+		"age_s": 0.0,
+		"dur_s": 0.78,
+		"scale_val": scale_val,
+	})
+
+
+func _detonate_genki_orb(proj: Dictionary) -> void:
+	var impact_pos: Vector2 = proj.get("land_pos", proj.get("pos", Vector2.ZERO)) as Vector2
+	var dmg: float = float(proj.get("damage", GENKI_BASE_DAMAGE))
+	var contrib_n: int = int(proj.get("contrib_count", 0))
+	_spawn_genki_explosion_fx(impact_pos, float(proj.get("scale_mul", 1.0)))
+	floating_texts.append({
+		"pos": impact_pos + Vector2(0.0, -110.0),
+		"text": "GENKI %d!" % int(round(dmg)) if contrib_n <= 0 else "GENKI %d (+%dP)!" % [int(round(dmg)), contrib_n],
+		"color": Color(0.42, 0.94, 1.0, 1.0),
+		"elapsed_s": 0.0,
+		"duration_s": 0.95,
+	})
+	# Deal 700px AoE damage to ALL attackable enemies in radius (respecting PK Tàn Sát for remote players!)
+	for s in _get_combat_slots():
+		if not can_attack_slot(s):
+			continue
+		var s_core: Vector2 = _get_slot_core_pos(s)
+		if s_core.distance_to(impact_pos) <= GENKI_AOE_RADIUS_PX:
+			var dir_v: Vector2 = (s_core - impact_pos).normalized() if s_core.distance_to(impact_pos) > 1.0 else Vector2.RIGHT
+			_emit_slot_combat_action("genki", s, impact_pos, dmg, 0.55)
+			apply_damage_to_slot(s, dmg, 80.0, s_core, "heavy", false, dir_v)
+
+
+func _step_hero_genki_projectiles_and_explosions(delta: float) -> void:
+	for i in range(_genki_projectiles.size() - 1, -1, -1):
+		var pr: Dictionary = _genki_projectiles[i]
+		pr["age_s"] = float(pr.get("age_s", 0.0)) + delta
+		var dur_s: float = maxf(0.05, float(pr.get("dur_s", 0.35)))
+		var t_next: float = minf(1.0, float(pr["age_s"]) / dur_s)
+		pr["t"] = t_next
+		var sp: Vector2 = pr["start_pos"] as Vector2
+		var lp: Vector2 = pr["land_pos"] as Vector2
+		pr["pos"] = sp.lerp(lp, t_next)
+		if t_next >= 1.0:
+			_genki_projectiles.remove_at(i)
+			_detonate_genki_orb(pr)
+
+	for ei in range(_genki_explosions.size() - 1, -1, -1):
+		var ex: Dictionary = _genki_explosions[ei]
+		ex["age_s"] = float(ex.get("age_s", 0.0)) + delta
+		if float(ex["age_s"]) >= float(ex.get("dur_s", 0.78)):
+			_genki_explosions.remove_at(ei)
+
+
+func _draw_hero_genki_charge_and_reflection(canvas: CanvasItem, goku: Node2D, c_sc: float) -> void:
+	if _genki_phase.is_empty() and _genki_wisps.is_empty():
+		return
+	var orb_pos: Vector2 = _get_genki_orb_pos(goku, c_sc)
+
+	# 1. Blue top-down light reflection cast from the overhead Genki sphere onto Goku's hair, arms & body
+	if not _genki_phase.is_empty():
+		var light_strength: float = clampf(_genki_elapsed_s / 0.85, 0.25, 1.0) if _genki_phase == "charging" else clampf(1.0 - _genki_elapsed_s / GENKI_THROW_DURATION_S, 0.0, 1.0)
+		var pulse: float = 0.88 + 0.12 * sin(_sim_time_s * 14.0)
+		var a_cone: float = 0.17 * light_strength * pulse
+		var p_rect: Rect2 = _get_player_body_rect()
+		var p_cx: float = goku.position.x
+		var p_head_y: float = p_rect.position.y + p_rect.size.y * 0.18
+		var p_body_y: float = p_rect.position.y + p_rect.size.y * 0.62
+		# Soft downward cyan cone from overhead orb down onto Goku's body
+		var cone_pts := PackedVector2Array([
+			orb_pos + Vector2(-34.0 * c_sc, 28.0 * c_sc),
+			orb_pos + Vector2(34.0 * c_sc, 28.0 * c_sc),
+			Vector2(p_cx + 48.0 * c_sc, p_body_y),
+			Vector2(p_cx - 48.0 * c_sc, p_body_y),
+		])
+		var cone_cols := PackedColorArray([
+			Color(0.32, 0.88, 1.0, a_cone * 1.15),
+			Color(0.32, 0.88, 1.0, a_cone * 1.15),
+			Color(0.18, 0.72, 1.0, 0.0),
+			Color(0.18, 0.72, 1.0, 0.0),
+		])
+		canvas.draw_polygon(cone_pts, cone_cols)
+		# Focused cyan reflection sheen across Goku's crown, shoulders and raised forearms
+		canvas.draw_circle(Vector2(p_cx, p_head_y), 34.0 * c_sc, Color(0.38, 0.92, 1.0, 0.16 * light_strength * pulse))
+		canvas.draw_circle(Vector2(p_cx, p_head_y - 10.0 * c_sc), 20.0 * c_sc, Color(0.68, 0.97, 1.0, 0.18 * light_strength * pulse))
+
+	# 2. Continuous cyan energy wisps/streaks flying from contributing players into the overhead Genki sphere
+	for w in _genki_wisps:
+		var t_w: float = clampf(float(w.get("age_s", 0.0)) / maxf(0.01, float(w.get("dur_s", 0.6))), 0.0, 1.0)
+		var sp: Vector2 = w["start_pos"] as Vector2
+		var cp: Vector2 = w["ctrl_pos"] as Vector2
+		var ep: Vector2 = w["end_pos"] as Vector2
+		var u: float = 1.0 - t_w
+		var head_p: Vector2 = (u * u) * sp + (2.0 * u * t_w) * cp + (t_w * t_w) * ep
+		var t_tail: float = maxf(0.0, t_w - 0.16)
+		var ut: float = 1.0 - t_tail
+		var tail_p: Vector2 = (ut * ut) * sp + (2.0 * ut * t_tail) * cp + (t_tail * t_tail) * ep
+		var alpha_w: float = sin(t_w * PI) * 0.95
+		canvas.draw_line(tail_p, head_p, Color(0.24, 0.86, 1.0, alpha_w * 0.85), 5.0, true)
+		canvas.draw_line(tail_p.lerp(head_p, 0.45), head_p, Color(0.84, 0.98, 1.0, alpha_w), 2.5, true)
+		canvas.draw_circle(head_p, 5.5, Color(0.36, 0.92, 1.0, alpha_w * 0.65))
+		canvas.draw_circle(head_p, 2.8, Color(0.92, 1.0, 1.0, alpha_w))
+
+	# 3. Overhead Genki Spirit Bomb sprite (`genki_charge_fx` #0..#7 -> `genki_orb_loop_fx` 80ms loop)
+	if _genki_phase == "charging" or (_genki_phase == "throwing" and not _genki_throw_released):
+		var gfx := _get_genki_fx_frames()
+		if gfx != null:
+			var orb_tex: Texture2D = null
+			var draw_pos: Vector2 = orb_pos
+			var scale_mul: float = 1.0
+			if _genki_phase == "charging":
+				if _genki_elapsed_s < 0.25:
+					scale_mul = 0.45 + 0.55 * (_genki_elapsed_s / 0.25)
+				if _genki_elapsed_s < 1.50 and gfx.has_animation(&"genki_charge_fx"):
+					var cfc: int = gfx.get_frame_count(&"genki_charge_fx")
+					var cfi: int = clampi(int(floor((_genki_elapsed_s / 1.50) * float(cfc))), 0, maxi(0, cfc - 1))
+					orb_tex = gfx.get_frame_texture(&"genki_charge_fx", cfi)
+					scale_mul *= (0.72 + 0.28 * clampf(_genki_elapsed_s / 1.50, 0.0, 1.0))
+				elif gfx.has_animation(&"genki_orb_loop_fx"):
+					var lfc: int = gfx.get_frame_count(&"genki_orb_loop_fx")
+					var lfi: int = int(floor(_sim_time_s * 12.5)) % maxi(1, lfc)
+					orb_tex = gfx.get_frame_texture(&"genki_orb_loop_fx", lfi)
+					var charge_grow: float = clampf((_genki_elapsed_s - 1.50) / maxf(0.1, GENKI_CHARGE_DURATION_S - 1.50), 0.0, 1.0)
+					scale_mul = 0.94 + 0.16 * charge_grow + 0.012 * float(_genki_contrib_count)
+			else:
+				# Brief hand-follow transition before release frame
+				var t_rel: float = clampf(_genki_elapsed_s / GENKI_THROW_RELEASE_S, 0.0, 1.0)
+				draw_pos = orb_pos.lerp(goku.position + Vector2(_genki_locked_facing_x * 56.0, -142.0 * c_sc), t_rel)
+				scale_mul = 1.10 + 0.012 * float(_genki_contrib_count)
+				if gfx.has_animation(&"genki_orb_loop_fx"):
+					var lfc2: int = gfx.get_frame_count(&"genki_orb_loop_fx")
+					orb_tex = gfx.get_frame_texture(&"genki_orb_loop_fx", int(floor(_sim_time_s * 12.5)) % maxi(1, lfc2))
+			if orb_tex != null:
+				var osz: float = 198.0 * c_sc * scale_mul
+				canvas.draw_texture_rect(orb_tex, Rect2(draw_pos - Vector2(osz * 0.5, osz * 0.5), Vector2(osz, osz)), false, Color.WHITE)
+
+
+func _draw_hero_genki_world_fx(canvas: CanvasItem) -> void:
+	if _genki_projectiles.is_empty() and _genki_explosions.is_empty():
+		return
+	var gfx := _get_genki_fx_frames()
+	var c_sc: float = float(arena.char_scale) if arena != null else 2.0
+
+	# 1. Flying Genki Spirit Bomb descending diagonally downward toward the ground
+	for pr in _genki_projectiles:
+		var ppos: Vector2 = pr["pos"] as Vector2
+		var sc_m: float = float(pr.get("scale_mul", 1.0))
+		if gfx != null and gfx.has_animation(&"genki_orb_loop_fx"):
+			var lfc: int = gfx.get_frame_count(&"genki_orb_loop_fx")
+			var lfi: int = int(floor(float(pr.get("age_s", 0.0)) * 12.5)) % maxi(1, lfc)
+			var otex := gfx.get_frame_texture(&"genki_orb_loop_fx", lfi)
+			if otex != null:
+				var osz: float = 204.0 * c_sc * sc_m
+				canvas.draw_texture_rect(otex, Rect2(ppos - Vector2(osz * 0.5, osz * 0.5), Vector2(osz, osz)), false, Color.WHITE)
+		else:
+			canvas.draw_circle(ppos, 64.0 * sc_m, Color(0.32, 0.88, 1.0, 0.85))
+
+	# 2. Ground-anchored Genki AoE Detonation (`Genki/9..16.png`, 352/384 ground baseline + 700px expanding cyan shockwave)
+	for ex in _genki_explosions:
+		var epos: Vector2 = ex["pos"] as Vector2
+		var age_e: float = float(ex.get("age_s", 0.0))
+		var dur_e: float = maxf(0.05, float(ex.get("dur_s", 0.78)))
+		var prog: float = clampf(age_e / dur_e, 0.0, 0.999)
+		var ring_r: float = lerpf(70.0, GENKI_AOE_RADIUS_PX, pow(prog, 0.55))
+		var ring_a: float = clampf(1.0 - prog, 0.0, 1.0) * 0.55
+		canvas.draw_arc(epos, ring_r, PI, TAU, 48, Color(0.45, 0.94, 1.0, ring_a), 4.0, true)
+		if gfx != null and gfx.has_animation(&"genki_explode_fx"):
+			var efc: int = gfx.get_frame_count(&"genki_explode_fx")
+			var efi: int = clampi(int(floor(prog * float(efc))), 0, maxi(0, efc - 1))
+			var etex := gfx.get_frame_texture(&"genki_explode_fx", efi)
+			if etex != null:
+				var esz: float = 360.0 * c_sc * float(ex.get("scale_val", 1.0))
+				var ground_ratio: float = 352.0 / 384.0
+				canvas.draw_texture_rect(etex, Rect2(epos.x - esz * 0.5, epos.y - esz * ground_ratio, esz, esz), false, Color.WHITE)

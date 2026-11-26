@@ -132,6 +132,17 @@ func send_player_pve_state(damage: float, new_hp: float, alive: bool) -> Error:
 	})
 
 
+func send_pk_mode(enabled: bool) -> Error:
+	if transport == null or not transport.is_connected_state or not session_authenticated or not zone_confirmed:
+		return ERR_UNAVAILABLE
+	return transport.send_packet({
+		"op": "set_pk_mode",
+		"map_id": current_map_id,
+		"zone_id": current_zone_id,
+		"pk_tan_sat": enabled,
+	})
+
+
 func _on_packet(payload: Dictionary) -> void:
 	if not (payload is Dictionary):
 		return

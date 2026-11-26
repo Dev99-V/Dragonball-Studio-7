@@ -24,6 +24,8 @@ const DAMAGE_TABLE := {
 	"flurry_kick": 30.0,
 	"atomic_blast": 55.0,
 	"kamehameha": 360.0,
+	"genki_cast": 0.0,
+	"genki": 400.0,
 	"kentaima": 60.0,
 	"mahasenko": 65.0,
 	"antamina_cast": 0.0,
@@ -41,11 +43,13 @@ const ACTION_SPECS := {
 	"flurry_kick": {"min_dmg": 30.0, "max_dmg": 30.0, "default_dmg": 30.0, "mana_delta": 8.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 300.0, "check_los": false},
 	"atomic_blast": {"min_dmg": 55.0, "max_dmg": 55.0, "default_dmg": 55.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": false},
 	"kamehameha": {"min_dmg": 360.0, "max_dmg": 360.0, "default_dmg": 360.0, "mana_delta": 0.0, "mana_cost": 80.0, "cast_window_ms": 5000, "ranged": true, "pvp_range": 1400.0, "check_los": true},
-	"kentaima": {"min_dmg": 60.0, "max_dmg": 60.0, "default_dmg": 60.0, "mana_delta": 10.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": true},
-	"mahasenko": {"min_dmg": 65.0, "max_dmg": 65.0, "default_dmg": 65.0, "mana_delta": 10.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": true},
-	"antamina_cast": {"min_dmg": 0.0, "max_dmg": 0.0, "default_dmg": 0.0, "mana_delta": 0.0, "mana_cost": 100.0, "ranged": true, "pvp_range": 1400.0, "check_los": false},
-	"antamina": {"min_dmg": 80.0, "max_dmg": 80.0, "default_dmg": 80.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1400.0, "check_los": false},
-	"bukadai": {"min_dmg": 85.0, "max_dmg": 85.0, "default_dmg": 85.0, "mana_delta": 15.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 950.0, "check_los": false},
+	"genki_cast": {"min_dmg": 0.0, "max_dmg": 0.0, "default_dmg": 0.0, "mana_delta": 0.0, "mana_cost": 100.0, "ranged": true, "pvp_range": 1050.0, "check_los": false},
+	"genki": {"min_dmg": 400.0, "max_dmg": 500.0, "default_dmg": 400.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1050.0, "check_los": false},
+	"kentaima": {"min_dmg": 60.0, "max_dmg": 60.0, "default_dmg": 60.0, "mana_delta": 10.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1240.0, "check_los": true},
+	"mahasenko": {"min_dmg": 65.0, "max_dmg": 65.0, "default_dmg": 65.0, "mana_delta": 10.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 1240.0, "check_los": true},
+	"antamina_cast": {"min_dmg": 0.0, "max_dmg": 0.0, "default_dmg": 0.0, "mana_delta": 0.0, "mana_cost": 100.0, "ranged": true, "pvp_range": 99999.0, "unlimited_range": true, "check_los": false},
+	"antamina": {"min_dmg": 80.0, "max_dmg": 104.0, "default_dmg": 80.0, "mana_delta": 0.0, "mana_cost": 0.0, "ranged": true, "pvp_range": 99999.0, "unlimited_range": true, "check_los": false},
+	"bukadai": {"min_dmg": 85.0, "max_dmg": 85.0, "default_dmg": 85.0, "mana_delta": 15.0, "mana_cost": 0.0, "ranged": false, "pvp_range": 1240.0, "check_los": false},
 }
 
 const DEFAULT_MONSTER_SLOTS := [
@@ -215,6 +219,7 @@ func _get_or_create_zone(map_id: String, zone_id: int) -> Dictionary:
 		"map_id": map_id,
 		"zone_id": zid,
 		"tick": 0,
+		"force_pvp_mode": false,
 		"players": {}, # user_id -> player dict
 		"monsters": mons,
 		"peer_ids": [],
@@ -429,6 +434,7 @@ func _complete_peer_auth(pid: int, claims: Dictionary, req_map: String, req_zone
 		"mana": init_mana,
 		"max_mana": PLAYER_MAX_MANA,
 		"alive": true,
+		"pk_tan_sat": false,
 		"respawn_timer_s": 0.0,
 		"kame_cast_paid_ms": 0,
 	}
@@ -514,9 +520,16 @@ func _handle_peer_packet(pid: int, pkt: Dictionary) -> void:
 			if req_cid in ["songoku", "drum", "tapion_demo", "tapion"]:
 				pdata["character_id"] = req_cid
 				pinfo["character_id"] = req_cid
+		if pkt.has("pk_tan_sat"):
+			pdata["pk_tan_sat"] = bool(pkt.get("pk_tan_sat", false))
 		var act := str(pkt.get("act", "idle")).strip_edges()
 		if not act.is_empty() and act.length() <= 36:
 			pdata["act"] = act
+		return
+
+	if op == "set_pk_mode":
+		pdata["pk_tan_sat"] = bool(pkt.get("pk_tan_sat", false))
+		_emit_zone_snapshot(z)
 		return
 
 	if op == "player_pve_state":
@@ -558,6 +571,12 @@ func _handle_combat_action(z: Dictionary, attacker_id: String, pkt: Dictionary) 
 		attacker["kame_cast_paid_ms"] = now_ms
 		_emit_zone_snapshot(z)
 		return
+	if action == "antamina_cast" or action == "genki_cast":
+		if float(attacker.get("mana", 0.0)) + 0.001 < 100.0:
+			return
+		attacker["mana"] = maxf(0.0, float(attacker["mana"]) - 100.0)
+		_emit_zone_snapshot(z)
+		return
 	if not ACTION_SPECS.has(action):
 		return
 	var spec: Dictionary = ACTION_SPECS[action]
@@ -573,6 +592,9 @@ func _handle_combat_action(z: Dictionary, attacker_id: String, pkt: Dictionary) 
 		if not z["players"].has(target_id):
 			return
 		target = z["players"][target_id]
+		var can_pvp := bool(attacker.get("pk_tan_sat", false)) or bool(target.get("pk_tan_sat", false)) or bool(z.get("force_pvp_mode", false))
+		if not can_pvp:
+			return
 	elif target_kind == "monster":
 		if not z["monsters"].has(target_id):
 			return
@@ -597,22 +619,24 @@ func _handle_combat_action(z: Dictionary, attacker_id: String, pkt: Dictionary) 
 
 	# Authoritative distance & continuous terrain LOS check
 	var is_ranged := bool(spec.get("ranged", false))
+	var unlimited_range := bool(spec.get("unlimited_range", false))
 	var a_pos := Vector2(float(attacker["x"]), float(attacker["y"]) - 36.0)
 	var t_pos := Vector2(float(target["x"]), float(target["y"]) - 36.0)
 	if target_kind == "monster":
-		var pad := 1400.0 if is_ranged else 340.0
-		var raw_px: Variant = pkt.get("x", null)
-		var px := float(attacker["x"])
-		if raw_px is int or raw_px is float:
-			var fpx := float(raw_px)
-			if not is_nan(fpx) and not is_inf(fpx):
-				px = fpx
-		if px < float(target.get("zmin", target["x"])) - pad or px > float(target.get("zmax", target["x"])) + pad:
-			return
+		if not unlimited_range:
+			var pad := 1400.0 if is_ranged else 520.0
+			var raw_px: Variant = pkt.get("x", null)
+			var px := float(attacker["x"])
+			if raw_px is int or raw_px is float:
+				var fpx := float(raw_px)
+				if not is_nan(fpx) and not is_inf(fpx):
+					px = fpx
+			if px < float(target.get("zmin", target["x"])) - pad or px > float(target.get("zmax", target["x"])) + pad:
+				return
 	else:
 		var dist := a_pos.distance_to(t_pos)
 		var max_range := float(spec.get("pvp_range", 280.0))
-		if dist > max_range:
+		if not unlimited_range and dist > max_range:
 			return
 		if bool(spec.get("check_los", false)) and _terrain_blocks_segment(a_pos, t_pos):
 			return
@@ -689,6 +713,7 @@ func _switch_peer_zone(pid: int, target_map: String, target_zone: int) -> void:
 			"mana": init_z_mana,
 			"max_mana": PLAYER_MAX_MANA,
 			"alive": true,
+			"pk_tan_sat": false,
 			"respawn_timer_s": 0.0,
 			"kame_cast_paid_ms": 0,
 		}

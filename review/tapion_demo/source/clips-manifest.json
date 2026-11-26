@@ -31,6 +31,14 @@
       "file": "raw_frames/anta_chg_03.png"
     },
     {
+      "name": "anta_end_00",
+      "file": "raw_frames/anta_end_00.png"
+    },
+    {
+      "name": "anta_end_01",
+      "file": "raw_frames/anta_end_01.png"
+    },
+    {
       "name": "anta_fire_00",
       "file": "raw_frames/anta_fire_00.png"
     },
@@ -41,6 +49,18 @@
     {
       "name": "anta_fire_02",
       "file": "raw_frames/anta_fire_02.png"
+    },
+    {
+      "name": "anta_lit_00",
+      "file": "raw_frames/anta_lit_00.png"
+    },
+    {
+      "name": "anta_lit_01",
+      "file": "raw_frames/anta_lit_01.png"
+    },
+    {
+      "name": "anta_lit_02",
+      "file": "raw_frames/anta_lit_02.png"
     },
     {
       "name": "anta_rng_00",
@@ -865,13 +885,13 @@
         "atk1_04",
         "atk1_05"
       ],
-      "ticks": [
-        4,
-        4,
-        4,
-        4,
-        4,
-        4
+      "duration_ms": [
+        60,
+        60,
+        60,
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -890,12 +910,12 @@
         "atk2_03",
         "atk2_04"
       ],
-      "ticks": [
-        4,
-        4,
-        4,
-        5,
-        4
+      "duration_ms": [
+        60,
+        60,
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -918,12 +938,12 @@
         "atk3_03",
         "atk3_04"
       ],
-      "ticks": [
-        4,
-        4,
-        4,
-        4,
-        4
+      "duration_ms": [
+        60,
+        60,
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -939,9 +959,9 @@
         "atk4_00",
         "atk4_01"
       ],
-      "ticks": [
-        4,
-        6
+      "duration_ms": [
+        60,
+        60
       ],
       "events": [
         {
@@ -958,10 +978,10 @@
         "atk5_01",
         "atk5_02"
       ],
-      "ticks": [
-        4,
-        4,
-        5
+      "duration_ms": [
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -982,10 +1002,10 @@
         "atk6_01",
         "atk6_02"
       ],
-      "ticks": [
-        4,
-        5,
-        5
+      "duration_ms": [
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -1004,12 +1024,12 @@
         "atk7_03",
         "atk7_04"
       ],
-      "ticks": [
-        4,
-        4,
-        5,
-        4,
-        4
+      "duration_ms": [
+        60,
+        60,
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -1032,12 +1052,12 @@
         "atk8_03",
         "atk8_04"
       ],
-      "ticks": [
-        4,
-        4,
-        5,
-        4,
-        4
+      "duration_ms": [
+        60,
+        60,
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -1060,12 +1080,12 @@
         "atk9_03",
         "atk9_04"
       ],
-      "ticks": [
-        4,
-        4,
-        5,
-        4,
-        4
+      "duration_ms": [
+        60,
+        60,
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -1091,15 +1111,15 @@
         "atk10_03",
         "atk10_04"
       ],
-      "ticks": [
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        7
+      "duration_ms": [
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60
       ],
       "events": [
         {
@@ -1167,18 +1187,18 @@
         5,
         6,
         6,
-        12,
-        12,
-        12,
-        12,
-        12,
-        12,
-        12,
-        12,
-        12,
-        12,
-        12,
-        12,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
         8
       ]
     },
@@ -1193,7 +1213,7 @@
       "ticks": [
         6,
         5,
-        16
+        22
       ],
       "events": [
         {
@@ -1211,7 +1231,7 @@
       ],
       "ticks": [
         6,
-        16
+        22
       ],
       "events": [
         {
@@ -1249,7 +1269,7 @@
         5,
         5,
         5,
-        4
+        5
       ]
     },
     "antamina_fire": {
@@ -1283,14 +1303,14 @@
         "anta_chg_00",
         "anta_chg_01",
         "anta_chg_02",
-        "anta_chg_03",
         "anta_rng_00",
         "anta_rng_01",
         "anta_rng_02",
-        "anta_rng_03",
-        "anta_fire_00",
-        "anta_fire_01",
-        "anta_fire_02"
+        "anta_lit_00",
+        "anta_lit_01",
+        "anta_lit_02",
+        "anta_end_00",
+        "anta_end_01"
       ],
       "ticks": [
         4,
@@ -1300,15 +1320,15 @@
         5,
         5,
         5,
-        4,
-        8,
-        8,
-        10
+        5,
+        5,
+        5,
+        6
       ],
       "events": [
         {
           "name": "custom:launch",
-          "at": 8
+          "at": 6
         }
       ]
     },

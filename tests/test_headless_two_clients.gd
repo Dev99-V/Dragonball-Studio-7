@@ -131,7 +131,19 @@ func run_test() -> void:
 		fail("Thái must receive Vinh's moved x=660 from server, got %s" % str(vinh_seen_by_thai.get("x")))
 		return
 
-	# 4. Authoritative PvP (Vinh hits Thái with attack_light -> -200 HP, +20 Mana) & PvE (Thái hits g0 -> -200 HP)
+	# 4a. PK Tàn Sát default OFF: Vinh CANNOT damage Thái before enabling PK Tàn Sát!
+	sync_vinh.send_combat_action("attack_light", "uid-thai", "player", Vector2(660.0, 840.0), false)
+	_pump([ws_vinh, ws_thai], 12, 20)
+	if absf(float(sync_thai.players_by_id["uid-thai"].get("hp", 0.0)) - 1500.0) > 0.5:
+		fail("With PK Tàn Sát OFF, PvP attack must be blocked (Thái HP must remain 1500), got %s" % str(sync_thai.players_by_id["uid-thai"].get("hp")))
+		return
+
+	# 4b. Enable PK Tàn Sát on Vinh -> authoritative PvP (Vinh hits Thái -> -200 HP, +20 Mana) & PvE (Thái hits g0 -> -200 HP)
+	sync_vinh.send_pk_mode(true)
+	_pump([ws_vinh, ws_thai], 10, 20)
+	if not bool(sync_thai.players_by_id["uid-vinh"].get("pk_tan_sat", false)):
+		fail("Thái must see Vinh's pk_tan_sat=true flag in zone snapshot")
+		return
 	sync_vinh.send_combat_action("attack_light", "uid-thai", "player", Vector2(660.0, 840.0), false)
 	sync_thai.send_combat_action("attack_light", "g0", "monster", Vector2(720.0, 840.0), true)
 	_pump([ws_vinh, ws_thai], 16, 20)

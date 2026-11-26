@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips/animation-clips.json",
-    "sha256": "8b50c041ab29907c0060f55ed8f3c767972172747fc849a0a4eff3a2bfdd71ee",
-    "bytes": 369423,
+    "sha256": "60bc1fb355396733aca7c38d4f0f63269fc2efeaed110616b3f27724bb651f62",
+    "bytes": 380110,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -42,7 +42,7 @@
           4090,
           4090
         ],
-        "cells": 183,
+        "cells": 189,
         "clips": [
           "idle",
           "walk",
@@ -77,7 +77,8 @@
           "kame_ground_up",
           "kame_air_horiz",
           "kame_air_down",
-          "atomic_ground_up"
+          "atomic_ground_up",
+          "genki_cast"
         ]
       }
     ]
@@ -169,21 +170,21 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
           9.0,
-          7.0,
-          7.0,
-          10.0,
-          8.0,
-          7.0,
-          8.0,
-          8.0,
-          8.0,
+          7.02,
+          6.96,
+          10.02,
+          7.98,
+          7.02,
+          7.98,
+          8.04,
+          7.98,
           12.0,
-          8.0,
-          8.0,
-          10.0
+          7.98,
+          8.04,
+          9.96
         ]
       }
     },
@@ -259,7 +260,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
           6.0,
           6.0,
@@ -338,16 +339,16 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0,
+          4.98,
+          5.04,
+          4.98,
+          4.98,
+          5.04,
           6.0,
           6.0,
-          7.0
+          6.96
         ]
       }
     },
@@ -413,15 +414,15 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0
+          4.98,
+          5.04,
+          4.98,
+          4.98,
+          5.04,
+          4.98,
+          4.98
         ]
       }
     },
@@ -468,12 +469,12 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          5.0,
-          5.0,
-          5.0,
-          5.0
+          4.98,
+          5.04,
+          4.98,
+          4.98
         ]
       }
     },
@@ -520,12 +521,12 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          5.0
+          4.02,
+          3.96,
+          4.02,
+          4.98
         ]
       }
     },
@@ -572,12 +573,12 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          7.0,
-          7.0,
-          7.0,
-          7.0
+          7.02,
+          6.96,
+          7.02,
+          7.02
         ]
       }
     },
@@ -653,7 +654,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
           6.0,
           6.0,
@@ -709,12 +710,12 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
           6.0,
-          5.0,
+          4.98,
           6.0,
-          5.0
+          5.04
         ]
       }
     },
@@ -769,14 +770,14 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          5.0,
+          4.98,
           6.0,
           6.0,
           6.0,
           6.0,
-          5.0
+          5.04
         ]
       }
     },
@@ -827,13 +828,13 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0
+          4.98,
+          5.04,
+          4.98,
+          4.98,
+          5.04
         ]
       }
     },
@@ -876,11 +877,11 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          7.0,
-          7.0,
-          14.0
+          7.02,
+          6.96,
+          14.04
         ]
       }
     },
@@ -984,20 +985,20 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02
         ]
       }
     },
@@ -1051,12 +1052,12 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02,
+          4.02
         ]
       }
     },
@@ -1110,12 +1111,12 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02,
+          4.02
         ]
       }
     },
@@ -1187,15 +1188,15 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02,
+          4.02
         ]
       }
     },
@@ -1281,17 +1282,17 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02
         ]
       }
     },
@@ -1413,23 +1414,23 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02
         ]
       }
     },
@@ -1497,14 +1498,14 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02,
+          4.02,
+          3.96,
+          4.02
         ]
       }
     },
@@ -1554,11 +1555,11 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02
         ]
       }
     },
@@ -1608,11 +1609,11 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02
         ]
       }
     },
@@ -1662,11 +1663,11 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02
         ]
       }
     },
@@ -1713,7 +1714,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
           6.0,
           6.0,
@@ -1765,12 +1766,12 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          4.0,
-          4.0,
-          4.0
+          4.02,
+          3.96,
+          4.02,
+          4.02
         ]
       }
     },
@@ -1820,10 +1821,10 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          5.0,
+          4.02,
+          4.98,
           6.0
         ]
       }
@@ -1894,16 +1895,16 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0,
-          5.0
+          4.98,
+          5.04,
+          4.98,
+          4.98,
+          5.04,
+          4.98,
+          4.98,
+          5.04
         ]
       }
     },
@@ -2009,7 +2010,7 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
           6.0,
           6.0,
@@ -2018,7 +2019,7 @@
           6.0,
           6.0,
           6.0,
-          5.0
+          4.98
         ]
       }
     },
@@ -2077,7 +2078,7 @@
       },
       "godot": {
         "speed": 60.0,
-        "basis": "duration_ms mapped to exact 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
           5.4,
           5.4,
@@ -2140,11 +2141,11 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          4.0,
-          5.0,
-          5.0,
+          4.02,
+          4.98,
+          4.98,
           6.0
         ]
       }
@@ -2211,10 +2212,10 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          8.0,
-          8.0,
+          7.98,
+          8.04,
           12.0,
           12.0,
           12.0,
@@ -2281,14 +2282,14 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          8.0,
-          8.0,
+          7.98,
+          8.04,
           12.0,
           12.0,
           12.0,
-          16.0
+          15.96
         ]
       }
     },
@@ -2350,14 +2351,14 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          8.0,
-          8.0,
+          7.98,
+          8.04,
           12.0,
           12.0,
           12.0,
-          16.0
+          15.96
         ]
       }
     },
@@ -2419,14 +2420,14 @@
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
-        "basis": "ticks at 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
-          8.0,
-          8.0,
+          7.98,
+          8.04,
           12.0,
           12.0,
           12.0,
-          16.0
+          15.96
         ]
       }
     },
@@ -2485,7 +2486,7 @@
       },
       "godot": {
         "speed": 60.0,
-        "basis": "duration_ms mapped to exact 60 Hz",
+        "basis": "fixed fps",
         "relative_durations": [
           5.4,
           5.4,
@@ -2495,6 +2496,75 @@
           5.4,
           5.4,
           6.0
+        ]
+      }
+    },
+    "genki_cast": {
+      "frames": [
+        196,
+        197,
+        198,
+        199,
+        200,
+        201
+      ],
+      "duration_ms": [
+        83,
+        84,
+        100,
+        133,
+        100,
+        233
+      ],
+      "total_duration_ms": 733,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [
+        {
+          "name": "custom:genki_throw",
+          "at_ms": 400,
+          "at": 4,
+          "position": 4
+        }
+      ],
+      "page": 0,
+      "role": "player",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          5,
+          6,
+          8,
+          6,
+          14
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 43.98,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "ticks": [
+        5,
+        5,
+        6,
+        8,
+        6,
+        14
+      ],
+      "tick_hz": 60,
+      "godot": {
+        "speed": 60.0,
+        "basis": "fixed fps",
+        "relative_durations": [
+          4.98,
+          5.04,
+          6.0,
+          7.98,
+          6.0,
+          13.98
         ]
       }
     }
@@ -2568,13 +2638,13 @@
   "files": [
     {
       "path": "godot/songoku-atlas-00.png",
-      "sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
-      "bytes": 2830729
+      "sha256": "744adbde39ae93f240d74f955dde5f3be63565010f0d83c606097f4924bcdb32",
+      "bytes": 2922898
     },
     {
       "path": "godot/songoku.tres",
-      "sha256": "b5d45d0c1f3aafdb2b45830bd27684f8bf80394e9fa10a8d26ea9f81902756e8",
-      "bytes": 43996
+      "sha256": "f3a584ec5e3034a0d8bded32a61485fc05eda46c9bcdf151e064745c8101d105",
+      "bytes": 45521
     },
     {
       "path": "godot/songoku.tscn",
@@ -2595,15 +2665,15 @@
         "id": "godot_spriteframes_roundtrip",
         "status": "pass",
         "value": {
-          "animations": 34
+          "animations": 35
         },
         "threshold": null
       },
       {
         "id": "godot_spriteframes_duration_error_ms",
         "status": "pass",
-        "value": 0.6666666666666856,
-        "threshold": 1.0
+        "value": 2.842170943040401e-14,
+        "threshold": 1e-06
       },
       {
         "id": "atlas_max_side_px",
@@ -2615,8 +2685,8 @@
         "id": "source_frame_hashes",
         "status": "pass",
         "value": {
-          "verified": 196,
-          "frames": 196
+          "verified": 202,
+          "frames": 202
         },
         "threshold": null
       }
@@ -2624,8 +2694,8 @@
     "inputs": [
       {
         "path": "../clips/animation-clips.json",
-        "sha256": "8b50c041ab29907c0060f55ed8f3c767972172747fc849a0a4eff3a2bfdd71ee",
-        "bytes": 369423
+        "sha256": "60bc1fb355396733aca7c38d4f0f63269fc2efeaed110616b3f27724bb651f62",
+        "bytes": 380110
       },
       {
         "path": "../clips/frames/frame-00.png",
@@ -3606,16 +3676,46 @@
         "path": "../clips/frames/frame-195.png",
         "sha256": "98ffd3a9ccdd718849e2d3dde2e82de3e36ad79ff5e612d40668463bbcfbcd71",
         "bytes": 18722
+      },
+      {
+        "path": "../clips/frames/frame-196.png",
+        "sha256": "b7bde883f419b5257a48cd666d8a5add76c4f1a0a6cf0edbd83c4e8c65238a72",
+        "bytes": 14227
+      },
+      {
+        "path": "../clips/frames/frame-197.png",
+        "sha256": "9e098c6fe32f3200b7cfb9de23c00cf81aff28efbfea158250c3f566de1f0216",
+        "bytes": 13736
+      },
+      {
+        "path": "../clips/frames/frame-198.png",
+        "sha256": "cf4defd0f8b92decd72ac824a4277e6b25106a98999e22a71d7e5f076a96a00e",
+        "bytes": 15152
+      },
+      {
+        "path": "../clips/frames/frame-199.png",
+        "sha256": "780fc625c4304ca59dc3360006b9a73596b53550cc56e4bd1e43f02aa4f44a81",
+        "bytes": 16834
+      },
+      {
+        "path": "../clips/frames/frame-200.png",
+        "sha256": "010fb60662196f643e3f815b8e70a7dfc8747bd4383649238b90f570ad8f2d0c",
+        "bytes": 19135
+      },
+      {
+        "path": "../clips/frames/frame-201.png",
+        "sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
+        "bytes": 16383
       }
     ],
     "outputs": [
       {
         "path": "godot/songoku-atlas-00.png",
-        "sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0"
+        "sha256": "744adbde39ae93f240d74f955dde5f3be63565010f0d83c606097f4924bcdb32"
       },
       {
         "path": "godot/songoku.tres",
-        "sha256": "06713a13280fdd84a15516e27218bf1c91ac23a1b7de36945b0d478462f48e02"
+        "sha256": "f3a584ec5e3034a0d8bded32a61485fc05eda46c9bcdf151e064745c8101d105"
       },
       {
         "path": "godot/songoku.tscn",
@@ -3662,7 +3762,8 @@
       "kame_ground_up",
       "kame_air_horiz",
       "kame_air_down",
-      "atomic_ground_up"
+      "atomic_ground_up",
+      "genki_cast"
     ],
     "effect_clips": [],
     "locomotion": {
@@ -3858,9 +3959,19 @@
       "atomic_bolts_per_hand": 3,
       "kamehameha_charge_duration_sec": 2.0,
       "kamehameha_blue_light_reflection": true,
-      "kamehameha_beam_scale_mul": 1.2
+      "kamehameha_beam_scale_mul": 1.2,
+      "genki_air_only": true,
+      "genki_mana_cost": 100.0,
+      "genki_cooldown_sec": 15.0,
+      "genki_charge_duration_sec": 5.0,
+      "genki_aoe_radius_px": 700.0,
+      "genki_base_damage": 400.0,
+      "genki_per_player_bonus": 5.0,
+      "genki_max_bonus_players": 20,
+      "genki_cc_immune_while_casting": true
     },
     "facing_default": "right",
-    "skills_fx_tres": "res://assets/fx/songoku_skills_fx/songoku_skills_fx.tres"
+    "skills_fx_tres": "res://assets/fx/songoku_skills_fx/songoku_skills_fx.tres",
+    "genki_fx_tres": "res://assets/fx/genki_fx/genki_fx.tres"
   }
 }

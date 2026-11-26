@@ -264,6 +264,11 @@ FX_CLIPS_SPEC: Dict[str, Dict[str, object]] = {
         "frames": [f"maha_impact_{i:02d}" for i in range(5)],
         "ticks": [3, 4, 4, 4, 4],
     },
+    "antamina_charge_orb_fx": {
+        "loop_policy": "cycle", "role": "fx",
+        "frames": [f"antamina_charge_orb_{i:02d}" for i in range(6)],
+        "duration_ms": [80, 80, 80, 80, 80, 80],
+    },
     "antamina_flash_fx": {
         "loop_policy": "cycle", "role": "fx",
         "frames": ["antamina_flash_00"],
@@ -282,7 +287,7 @@ FX_CLIPS_SPEC: Dict[str, Dict[str, object]] = {
     "antamina_impact_fx": {
         "loop_policy": "oneshot", "role": "fx",
         "frames": [f"antamina_impact_{i:02d}" for i in range(3)],
-        "ticks": [5, 5, 5],
+        "duration_ms": [100, 110, 120],
     },
     "kentaima_wave_fx": {
         "loop_policy": "oneshot", "role": "fx",
@@ -320,10 +325,14 @@ def build_complete_fx_bundle() -> Dict[str, object]:
     if (fly_aura_fx_dir / "fly_aura_fx_00.png").is_file():
         for fi in range(6):
             shutil.copy2(fly_aura_fx_dir / f"fly_aura_fx_{fi:02d}.png", fx_raw / f"fly_aura_fx_{fi:02d}.png")
-    polish_v2_fx_dir = ROOT / "work" / "characters" / "tapion" / "polish_v2" / "fx_registered_288"
-    if polish_v2_fx_dir.is_dir():
-        for fx_p in sorted(polish_v2_fx_dir.glob("*.png")):
-            shutil.copy2(fx_p, fx_raw / fx_p.name)
+    for fx_ov_dir in (
+        ROOT / "work" / "characters" / "tapion" / "polish_v2" / "fx_registered_288",
+        ROOT / "work" / "characters" / "tapion" / "polish_v5" / "fx_registered_288",
+        ROOT / "work" / "characters" / "tapion" / "polish_v6" / "fx_registered_288",
+    ):
+        if fx_ov_dir.is_dir():
+            for fx_p in sorted(fx_ov_dir.glob("*.png")):
+                shutil.copy2(fx_p, fx_raw / fx_p.name)
 
     # Owner polish_v3 FX reorganization:
     # - Remove old starburst `anta_impact_00..03`
@@ -507,11 +516,15 @@ def main() -> int:
             for cp_id in cp_list:
                 shutil.copy2(src_p, RAW_DIR / f"{cp_id}.png")
 
-    # 3C. Apply polish_v2 Owner Feedback Fixes (fly_prep 50% thinner pale aura, atk2_04, atk5_01, atk8_04, barrier_00/#02 size sync, energy_recover rebuild)!
-    polish_v2_dir = ROOT / "work" / "characters" / "tapion" / "polish_v2" / "registered_288"
-    if polish_v2_dir.is_dir():
-        for wp in sorted(polish_v2_dir.glob("*.png")):
-            shutil.copy2(wp, RAW_DIR / wp.name)
+    # 3C. Apply polish_v2, polish_v4 & polish_v5 Owner Feedback Fixes!
+    for p_dir in (
+        ROOT / "work" / "characters" / "tapion" / "polish_v2" / "registered_288",
+        ROOT / "work" / "characters" / "tapion" / "polish_v4" / "registered_288",
+        ROOT / "work" / "characters" / "tapion" / "polish_v5" / "registered_288",
+    ):
+        if p_dir.is_dir():
+            for wp in sorted(p_dir.glob("*.png")):
+                shutil.copy2(wp, RAW_DIR / wp.name)
 
     for air_id, src_id, lift_px in [("atk10_02", "atk1_02", 18), ("atk10_03", "atk5_01", 16), ("atk10_04", "atk1_05", 6)]:
         arr = np.array(Image.open(RAW_DIR / f"{src_id}.png").convert("RGBA"))
@@ -528,12 +541,14 @@ def main() -> int:
         "combat_enter_00", "idle_combat_00", "idle_combat_01", "idle_combat_02", "idle_combat_03",
         "turntable_00", "turntable_01", "turntable_02", "turntable_03", "turntable_04", "turntable_05", "turntable_06", "turntable_07",
         "recover_00", "recover_01",
-        "anta_chg_00", "anta_chg_01", "anta_chg_02",
+        "anta_chg_00", "anta_chg_01", "anta_chg_02", "anta_chg_03",
+        "anta_rng_00", "anta_rng_01", "anta_rng_02", "anta_rng_03",
+        "anta_lit_00", "anta_lit_01", "anta_lit_02",
         "anta_fire_00", "anta_fire_01", "anta_fire_02",
         "maha_gnd_00", "maha_gnd_01", "maha_gnd_02",
     }
-    skip_special_ids = {"source_raw_00", "tele_ground_02", "tele_ground_03", "tele_air_02", "tele_air_03", "bukadai_04", "anta_rng_03"}
-    fx_body_prefixes = ("atk", "fly_prep_", "barrier_04", "barrier_05", "barrier_06", "barrier_07", "barrier_08", "recover_0", "anta_chg_03", "anta_rng_", "kenta_cast_01", "kenta_cast_02", "kenta_cast_03", "bukadai_01", "bukadai_02", "bukadai_03")
+    skip_special_ids = {"source_raw_00", "tele_ground_02", "tele_ground_03", "tele_air_02", "tele_air_03", "bukadai_04"}
+    fx_body_prefixes = ("atk", "fly_prep_", "barrier_04", "barrier_05", "barrier_06", "barrier_07", "barrier_08", "recover_0", "anta_rng_03", "anta_lit_", "kenta_cast_01", "kenta_cast_02", "kenta_cast_03", "bukadai_01", "bukadai_02", "bukadai_03")
     for png in sorted(RAW_DIR.glob("*.png")):
         if png.stem in skip_special_ids:
             continue
@@ -627,61 +642,61 @@ def main() -> int:
         "attack_light": {
             "loop_policy": "oneshot", "role": "player",
             "frames": [f"atk1_{i:02d}" for i in range(6)],
-            "ticks": [4, 4, 4, 4, 4, 4],
+            "duration_ms": [60, 60, 60, 60, 60, 60],
             "events": [{"name": "hit", "at": 3}],
         },
         "attack_2": {
             "loop_policy": "oneshot", "role": "player",
             "frames": [f"atk2_{i:02d}" for i in range(5)],
-            "ticks": [4, 4, 4, 5, 4],
+            "duration_ms": [60, 60, 60, 60, 60],
             "events": [{"name": "hit", "at": 1}, {"name": "hit", "at": 3}],
         },
         "attack_3": {
             "loop_policy": "oneshot", "role": "player",
             "frames": [f"atk3_{i:02d}" for i in range(5)],
-            "ticks": [4, 4, 4, 4, 4],
+            "duration_ms": [60, 60, 60, 60, 60],
             "events": [{"name": "hit", "at": 1}],
         },
         "attack_4": {
             "loop_policy": "oneshot", "role": "player",
             "frames": ["atk4_00", "atk4_01"],
-            "ticks": [4, 6],
+            "duration_ms": [60, 60],
             "events": [{"name": "hit", "at": 1}],
         },
         "attack_5": {
             "loop_policy": "oneshot", "role": "player",
             "frames": ["atk5_00", "atk5_01", "atk5_02"],
-            "ticks": [4, 4, 5],
+            "duration_ms": [60, 60, 60],
             "events": [{"name": "hit", "at": 1}, {"name": "hit", "at": 2}],
         },
         "attack_6": {
             "loop_policy": "oneshot", "role": "player",
             "frames": ["atk6_00", "atk6_01", "atk6_02"],
-            "ticks": [4, 5, 5],
+            "duration_ms": [60, 60, 60],
             "events": [{"name": "hit", "at": 1}],
         },
         "attack_7": {
             "loop_policy": "oneshot", "role": "player",
             "frames": [f"atk7_{i:02d}" for i in range(5)],
-            "ticks": [4, 4, 5, 4, 4],
+            "duration_ms": [60, 60, 60, 60, 60],
             "events": [{"name": "hit", "at": 1}, {"name": "hit", "at": 2}],
         },
         "attack_8": {
             "loop_policy": "oneshot", "role": "player",
             "frames": [f"atk8_{i:02d}" for i in range(5)],
-            "ticks": [4, 4, 5, 4, 4],
+            "duration_ms": [60, 60, 60, 60, 60],
             "events": [{"name": "hit", "at": 1}, {"name": "hit", "at": 2}],
         },
         "attack_9": {
             "loop_policy": "oneshot", "role": "player",
             "frames": [f"atk9_{i:02d}" for i in range(5)],
-            "ticks": [4, 4, 5, 4, 4],
+            "duration_ms": [60, 60, 60, 60, 60],
             "events": [{"name": "hit", "at": 2}, {"name": "hit", "at": 3}],
         },
         "attack_10": {
             "loop_policy": "oneshot", "role": "player",
             "frames": ["atk10_00", "atk10_01", "atk10_02", "atk10_03", "atk10_04", "atk10_02", "atk10_03", "atk10_04"],
-            "ticks": [4, 4, 4, 4, 4, 4, 4, 7],
+            "duration_ms": [60, 60, 60, 60, 60, 60, 60, 60],
             "events": [{"name": "hit", "at": 3}, {"name": "hit", "at": 6}, {"name": "hit", "at": 7}],
         },
         # --- PHASE 2 OCARINA & 4 SIGNATURE SKILLS ---
@@ -699,18 +714,18 @@ def main() -> int:
                 "recover_03", "recover_04", "recover_05", "recover_06",
                 "recover_07",
             ],
-            "ticks": [5, 6, 6, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 8],
+            "ticks": [5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 8],
         },
         "mahasenko_ground": {
             "loop_policy": "oneshot", "role": "player",
             "frames": ["maha_gnd_00", "maha_gnd_01", "maha_gnd_02"],
-            "ticks": [6, 5, 16],
+            "ticks": [6, 5, 22],
             "events": [{"name": "custom:launch", "at": 2}],
         },
         "mahasenko_air": {
             "loop_policy": "oneshot", "role": "player",
             "frames": ["maha_air_00", "maha_air_01"],
-            "ticks": [6, 16],
+            "ticks": [6, 22],
             "events": [{"name": "custom:launch", "at": 1}],
         },
         "antamina_charge": {
@@ -721,7 +736,7 @@ def main() -> int:
         "antamina_rings": {
             "loop_policy": "oneshot", "role": "player",
             "frames": [f"anta_rng_{i:02d}" for i in range(4)],
-            "ticks": [5, 5, 5, 4],
+            "ticks": [5, 5, 5, 5],
         },
         "antamina_fire": {
             "loop_policy": "oneshot", "role": "player",
@@ -732,12 +747,13 @@ def main() -> int:
         "antamina_combo": {
             "loop_policy": "oneshot", "role": "player",
             "frames": [
-                "anta_chg_00", "anta_chg_01", "anta_chg_02", "anta_chg_03",
-                "anta_rng_00", "anta_rng_01", "anta_rng_02", "anta_rng_03",
-                "anta_fire_00", "anta_fire_01", "anta_fire_02",
+                "anta_chg_00", "anta_chg_01", "anta_chg_02",
+                "anta_rng_00", "anta_rng_01", "anta_rng_02",
+                "anta_lit_00", "anta_lit_01", "anta_lit_02",
+                "anta_end_00", "anta_end_01",
             ],
-            "ticks": [4, 4, 4, 5, 5, 5, 5, 4, 8, 8, 10],
-            "events": [{"name": "custom:launch", "at": 8}],
+            "ticks": [4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 6],
+            "events": [{"name": "custom:launch", "at": 6}],
         },
         "kentaima_cast": {
             "loop_policy": "oneshot", "role": "player",
@@ -864,6 +880,16 @@ animation = &"mahasenko_hand_fx"
 centered = false
 offset = Vector2(-144, -176)
 
+[node name="AntaminaChargeFX" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 69
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"antamina_charge_orb_fx"
+centered = false
+offset = Vector2(-144, -176)
+position = Vector2(73, -62)
+
 [node name="GroundImpactFX" type="AnimatedSprite2D" parent="."]
 visible = false
 z_index = 70
@@ -893,7 +919,7 @@ script = ExtResource("4_anim")
             "combat_speed_px_per_second": 500.0,
             "combat_back_speed_px_per_second": 400.0,
             "combat_fwd_speed_px_per_second": 500.0,
-            "flight_speed_px_per_second": 400.0,
+            "flight_speed_px_per_second": 520.0,
             "jump_height_px": 100.0,
         },
         "game_states": {

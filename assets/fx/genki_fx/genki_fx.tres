@@ -1,0 +1,158 @@
+[gd_resource type="SpriteFrames" load_steps=18 format=3]
+
+[ext_resource type="Texture2D" path="genki_fx-atlas-00.png" id="1_atlas00"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c0"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(3, 3, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c1"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(391, 3, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c2"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(779, 3, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c3"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(1167, 3, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c4"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(3, 391, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c5"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(391, 391, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c6"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(779, 391, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c7"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(1167, 391, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c8"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(3, 779, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c9"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(391, 779, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c10"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(779, 779, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c11"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(1167, 779, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c12"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(3, 1167, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c13"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(391, 1167, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c14"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(779, 1167, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c15"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(1167, 1167, 384, 384)
+filter_clip = true
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c0")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c1")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c2")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c3")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c4")
+}, {
+"duration": 6.0,
+"texture": SubResource("AtlasTexture_p0c5")
+}, {
+"duration": 6.0,
+"texture": SubResource("AtlasTexture_p0c6")
+}, {
+"duration": 6.0,
+"texture": SubResource("AtlasTexture_p0c7")
+}],
+"loop": false,
+"name": &"genki_charge_fx",
+"speed": 60.0
+}, {
+"frames": [{
+"duration": 4.8,
+"texture": SubResource("AtlasTexture_p0c5")
+}, {
+"duration": 4.8,
+"texture": SubResource("AtlasTexture_p0c6")
+}, {
+"duration": 4.8,
+"texture": SubResource("AtlasTexture_p0c7")
+}],
+"loop": true,
+"name": &"genki_orb_loop_fx",
+"speed": 60.0
+}, {
+"frames": [{
+"duration": 4.2,
+"texture": SubResource("AtlasTexture_p0c8")
+}, {
+"duration": 4.5,
+"texture": SubResource("AtlasTexture_p0c9")
+}, {
+"duration": 4.8,
+"texture": SubResource("AtlasTexture_p0c10")
+}, {
+"duration": 5.1,
+"texture": SubResource("AtlasTexture_p0c11")
+}, {
+"duration": 5.7,
+"texture": SubResource("AtlasTexture_p0c12")
+}, {
+"duration": 6.3,
+"texture": SubResource("AtlasTexture_p0c13")
+}, {
+"duration": 6.9,
+"texture": SubResource("AtlasTexture_p0c14")
+}, {
+"duration": 7.5,
+"texture": SubResource("AtlasTexture_p0c15")
+}],
+"loop": false,
+"name": &"genki_explode_fx",
+"speed": 60.0
+}]

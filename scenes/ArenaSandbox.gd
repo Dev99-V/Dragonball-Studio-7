@@ -72,6 +72,7 @@ var zone_sync: ZoneClientSync = null
 var alpha_session_active: bool = false
 var alpha_session_profile: Dictionary = {}
 var _net_intent_accum_s: float = 0.0
+var _net_reconnect_accum_s: float = 0.0
 var _last_sent_action: String = ""
 var logout_button: Button = null
 var zone_selector: OptionButton = null
@@ -196,6 +197,7 @@ var field_mode_enabled: bool = false
 var hud_ui_hidden: bool = false
 var hero_immortal_enabled: bool = false
 var hero_infinite_mana_enabled: bool = false
+var pk_tan_sat_enabled: bool = false
 var show_monster_ranges_enabled: bool = false
 var field_manager = null
 var _field_overlay_node: Node2D = null
@@ -203,6 +205,7 @@ var _field_back_overlay_node: Node2D = null
 var mobile_pad = null
 var hero_avatar_panel: PanelContainer = null
 var hero_avatar_rect: TextureRect = null
+var pk_toggle_button: Button = null
 var hero_selector: OptionButton = null
 var boss_selector: OptionButton = null
 var infinite_mana_button: Button = null
@@ -596,6 +599,19 @@ func is_player_grounded_for_recover() -> bool:
 	return player_node.position.y >= support_y - 2.5
 
 
+func is_player_airborne_for_genki() -> bool:
+	if player_node == null or not _is_hero_songoku(player_node):
+		return false
+	if player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion")):
+		return false
+	if not bool(player_node.get("is_ssj")):
+		return false
+	if bool(player_node.call(&"is_airborne_flight")):
+		return true
+	var sup_y := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+	return player_node.position.y < sup_y - 24.0
+
+
 func _sync_field_pad_state() -> void:
 	if mobile_pad == null or not is_instance_valid(mobile_pad) or field_manager == null:
 		return
@@ -623,6 +639,12 @@ func _sync_field_pad_state() -> void:
 				float(player_node.get("mahasenko_cooldown_s")),
 				float(player_node.get("antamina_cooldown_s")),
 				float(player_node.get("bukadai_cooldown_s"))
+			)
+		elif mobile_pad.has_method(&"set_hero_genki_state"):
+			mobile_pad.call(
+				&"set_hero_genki_state",
+				float(player_node.get("genki_cooldown_s")),
+				is_player_airborne_for_genki()
 			)
 
 
@@ -719,14 +741,29 @@ func _on_touch_action(action_name: String) -> void:
 		elif _is_hero_songoku(player_node) and bool(player_node.call(&"trigger_kamehameha", 100.0)):
 			_request_player_action("kame_ground_horiz")
 		_sync_field_pad_state()
+	elif action_name == "genki":
+		if field_mode_enabled and field_manager != null and field_manager.active:
+			field_manager.request_player_genki()
+		elif is_player_airborne_for_genki() and bool(player_node.call(&"trigger_genki", 100.0, true)):
+			_request_player_action("genki_cast")
+		_sync_field_pad_state()
 	elif action_name == "kentaima":
 		if not _is_fighter_turning(player_node) and not _is_player_action_playing() and float(player_node.get("recover_timer_s")) <= 0.0:
 			var tgt_k: Dictionary = {}
 			if field_mode_enabled and field_manager != null and field_manager.active:
+				if player_node.get("kentaima_cooldown_s") != null and float(player_node.get("kentaima_cooldown_s")) > 0.0:
+					_sync_field_pad_state()
+					return
 				tgt_k = field_manager.resolve_skill_target()
 				if tgt_k.is_empty():
 					_sync_field_pad_state()
 					return
+				var is_tapion_k := player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion"))
+				if is_tapion_k and not field_manager.is_target_in_tapion_skill_range(tgt_k):
+					field_manager.start_skill_auto_approach("kentaima", tgt_k)
+					_sync_field_pad_state()
+					return
+				field_manager.cancel_auto_approach()
 			if player_node.has_method(&"trigger_kentaima") and bool(player_node.call(&"trigger_kentaima")):
 				if player_node.has_method(&"set_locked_skill_target"):
 					player_node.call(&"set_locked_skill_target", tgt_k)
@@ -737,10 +774,19 @@ func _on_touch_action(action_name: String) -> void:
 		if not _is_fighter_turning(player_node) and not _is_player_action_playing() and float(player_node.get("recover_timer_s")) <= 0.0:
 			var tgt_m: Dictionary = {}
 			if field_mode_enabled and field_manager != null and field_manager.active:
+				if player_node.get("mahasenko_cooldown_s") != null and float(player_node.get("mahasenko_cooldown_s")) > 0.0:
+					_sync_field_pad_state()
+					return
 				tgt_m = field_manager.resolve_skill_target()
 				if tgt_m.is_empty():
 					_sync_field_pad_state()
 					return
+				var is_tapion_m := player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion"))
+				if is_tapion_m and not field_manager.is_target_in_tapion_skill_range(tgt_m):
+					field_manager.start_skill_auto_approach("mahasenko", tgt_m)
+					_sync_field_pad_state()
+					return
+				field_manager.cancel_auto_approach()
 			if player_node.has_method(&"trigger_mahasenko") and bool(player_node.call(&"trigger_mahasenko")):
 				if player_node.has_method(&"set_locked_skill_target"):
 					player_node.call(&"set_locked_skill_target", tgt_m)
@@ -750,6 +796,7 @@ func _on_touch_action(action_name: String) -> void:
 				_request_player_action("mahasenko_air" if air_m else "mahasenko_ground")
 		_sync_field_pad_state()
 	elif action_name == "antamina":
+		# Antamina has UNLIMITED cast range (Owner 2026-11-26) — never requires moving closer!
 		if not _is_fighter_turning(player_node) and not _is_player_action_playing() and float(player_node.get("recover_timer_s")) <= 0.0:
 			var tgt_a: Dictionary = {}
 			var cur_mp := 100.0
@@ -762,26 +809,38 @@ func _on_touch_action(action_name: String) -> void:
 				if cur_mp + 0.001 < 100.0:
 					_sync_field_pad_state()
 					return
+				field_manager.cancel_auto_approach()
 			if player_node.has_method(&"trigger_antamina") and bool(player_node.call(&"trigger_antamina", cur_mp)):
 				if field_mode_enabled and field_manager != null and field_manager.active:
 					if not bool(field_manager.player_infinite_mana):
 						field_manager.player_mana = maxf(0.0, field_manager.player_mana - 100.0)
-					field_manager._local_mana_grace_s = maxf(field_manager._local_mana_grace_s, 2.4)
+					field_manager._local_mana_grace_s = maxf(field_manager._local_mana_grace_s, 4.4)
 					field_manager.combat_action_emitted.emit("antamina_cast", "", "self", player_node.position, player_node.scale.x < 0.0, 0.0)
 					field_manager.player_state_changed.emit()
 				if player_node.has_method(&"set_locked_skill_target"):
 					player_node.call(&"set_locked_skill_target", tgt_a)
 				_face_player_toward_pointed_target_if_any()
-				_request_player_action("antamina_fire")
+				if player_node.has_method(&"lock_antamina_facing"):
+					player_node.call(&"lock_antamina_facing")
+				_request_player_action("antamina_combo")
 		_sync_field_pad_state()
 	elif action_name == "bukadai":
 		if not _is_fighter_turning(player_node) and not _is_player_action_playing() and float(player_node.get("recover_timer_s")) <= 0.0:
 			var tgt_b: Dictionary = {}
 			if field_mode_enabled and field_manager != null and field_manager.active:
+				if player_node.get("bukadai_cooldown_s") != null and float(player_node.get("bukadai_cooldown_s")) > 0.0:
+					_sync_field_pad_state()
+					return
 				tgt_b = field_manager.resolve_skill_target()
 				if tgt_b.is_empty():
 					_sync_field_pad_state()
 					return
+				var is_tapion_b := player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion"))
+				if is_tapion_b and not field_manager.is_target_in_tapion_skill_range(tgt_b):
+					field_manager.start_skill_auto_approach("bukadai", tgt_b)
+					_sync_field_pad_state()
+					return
+				field_manager.cancel_auto_approach()
 			if player_node.has_method(&"trigger_bukadai") and bool(player_node.call(&"trigger_bukadai")):
 				if player_node.has_method(&"set_locked_skill_target"):
 					player_node.call(&"set_locked_skill_target", tgt_b)
@@ -845,7 +904,10 @@ func _step_player_light_cooldown(delta: float) -> void:
 	var light_playing_now := spr != null and spr.is_playing() and _is_light_attack_clip(String(spr.animation))
 	if _player_light_clip_active and not light_playing_now:
 		_player_light_clip_active = false
-		player_light_cooldown_s = 0.02 if _is_hero_songoku(player_node) else PLAYER_LIGHT_ATTACK_COOLDOWN_S
+		if player_node.has_method(&"get_combo_link_cooldown_s"):
+			player_light_cooldown_s = float(player_node.call(&"get_combo_link_cooldown_s"))
+		else:
+			player_light_cooldown_s = 0.02 if _is_hero_songoku(player_node) else PLAYER_LIGHT_ATTACK_COOLDOWN_S
 	elif not light_playing_now and player_light_cooldown_s > 0.0:
 		player_light_cooldown_s = maxf(0.0, player_light_cooldown_s - delta)
 
@@ -1036,6 +1098,13 @@ func _apply_hud_safe_area() -> void:
 		hero_avatar_panel.offset_right = 88.0 + ins_l
 		hero_avatar_panel.offset_top = 104.0 + ins_t
 		hero_avatar_panel.offset_bottom = 196.0 + ins_t
+	if pk_toggle_button != null and is_instance_valid(pk_toggle_button):
+		pk_toggle_button.anchor_left = 0.0
+		pk_toggle_button.anchor_right = 0.0
+		pk_toggle_button.offset_left = 96.0 + ins_l
+		pk_toggle_button.offset_right = 264.0 + ins_l
+		pk_toggle_button.offset_top = 104.0 + ins_t
+		pk_toggle_button.offset_bottom = 144.0 + ins_t
 
 	# Right cluster (Column R1: Gọi Shenron + Ngọc + Phím/Ẩn UI; Column R2: Vô hạn mana + Bất tử + Tướng + Dropdown Gọi Boss)
 	if summon_button != null:
@@ -1301,6 +1370,16 @@ func _setup_field_hud_controls() -> void:
 		hero_avatar_panel.add_child(hero_avatar_rect)
 		hud_layer.add_child(hero_avatar_panel)
 
+	if pk_toggle_button == null:
+		pk_toggle_button = Button.new()
+		pk_toggle_button.name = "PkToggleButton"
+		pk_toggle_button.tooltip_text = "Bật/Tắt chế độ PK Tàn Sát (khi bật, thanh máu player khác đổi đỏ và có thể tấn công nhau)"
+		pk_toggle_button.pressed.connect(func() -> void:
+			set_pk_tan_sat_enabled(not pk_tan_sat_enabled)
+		)
+		hud_layer.add_child(pk_toggle_button)
+	_sync_pk_toggle_button()
+
 	# Right cluster controls (next to Gọi Shenron)
 	infinite_mana_button = Button.new()
 	infinite_mana_button.name = "InfiniteManaButton"
@@ -1387,6 +1466,28 @@ func set_infinite_mana_enabled(enabled: bool) -> void:
 	queue_redraw()
 
 
+func _sync_pk_toggle_button() -> void:
+	if pk_toggle_button == null or not is_instance_valid(pk_toggle_button):
+		return
+	if pk_tan_sat_enabled:
+		pk_toggle_button.text = "☠️ Tàn sát: BẬT"
+		pk_toggle_button.add_theme_color_override("font_color", Color(1.0, 0.24, 0.24, 1.0))
+	else:
+		pk_toggle_button.text = "🛡️ PK: TẮT"
+		pk_toggle_button.remove_theme_color_override("font_color")
+
+
+func set_pk_tan_sat_enabled(enabled: bool) -> void:
+	pk_tan_sat_enabled = enabled
+	_ensure_field_manager()
+	field_manager.set_pk_tan_sat_enabled(enabled)
+	if alpha_session_active and zone_sync != null:
+		zone_sync.send_pk_mode(enabled)
+	_sync_pk_toggle_button()
+	_update_hud()
+	queue_redraw()
+
+
 func _sync_immortal_button() -> void:
 	if immortal_button == null or not is_instance_valid(immortal_button):
 		return
@@ -1463,7 +1564,7 @@ func spawn_boss_drum_now() -> Dictionary:
 func set_hud_ui_hidden(hidden: bool) -> void:
 	hud_ui_hidden = hidden
 	var vis_flag := not hidden
-	for n in [hud_label, pad_settings_button, infinite_mana_button, immortal_button, toggle_hero_button, boss_selector, boss_spawn_button, summon_button, item_toggle_button, item_drop_test_button, item_pickup_button]:
+	for n in [hud_label, pk_toggle_button, pad_settings_button, infinite_mana_button, immortal_button, toggle_hero_button, boss_selector, boss_spawn_button, summon_button, item_toggle_button, item_drop_test_button, item_pickup_button]:
 		if n != null and is_instance_valid(n):
 			n.visible = vis_flag
 	if toggle_ui_button != null:
@@ -1490,6 +1591,7 @@ func enable_field_mode(enabled: bool, spawn_hero: bool = false) -> void:
 	if role_hud != null:
 		role_hud.visible = false
 	field_manager.start_field(false)
+	field_manager.set_pk_tan_sat_enabled(pk_tan_sat_enabled)
 	set_field_hero_visible(spawn_hero)
 	_update_follow_camera()
 	_update_hud()
@@ -1689,6 +1791,8 @@ func _on_zone_combat_event(ev: Dictionary) -> void:
 
 
 func _on_zone_switched(_map_id: String, zone_id: int) -> void:
+	if field_manager != null and field_manager.has_method(&"clear_all_tapion_marks"):
+		field_manager.clear_all_tapion_marks()
 	if zone_selector != null:
 		_zone_selector_syncing = true
 		zone_selector.select(clampi(zone_id, 0, 19))
@@ -1713,6 +1817,20 @@ func step_alpha_network(delta: float, move_dir: int = 0) -> void:
 	net_transport.poll_events()
 	if field_manager != null and field_manager.active:
 		field_manager.step_remote_players(delta)
+	# Auto-reconnect dropped WSS sessions on downloaded clients so monster respawns & sync never stall permanently!
+	if not bool(net_transport.is_connected_state):
+		var is_connecting_now := bool(net_transport.get("_connecting")) if net_transport.get("_connecting") != null else false
+		if not is_connecting_now and not alpha_session_profile.is_empty():
+			_net_reconnect_accum_s += delta
+			if _net_reconnect_accum_s >= 3.0:
+				_net_reconnect_accum_s = 0.0
+				var ws_url := str(alpha_session_profile.get("ws_url", ""))
+				var jwt := str(alpha_session_profile.get("access_token", ""))
+				if not ws_url.is_empty() and not jwt.is_empty():
+					zone_sync.reset_session()
+					net_transport.connect_to_zone(ws_url, zone_sync.current_map_id, zone_sync.current_zone_id, jwt)
+		return
+	_net_reconnect_accum_s = 0.0
 	if player_node == null or not zone_sync.is_ready_to_play():
 		return
 	var pspr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
@@ -1721,7 +1839,7 @@ func step_alpha_network(delta: float, move_dir: int = 0) -> void:
 	if _net_intent_accum_s >= 0.05 or cur_act != _last_sent_action:
 		_net_intent_accum_s = 0.0
 		_last_sent_action = cur_act
-		zone_sync.send_player_intent(player_node.position, move_dir, cur_act, player_node.scale.x < 0.0, {"character_id": active_character_id})
+		zone_sync.send_player_intent(player_node.position, move_dir, cur_act, player_node.scale.x < 0.0, {"character_id": active_character_id, "pk_tan_sat": pk_tan_sat_enabled})
 
 
 func set_ruler_modal_visible(visible_flag: bool) -> void:
@@ -3574,6 +3692,16 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 
 	var entry := _find_character_entry(active_character_id)
 	var is_goku := _is_hero_songoku(player_node)
+	var goku_genki_casting := is_goku and bool(player_node.get("genki_casting"))
+	if goku_genki_casting:
+		player_node.set("flight_state", "hovering")
+		player_node.set("hover_timer_s", 3.0)
+		player_vy = 0.0
+		move_dir = 0
+		fly_dir_y = 0
+		jump_req = false
+		drop_req = false
+		analog_vec = Vector2.ZERO
 	var goku_recovering := is_goku and float(player_node.get("recover_timer_s")) > 0.0
 	if goku_recovering:
 		player_node.set("flight_state", "ground")
@@ -3589,7 +3717,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 		analog_vec = Vector2.ZERO
 	var goku_air_flight := is_goku and bool(player_node.call(&"is_airborne_flight"))
 	var is_flying := _is_flying_entry(entry) or goku_air_flight
-	var is_stationary := _is_stationary_entry(entry) or goku_recovering
+	var is_stationary := _is_stationary_entry(entry) or goku_recovering or goku_genki_casting
 	var action_playing := _is_player_action_playing()
 	var dir := 0 if (is_stationary or action_playing) else clampi(move_dir, -1, 1)
 	var eff_fly_dir_y := 0 if action_playing else clampi(fly_dir_y, -1, 1)
@@ -3646,7 +3774,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 	if is_goku:
 		var g_fstate := str(player_node.get("flight_state"))
 		if g_fstate == "flying":
-			walk_speed = 400.0
+			walk_speed = float(player_node.call(&"get_flight_speed_px_s")) if player_node.has_method(&"get_flight_speed_px_s") else 400.0
 		elif bool(player_node.get("is_ssj")) and bool(player_node.call(&"is_in_combat")):
 			# In Combat mode (`combat_move`), face nearby targeted enemy so:
 			# - Pulling analog AWAY >= 0.55 -> #0 continuous back dash (400 px/s, no aura, no hop)

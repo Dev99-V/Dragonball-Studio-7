@@ -2501,11 +2501,11 @@ func run_test() -> void:
 	if absf(p1_fm.player_armor) > 0.1 or absf(p1_fm.player_armor_broken_timer_s - 3.0) > 0.05 or String(g_spr.animation) != "hit":
 		fail("v6 T5: 5th hit must break armor (0), start 3.0s timer & play 'hit' (08) ONCE (armor=%.1f, t=%.2f, anim=%s)" % [p1_fm.player_armor, p1_fm.player_armor_broken_timer_s, String(g_spr.animation)])
 		return
-	# Subsequent hit during broken-armor window MUST NOT re-trigger 'hit'!
+	# Subsequent hit during broken-armor window MUST replay 'hit' 1:1 in parallel with EVERY incoming hit (Owner 2026-11-26)!
 	g_spr.play(&"idle_combat")
 	p1_fm.apply_damage_to_player(15.0, Vector2(-99999.0, -99999.0), false, "skill")
-	if String(g_spr.animation) == "hit":
-		fail("v6 T5: Subsequent hits while armor is already broken MUST NOT re-trigger 'hit'!")
+	if String(g_spr.animation) != "hit" or g_spr.frame != 0:
+		fail("Broken-armor HIT fix: Subsequent hits while armor is broken MUST replay 'hit' from frame 0 in parallel with each hit! (anim=%s frame=%d)" % [String(g_spr.animation), g_spr.frame])
 		return
 	p1_fm.step(3.1)
 	if absf(p1_fm.player_armor - 100.0) > 0.1 or p1_fm.player_armor_broken_timer_s > 0.0:

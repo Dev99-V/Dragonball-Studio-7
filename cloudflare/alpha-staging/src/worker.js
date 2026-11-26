@@ -71,6 +71,8 @@ const DAMAGE_TABLE = {
   flurry_kick: 30,
   atomic_blast: 55,
   kamehameha: 360,
+  genki_cast: 0,
+  genki: 400,
   kentaima: 60,
   mahasenko: 65,
   antamina_cast: 0,
@@ -88,11 +90,13 @@ const ACTION_SPECS = {
   flurry_kick: { min_dmg: 30, max_dmg: 30, default_dmg: 30, mana_delta: 8, mana_cost: 0, ranged: false, pvp_range: 300 },
   atomic_blast: { min_dmg: 55, max_dmg: 55, default_dmg: 55, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 1400 },
   kamehameha: { min_dmg: 360, max_dmg: 360, default_dmg: 360, mana_delta: 0, mana_cost: 80, cast_window_ms: 5000, ranged: true, pvp_range: 1400 },
-  kentaima: { min_dmg: 60, max_dmg: 60, default_dmg: 60, mana_delta: 10, mana_cost: 0, ranged: true, pvp_range: 1400 },
-  mahasenko: { min_dmg: 65, max_dmg: 65, default_dmg: 65, mana_delta: 10, mana_cost: 0, ranged: true, pvp_range: 1400 },
-  antamina_cast: { min_dmg: 0, max_dmg: 0, default_dmg: 0, mana_delta: 0, mana_cost: 100, ranged: true, pvp_range: 1400 },
-  antamina: { min_dmg: 80, max_dmg: 80, default_dmg: 80, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 1400 },
-  bukadai: { min_dmg: 85, max_dmg: 85, default_dmg: 85, mana_delta: 15, mana_cost: 0, ranged: false, pvp_range: 950 },
+  genki_cast: { min_dmg: 0, max_dmg: 0, default_dmg: 0, mana_delta: 0, mana_cost: 100, ranged: true, pvp_range: 1050 },
+  genki: { min_dmg: 400, max_dmg: 500, default_dmg: 400, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 1050 },
+  kentaima: { min_dmg: 60, max_dmg: 60, default_dmg: 60, mana_delta: 10, mana_cost: 0, ranged: true, pvp_range: 1240 },
+  mahasenko: { min_dmg: 65, max_dmg: 65, default_dmg: 65, mana_delta: 10, mana_cost: 0, ranged: true, pvp_range: 1240 },
+  antamina_cast: { min_dmg: 0, max_dmg: 0, default_dmg: 0, mana_delta: 0, mana_cost: 100, ranged: true, pvp_range: 99999, unlimited_range: true },
+  antamina: { min_dmg: 80, max_dmg: 104, default_dmg: 80, mana_delta: 0, mana_cost: 0, ranged: true, pvp_range: 99999, unlimited_range: true },
+  bukadai: { min_dmg: 85, max_dmg: 85, default_dmg: 85, mana_delta: 15, mana_cost: 0, ranged: false, pvp_range: 1240 },
 };
 
 const RATE_LIMIT_MAP = new Map();
@@ -441,7 +445,7 @@ export class ZoneRoomDO {
         respawn_at: 0,
       });
     }
-    const zObj = { key, map_id: m, zone_id: zid, tick: 0, players: new Map(), monsters, sockets: new Set() };
+    const zObj = { key, map_id: m, zone_id: zid, tick: 0, force_pvp_mode: false, players: new Map(), monsters, sockets: new Set() };
     this.zones.set(key, zObj);
     return zObj;
   }
@@ -465,25 +469,75 @@ export class ZoneRoomDO {
     }
   }
 
-  _emitSnapshot(z) {
+  _processRespawns(z) {
     const now = Date.now();
+    let changed = false;
     for (const p of z.players.values()) {
-      if (!p.alive && p.respawn_at > 0 && now >= p.respawn_at) {
-        p.alive = true;
-        p.hp = p.max_hp;
-        p.x = 560;
-        p.y = 840;
-        p.act = "idle";
-        p.respawn_at = 0;
+      if (!p.alive) {
+        if (!p.respawn_at || p.respawn_at <= 0) {
+          p.respawn_at = now + 3000;
+        } else if (now >= p.respawn_at) {
+          p.alive = true;
+          p.hp = p.max_hp;
+          p.x = 560;
+          p.y = 840;
+          p.act = "idle";
+          p.respawn_at = 0;
+          changed = true;
+        }
       }
     }
     for (const m of z.monsters.values()) {
-      if (!m.alive && m.respawn_at > 0 && now >= m.respawn_at) {
-        m.alive = true;
-        m.hp = m.max_hp;
-        m.respawn_at = 0;
+      if (!m.alive) {
+        if (!m.respawn_at || m.respawn_at <= 0) {
+          m.respawn_at = now + 12000;
+        } else if (now >= m.respawn_at) {
+          m.alive = true;
+          m.hp = m.max_hp;
+          m.respawn_at = 0;
+          changed = true;
+        }
       }
     }
+    return changed;
+  }
+
+  async _scheduleNextRespawnAlarm() {
+    let soonest = 0;
+    for (const z of this.zones.values()) {
+      if (!z.sockets || z.sockets.size === 0) continue;
+      for (const p of z.players.values()) {
+        if (!p.alive && p.respawn_at > 0 && (soonest === 0 || p.respawn_at < soonest)) {
+          soonest = p.respawn_at;
+        }
+      }
+      for (const m of z.monsters.values()) {
+        if (!m.alive && m.respawn_at > 0 && (soonest === 0 || m.respawn_at < soonest)) {
+          soonest = m.respawn_at;
+        }
+      }
+    }
+    if (soonest > 0 && this.state?.storage?.setAlarm) {
+      try {
+        await this.state.storage.setAlarm(Math.max(Date.now() + 100, soonest + 50));
+      } catch {
+        // ignore alarm errors in environments without DO alarm support
+      }
+    }
+  }
+
+  async alarm() {
+    for (const z of this.zones.values()) {
+      if (!z.sockets || z.sockets.size === 0) continue;
+      if (this._processRespawns(z)) {
+        this._emitSnapshot(z);
+      }
+    }
+    await this._scheduleNextRespawnAlarm();
+  }
+
+  _emitSnapshot(z) {
+    this._processRespawns(z);
     z.tick += 1;
     const entities = [];
     for (const p of z.players.values()) entities.push({ ...p });
@@ -597,6 +651,7 @@ export class ZoneRoomDO {
         mana: initMana,
         max_mana: 100,
         alive: true,
+        pk_tan_sat: false,
         respawn_at: 0,
         kame_cast_paid_ms: 0,
       });
@@ -652,6 +707,7 @@ export class ZoneRoomDO {
           mana: info.character_id === "songoku" ? 100 : 0,
           max_mana: 100,
           alive: true,
+          pk_tan_sat: false,
           respawn_at: 0,
           kame_cast_paid_ms: 0,
         }
@@ -666,13 +722,27 @@ export class ZoneRoomDO {
     const p = z.players.get(info.user_id);
     if (!p) return;
 
+    if (op === "set_pk_mode") {
+      p.pk_tan_sat = Boolean(pkt.pk_tan_sat);
+      this._emitSnapshot(z);
+      return;
+    }
+
     if (op === "intent") {
-      if (!p.alive) return;
+      if (!p.alive) {
+        if (this._processRespawns(z)) {
+          this._emitSnapshot(z);
+        }
+        return;
+      }
       const rx = Math.max(-216, Math.min(6336, Number(pkt.x ?? p.x)));
       const ry = Math.max(40, Math.min(1060, Number(pkt.y ?? p.y)));
       p.x = Math.round(rx * 10) / 10;
       p.y = Math.round(ry * 10) / 10;
       p.facing_left = Boolean(pkt.facing_left ?? p.facing_left);
+      if (typeof pkt.pk_tan_sat === "boolean") {
+        p.pk_tan_sat = pkt.pk_tan_sat;
+      }
       if (pkt.character_id) {
         const nextCid = normalizeHeroCharacterId(pkt.character_id);
         p.character_id = nextCid;
@@ -696,6 +766,7 @@ export class ZoneRoomDO {
           p.alive = false;
           p.act = "ko";
           p.respawn_at = Date.now() + 3000;
+          await this._scheduleNextRespawnAlarm();
         }
       } else if (aliveReq && !p.alive && Number(pkt.hp ?? 0) >= p.max_hp - 1) {
         p.alive = true;
@@ -719,6 +790,12 @@ export class ZoneRoomDO {
         this._emitSnapshot(z);
         return;
       }
+      if (action === "antamina_cast" || action === "genki_cast") {
+        if (p.mana + 0.001 < 100) return;
+        p.mana = Math.max(0, p.mana - 100);
+        this._emitSnapshot(z);
+        return;
+      }
       const spec = ACTION_SPECS[action];
       if (!spec) return;
       const targetKind = String(pkt.target_kind || "player");
@@ -727,6 +804,10 @@ export class ZoneRoomDO {
       if (!targetId || (targetKind === "player" && targetId === info.user_id)) return;
       const target = targetKind === "player" ? z.players.get(targetId) : z.monsters.get(targetId);
       if (!target || !target.alive) return;
+      if (targetKind === "player") {
+        const canPvp = Boolean(p.pk_tan_sat) || Boolean(target.pk_tan_sat) || Boolean(z.force_pvp_mode);
+        if (!canPvp) return;
+      }
       if (spec.mana_cost > 0) {
         const castWin = Number(spec.cast_window_ms || 0);
         const paidMs = Number(p.kame_cast_paid_ms || 0);
@@ -738,13 +819,17 @@ export class ZoneRoomDO {
         }
       }
       if (targetKind === "monster") {
-        const pad = spec.ranged ? 1400 : 340;
-        const px = typeof pkt.x === "number" && Number.isFinite(pkt.x) ? pkt.x : Number(p.x ?? 0);
-        if (px < (target.zmin ?? target.x) - pad || px > (target.zmax ?? target.x) + pad) return;
+        if (!spec.unlimited_range) {
+          const pad = spec.ranged ? 1400 : 520;
+          const px = typeof pkt.x === "number" && Number.isFinite(pkt.x) ? pkt.x : Number(p.x ?? 0);
+          if (px < (target.zmin ?? target.x) - pad || px > (target.zmax ?? target.x) + pad) return;
+        }
       } else {
-        const dist = Math.hypot((p.x || 0) - (target.x || 0), (p.y || 0) - (target.y || 0));
-        const maxRange = Number(spec.pvp_range || 280);
-        if (dist > maxRange) return;
+        if (!spec.unlimited_range) {
+          const dist = Math.hypot((p.x || 0) - (target.x || 0), (p.y || 0) - (target.y || 0));
+          const maxRange = Number(spec.pvp_range || 280);
+          if (dist > maxRange) return;
+        }
       }
       let dmg = spec.max_dmg;
       if (spec.max_dmg > spec.min_dmg) {
@@ -759,6 +844,7 @@ export class ZoneRoomDO {
         target.alive = false;
         target.respawn_at = Date.now() + (targetKind === "player" ? 3000 : 12000);
         if (targetKind === "player") target.act = "ko";
+        await this._scheduleNextRespawnAlarm();
       }
       this._broadcastZone(z, {
         op: "combat_event",

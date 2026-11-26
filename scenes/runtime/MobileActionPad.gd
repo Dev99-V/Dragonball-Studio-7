@@ -24,10 +24,11 @@ const ACTION_LABELS := {
 	"flurry_kick": "Đá liên hoàn",
 	"atomic_blast": "Antomic",
 	"kamehameha": "Kamehameha",
-	"kentaima": "Kentaima (Sóng kiếm)",
-	"mahasenko": "Mahasenko (2 tia vàng)",
-	"antamina": "Antamina (100 MP)",
-	"bukadai": "Bukadai (Tele choáng 2s)",
+	"genki": "Genki (Trên không · 100 MP · Nổ 700px)",
+	"kentaima": "Kentaima (Sóng kiếm · Đốt Kentai 5s)",
+	"mahasenko": "Mahasenko (4 tia vàng trái-phải)",
+	"antamina": "Antamina (100 MP · 5/7 tia 4000px/s)",
+	"bukadai": "Bukadai (Tele choáng 2s · Ấn ngục)",
 	"empty": "Trống",
 }
 
@@ -45,6 +46,7 @@ const SHORT_LABELS := {
 	"flurry_kick": "ĐÁ LH",
 	"atomic_blast": "ATOMIC",
 	"kamehameha": "KAME",
+	"genki": "GENKI",
 	"kentaima": "KENTAIMA",
 	"mahasenko": "MAHASENKO",
 	"antamina": "ANTAMINA",
@@ -52,7 +54,7 @@ const SHORT_LABELS := {
 	"cycle_target": "TRỎ",
 }
 
-const ASSIGNABLE_ACTIONS := ["jump", "teleport", "transform_ssj", "kentaima", "mahasenko", "antamina", "bukadai", "flurry_kick", "atomic_blast", "kamehameha", "barrier", "energy_recover", "fly_toggle", "power_up", "attack_heavy", "pickup_items", "empty"]
+const ASSIGNABLE_ACTIONS := ["jump", "teleport", "transform_ssj", "kentaima", "mahasenko", "antamina", "bukadai", "flurry_kick", "atomic_blast", "kamehameha", "genki", "barrier", "energy_recover", "fly_toggle", "power_up", "attack_heavy", "pickup_items", "empty"]
 
 var analog_dir_x: int = 0
 var analog_dir_y: int = 0
@@ -102,6 +104,8 @@ var _hero_kentaima_cd: float = 0.0
 var _hero_mahasenko_cd: float = 0.0
 var _hero_antamina_cd: float = 0.0
 var _hero_bukadai_cd: float = 0.0
+var _hero_genki_cd: float = 0.0
+var _hero_airborne_for_genki: bool = false
 var _hero_on_ground: bool = true
 
 # Analog drag tracking
@@ -186,6 +190,7 @@ func _build_ui() -> void:
 	var layout_specs := {
 		1: Rect2(326, 224, 122, 122),
 		5: Rect2(340, 100, 106, 106),
+		11: Rect2(352, 8, 84, 84),
 		2: Rect2(226, 16, 92, 92),
 		4: Rect2(210, 144, 94, 94),
 		3: Rect2(204, 266, 92, 92),
@@ -194,7 +199,7 @@ func _build_ui() -> void:
 		7: Rect2(10, 140, 72, 72),
 		8: Rect2(14, 294, 62, 62),
 	}
-	for sid in [1, 2, 3, 4, 5, 6, 7, 8, 10]:
+	for sid in [1, 2, 3, 4, 5, 6, 7, 8, 10, 11]:
 		var r: Rect2 = layout_specs[sid]
 		var btn := Button.new()
 		btn.name = "SkillCircle_%d" % sid
@@ -422,6 +427,8 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 		avail.append("atomic_blast")
 	if available_clips.has("kame_ground_horiz") or (not _hero_is_tapion and _hero_is_songoku):
 		avail.append("kamehameha")
+	if available_clips.has("genki_cast") or (not _hero_is_tapion and _hero_is_songoku):
+		avail.append("genki")
 	if available_clips.has("fly_aura") or available_clips.has("fly_launch"):
 		avail.append("fly_toggle")
 	if available_clips.has("power_up"):
@@ -441,6 +448,7 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 	_slot_bindings[7] = "empty"
 	_slot_bindings[8] = "cycle_target"
 	_slot_bindings[10] = "empty"
+	_slot_bindings[11] = "empty"
 	if _hero_is_tapion:
 		# Full Tapion Skill Cluster: All 10-step Sword Combo + Teleport + 4 Signature Skills + Ocarina Barrier & Recover!
 		_slot_bindings[2] = "teleport"
@@ -451,7 +459,7 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 		_slot_bindings[7] = "barrier"
 		_slot_bindings[10] = "energy_recover"
 	elif _hero_is_songoku:
-		# Full Phase 2 Hero Skill Arc (ALL skills directly visible on screen: 2..7 + dedicated slot 10 `energy_recover`!)
+		# Full Phase 2 Hero Skill Arc (ALL skills directly visible on screen: 2..7 + slot 10 `energy_recover` + slot 11 `genki`!)
 		_slot_bindings[2] = "transform_ssj"
 		_slot_bindings[3] = "teleport"
 		_slot_bindings[4] = "flurry_kick"
@@ -459,6 +467,7 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 		_slot_bindings[6] = "kamehameha"
 		_slot_bindings[7] = "barrier"
 		_slot_bindings[10] = "energy_recover"
+		_slot_bindings[11] = "genki"
 	elif char_id == "drum":
 		_slot_bindings[2] = "jump"
 		_slot_bindings[3] = "teleport"
@@ -507,6 +516,12 @@ func set_tapion_skill_cooldowns(kenta_cd: float, maha_cd: float, anta_cd: float,
 	_refresh_slot_buttons()
 
 
+func set_hero_genki_state(genki_cd: float, airborne_ready: bool) -> void:
+	_hero_genki_cd = genki_cd
+	_hero_airborne_for_genki = airborne_ready
+	_refresh_slot_buttons()
+
+
 func set_jump_available(enabled: bool, flight: bool = false) -> void:
 	_jump_enabled = enabled
 	_flight_mode = flight
@@ -514,7 +529,7 @@ func set_jump_available(enabled: bool, flight: bool = false) -> void:
 
 
 func _refresh_slot_buttons() -> void:
-	for sid in [1, 2, 3, 4, 5, 6, 7, 8, 10]:
+	for sid in [1, 2, 3, 4, 5, 6, 7, 8, 10, 11]:
 		var btn := _slot_buttons.get(sid) as Button
 		if btn == null:
 			continue
@@ -576,6 +591,14 @@ func _refresh_slot_buttons() -> void:
 		elif act == "kamehameha":
 			btn.tooltip_text = "Kamehameha (80 MP · Hiện có %d)" % int(floor(_current_mana))
 			btn.disabled = (not _hero_is_ssj) or (_current_mana < 80.0)
+		elif act == "genki":
+			if not _hero_airborne_for_genki:
+				btn.tooltip_text = "Genki (Chỉ dùng khi đang trên không trung · 100 MP)"
+			elif _hero_genki_cd > 0.0:
+				btn.tooltip_text = "Genki (Hồi %.1fs · 100 MP)" % _hero_genki_cd
+			else:
+				btn.tooltip_text = "Genki — Tụ 5s trên không · Nổ đất 700px (100 MP · Hiện có %d)" % int(floor(_current_mana))
+			btn.disabled = (not _hero_is_ssj) or (not _hero_airborne_for_genki) or (_hero_genki_cd > 0.0) or (_current_mana + 0.001 < 100.0)
 		elif act == "flurry_kick":
 			btn.tooltip_text = "Đá liên hoàn (Choáng Boss/Quái/Tướng)" if _hero_flurry_cd <= 0.0 else "Đá liên hoàn (%.1fs)" % _hero_flurry_cd
 			btn.disabled = (not _hero_is_ssj) or _hero_flurry_cd > 0.0
@@ -591,19 +614,19 @@ func _refresh_slot_buttons() -> void:
 				btn.tooltip_text = "Gồng hồi (%.1fs)" % _hero_recover_cd
 			btn.disabled = (not _hero_is_ssj) or (not _hero_on_ground) or _hero_recover_cd > 0.0
 		elif act == "kentaima":
-			btn.tooltip_text = "Kentaima — Sóng kiếm xanh 2500px/s khóa mục tiêu" if _hero_kentaima_cd <= 0.0 else "Kentaima (%.1fs)" % _hero_kentaima_cd
+			btn.tooltip_text = "Kentaima — Sóng kiếm 2500px/s · Đốt Kentai 5s" if _hero_kentaima_cd <= 0.0 else "Kentaima (%.1fs)" % _hero_kentaima_cd
 			btn.disabled = _hero_kentaima_cd > 0.0
 		elif act == "mahasenko":
-			btn.tooltip_text = "Mahasenko — Phóng 2 tia vàng 2500px/s vào mục tiêu" if _hero_mahasenko_cd <= 0.0 else "Mahasenko (%.1fs)" % _hero_mahasenko_cd
+			btn.tooltip_text = "Mahasenko — Phóng 4 tia vàng nối đuôi 2500px/s" if _hero_mahasenko_cd <= 0.0 else "Mahasenko (%.1fs)" % _hero_mahasenko_cd
 			btn.disabled = _hero_mahasenko_cd > 0.0
 		elif act == "antamina":
 			if _hero_antamina_cd > 0.0:
 				btn.tooltip_text = "Antamina (%.1fs · 100 MP)" % _hero_antamina_cd
 			else:
-				btn.tooltip_text = "Antamina — Đại chiêu 3000px/s (100 MP · Hiện có %d)" % int(floor(_current_mana))
+				btn.tooltip_text = "Antamina — Vận 2s bắn 5/7 tia 4000px/s (100 MP · Hiện có %d)" % int(floor(_current_mana))
 			btn.disabled = _hero_antamina_cd > 0.0 or (_current_mana + 0.001 < 100.0)
 		elif act == "bukadai":
-			btn.tooltip_text = "Bukadai — Tele chớp nhoáng & làm choáng địch 2s" if _hero_bukadai_cd <= 0.0 else "Bukadai (%.1fs)" % _hero_bukadai_cd
+			btn.tooltip_text = "Bukadai — Tele choáng 2s · Tích Ấn ngục (5→Suy yếu)" if _hero_bukadai_cd <= 0.0 else "Bukadai (%.1fs)" % _hero_bukadai_cd
 			btn.disabled = _hero_bukadai_cd > 0.0
 		else:
 			btn.tooltip_text = lbl
@@ -858,6 +881,24 @@ class _SkillButtonVisual extends Control:
 			# Dedicated blue Kamehameha beam icon on transparent frosted glass disc (Owner v10.6 HUD spec)
 			_draw_kame_beam_icon(center + Vector2(0.0, -7.0), r * 0.48, blue_k, alpha_mul)
 			short_lbl = "KAME" if mp_ratio >= 1.0 else "%d/80" % int(floor(pad_owner._current_mana))
+		elif act == "genki":
+			var cd_g: float = float(pad_owner._hero_genki_cd)
+			var mp_g: float = clampf(pad_owner._current_mana / 100.0, 0.0, 1.0)
+			var cyan_g := Color(0.22, 0.88, 1.0, 0.98 * alpha_mul)
+			var ring_g: float = clampf(1.0 - cd_g / 15.0, 0.0, 1.0) if cd_g > 0.05 else mp_g
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_g, 36, cyan_g if (mp_g >= 1.0 and bool(pad_owner._hero_airborne_for_genki)) else Color(0.24, 0.66, 0.96, 0.52), 3.0, true)
+			draw_circle(center + Vector2(0.0, -7.0), r * 0.34, Color(0.14, 0.72, 1.0, 0.60 * alpha_mul))
+			draw_circle(center + Vector2(0.0, -7.0), r * 0.20, Color(0.92, 0.99, 1.0, 0.98 * alpha_mul))
+			draw_arc(center + Vector2(0.0, -7.0), r * 0.44, -PI * 0.75, PI * 0.15, 16, cyan_g, 2.0, true)
+			draw_arc(center + Vector2(0.0, -7.0), r * 0.44, PI * 0.25, PI * 1.15, 16, Color(0.84, 0.97, 1.0, 0.90 * alpha_mul), 1.8, true)
+			if cd_g > 0.05:
+				short_lbl = "%ds" % int(ceilf(cd_g))
+			elif not bool(pad_owner._hero_airborne_for_genki):
+				short_lbl = "BAY"
+			elif mp_g < 1.0:
+				short_lbl = "%d/100" % int(floor(pad_owner._current_mana))
+			else:
+				short_lbl = "GENKI"
 		elif act == "flurry_kick":
 			var cd_f: float = float(pad_owner._hero_flurry_cd)
 			var ready_f: float = clampf(1.0 - cd_f / 6.0, 0.0, 1.0)

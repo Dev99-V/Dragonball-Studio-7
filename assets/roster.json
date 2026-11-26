@@ -2742,7 +2742,8 @@
         "kame_ground_up",
         "kame_air_horiz",
         "kame_air_down",
-        "atomic_ground_up"
+        "atomic_ground_up",
+        "genki_cast"
       ],
       "effect_clips": [],
       "missing_provisional_clips": [
@@ -2797,7 +2798,8 @@
           "kame_ground_up",
           "kame_air_horiz",
           "kame_air_down",
-          "atomic_ground_up"
+          "atomic_ground_up",
+          "genki_cast"
         ],
         "effect_clips": [],
         "locomotion": {
@@ -2993,10 +2995,20 @@
           "atomic_bolts_per_hand": 3,
           "kamehameha_charge_duration_sec": 2.0,
           "kamehameha_blue_light_reflection": true,
-          "kamehameha_beam_scale_mul": 1.2
+          "kamehameha_beam_scale_mul": 1.2,
+          "genki_air_only": true,
+          "genki_mana_cost": 100.0,
+          "genki_cooldown_sec": 15.0,
+          "genki_charge_duration_sec": 5.0,
+          "genki_aoe_radius_px": 700.0,
+          "genki_base_damage": 400.0,
+          "genki_per_player_bonus": 5.0,
+          "genki_max_bonus_players": 20,
+          "genki_cc_immune_while_casting": true
         },
         "facing_default": "right",
-        "skills_fx_tres": "res://assets/fx/songoku_skills_fx/songoku_skills_fx.tres"
+        "skills_fx_tres": "res://assets/fx/songoku_skills_fx/songoku_skills_fx.tres",
+        "genki_fx_tres": "res://assets/fx/genki_fx/genki_fx.tres"
       },
       "modes": {
         "combined_1layer": {
@@ -3006,22 +3018,24 @@
         }
       },
       "motion_quality": {
-        "status": "owner_approved",
+        "status": "reviewed_pending_owner",
+        "owner_approved": false,
         "method": "imagegen_complete_body_keyframes",
         "turn_method": "instant_flip",
-        "atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
-        "owner_approved": true,
+        "atlas_sha256": "744adbde39ae93f240d74f955dde5f3be63565010f0d83c606097f4924bcdb32",
+        "previous_revision_atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
+        "reviewed_at": "2026-11-26T04:32:00Z",
         "checks": {
           "body_connections": true,
           "whole_pose_sequence": true,
           "perspective_turns": true,
           "phase_timing": true,
-          "three_backgrounds": true
+          "three_backgrounds": true,
+          "character_identity": true
         },
         "unresolved_structural_failures": [],
-        "review_evidence": "assets/songoku/clips/review/filmstrip-30.png",
-        "notes": "Son Goku Hero Phase 1+2 v10.6 (34 body clips, 196 frames on 1-page 4090x4090 Nearest atlas + 14 independent FX clips on 1-page atlas): 24/24 Base Lock verified, stance_mid locked across grounded/charge/cast clips, slim #1/#4 kame_ground_up matched to #5, agu_06 bridge + agu_07 2-hands-to-sky matched to #2, atomic_ground [90x6,100,90]ms & atomic_ground_up [90x7,100]ms @ 60Hz, full HUD & combat verified.",
-        "naturalness_verdict": "owner_approved"
+        "review_evidence": "assets/songoku/clips/review/filmstrip-34.png",
+        "notes": "Appended 6-frame SSJ1 genki_cast clip (4 arm-raise + 2 downward 25deg throw) preserving 100% of 34 existing clips & 24/24 Base SHA-256 lock; pending Owner Human Test."
       }
     }
   ],

@@ -52,7 +52,7 @@ const KI_BAR_WIDTH := 5.4 # 60% of previous 9.0px thickness (-40% per Owner v10.
 const STATE_ICON_RADIUS := 7.5 # Exact radius shared by Peace/Combat & Shield-Break badges
 
 
-static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, hp: float, max_hp: float, mana: float, max_mana: float, display_name: String = "", is_remote: bool = false, armor: float = -1.0, max_armor: float = 100.0, armor_broken: bool = false, ki: float = -1.0, max_ki: float = 50.0, ki_exhausted: bool = false, show_shield_break_icon: bool = false, shield_break_alpha: float = 1.0) -> void:
+static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, hp: float, max_hp: float, mana: float, max_mana: float, display_name: String = "", is_remote: bool = false, armor: float = -1.0, max_armor: float = 100.0, armor_broken: bool = false, ki: float = -1.0, max_ki: float = 50.0, ki_exhausted: bool = false, show_shield_break_icon: bool = false, shield_break_alpha: float = 1.0, is_hostile_enemy: bool = false, is_pk_flagged: bool = false) -> void:
 	var bar_w := 124.0
 	var hp_h := 16.0
 	var mana_h := 9.0
@@ -65,7 +65,8 @@ static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, 
 	var hp_rect := Rect2(x0, mana_bottom_y - hp_h - mana_h - gap, bar_w, hp_h)
 	var mana_rect := Rect2(x0, mana_bottom_y - mana_h, bar_w, mana_h)
 	var white_track := Color(0.98, 0.99, 1.0, 0.96)
-	var hp_col := Color(0.12, 0.84, 0.98, 1.0) if is_remote else Color(0.0, 0.93, 0.04, 1.0)
+	# Hostile PK remote players render with crimson enemy HP bar identical to monsters/bosses (Owner 2026-11-26)!
+	var hp_col := Color(0.92, 0.15, 0.15, 1.0) if (is_remote and is_hostile_enemy) else (Color(0.12, 0.84, 0.98, 1.0) if is_remote else Color(0.0, 0.93, 0.04, 1.0))
 	draw_pill_bar(canvas, hp_rect, hp / maxf(1.0, max_hp), hp_col, white_track)
 	draw_pill_bar(canvas, mana_rect, mana / maxf(1.0, max_mana), Color(0.0, 0.68, 0.96, 1.0), white_track)
 	if has_armor:
@@ -84,6 +85,9 @@ static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, 
 		var ki_track := Color(0.16, 0.20, 0.28, 0.88)
 		draw_vertical_pill_bar(canvas, ki_rect, ki / maxf(1.0, max_ki), ki_fill, ki_track)
 		canvas.draw_rect(ki_rect.grow(0.5), Color(0.04, 0.06, 0.10, 0.75), false, 1.0)
+	if (is_remote and is_hostile_enemy) or is_pk_flagged:
+		# Crimson crossed-swords PK/hostile indicator right below bar (identical to hostile enemy badge!)
+		draw_monster_state_icon(canvas, Vector2(center_x, top_y + 10.0), true)
 	if show_shield_break_icon and shield_break_alpha > 0.02:
 		draw_shield_break_icon(canvas, Vector2(center_x, hp_rect.position.y - STATE_ICON_RADIUS - 3.0), shield_break_alpha)
 	var font := ThemeDB.fallback_font
@@ -93,7 +97,7 @@ static func draw_player_bars(canvas: CanvasItem, center_x: float, top_y: float, 
 		canvas.draw_string(font, Vector2(x0 - 16.0, hp_txt_y), txt, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 32.0, 15, Color(0.98, 1.0, 0.98, 0.98))
 		if not display_name.is_empty():
 			var name_pos := Vector2(x0 - 36.0, hp_txt_y - 20.0)
-			var name_col := Color(0.42, 0.96, 1.0, 1.0) if is_remote else Color(1.0, 0.92, 0.36, 1.0)
+			var name_col := Color(1.0, 0.24, 0.24, 1.0) if ((is_remote and is_hostile_enemy) or is_pk_flagged) else (Color(0.42, 0.96, 1.0, 1.0) if is_remote else Color(1.0, 0.92, 0.36, 1.0))
 			canvas.draw_string_outline(font, name_pos, display_name, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 72.0, 18, 4, Color(0.03, 0.06, 0.12, 0.96))
 			canvas.draw_string(font, name_pos, display_name, HORIZONTAL_ALIGNMENT_CENTER, bar_w + 72.0, 18, name_col)
 
@@ -405,3 +409,88 @@ static func draw_stun_stars_ring(canvas: CanvasItem, head_top_pos: Vector2, time
 		canvas.draw_rect(Rect2(roundf(sx - sz * 0.5), roundf(sy - sz * 0.5), sz, sz), Color(1.0, 0.90, 0.22, 1.0), true)
 		canvas.draw_rect(Rect2(roundf(sx - 1.0), roundf(sy - sz * 0.85), 2.0, sz * 1.7), Color(1.0, 0.98, 0.70, 0.95), true)
 		canvas.draw_rect(Rect2(roundf(sx - sz * 0.85), roundf(sy - 1.0), sz * 1.7, 2.0), Color(1.0, 0.98, 0.70, 0.95), true)
+
+
+static func draw_kentai_green_burn_fx(canvas: CanvasItem, body_rect: Rect2, time_s: float) -> void:
+	## Subtle pixel-art emerald-green flame wisps burning lightly on a target afflicted by Kentaima's 5s Kentai mark!
+	if body_rect.size.x < 4.0 or body_rect.size.y < 4.0:
+		return
+	var col_outer := Color(0.10, 0.92, 0.46, 0.86)
+	var col_mid := Color(0.42, 1.0, 0.68, 0.92)
+	var col_core := Color(0.88, 1.0, 0.94, 0.96)
+	# 5 lightweight rising pixel flame wisps distributed subtly across target silhouette
+	for i in range(5):
+		var phase := fposmod(time_s * (2.6 + float(i) * 0.35) + float(i) * 0.29, 1.0)
+		var x_frac := 0.22 + float(i) * 0.14
+		var sway := sin(time_s * 9.0 + float(i) * 1.7) * 2.5
+		var fx := roundf(body_rect.position.x + body_rect.size.x * x_frac + sway)
+		var fy := roundf(body_rect.end.y - body_rect.size.y * (0.18 + phase * 0.68))
+		var fade := 1.0 - maxf(0.0, (phase - 0.55) / 0.45)
+		if fade <= 0.05:
+			continue
+		var s := 4.0 if phase < 0.55 else 3.0
+		var c1 := Color(col_outer.r, col_outer.g, col_outer.b, col_outer.a * fade)
+		var c2 := Color(col_mid.r, col_mid.g, col_mid.b, col_mid.a * fade)
+		var c3 := Color(col_core.r, col_core.g, col_core.b, col_core.a * fade)
+		# Crisp pixel teardrop flame (3 stacked pixel blocks)
+		canvas.draw_rect(Rect2(fx - s * 0.5, fy, s, s), c1, true)
+		canvas.draw_rect(Rect2(fx - (s - 1.0) * 0.5, fy - s + 1.0, s - 1.0, s), c2, true)
+		canvas.draw_rect(Rect2(fx - 1.0, fy - s - 2.0, 2.0, 2.0), c3, true)
+
+
+static func draw_tapion_mark_badges(canvas: CanvasItem, center_x: float, badge_y: float, kentai_timer_s: float, an_nguc_stacks: int, time_s: float) -> void:
+	## Overhead badges for Tapion's combo system:
+	## - Kentai (5s): emerald-green flame badge + radial remaining-time arc.
+	## - Ấn ngục (1..5 stacks): crimson-violet seal emblem with crisp stack count; at 5 stacks pulses gold-magenta "SUY YẾU"!
+	var has_kentai := kentai_timer_s > 0.0
+	var has_seal := an_nguc_stacks > 0
+	if not has_kentai and not has_seal:
+		return
+	var r := 9.0
+	var font := ThemeDB.fallback_font
+	var k_pos := Vector2(center_x - 14.0, badge_y) if (has_kentai and has_seal) else Vector2(center_x, badge_y)
+	var s_pos := Vector2(center_x + 14.0, badge_y) if (has_kentai and has_seal) else Vector2(center_x, badge_y)
+
+	if has_kentai:
+		var frac := clampf(kentai_timer_s / 5.0, 0.0, 1.0)
+		canvas.draw_circle(k_pos, r + 1.6, Color(0.04, 0.09, 0.08, 0.92))
+		canvas.draw_arc(k_pos, r, 0.0, TAU, 20, Color(0.10, 0.34, 0.24, 0.72), 2.0, true)
+		canvas.draw_arc(k_pos, r, -PI * 0.5, -PI * 0.5 + TAU * frac, 20, Color(0.18, 1.0, 0.58, 0.98), 2.2, true)
+		# Emerald flame glyph inside badge
+		var flame_pts := PackedVector2Array([
+			k_pos + Vector2(0.0, -5.8),
+			k_pos + Vector2(3.8, -0.4),
+			k_pos + Vector2(2.6, 4.4),
+			k_pos + Vector2(0.0, 5.4),
+			k_pos + Vector2(-2.6, 4.4),
+			k_pos + Vector2(-3.8, -0.4),
+		])
+		canvas.draw_colored_polygon(flame_pts, Color(0.18, 0.96, 0.54, 0.98))
+		var inner_pts := PackedVector2Array([
+			k_pos + Vector2(0.0, -2.4),
+			k_pos + Vector2(1.8, 1.2),
+			k_pos + Vector2(0.0, 3.6),
+			k_pos + Vector2(-1.8, 1.2),
+		])
+		canvas.draw_colored_polygon(inner_pts, Color(0.88, 1.0, 0.94, 0.98))
+
+	if has_seal:
+		var weakened := an_nguc_stacks >= 5
+		var pulse := 0.5 + 0.5 * sin(time_s * 10.0)
+		var outer_r := r + (1.8 if weakened else 1.2)
+		canvas.draw_circle(s_pos, outer_r + 1.4, Color(0.10, 0.03, 0.14, 0.94))
+		var ring_c := Color(1.0, lerpf(0.28, 0.86, pulse), 0.16, 1.0) if weakened else Color(0.86, 0.28, 1.0, 0.98)
+		var fill_c := Color(0.46, 0.08, 0.22, 0.96) if weakened else Color(0.24, 0.07, 0.34, 0.95)
+		canvas.draw_circle(s_pos, r - 0.6, fill_c)
+		canvas.draw_arc(s_pos, r, 0.0, TAU, 24, ring_c, 2.4 if weakened else 1.8, true)
+		if weakened:
+			canvas.draw_arc(s_pos, r + 3.0, 0.0, TAU, 24, Color(1.0, 0.88, 0.24, 0.55 + 0.40 * pulse), 1.4, true)
+		if font != null:
+			var stk_txt := "%d" % mini(5, an_nguc_stacks)
+			var txt_col := Color(1.0, 0.95, 0.42, 1.0) if weakened else Color(1.0, 0.86, 1.0, 1.0)
+			canvas.draw_string_outline(font, s_pos + Vector2(-8.0, 4.5), stk_txt, HORIZONTAL_ALIGNMENT_CENTER, 16.0, 13, 3, Color(0.04, 0.02, 0.06, 0.98))
+			canvas.draw_string(font, s_pos + Vector2(-8.0, 4.5), stk_txt, HORIZONTAL_ALIGNMENT_CENTER, 16.0, 13, txt_col)
+			if weakened:
+				var wpos := Vector2(s_pos.x - 42.0, s_pos.y - r - 6.0)
+				canvas.draw_string_outline(font, wpos, "SUY YẾU", HORIZONTAL_ALIGNMENT_CENTER, 84.0, 11, 3, Color(0.08, 0.01, 0.04, 0.98))
+				canvas.draw_string(font, wpos, "SUY YẾU", HORIZONTAL_ALIGNMENT_CENTER, 84.0, 11, Color(1.0, 0.84, 0.24, 1.0))

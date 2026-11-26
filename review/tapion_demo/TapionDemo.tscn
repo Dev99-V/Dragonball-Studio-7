@@ -55,6 +55,16 @@ animation = &"mahasenko_hand_fx"
 centered = false
 offset = Vector2(-144, -176)
 
+[node name="AntaminaChargeFX" type="AnimatedSprite2D" parent="."]
+visible = false
+z_index = 69
+texture_filter = 1
+sprite_frames = ExtResource("3_fx_frames")
+animation = &"antamina_charge_orb_fx"
+centered = false
+offset = Vector2(-144, -176)
+position = Vector2(73, -62)
+
 [node name="GroundImpactFX" type="AnimatedSprite2D" parent="."]
 visible = false
 z_index = 70
