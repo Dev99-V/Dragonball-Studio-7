@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=71 format=3]
+[gd_resource type="SpriteFrames" load_steps=77 format=3]
 
 [ext_resource type="Texture2D" path="tapion_skills_fx-atlas-00.png" id="1_atlas00"]
 
@@ -347,6 +347,36 @@ atlas = ExtResource("1_atlas00")
 region = Rect2(1463, 2047, 288, 288)
 filter_clip = true
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c69"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(1755, 2047, 288, 288)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c70"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(2047, 2047, 288, 288)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c71"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(2339, 2047, 288, 288)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c72"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(3, 2339, 288, 288)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c73"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(295, 2339, 288, 288)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c74"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(587, 2339, 288, 288)
+filter_clip = true
+
 [resource]
 animations = [{
 "frames": [{
@@ -367,22 +397,22 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c4")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c5")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c6")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c7")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c8")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c9")
 }],
 "loop": true,
@@ -390,7 +420,7 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c10")
 }],
 "loop": false,
@@ -418,16 +448,16 @@ animations = [{
 "duration": 3.0,
 "texture": SubResource("AtlasTexture_p0c15")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c16")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c17")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c18")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c19")
 }],
 "loop": false,
@@ -435,19 +465,19 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 5.0,
+"duration": 4.98,
 "texture": SubResource("AtlasTexture_p0c20")
 }, {
-"duration": 5.0,
+"duration": 5.04,
 "texture": SubResource("AtlasTexture_p0c21")
 }, {
-"duration": 5.0,
+"duration": 4.98,
 "texture": SubResource("AtlasTexture_p0c22")
 }, {
-"duration": 5.0,
+"duration": 4.98,
 "texture": SubResource("AtlasTexture_p0c23")
 }, {
-"duration": 5.0,
+"duration": 5.04,
 "texture": SubResource("AtlasTexture_p0c24")
 }],
 "loop": true,
@@ -455,13 +485,13 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c25")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c26")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c27")
 }],
 "loop": false,
@@ -469,13 +499,13 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 5.0,
+"duration": 4.98,
 "texture": SubResource("AtlasTexture_p0c28")
 }, {
-"duration": 5.0,
+"duration": 5.04,
 "texture": SubResource("AtlasTexture_p0c29")
 }, {
-"duration": 7.0,
+"duration": 6.96,
 "texture": SubResource("AtlasTexture_p0c30")
 }],
 "loop": false,
@@ -483,13 +513,13 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 5.0,
+"duration": 4.98,
 "texture": SubResource("AtlasTexture_p0c31")
 }, {
-"duration": 5.0,
+"duration": 5.04,
 "texture": SubResource("AtlasTexture_p0c32")
 }, {
-"duration": 7.0,
+"duration": 6.96,
 "texture": SubResource("AtlasTexture_p0c33")
 }],
 "loop": false,
@@ -500,16 +530,16 @@ animations = [{
 "duration": 3.0,
 "texture": SubResource("AtlasTexture_p0c34")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c35")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c36")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c37")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c38")
 }],
 "loop": false,
@@ -517,30 +547,30 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 1.0,
+"duration": 4.8,
 "texture": SubResource("AtlasTexture_p0c39")
 }, {
-"duration": 1.0,
+"duration": 4.8,
 "texture": SubResource("AtlasTexture_p0c40")
 }, {
-"duration": 1.0,
+"duration": 4.8,
 "texture": SubResource("AtlasTexture_p0c41")
 }, {
-"duration": 1.0,
+"duration": 4.8,
 "texture": SubResource("AtlasTexture_p0c42")
 }, {
-"duration": 1.0,
+"duration": 4.8,
 "texture": SubResource("AtlasTexture_p0c43")
 }, {
-"duration": 1.0,
+"duration": 4.8,
 "texture": SubResource("AtlasTexture_p0c44")
 }],
 "loop": true,
 "name": &"antamina_charge_orb_fx",
-"speed": 12.5
+"speed": 60.0
 }, {
 "frames": [{
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c45")
 }],
 "loop": true,
@@ -568,19 +598,19 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c50")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c49")
 }, {
-"duration": 5.0,
+"duration": 5.04,
 "texture": SubResource("AtlasTexture_p0c48")
 }, {
 "duration": 6.0,
 "texture": SubResource("AtlasTexture_p0c47")
 }, {
-"duration": 8.0,
+"duration": 7.98,
 "texture": SubResource("AtlasTexture_p0c46")
 }],
 "loop": false,
@@ -588,21 +618,21 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 1.0,
+"duration": 6.0,
 "texture": SubResource("AtlasTexture_p0c51")
 }, {
-"duration": 1.1,
+"duration": 6.6,
 "texture": SubResource("AtlasTexture_p0c52")
 }, {
-"duration": 1.2,
+"duration": 7.2,
 "texture": SubResource("AtlasTexture_p0c53")
 }],
 "loop": false,
 "name": &"antamina_impact_fx",
-"speed": 10.0
+"speed": 60.0
 }, {
 "frames": [{
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c54")
 }, {
 "duration": 6.0,
@@ -611,7 +641,7 @@ animations = [{
 "duration": 6.0,
 "texture": SubResource("AtlasTexture_p0c56")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c57")
 }],
 "loop": false,
@@ -622,19 +652,19 @@ animations = [{
 "duration": 3.0,
 "texture": SubResource("AtlasTexture_p0c58")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c59")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c60")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c61")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c62")
 }, {
-"duration": 4.0,
+"duration": 3.96,
 "texture": SubResource("AtlasTexture_p0c63")
 }],
 "loop": false,
@@ -642,7 +672,7 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 5.0,
+"duration": 4.98,
 "texture": SubResource("AtlasTexture_p0c64")
 }],
 "loop": false,
@@ -650,19 +680,42 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c65")
 }, {
-"duration": 5.0,
+"duration": 4.98,
 "texture": SubResource("AtlasTexture_p0c66")
 }, {
-"duration": 5.0,
+"duration": 4.98,
 "texture": SubResource("AtlasTexture_p0c67")
 }, {
-"duration": 4.0,
+"duration": 4.02,
 "texture": SubResource("AtlasTexture_p0c68")
 }],
 "loop": false,
 "name": &"bukadai_sphere_fx",
+"speed": 60.0
+}, {
+"frames": [{
+"duration": 4.98,
+"texture": SubResource("AtlasTexture_p0c69")
+}, {
+"duration": 5.04,
+"texture": SubResource("AtlasTexture_p0c70")
+}, {
+"duration": 4.98,
+"texture": SubResource("AtlasTexture_p0c71")
+}, {
+"duration": 4.98,
+"texture": SubResource("AtlasTexture_p0c72")
+}, {
+"duration": 5.04,
+"texture": SubResource("AtlasTexture_p0c73")
+}, {
+"duration": 4.98,
+"texture": SubResource("AtlasTexture_p0c74")
+}],
+"loop": true,
+"name": &"kentai_burn_fx",
 "speed": 60.0
 }]

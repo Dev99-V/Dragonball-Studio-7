@@ -821,6 +821,22 @@
     {
       "name": "genki_05",
       "file": "raw_frames/genki_05.png"
+    },
+    {
+      "name": "genki_hold_00",
+      "file": "raw_frames/genki_hold_00.png"
+    },
+    {
+      "name": "genki_hold_01",
+      "file": "raw_frames/genki_hold_01.png"
+    },
+    {
+      "name": "genki_hold_02",
+      "file": "raw_frames/genki_hold_02.png"
+    },
+    {
+      "name": "genki_hold_03",
+      "file": "raw_frames/genki_hold_03.png"
     }
   ],
   "clips": {
@@ -1747,22 +1763,30 @@
         "genki_00",
         "genki_01",
         "genki_02",
+        "genki_hold_00",
+        "genki_hold_01",
+        "genki_hold_02",
+        "genki_hold_03",
         "genki_03",
         "genki_04",
         "genki_05"
       ],
       "ticks": [
-        5,
-        5,
-        6,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
         8,
-        6,
-        14
+        10
       ],
       "events": [
         {
           "name": "custom:genki_throw",
-          "at": 4
+          "at": 8
         }
       ]
     }

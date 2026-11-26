@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-26T04:59:24Z",
+  "updated_at": "2026-11-26T05:54:15Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.18.0",
@@ -167,9 +167,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "SONGOKU-GENKI-AND-TAPION-ANTAMINA-ARC",
+    "active_task_id": "GENKI-POLISH-KENTAI-BURN-AND-AI-SURVIVAL",
     "status": "ready_for_owner_human_test",
-    "summary": "Tapion Antamina khoa huong + dan vong cung qua dau & Son Goku Genki 6f chuan image copy 4.png (bay-only, tu 5s, anh xa xanh, +5 dmg/player max 20, mien CC, nem dat 50..200px no 700px)",
+    "summary": "Tapion kentai_burn_fx 6f lua+khoi xanh, Goku genki_cast 10f (4f loop phap phoi), genki_fx 24f du 1..16 + 4f noi + 4f bay (+40% toc) + 120ms no/van cong + rung & sang tang duoi z=5, AI auto HP<30% hoi mau & HP<10% khien",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1438,6 +1438,12 @@
       "timestamp": "2026-11-26T04:59:24Z",
       "status": "ready_for_owner_human_test",
       "summary": "Tapion Antamina khoa huong + dan vong cung qua dau & Son Goku Genki 6f chuan image copy 4.png (bay-only, tu 5s, anh xa xanh, +5 dmg/player max 20, mien CC, nem dat 50..200px no 700px)"
+    },
+    {
+      "id": "GENKI-POLISH-KENTAI-BURN-AND-AI-SURVIVAL",
+      "timestamp": "2026-11-26T05:54:15Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Tapion kentai_burn_fx 6f lua+khoi xanh, Goku genki_cast 10f (4f loop phap phoi), genki_fx 24f du 1..16 + 4f noi + 4f bay (+40% toc) + 120ms no/van cong + rung & sang tang duoi z=5, AI auto HP<30% hoi mau & HP<10% khien"
     }
   ],
   "quick_resume_commands": [
@@ -1783,5 +1789,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-26T04:59:24Z"
+  "last_updated_utc": "2026-11-26T05:54:15Z"
 }

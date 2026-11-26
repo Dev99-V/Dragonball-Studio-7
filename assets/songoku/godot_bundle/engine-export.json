@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips/animation-clips.json",
-    "sha256": "60bc1fb355396733aca7c38d4f0f63269fc2efeaed110616b3f27724bb651f62",
-    "bytes": 380110,
+    "sha256": "48e3df6c0a37845068746e46e737eb812d5c491df6ecba0a61896e1593f436d9",
+    "bytes": 385599,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -42,7 +42,7 @@
           4090,
           4090
         ],
-        "cells": 189,
+        "cells": 193,
         "clips": [
           "idle",
           "walk",
@@ -2504,27 +2504,35 @@
         196,
         197,
         198,
+        202,
+        203,
+        204,
+        205,
         199,
         200,
         201
       ],
       "duration_ms": [
-        83,
-        84,
-        100,
-        133,
-        100,
-        233
+        117,
+        116,
+        117,
+        117,
+        116,
+        117,
+        117,
+        116,
+        134,
+        166
       ],
-      "total_duration_ms": 733,
+      "total_duration_ms": 1233,
       "loop": false,
       "loop_policy": "oneshot",
       "events_ms": [
         {
           "name": "custom:genki_throw",
-          "at_ms": 400,
-          "at": 4,
-          "position": 4
+          "at_ms": 933,
+          "at": 8,
+          "position": 8
         }
       ],
       "page": 0,
@@ -2533,38 +2541,50 @@
         "hz": 60,
         "max_drift_ms": 0.333,
         "frame_ticks": [
-          5,
-          5,
-          6,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
           8,
-          6,
-          14
+          10
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 43.98,
+        "cycle_ticks": 73.98,
         "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
       "ticks": [
-        5,
-        5,
-        6,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
         8,
-        6,
-        14
+        10
       ],
       "tick_hz": 60,
       "godot": {
         "speed": 60.0,
         "basis": "fixed fps",
         "relative_durations": [
-          4.98,
-          5.04,
-          6.0,
-          7.98,
-          6.0,
-          13.98
+          7.02,
+          6.96,
+          7.02,
+          7.02,
+          6.96,
+          7.02,
+          7.02,
+          6.96,
+          8.04,
+          9.96
         ]
       }
     }
@@ -2638,13 +2658,13 @@
   "files": [
     {
       "path": "godot/songoku-atlas-00.png",
-      "sha256": "744adbde39ae93f240d74f955dde5f3be63565010f0d83c606097f4924bcdb32",
-      "bytes": 2922898
+      "sha256": "9b846745c2d62e4df8e3fb11a562422b9118b6ae8ba54d60afdc14a4b76229bc",
+      "bytes": 2987041
     },
     {
       "path": "godot/songoku.tres",
-      "sha256": "f3a584ec5e3034a0d8bded32a61485fc05eda46c9bcdf151e064745c8101d105",
-      "bytes": 45521
+      "sha256": "97d53c6dbf8e744f282fc482cc67dc384cae68c0783e22399f990efd14d2ce3b",
+      "bytes": 46398
     },
     {
       "path": "godot/songoku.tscn",
@@ -2685,8 +2705,8 @@
         "id": "source_frame_hashes",
         "status": "pass",
         "value": {
-          "verified": 202,
-          "frames": 202
+          "verified": 206,
+          "frames": 206
         },
         "threshold": null
       }
@@ -2694,8 +2714,8 @@
     "inputs": [
       {
         "path": "../clips/animation-clips.json",
-        "sha256": "60bc1fb355396733aca7c38d4f0f63269fc2efeaed110616b3f27724bb651f62",
-        "bytes": 380110
+        "sha256": "48e3df6c0a37845068746e46e737eb812d5c491df6ecba0a61896e1593f436d9",
+        "bytes": 385599
       },
       {
         "path": "../clips/frames/frame-00.png",
@@ -3706,16 +3726,36 @@
         "path": "../clips/frames/frame-201.png",
         "sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
         "bytes": 16383
+      },
+      {
+        "path": "../clips/frames/frame-202.png",
+        "sha256": "3c921e3f08ea98192d2e2573337716c2bbf5073166733d81ef48207f97d5edcd",
+        "bytes": 17213
+      },
+      {
+        "path": "../clips/frames/frame-203.png",
+        "sha256": "e7b8deb79d1293135816d3c788580f5825c325cfb445d39c72d9dfb1764c8714",
+        "bytes": 17604
+      },
+      {
+        "path": "../clips/frames/frame-204.png",
+        "sha256": "f5541921e2708dc417c70f311dfb5887f6617aa539982fd183b31dca92539b5f",
+        "bytes": 16236
+      },
+      {
+        "path": "../clips/frames/frame-205.png",
+        "sha256": "e913a5b9c865ccb37cf33d8c21c0483b7028b1aed8841054ee6f245971fd583b",
+        "bytes": 17083
       }
     ],
     "outputs": [
       {
         "path": "godot/songoku-atlas-00.png",
-        "sha256": "744adbde39ae93f240d74f955dde5f3be63565010f0d83c606097f4924bcdb32"
+        "sha256": "9b846745c2d62e4df8e3fb11a562422b9118b6ae8ba54d60afdc14a4b76229bc"
       },
       {
         "path": "godot/songoku.tres",
-        "sha256": "f3a584ec5e3034a0d8bded32a61485fc05eda46c9bcdf151e064745c8101d105"
+        "sha256": "97d53c6dbf8e744f282fc482cc67dc384cae68c0783e22399f990efd14d2ce3b"
       },
       {
         "path": "godot/songoku.tscn",

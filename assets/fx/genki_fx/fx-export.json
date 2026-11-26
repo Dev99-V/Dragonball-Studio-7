@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips_out/animation-clips.json",
-    "sha256": "c5f87644d94fb3a7c77205a07abab682440eab0c7a0796917c26fdd80d18c861",
-    "bytes": 34523,
+    "sha256": "eaf9aab55bba558d1668a043f82014c361eed19b37e769918a2b181ef0f02de5",
+    "bytes": 50289,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -24,7 +24,7 @@
   ],
   "sampling": "nearest",
   "pixel_art": true,
-  "art_source": "host_image",
+  "art_source": "existing",
   "default_clip": "genki_charge_fx",
   "atlas": {
     "max_size": 4096,
@@ -34,13 +34,15 @@
       {
         "index": 0,
         "size": [
-          1554,
-          1554
+          1942,
+          1942
         ],
-        "cells": 16,
+        "cells": 24,
         "clips": [
           "genki_charge_fx",
-          "genki_orb_loop_fx",
+          "genki_charge_hold_fx",
+          "genki_fly_fx",
+          "genki_impact_fx",
           "genki_explode_fx"
         ]
       }
@@ -48,10 +50,10 @@
   },
   "scale": {
     "pixel_size": 0.01,
-    "subject_height_px": 125.0,
-    "world_height": 1.25,
+    "subject_height_px": 207.0,
+    "world_height": 2.07,
     "source": "Godot default pixel size",
-    "subject_height_source": "--subject-height-px"
+    "subject_height_source": "median visible height of clip genki_charge_fx"
   },
   "clips": {
     "genki_charge_fx": {
@@ -63,7 +65,9 @@
         4,
         5,
         6,
-        7
+        7,
+        8,
+        9
       ],
       "duration_ms": [
         120,
@@ -71,11 +75,13 @@
         120,
         120,
         120,
-        100,
-        100,
-        100
+        120,
+        120,
+        120,
+        120,
+        120
       ],
-      "total_duration_ms": 900,
+      "total_duration_ms": 1200,
       "loop": false,
       "loop_policy": "oneshot",
       "events_ms": [],
@@ -90,13 +96,15 @@
           8,
           7,
           7,
-          6,
-          6,
-          6
+          7,
+          7,
+          8,
+          7,
+          7
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 54.0,
+        "cycle_ticks": 72.0,
         "cycle_aligned": true,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
@@ -109,24 +117,69 @@
           7.2,
           7.2,
           7.2,
-          6.0,
-          6.0,
-          6.0
+          7.2,
+          7.2,
+          7.2,
+          7.2,
+          7.2
         ]
       }
     },
-    "genki_orb_loop_fx": {
+    "genki_charge_hold_fx": {
       "frames": [
-        5,
-        6,
-        7
+        9,
+        10,
+        11
+      ],
+      "duration_ms": [
+        120,
+        120,
+        120
+      ],
+      "total_duration_ms": 360,
+      "loop": true,
+      "loop_policy": "cycle",
+      "events_ms": [],
+      "page": 0,
+      "role": "fx",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 6.667,
+        "frame_ticks": [
+          7,
+          7,
+          8
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 21.6,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "godot": {
+        "speed": 60.0,
+        "basis": "fixed fps",
+        "relative_durations": [
+          7.2,
+          7.2,
+          7.2
+        ]
+      }
+    },
+    "genki_fly_fx": {
+      "frames": [
+        12,
+        13,
+        14,
+        15
       ],
       "duration_ms": [
         80,
         80,
+        80,
         80
       ],
-      "total_duration_ms": 240,
+      "total_duration_ms": 320,
       "loop": true,
       "loop_policy": "cycle",
       "events_ms": [],
@@ -138,11 +191,12 @@
         "frame_ticks": [
           5,
           5,
-          4
+          4,
+          5
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 14.4,
+        "cycle_ticks": 19.2,
         "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
@@ -152,32 +206,25 @@
         "relative_durations": [
           4.8,
           4.8,
+          4.8,
           4.8
         ]
       }
     },
-    "genki_explode_fx": {
+    "genki_impact_fx": {
       "frames": [
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15
+        16,
+        17,
+        18,
+        19
       ],
       "duration_ms": [
-        70,
-        75,
-        80,
-        85,
-        95,
-        105,
-        115,
-        125
+        100,
+        100,
+        100,
+        100
       ],
-      "total_duration_ms": 750,
+      "total_duration_ms": 400,
       "loop": false,
       "loop_policy": "oneshot",
       "events_ms": [],
@@ -185,20 +232,16 @@
       "role": "fx",
       "tick_grid": {
         "hz": 60,
-        "max_drift_ms": 8.333,
+        "max_drift_ms": 0.0,
         "frame_ticks": [
-          4,
-          5,
-          5,
-          5,
-          5,
-          7,
-          7,
-          7
+          6,
+          6,
+          6,
+          6
         ],
         "zero_tick_positions": [],
-        "even": false,
-        "cycle_ticks": 45.0,
+        "even": true,
+        "cycle_ticks": 24.0,
         "cycle_aligned": true,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
@@ -206,14 +249,55 @@
         "speed": 60.0,
         "basis": "fixed fps",
         "relative_durations": [
-          4.2,
-          4.5,
-          4.8,
-          5.1,
-          5.7,
-          6.3,
-          6.9,
-          7.5
+          6.0,
+          6.0,
+          6.0,
+          6.0
+        ]
+      }
+    },
+    "genki_explode_fx": {
+      "frames": [
+        20,
+        21,
+        22,
+        23
+      ],
+      "duration_ms": [
+        120,
+        120,
+        120,
+        120
+      ],
+      "total_duration_ms": 480,
+      "loop": false,
+      "loop_policy": "oneshot",
+      "events_ms": [],
+      "page": 0,
+      "role": "fx",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 6.667,
+        "frame_ticks": [
+          7,
+          7,
+          8,
+          7
+        ],
+        "zero_tick_positions": [],
+        "even": false,
+        "cycle_ticks": 28.8,
+        "cycle_aligned": false,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "godot": {
+        "speed": 60.0,
+        "basis": "fixed fps",
+        "relative_durations": [
+          7.2,
+          7.2,
+          7.2,
+          7.2
         ]
       }
     }
@@ -283,13 +367,13 @@
   "files": [
     {
       "path": "godot/genki_fx-atlas-00.png",
-      "sha256": "eced28a1bbd95eb48706ff32f13f178ac97cb4b4b5ccc4ce19bd095dccee843b",
-      "bytes": 988351
+      "sha256": "50fa9e577418bbd9607554c46741eb894e708b0f21f64abb41d1680578a969b9",
+      "bytes": 1378289
     },
     {
       "path": "godot/genki_fx.tres",
-      "sha256": "6646baaea6666de27176bcc369969b3d23b2a5133615d38688490f6189e67054",
-      "bytes": 3978
+      "sha256": "dbbcf567dfe22f71a336b4016d5cc9206eb00a0396ea86b42ff1d991f8a0a985",
+      "bytes": 5711
     },
     {
       "path": "godot/genki_fx.tscn",
@@ -310,7 +394,7 @@
         "id": "godot_spriteframes_roundtrip",
         "status": "pass",
         "value": {
-          "animations": 3
+          "animations": 5
         },
         "threshold": null
       },
@@ -323,15 +407,15 @@
       {
         "id": "atlas_max_side_px",
         "status": "pass",
-        "value": 1554,
+        "value": 1942,
         "threshold": 4096
       },
       {
         "id": "source_frame_hashes",
         "status": "pass",
         "value": {
-          "verified": 16,
-          "frames": 16
+          "verified": 24,
+          "frames": 24
         },
         "threshold": null
       }
@@ -339,98 +423,138 @@
     "inputs": [
       {
         "path": "../clips_out/animation-clips.json",
-        "sha256": "c5f87644d94fb3a7c77205a07abab682440eab0c7a0796917c26fdd80d18c861",
-        "bytes": 34523
+        "sha256": "eaf9aab55bba558d1668a043f82014c361eed19b37e769918a2b181ef0f02de5",
+        "bytes": 50289
       },
       {
         "path": "../clips_out/frames/frame-00.png",
-        "sha256": "5133f2c2c9e3b90036188f15999ab47adfa2778c9aed5618381a6b0d073e548a",
-        "bytes": 8040
+        "sha256": "6eee0dc77517217149638f818d691321ea1b178bb19f6ebfe73d1c9c01c1390f",
+        "bytes": 6628
       },
       {
         "path": "../clips_out/frames/frame-01.png",
-        "sha256": "9c9e13e649abe30df46f8110981c70137a60e93a07ff796af7f8fd9c5aa097a1",
-        "bytes": 7049
+        "sha256": "827c1285af9a1bf2768a0369b69fa4212cf3d79a7c1bac064ecf04a5df92e1ff",
+        "bytes": 5892
       },
       {
         "path": "../clips_out/frames/frame-02.png",
-        "sha256": "276d17b7f89615fd2933c782270c07a3d7cb3f74282b876e3fb1501a8d435dff",
-        "bytes": 9092
+        "sha256": "f38abe0f1857ecdedd9bd7b7e647e9dcb8b5d226aea840630f760c62e5a41ba0",
+        "bytes": 12744
       },
       {
         "path": "../clips_out/frames/frame-03.png",
-        "sha256": "8b76dd0b202380f192cfb71ac1e80a69ef29b7f2d1ecfbf146435f0ddb0e6ea5",
-        "bytes": 41450
+        "sha256": "51e16937a9e1541778d83f79cdd31c6127bddfdd8053c2e262c08e27499cacae",
+        "bytes": 8286
       },
       {
         "path": "../clips_out/frames/frame-04.png",
-        "sha256": "c3f2afcbe1c84c53124673c5935cf4443b6d9fe5b5a58e6259b16156d1323276",
-        "bytes": 52128
+        "sha256": "f161b7f9aeca5b631579cc9a21bcea2f06149029e9ff496c54579a9501b768dd",
+        "bytes": 24735
       },
       {
         "path": "../clips_out/frames/frame-05.png",
-        "sha256": "b343f1b8dfd0ed7ab0c9d4c0adc841d5ae45da9843d83c28fe65da129362a79e",
-        "bytes": 72242
+        "sha256": "43ed0a642b45612fbc24d2913fab6652859beff846cb806d0961a66ac13d106d",
+        "bytes": 37249
       },
       {
         "path": "../clips_out/frames/frame-06.png",
-        "sha256": "756670c3f9fe38b4d5087ea5917b3f5ef54520de3b7ff9300a0991df13a9c4de",
-        "bytes": 82660
+        "sha256": "ab3ea866eb6cd17b14d7669b86d1cb74d3a65ef6451464a61060a569c776c7d6",
+        "bytes": 40047
       },
       {
         "path": "../clips_out/frames/frame-07.png",
-        "sha256": "b429fcf66f96f21b46789840627b078cb738cfb439826c9d8c4202b33b34340c",
-        "bytes": 95297
+        "sha256": "21fd50848277b6f1f252b613a03dbc8de374b5cca5cd14ef6e1053a1c645dfde",
+        "bytes": 49810
       },
       {
         "path": "../clips_out/frames/frame-08.png",
-        "sha256": "9f104ad18abd4fb2944f2f4b347809e42b5e75a55b82c1b885efa7fda1a17f66",
-        "bytes": 69730
+        "sha256": "13cf530465eaa85b98062365aee13c51b387ab9feb4eb6e3a274ba8fae8ae754",
+        "bytes": 45995
       },
       {
         "path": "../clips_out/frames/frame-09.png",
-        "sha256": "0d27d5244f7678fd06bb39b1ff8bc7a26332ef9de2c1f437a979650fde341f42",
-        "bytes": 72606
+        "sha256": "5d86ecfc1305784231afe7cb761e522ebc4741d22425f4ba1f6be9812f21877b",
+        "bytes": 72947
       },
       {
         "path": "../clips_out/frames/frame-10.png",
-        "sha256": "c402d520a58f78bd50a59b8b49576b27b3f423f7429d65741b4f156f1dbfec27",
-        "bytes": 67778
+        "sha256": "353e994ce75630a59c5109e288a536732e020901f1bfd6d7e276bda3e7bc5d5d",
+        "bytes": 57853
       },
       {
         "path": "../clips_out/frames/frame-11.png",
-        "sha256": "8dc30e9ed13f23f9e199d718c9bb16812ae22bf0e35daa5daf886dec53774540",
-        "bytes": 58025
+        "sha256": "abb9b2763938cf4a11d6c0e0fd7868f1fb8b77e6400f2d7b90f7c73e902639da",
+        "bytes": 61364
       },
       {
         "path": "../clips_out/frames/frame-12.png",
-        "sha256": "9bbc0a6d6848293a70d4c721b2c2d9009563b8d2e76462021e92d47d3c47b78d",
-        "bytes": 49445
+        "sha256": "bb6e01a4b88da220d8a79372345ccbd832aad5f855404200b2d12338dfa50c29",
+        "bytes": 83216
       },
       {
         "path": "../clips_out/frames/frame-13.png",
-        "sha256": "0ee199648afdca536d9eda1640a24fe74957005f12bb442ea3fe752ba774b6a8",
-        "bytes": 111120
+        "sha256": "234a4986c02eca91421279a7390f340aba77ce1a0d025fba9ea41bb3e1779608",
+        "bytes": 75379
       },
       {
         "path": "../clips_out/frames/frame-14.png",
-        "sha256": "420933334aa0551f128d7aa4b4d2f608c5c916f10a34f4b2c57c57c1c411bf34",
-        "bytes": 116636
+        "sha256": "5f12c05b54b4615545dce1221ec9d28a01772f1bf8d4e0304e90c02b3d98cd91",
+        "bytes": 96979
       },
       {
         "path": "../clips_out/frames/frame-15.png",
-        "sha256": "880419f89488e70139215e5f29ee6d4357b39b09cb969738385fed1a5fb02023",
-        "bytes": 72179
+        "sha256": "ca08fbb97590c8ba1a3b93e8829e8159069e192901b0fd9ee1e075ed060ef8f6",
+        "bytes": 76220
+      },
+      {
+        "path": "../clips_out/frames/frame-16.png",
+        "sha256": "a4acd1f2ec7dcb0ed6127b1b1100e99152192db9f399c903c7f9518f6ec626fc",
+        "bytes": 71586
+      },
+      {
+        "path": "../clips_out/frames/frame-17.png",
+        "sha256": "b9fc69625a8852d969a8f369d4120dad94275902a2615d116549fbad6a44680f",
+        "bytes": 74694
+      },
+      {
+        "path": "../clips_out/frames/frame-18.png",
+        "sha256": "ebd850ad479b03f6bc8aefa24b1a77d5699e2435281b7ce2af5a9dc1af657856",
+        "bytes": 69075
+      },
+      {
+        "path": "../clips_out/frames/frame-19.png",
+        "sha256": "ddc17f8a7b68d04b66bd2a3fc0c81dacdd74517e1d0174a02ed3f3681a1f6429",
+        "bytes": 53497
+      },
+      {
+        "path": "../clips_out/frames/frame-20.png",
+        "sha256": "6e6d65916c5d8d478bc96550f4a05fdd52512c660bca0b5d4344645401d72651",
+        "bytes": 49775
+      },
+      {
+        "path": "../clips_out/frames/frame-21.png",
+        "sha256": "7805571b819a145679047f2bd51e044eadfc943175e92bc044acb4f80791abee",
+        "bytes": 112338
+      },
+      {
+        "path": "../clips_out/frames/frame-22.png",
+        "sha256": "2c917d2aba2801724f00a4e08c1208bc2b45c92c7261b792308ef27a72992b6f",
+        "bytes": 114677
+      },
+      {
+        "path": "../clips_out/frames/frame-23.png",
+        "sha256": "6bfe907071a3b23afa86f563ad125723b14096eccdc2b025a28f6423b78654c4",
+        "bytes": 60763
       }
     ],
     "outputs": [
       {
         "path": "godot/genki_fx-atlas-00.png",
-        "sha256": "eced28a1bbd95eb48706ff32f13f178ac97cb4b4b5ccc4ce19bd095dccee843b"
+        "sha256": "50fa9e577418bbd9607554c46741eb894e708b0f21f64abb41d1680578a969b9"
       },
       {
         "path": "godot/genki_fx.tres",
-        "sha256": "6646baaea6666de27176bcc369969b3d23b2a5133615d38688490f6189e67054"
+        "sha256": "dbbcf567dfe22f71a336b4016d5cc9206eb00a0396ea86b42ff1d991f8a0a985"
       },
       {
         "path": "godot/genki_fx.tscn",
@@ -442,7 +566,7 @@
       "version": "0.4.0"
     }
   },
-  "orb_scale": 0.5865,
-  "explode_scale": 0.6057,
+  "orb_scale": 0.5931,
+  "explode_scale": 0.6144,
   "explode_ground_y_px": 352
 }

@@ -147,7 +147,10 @@ const GENKI_THROW_ARC_END_S: float = 0.28
 const GENKI_MIN_LAND_OFFSET_PX: float = 50.0
 const GENKI_MAX_LAND_OFFSET_PX: float = 200.0
 const GENKI_DEFAULT_LAND_OFFSET_PX: float = 188.0
-const GENKI_ORB_FLIGHT_SPEED_PX_S: float = 760.0
+const GENKI_ORB_FLIGHT_SPEED_PX_S: float = 1064.0 # +40% faster flight speed (760 -> 1064 px/s, Owner 2026-11-26)
+const GENKI_CHARGE_FRAME_S: float = 0.12          # 120ms/frame charge & body flutter loop
+const GENKI_IMPACT_FRAME_S: float = 0.10          # 100ms/frame ground impact (Genki/9..12)
+const GENKI_EXPLODE_FRAME_S: float = 0.12         # 120ms/frame explosion climax (Genki/13..16)
 var _genki_phase: String = "" # "", "charging", "throwing"
 var _genki_elapsed_s: float = 0.0
 var _genki_throw_released: bool = false
@@ -155,6 +158,9 @@ var _genki_locked_facing_x: float = 1.0
 var _genki_contrib_count: int = 0
 var _genki_wisp_spawn_accum_s: float = 0.0
 var _genki_cc_notice_cd_s: float = 0.0
+var _genki_ambient_flash_s: float = 0.0
+var _genki_ambient_flash_dur_s: float = 0.62
+var _genki_ambient_flash_pos: Vector2 = Vector2.ZERO
 var _genki_wisps: Array[Dictionary] = []
 var _genki_projectiles: Array[Dictionary] = []
 var _genki_explosions: Array[Dictionary] = []
@@ -278,6 +284,7 @@ func clear_all() -> void:
 	_genki_contrib_count = 0
 	_genki_wisp_spawn_accum_s = 0.0
 	_genki_cc_notice_cd_s = 0.0
+	_genki_ambient_flash_s = 0.0
 	_genki_wisps.clear()
 	_genki_projectiles.clear()
 	_genki_explosions.clear()
@@ -414,6 +421,7 @@ func start_field(spawn_player_immediately: bool = false, spawn_monsters: bool = 
 	_genki_contrib_count = 0
 	_genki_wisp_spawn_accum_s = 0.0
 	_genki_cc_notice_cd_s = 0.0
+	_genki_ambient_flash_s = 0.0
 	_genki_wisps.clear()
 	_genki_projectiles.clear()
 	_genki_explosions.clear()
@@ -1133,12 +1141,34 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 		return {"intent": "idle"}
 	var p_node: Node2D = arena.player_node as Node2D
 	_update_auto_ki_lock(p_node)
-	var tgt: Dictionary = _select_auto_battle_target()
-	if tgt.is_empty():
-		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
-		return {"intent": "idle"}
 	var is_goku: bool = _is_hero_songoku_node(p_node)
 	var is_tapion_auto: bool = p_node.has_method(&"is_hero_tapion") and bool(p_node.call(&"is_hero_tapion"))
+	var is_busy: bool = bool(arena.call("_is_player_action_playing"))
+	var goku_is_ssj: bool = bool(p_node.get("is_ssj")) if is_goku else true
+	var hp_ratio: float = player_hp / maxf(1.0, player_max_hp)
+	var can_barrier_auto: bool = is_goku and goku_is_ssj and float(p_node.get("barrier_timer_s")) <= 0.0 and float(p_node.get("barrier_cooldown_s")) <= 0.0
+	var rec_cd_ok: bool = is_goku and goku_is_ssj and float(p_node.get("recover_timer_s")) <= 0.0 and float(p_node.get("recover_cooldown_s")) <= 0.0
+	var grounded_for_rec: bool = bool(arena.call("is_player_grounded_for_recover"))
+	var can_hp_recover_auto: bool = rec_cd_ok and grounded_for_rec
+	var need_land_for_hp_rec: bool = rec_cd_ok and (not grounded_for_rec) and bool(p_node.call(&"is_airborne_flight"))
+
+	var tgt: Dictionary = _select_auto_battle_target()
+	if tgt.is_empty():
+		if is_goku and goku_is_ssj and not is_busy:
+			if hp_ratio < 0.10 and can_barrier_auto:
+				arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+				request_player_barrier()
+				return {"intent": "barrier", "reason": "auto_low_hp_barrier"}
+			if hp_ratio < 0.30 and can_hp_recover_auto:
+				arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+				request_player_energy_recover()
+				return {"intent": "energy_recover", "reason": "auto_low_hp_recover"}
+			if hp_ratio < 0.30 and need_land_for_hp_rec:
+				p_node.call(&"trigger_fast_drop_from_flight")
+				arena.call("step_player_movement", delta, 0, 1, false, true, false, Vector2(0.0, 1.0))
+				return {"intent": "fast_drop", "reason": "auto_low_hp_land_to_recover"}
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+		return {"intent": "idle"}
 	var p_rect: Rect2 = _get_player_body_rect()
 	var m_rect: Rect2 = _get_slot_body_rect(tgt)
 	var p_core: Vector2 = _get_player_core_pos()
@@ -1146,21 +1176,23 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	var edge_gap: float = _compute_slot_edge_gap(tgt)
 	var v_gap: float = maxf(0.0, maxf(p_rect.position.y - m_rect.end.y, m_rect.position.y - p_rect.end.y))
 	var melee_r: float = _get_player_melee_strike_edge_px()
-	var is_busy: bool = bool(arena.call("_is_player_action_playing"))
-	var goku_is_ssj: bool = bool(p_node.get("is_ssj")) if is_goku else true
 	var in_tapion_range: bool = absf(m_core.x - p_core.x) <= TAPION_SKILL_MAX_RANGE_PX
 	var tap_can_maha: bool = is_tapion_auto and in_tapion_range and float(p_node.get("mahasenko_cooldown_s")) <= 0.0
 	var tap_can_kentai: bool = is_tapion_auto and in_tapion_range and float(p_node.get("kentaima_cooldown_s")) <= 0.0
 	var tap_can_anta: bool = is_tapion_auto and float(p_node.get("antamina_cooldown_s")) <= 0.0 and player_mana + 0.001 >= 100.0
 	var can_kame: bool = tap_can_maha if is_tapion_auto else (is_goku and goku_is_ssj and player_mana + 0.001 >= 80.0 and float(p_node.get("kame_cooldown_s")) <= 0.0)
 	var can_atomic: bool = (tap_can_kentai or tap_can_anta) if is_tapion_auto else (is_goku and goku_is_ssj and float(p_node.get("atomic_cooldown_s")) <= 0.0)
-	var can_recover: bool = is_goku and goku_is_ssj and bool(arena.call("is_player_grounded_for_recover")) and float(p_node.get("recover_cooldown_s")) <= 0.0 and float(p_node.get("ki")) < float(p_node.get("max_ki")) - 5.0
+	var can_recover: bool = is_goku and goku_is_ssj and grounded_for_rec and float(p_node.get("recover_cooldown_s")) <= 0.0 and float(p_node.get("ki")) < float(p_node.get("max_ki")) - 5.0
 	var can_fly_auto: bool = (bool(p_node.call(&"can_fly")) and (not _auto_ki_ground_lock)) if is_goku else false
 	var dec: Dictionary = UtilityAIControllerScript.evaluate_hero_auto({
 		"has_target": true,
 		"is_songoku": is_goku,
 		"is_ssj": goku_is_ssj,
 		"is_busy": is_busy,
+		"hp_ratio": hp_ratio,
+		"can_barrier": can_barrier_auto,
+		"can_hp_recover": can_hp_recover_auto,
+		"need_land_for_hp_recover": need_land_for_hp_rec,
 		"player_pos": p_core,
 		"target_pos": m_core,
 		"edge_dist": edge_gap,
@@ -1182,6 +1214,9 @@ func step_hero_auto_battle(delta: float) -> Dictionary:
 	if intent == "transform_ssj":
 		arena.call("_trigger_songoku_auto_transform_on_hit")
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+	elif intent == "barrier":
+		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
+		request_player_barrier()
 	elif intent == "kamehameha":
 		arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 		if is_tapion_auto:
@@ -3021,7 +3056,7 @@ func draw_overlays(canvas: CanvasItem) -> void:
 			var rk_t := float(s.get("kentai_timer_s", 0.0))
 			var ran_s := int(s.get("an_nguc_stacks", 0))
 			if rk_t > 0.0:
-				OverheadBarsDrawScript.draw_kentai_green_burn_fx(canvas, m_rect, _sim_time_s)
+				_draw_kentai_burn_on_rect(canvas, m_rect, e_cx * 0.013)
 			var r_hostile := is_remote_player_hostile(s)
 			var r_pk_flag := bool(s.get("pk_tan_sat", false))
 			OverheadBarsDrawScript.draw_player_bars(
@@ -3056,7 +3091,7 @@ func draw_overlays(canvas: CanvasItem) -> void:
 		var k_rem: float = float(s.get("kentai_timer_s", 0.0))
 		var an_stacks: int = int(s.get("an_nguc_stacks", 0))
 		if k_rem > 0.0:
-			OverheadBarsDrawScript.draw_kentai_green_burn_fx(canvas, m_rect, _sim_time_s)
+			_draw_kentai_burn_on_rect(canvas, m_rect, e_cx * 0.013)
 		OverheadBarsDrawScript.draw_enemy_bars(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, lbl, is_boss, m_cstate, sb_rem > 0.0, _shield_break_flash_alpha(sb_rem))
 		if k_rem > 0.0 or an_stacks > 0:
 			var mark_y := e_top - (64.0 if sb_rem > 0.0 else 50.0)
@@ -4487,6 +4522,44 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 	_draw_hero_genki_charge_and_reflection(canvas, goku, c_sc)
 
 
+func _draw_kentai_burn_on_rect(canvas: CanvasItem, body_rect: Rect2, phase_seed: float = 0.0) -> void:
+	## Pixel-art green burning fire & dark emerald smoke wrapping around a Kentaima-afflicted victim!
+	if body_rect.size.x < 4.0 or body_rect.size.y < 4.0:
+		return
+	var tfx := _get_tapion_fx_frames()
+	if tfx != null and tfx.has_animation(&"kentai_burn_fx"):
+		var fc: int = tfx.get_frame_count(&"kentai_burn_fx")
+		if fc > 0:
+			var fi: int = int(floor((_sim_time_s + phase_seed) * 12.5)) % fc
+			var tex := tfx.get_frame_texture(&"kentai_burn_fx", fi)
+			if tex != null:
+				var bw: float = maxf(body_rect.size.x * 1.48, 86.0)
+				var bh: float = maxf(body_rect.size.y * 1.28, 94.0)
+				var center: Vector2 = body_rect.get_center() + Vector2(0.0, 2.0)
+				canvas.draw_texture_rect(tex, Rect2(center - Vector2(bw * 0.5, bh * 0.5), Vector2(bw, bh)), false, Color(1.0, 1.0, 1.0, 0.94))
+				return
+	OverheadBarsDrawScript.draw_kentai_green_burn_fx(canvas, body_rect, _sim_time_s)
+
+
+func draw_ambient_flash_overlays(canvas: CanvasItem) -> void:
+	## Soft luminous whole-area ambient flash rendered on z_index=5 (ABOVE map/trees, BELOW all characters/monsters/bosses!)
+	## Triggered on Genki impact frames 11..12 -> explosion 13..16 so every fighter being hit remains 100% clear and visible!
+	if not active or _genki_ambient_flash_s <= 0.0:
+		return
+	var dur: float = maxf(0.05, _genki_ambient_flash_dur_s)
+	var prog: float = clampf(1.0 - (_genki_ambient_flash_s / dur), 0.0, 1.0)
+	# Quick smooth lift over first 18% (frames 11..12), soft sustained glow through 13..15, smooth fade-out at 16
+	var env: float = clampf(prog / 0.18, 0.0, 1.0) if prog < 0.18 else clampf(1.0 - ((prog - 0.18) / 0.82), 0.0, 1.0)
+	var area_alpha: float = 0.24 * env
+	var bloom_alpha: float = 0.28 * env
+	# Cover full world/camera span generously
+	var rect := Rect2(-400.0, -400.0, 8200.0, 2400.0)
+	canvas.draw_rect(rect, Color(0.76, 0.95, 1.0, area_alpha), true)
+	# Soft radial atmospheric glow behind characters centered at impact zone
+	canvas.draw_circle(_genki_ambient_flash_pos, 720.0, Color(0.56, 0.92, 1.0, bloom_alpha * 0.55))
+	canvas.draw_circle(_genki_ambient_flash_pos, 420.0, Color(0.88, 0.98, 1.0, bloom_alpha * 0.70))
+
+
 func _get_genki_orb_pos(goku: Node2D, c_sc: float) -> Vector2:
 	# Elevated directly above Goku's raised hands matching Owner's reference (image copy 4.png)
 	return goku.position + Vector2(0.0, -210.0 * c_sc)
@@ -4520,17 +4593,23 @@ func _step_hero_genki_cast(delta: float, goku: Node2D, pspr: AnimatedSprite2D, c
 		var contribs: Array[Dictionary] = count_genki_contributing_players()
 		_genki_contrib_count = mini(GENKI_MAX_CONTRIB_PLAYERS, contribs.size())
 
-		# Exact pose choreography from Owner's reference (image copy 4.png):
-		# #0 ready stance -> #1 arms bent raising -> #2 BOTH arms high overhead held for full 5.0s!
+		# 10-frame genki_cast (Owner image copy 4.png + 4 fluttering overhead loop frames @ 120ms):
+		# #0 ready -> #1 arms raising -> #2 arms overhead -> loop #3..#6 (hair/gi/sash fluttering @ 120ms!) for full 5.0s!
 		if pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"genki_cast"):
 			if String(pspr.animation) != "genki_cast" or not pspr.is_playing():
 				pspr.play(&"genki_cast")
+			var fc_g: int = pspr.sprite_frames.get_frame_count(&"genki_cast")
 			var target_f: int = 2
-			if _genki_elapsed_s < 0.14:
+			if _genki_elapsed_s < 0.12:
 				target_f = 0
-			elif _genki_elapsed_s < 0.28:
+			elif _genki_elapsed_s < 0.24:
 				target_f = 1
-			pspr.set_frame_and_progress(target_f, 0.0)
+			elif _genki_elapsed_s < 0.36 or fc_g < 10:
+				target_f = 2
+			else:
+				var hold_idx: int = int(floor((_genki_elapsed_s - 0.36) / GENKI_CHARGE_FRAME_S)) % 4
+				target_f = 3 + hold_idx
+			pspr.set_frame_and_progress(clampi(target_f, 0, maxi(0, fc_g - 1)), 0.0)
 
 		# Continuously emit bright cyan energy streaks from every contributing player (up to 20, incl. PK hostile, excl. monsters/boss!)
 		_genki_wisp_spawn_accum_s += delta
@@ -4562,21 +4641,24 @@ func _step_hero_genki_cast(delta: float, goku: Node2D, pspr: AnimatedSprite2D, c
 			_genki_elapsed_s = 0.0
 			_genki_throw_released = false
 			if pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"genki_cast"):
-				pspr.set_frame_and_progress(3, 0.0)
+				var fc_g2: int = pspr.sprite_frames.get_frame_count(&"genki_cast")
+				pspr.set_frame_and_progress(7 if fc_g2 >= 10 else 3, 0.0)
 
 	elif _genki_phase == "throwing":
 		_genki_elapsed_s += delta
 		# Exact 3-frame throw choreography from image copy 4.png:
-		# #3 wind-up lunge -> #4 downward hurl + sweeping motion arc (releases orb!) -> #5 crouched follow-through!
+		# #7 wind-up lunge -> #8 downward hurl + sweeping motion arc (releases orb!) -> #9 crouched follow-through!
 		if pspr != null and pspr.sprite_frames != null and pspr.sprite_frames.has_animation(&"genki_cast"):
 			if String(pspr.animation) != "genki_cast" or not pspr.is_playing():
 				pspr.play(&"genki_cast")
-			var throw_f: int = 3
+			var fc_t: int = pspr.sprite_frames.get_frame_count(&"genki_cast")
+			var base_throw: int = 7 if fc_t >= 10 else 3
+			var throw_f: int = base_throw
 			if _genki_elapsed_s >= GENKI_THROW_ARC_END_S:
-				throw_f = 5
+				throw_f = base_throw + 2
 			elif _genki_elapsed_s >= GENKI_THROW_WINDUP_S:
-				throw_f = 4
-			pspr.set_frame_and_progress(throw_f, 0.0)
+				throw_f = base_throw + 1
+			pspr.set_frame_and_progress(clampi(throw_f, 0, maxi(0, fc_t - 1)), 0.0)
 
 		if (not _genki_throw_released) and _genki_elapsed_s >= GENKI_THROW_RELEASE_S:
 			_genki_throw_released = true
@@ -4621,7 +4703,7 @@ func _launch_genki_orb(goku: Node2D, c_sc: float) -> void:
 		"caster_x": goku.position.x,
 		"face_x": face_x,
 		"t": 0.0,
-		"dur_s": maxf(0.18, dist_total / GENKI_ORB_FLIGHT_SPEED_PX_S),
+		"dur_s": maxf(0.12, dist_total / GENKI_ORB_FLIGHT_SPEED_PX_S),
 		"age_s": 0.0,
 		"damage": final_dmg,
 		"contrib_count": _genki_contrib_count,
@@ -4630,11 +4712,17 @@ func _launch_genki_orb(goku: Node2D, c_sc: float) -> void:
 
 
 func _spawn_genki_explosion_fx(ground_pos: Vector2, scale_val: float = 1.0) -> void:
+	# Exact 2-stage ground contact sequence (Owner 2026-11-26):
+	# - Impact buildup `Genki/9..12` (4 * 100ms = 0.40s); at frame 11 onset (0.20s) -> micro-shake + under-entity ambient flash!
+	# - Fiery explosion climax `Genki/13..16` (4 * 120ms = 0.48s) -> total 0.88s!
 	_genki_explosions.append({
 		"pos": ground_pos,
 		"age_s": 0.0,
-		"dur_s": 0.78,
+		"impact_dur_s": 4.0 * GENKI_IMPACT_FRAME_S,
+		"explode_dur_s": 4.0 * GENKI_EXPLODE_FRAME_S,
+		"dur_s": 4.0 * GENKI_IMPACT_FRAME_S + 4.0 * GENKI_EXPLODE_FRAME_S,
 		"scale_val": scale_val,
+		"shake_flash_fired": false,
 	})
 
 
@@ -4662,10 +4750,13 @@ func _detonate_genki_orb(proj: Dictionary) -> void:
 
 
 func _step_hero_genki_projectiles_and_explosions(delta: float) -> void:
+	if _genki_ambient_flash_s > 0.0:
+		_genki_ambient_flash_s = maxf(0.0, _genki_ambient_flash_s - delta)
+
 	for i in range(_genki_projectiles.size() - 1, -1, -1):
 		var pr: Dictionary = _genki_projectiles[i]
 		pr["age_s"] = float(pr.get("age_s", 0.0)) + delta
-		var dur_s: float = maxf(0.05, float(pr.get("dur_s", 0.35)))
+		var dur_s: float = maxf(0.05, float(pr.get("dur_s", 0.25)))
 		var t_next: float = minf(1.0, float(pr["age_s"]) / dur_s)
 		pr["t"] = t_next
 		var sp: Vector2 = pr["start_pos"] as Vector2
@@ -4678,7 +4769,15 @@ func _step_hero_genki_projectiles_and_explosions(delta: float) -> void:
 	for ei in range(_genki_explosions.size() - 1, -1, -1):
 		var ex: Dictionary = _genki_explosions[ei]
 		ex["age_s"] = float(ex.get("age_s", 0.0)) + delta
-		if float(ex["age_s"]) >= float(ex.get("dur_s", 0.78)):
+		# Trigger subtle camera micro-shake + under-entity ambient brightening right at Genki frames 11..12 onset (0.20s)!
+		if (not bool(ex.get("shake_flash_fired", false))) and float(ex["age_s"]) >= 2.0 * GENKI_IMPACT_FRAME_S:
+			ex["shake_flash_fired"] = true
+			_genki_ambient_flash_dur_s = 0.62
+			_genki_ambient_flash_s = 0.62
+			_genki_ambient_flash_pos = ex["pos"] as Vector2
+			if arena != null and arena.has_method(&"trigger_camera_micro_shake"):
+				arena.call(&"trigger_camera_micro_shake", 5.5, 0.45)
+		if float(ex["age_s"]) >= float(ex.get("dur_s", 0.88)):
 			_genki_explosions.remove_at(ei)
 
 
@@ -4696,7 +4795,6 @@ func _draw_hero_genki_charge_and_reflection(canvas: CanvasItem, goku: Node2D, c_
 		var p_cx: float = goku.position.x
 		var p_head_y: float = p_rect.position.y + p_rect.size.y * 0.18
 		var p_body_y: float = p_rect.position.y + p_rect.size.y * 0.62
-		# Soft downward cyan cone from overhead orb down onto Goku's body
 		var cone_pts := PackedVector2Array([
 			orb_pos + Vector2(-34.0 * c_sc, 28.0 * c_sc),
 			orb_pos + Vector2(34.0 * c_sc, 28.0 * c_sc),
@@ -4710,7 +4808,6 @@ func _draw_hero_genki_charge_and_reflection(canvas: CanvasItem, goku: Node2D, c_
 			Color(0.18, 0.72, 1.0, 0.0),
 		])
 		canvas.draw_polygon(cone_pts, cone_cols)
-		# Focused cyan reflection sheen across Goku's crown, shoulders and raised forearms
 		canvas.draw_circle(Vector2(p_cx, p_head_y), 34.0 * c_sc, Color(0.38, 0.92, 1.0, 0.16 * light_strength * pulse))
 		canvas.draw_circle(Vector2(p_cx, p_head_y - 10.0 * c_sc), 20.0 * c_sc, Color(0.68, 0.97, 1.0, 0.18 * light_strength * pulse))
 
@@ -4731,35 +4828,36 @@ func _draw_hero_genki_charge_and_reflection(canvas: CanvasItem, goku: Node2D, c_
 		canvas.draw_circle(head_p, 5.5, Color(0.36, 0.92, 1.0, alpha_w * 0.65))
 		canvas.draw_circle(head_p, 2.8, Color(0.92, 1.0, 1.0, alpha_w))
 
-	# 3. Overhead Genki Spirit Bomb sprite (`genki_charge_fx` #0..#7 -> `genki_orb_loop_fx` 80ms loop)
+	# 3. Overhead Genki Spirit Bomb (`genki_charge_fx` 10f: Genki/1..6 + 4 bridges @ 120ms -> `genki_charge_hold_fx` 6..6c @ 120ms!)
+	#    STRICTLY NEVER shows flight frames 7/8 above Goku's hands!
 	if _genki_phase == "charging" or (_genki_phase == "throwing" and not _genki_throw_released):
 		var gfx := _get_genki_fx_frames()
 		if gfx != null:
 			var orb_tex: Texture2D = null
 			var draw_pos: Vector2 = orb_pos
 			var scale_mul: float = 1.0
+			var hold_clip: StringName = &"genki_charge_hold_fx" if gfx.has_animation(&"genki_charge_hold_fx") else &"genki_orb_loop_fx"
 			if _genki_phase == "charging":
-				if _genki_elapsed_s < 0.25:
-					scale_mul = 0.45 + 0.55 * (_genki_elapsed_s / 0.25)
-				if _genki_elapsed_s < 1.50 and gfx.has_animation(&"genki_charge_fx"):
-					var cfc: int = gfx.get_frame_count(&"genki_charge_fx")
-					var cfi: int = clampi(int(floor((_genki_elapsed_s / 1.50) * float(cfc))), 0, maxi(0, cfc - 1))
+				var cfc: int = gfx.get_frame_count(&"genki_charge_fx") if gfx.has_animation(&"genki_charge_fx") else 0
+				# Spread formation smoothly at 120ms cadence across first 1.2s (or 2.4s if >=10 frames: 120ms per frame = 1.20s exact!)
+				var form_dur_s: float = float(cfc) * GENKI_CHARGE_FRAME_S
+				if cfc > 0 and _genki_elapsed_s < form_dur_s:
+					var cfi: int = clampi(int(floor(_genki_elapsed_s / GENKI_CHARGE_FRAME_S)), 0, cfc - 1)
 					orb_tex = gfx.get_frame_texture(&"genki_charge_fx", cfi)
-					scale_mul *= (0.72 + 0.28 * clampf(_genki_elapsed_s / 1.50, 0.0, 1.0))
-				elif gfx.has_animation(&"genki_orb_loop_fx"):
-					var lfc: int = gfx.get_frame_count(&"genki_orb_loop_fx")
-					var lfi: int = int(floor(_sim_time_s * 12.5)) % maxi(1, lfc)
-					orb_tex = gfx.get_frame_texture(&"genki_orb_loop_fx", lfi)
-					var charge_grow: float = clampf((_genki_elapsed_s - 1.50) / maxf(0.1, GENKI_CHARGE_DURATION_S - 1.50), 0.0, 1.0)
-					scale_mul = 0.94 + 0.16 * charge_grow + 0.012 * float(_genki_contrib_count)
+					scale_mul = 0.78 + 0.16 * clampf(_genki_elapsed_s / maxf(0.1, form_dur_s), 0.0, 1.0)
+				elif gfx.has_animation(hold_clip):
+					var lfc: int = gfx.get_frame_count(hold_clip)
+					var lfi: int = int(floor(maxf(0.0, _genki_elapsed_s - form_dur_s) / GENKI_CHARGE_FRAME_S)) % maxi(1, lfc)
+					orb_tex = gfx.get_frame_texture(hold_clip, lfi)
+					var charge_grow: float = clampf((_genki_elapsed_s - form_dur_s) / maxf(0.1, GENKI_CHARGE_DURATION_S - form_dur_s), 0.0, 1.0)
+					scale_mul = 0.94 + 0.18 * charge_grow + 0.012 * float(_genki_contrib_count)
 			else:
-				# Brief hand-follow transition before release frame
 				var t_rel: float = clampf(_genki_elapsed_s / GENKI_THROW_RELEASE_S, 0.0, 1.0)
 				draw_pos = orb_pos.lerp(goku.position + Vector2(_genki_locked_facing_x * 56.0, -142.0 * c_sc), t_rel)
-				scale_mul = 1.10 + 0.012 * float(_genki_contrib_count)
-				if gfx.has_animation(&"genki_orb_loop_fx"):
-					var lfc2: int = gfx.get_frame_count(&"genki_orb_loop_fx")
-					orb_tex = gfx.get_frame_texture(&"genki_orb_loop_fx", int(floor(_sim_time_s * 12.5)) % maxi(1, lfc2))
+				scale_mul = 1.12 + 0.012 * float(_genki_contrib_count)
+				if gfx.has_animation(hold_clip):
+					var lfc2: int = gfx.get_frame_count(hold_clip)
+					orb_tex = gfx.get_frame_texture(hold_clip, int(floor(_sim_time_s / GENKI_CHARGE_FRAME_S)) % maxi(1, lfc2))
 			if orb_tex != null:
 				var osz: float = 198.0 * c_sc * scale_mul
 				canvas.draw_texture_rect(orb_tex, Rect2(draw_pos - Vector2(osz * 0.5, osz * 0.5), Vector2(osz, osz)), false, Color.WHITE)
@@ -4771,33 +4869,45 @@ func _draw_hero_genki_world_fx(canvas: CanvasItem) -> void:
 	var gfx := _get_genki_fx_frames()
 	var c_sc: float = float(arena.char_scale) if arena != null else 2.0
 
-	# 1. Flying Genki Spirit Bomb descending diagonally downward toward the ground
+	# 1. Flying Genki Spirit Bomb (`genki_fly_fx` 4 frames: 7 -> 7b -> 8 -> 8b @ 80ms, +40% flight speed!)
+	var fly_clip: StringName = &"genki_fly_fx" if (gfx != null and gfx.has_animation(&"genki_fly_fx")) else &"genki_orb_loop_fx"
 	for pr in _genki_projectiles:
 		var ppos: Vector2 = pr["pos"] as Vector2
 		var sc_m: float = float(pr.get("scale_mul", 1.0))
-		if gfx != null and gfx.has_animation(&"genki_orb_loop_fx"):
-			var lfc: int = gfx.get_frame_count(&"genki_orb_loop_fx")
+		if gfx != null and gfx.has_animation(fly_clip):
+			var lfc: int = gfx.get_frame_count(fly_clip)
 			var lfi: int = int(floor(float(pr.get("age_s", 0.0)) * 12.5)) % maxi(1, lfc)
-			var otex := gfx.get_frame_texture(&"genki_orb_loop_fx", lfi)
+			var otex := gfx.get_frame_texture(fly_clip, lfi)
 			if otex != null:
 				var osz: float = 204.0 * c_sc * sc_m
 				canvas.draw_texture_rect(otex, Rect2(ppos - Vector2(osz * 0.5, osz * 0.5), Vector2(osz, osz)), false, Color.WHITE)
 		else:
 			canvas.draw_circle(ppos, 64.0 * sc_m, Color(0.32, 0.88, 1.0, 0.85))
 
-	# 2. Ground-anchored Genki AoE Detonation (`Genki/9..16.png`, 352/384 ground baseline + 700px expanding cyan shockwave)
+	# 2. Ground-anchored 2-stage Detonation:
+	#    - Stage A (`genki_impact_fx`, Genki/9..12 @ 100ms/frame) -> micro-shake & ambient flash at 11..12!
+	#    - Stage B (`genki_explode_fx`, Genki/13..16 @ 120ms/frame exact!)
 	for ex in _genki_explosions:
 		var epos: Vector2 = ex["pos"] as Vector2
 		var age_e: float = float(ex.get("age_s", 0.0))
-		var dur_e: float = maxf(0.05, float(ex.get("dur_s", 0.78)))
-		var prog: float = clampf(age_e / dur_e, 0.0, 0.999)
+		var imp_dur: float = float(ex.get("impact_dur_s", 4.0 * GENKI_IMPACT_FRAME_S))
+		var exp_dur: float = float(ex.get("explode_dur_s", 4.0 * GENKI_EXPLODE_FRAME_S))
+		var tot_dur: float = maxf(0.05, float(ex.get("dur_s", imp_dur + exp_dur)))
+		var prog: float = clampf(age_e / tot_dur, 0.0, 0.999)
 		var ring_r: float = lerpf(70.0, GENKI_AOE_RADIUS_PX, pow(prog, 0.55))
 		var ring_a: float = clampf(1.0 - prog, 0.0, 1.0) * 0.55
 		canvas.draw_arc(epos, ring_r, PI, TAU, 48, Color(0.45, 0.94, 1.0, ring_a), 4.0, true)
-		if gfx != null and gfx.has_animation(&"genki_explode_fx"):
-			var efc: int = gfx.get_frame_count(&"genki_explode_fx")
-			var efi: int = clampi(int(floor(prog * float(efc))), 0, maxi(0, efc - 1))
-			var etex := gfx.get_frame_texture(&"genki_explode_fx", efi)
+		if gfx != null:
+			var etex: Texture2D = null
+			if age_e < imp_dur and gfx.has_animation(&"genki_impact_fx"):
+				var ifc: int = gfx.get_frame_count(&"genki_impact_fx")
+				var ifi: int = clampi(int(floor(age_e / GENKI_IMPACT_FRAME_S)), 0, maxi(0, ifc - 1))
+				etex = gfx.get_frame_texture(&"genki_impact_fx", ifi)
+			elif gfx.has_animation(&"genki_explode_fx"):
+				var efc: int = gfx.get_frame_count(&"genki_explode_fx")
+				var e_age: float = maxf(0.0, age_e - imp_dur) if gfx.has_animation(&"genki_impact_fx") else age_e
+				var efi: int = clampi(int(floor(e_age / GENKI_EXPLODE_FRAME_S)), 0, maxi(0, efc - 1))
+				etex = gfx.get_frame_texture(&"genki_explode_fx", efi)
 			if etex != null:
 				var esz: float = 360.0 * c_sc * float(ex.get("scale_val", 1.0))
 				var ground_ratio: float = 352.0 / 384.0

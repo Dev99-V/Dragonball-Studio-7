@@ -371,13 +371,29 @@ static func evaluate_hero_auto(params: Dictionary) -> Dictionary:
 	##     Priority 2: Jump + Fly up (`fly_aura`) toward target!
 	## - If target is close (< melee_range_px): normal combo attack (or skill `power_up` when mana >= 100 & supported).
 	## - If target is mid/far on ground: directional Teleport dash (-25) when stamina >= 45 & gap > 140px, else chase!
-	if not bool(params.get("has_target", false)):
-		return {"intent": "idle", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "no_target"}
 	var is_goku: bool = bool(params.get("is_songoku", false))
 	var is_ssj: bool = bool(params.get("is_ssj", true))
+	var hp_ratio: float = float(params.get("hp_ratio", 1.0))
+	var can_barrier: bool = bool(params.get("can_barrier", false))
+	var can_hp_recover: bool = bool(params.get("can_hp_recover", false))
+	var need_land_for_hp_recover: bool = bool(params.get("need_land_for_hp_recover", false))
+	var is_busy: bool = bool(params.get("is_busy", false))
+	# Owner AI survival rule (2026-11-26):
+	# - HP < 10%: auto-activate protective Barrier immediately when available!
+	# - HP < 30%: auto-activate Energy Recover (heal/regenerate) when available (fast-drop first if airborne)!
+	if is_goku and is_ssj and not is_busy:
+		if hp_ratio < 0.10 and can_barrier:
+			return {"intent": "barrier", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_low_hp_barrier"}
+		if hp_ratio < 0.30 and can_hp_recover:
+			return {"intent": "energy_recover", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_low_hp_recover"}
+		if hp_ratio < 0.30 and need_land_for_hp_recover:
+			return {"intent": "fast_drop", "move_dir": 0, "fly_vec": Vector2(0.0, 1.0), "jump": false, "drop": true, "reason": "auto_low_hp_land_to_recover"}
+
+	if not bool(params.get("has_target", false)):
+		return {"intent": "idle", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "no_target"}
 	if is_goku and not is_ssj:
 		return {"intent": "transform_ssj", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_transform_ssj"}
-	if bool(params.get("is_busy", false)):
+	if is_busy:
 		return {"intent": "busy", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "executing_action"}
 
 	var p_pos: Vector2 = params.get("player_pos", Vector2.ZERO)

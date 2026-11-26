@@ -2,7 +2,7 @@
   "schema": "generate2dsprite.animation_clips.v2",
   "source_manifest": {
     "path": "../source/clips-manifest.json",
-    "file_sha256": "a1a3b4da80919c33a68f5c1a5477f4ab5ebf521b8c23a11d0cbeb37a331adc23",
+    "file_sha256": "eb47a69497bfa34b050b56b0dc44ac04f99bc19b5b3bb6213002d1f27a6f181e",
     "copy": "source-manifest.json"
   },
   "frame_size": [
@@ -4117,6 +4117,86 @@
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-201.png"
+    },
+    {
+      "index": 202,
+      "name": "genki_hold_00",
+      "source": {
+        "path": "../source/raw_frames/genki_hold_00.png",
+        "file_sha256": "3c921e3f08ea98192d2e2573337716c2bbf5073166733d81ef48207f97d5edcd",
+        "bytes": 17213,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "5007092f4f940dc3e5b100c9b71e8a18f141f5f50d9fa3c84823943cd9ef93ff",
+      "transparent_pixel_count": 78028,
+      "visible_pixel_count": 4916,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-202.png"
+    },
+    {
+      "index": 203,
+      "name": "genki_hold_01",
+      "source": {
+        "path": "../source/raw_frames/genki_hold_01.png",
+        "file_sha256": "e7b8deb79d1293135816d3c788580f5825c325cfb445d39c72d9dfb1764c8714",
+        "bytes": 17604,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "599548593c40e12e1be76442d79732bcf6e4f3547cce00d447c7ae9f3ddf7712",
+      "transparent_pixel_count": 77906,
+      "visible_pixel_count": 5038,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-203.png"
+    },
+    {
+      "index": 204,
+      "name": "genki_hold_02",
+      "source": {
+        "path": "../source/raw_frames/genki_hold_02.png",
+        "file_sha256": "f5541921e2708dc417c70f311dfb5887f6617aa539982fd183b31dca92539b5f",
+        "bytes": 16236,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "d7c41eaf493b78328f432c277a7dd54b92410f3d3be251fd3032e5a3b024a58d",
+      "transparent_pixel_count": 78312,
+      "visible_pixel_count": 4632,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-204.png"
+    },
+    {
+      "index": 205,
+      "name": "genki_hold_03",
+      "source": {
+        "path": "../source/raw_frames/genki_hold_03.png",
+        "file_sha256": "e913a5b9c865ccb37cf33d8c21c0483b7028b1aed8841054ee6f245971fd583b",
+        "bytes": 17083,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "0c66bf4e05888fe3264eaf82df56cc4508c1e9963f8e661e8cb53eacfa68f30e",
+      "transparent_pixel_count": 78041,
+      "visible_pixel_count": 4903,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-205.png"
     }
   ],
   "clips": {
@@ -10033,40 +10113,52 @@
         196,
         197,
         198,
+        202,
+        203,
+        204,
+        205,
         199,
         200,
         201
       ],
       "duration_ms": [
-        83,
-        84,
-        100,
-        133,
-        100,
-        233
+        117,
+        116,
+        117,
+        117,
+        116,
+        117,
+        117,
+        116,
+        134,
+        166
       ],
       "loop": false,
-      "total_duration_ms": 733,
+      "total_duration_ms": 1233,
       "nominal_fps": null,
-      "average_fps": 8.185538881309686,
+      "average_fps": 8.110300081103,
       "loop_policy": "oneshot",
       "timing_source": "ticks",
       "ticks": [
-        5,
-        5,
-        6,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
         8,
-        6,
-        14
+        10
       ],
       "tick_hz": 60,
       "events_ms": [
         {
           "name": "custom:genki_throw",
-          "at_ms": 400,
-          "at": 4,
-          "position": 4,
-          "at_tick": 24
+          "at_ms": 933,
+          "at": 8,
+          "position": 8,
+          "at_tick": 56
         }
       ],
       "role": "player",
@@ -10074,16 +10166,20 @@
         "hz": 60,
         "max_drift_ms": 0.333,
         "frame_ticks": [
-          5,
-          5,
-          6,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
           8,
-          6,
-          14
+          10
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 43.98,
+        "cycle_ticks": 73.98,
         "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
@@ -10094,60 +10190,92 @@
           {
             "index": 0,
             "start_ms": 0,
-            "duration_ms": 83,
+            "duration_ms": 117,
             "clip_positions": [
               0
             ]
           },
           {
             "index": 1,
-            "start_ms": 83,
-            "duration_ms": 84,
+            "start_ms": 117,
+            "duration_ms": 116,
             "clip_positions": [
               1
             ]
           },
           {
             "index": 2,
-            "start_ms": 167,
-            "duration_ms": 100,
+            "start_ms": 233,
+            "duration_ms": 117,
             "clip_positions": [
               2
             ]
           },
           {
             "index": 3,
-            "start_ms": 267,
-            "duration_ms": 133,
+            "start_ms": 350,
+            "duration_ms": 117,
             "clip_positions": [
               3
             ]
           },
           {
             "index": 4,
-            "start_ms": 400,
-            "duration_ms": 100,
+            "start_ms": 467,
+            "duration_ms": 116,
             "clip_positions": [
               4
             ]
           },
           {
             "index": 5,
-            "start_ms": 500,
-            "duration_ms": 233,
+            "start_ms": 583,
+            "duration_ms": 117,
             "clip_positions": [
               5
             ]
+          },
+          {
+            "index": 6,
+            "start_ms": 700,
+            "duration_ms": 117,
+            "clip_positions": [
+              6
+            ]
+          },
+          {
+            "index": 7,
+            "start_ms": 817,
+            "duration_ms": 116,
+            "clip_positions": [
+              7
+            ]
+          },
+          {
+            "index": 8,
+            "start_ms": 933,
+            "duration_ms": 134,
+            "clip_positions": [
+              8
+            ]
+          },
+          {
+            "index": 9,
+            "start_ms": 1067,
+            "duration_ms": 166,
+            "clip_positions": [
+              9
+            ]
           }
         ],
-        "decoded_frame_count": 6,
-        "total_duration_ms": 733,
+        "decoded_frame_count": 10,
+        "total_duration_ms": 1233,
         "native_loop_count": 1,
         "timeline_verified": true,
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "6ebda6aec23177bbfdc4dfd66b80db66fe244b2560effe8d8a7df4cf3c0da510"
+        "file_sha256": "0ebb44f8ba9462951fefd530dc17cea6b8f50dfe584937759c7eef266b5fe968"
       },
       "transitions": [
         {
@@ -10167,20 +10295,48 @@
         {
           "from_position": 2,
           "to_position": 3,
-          "premultiplied_rgb_mae": 10.796561,
-          "alpha_mae": 16.73376,
-          "changed_visible_pixels": 7619
+          "premultiplied_rgb_mae": 3.783147,
+          "alpha_mae": 3.019025,
+          "changed_visible_pixels": 5258
         },
         {
           "from_position": 3,
           "to_position": 4,
+          "premultiplied_rgb_mae": 4.266461,
+          "alpha_mae": 3.031322,
+          "changed_visible_pixels": 5470
+        },
+        {
+          "from_position": 4,
+          "to_position": 5,
+          "premultiplied_rgb_mae": 3.914243,
+          "alpha_mae": 3.129702,
+          "changed_visible_pixels": 5331
+        },
+        {
+          "from_position": 5,
+          "to_position": 6,
+          "premultiplied_rgb_mae": 2.793294,
+          "alpha_mae": 1.866139,
+          "changed_visible_pixels": 5063
+        },
+        {
+          "from_position": 6,
+          "to_position": 7,
+          "premultiplied_rgb_mae": 11.399314,
+          "alpha_mae": 17.48083,
+          "changed_visible_pixels": 7882
+        },
+        {
+          "from_position": 7,
+          "to_position": 8,
           "premultiplied_rgb_mae": 11.827397,
           "alpha_mae": 16.921296,
           "changed_visible_pixels": 8451
         },
         {
-          "from_position": 4,
-          "to_position": 5,
+          "from_position": 8,
+          "to_position": 9,
           "premultiplied_rgb_mae": 10.969184,
           "alpha_mae": 11.282914,
           "changed_visible_pixels": 7609
@@ -10338,7 +10494,7 @@
     "requested_scale": 1,
     "annotated_with_shared_root": true,
     "not_a_runtime_atlas": true,
-    "file_sha256": "82f6c426db3432cd731af625be07edc9de020d32d1d35fbfb7de99c1898329fc"
+    "file_sha256": "fcdad452aa4966ca8bf4fce9b8f21f7dc3f88d7f50733282dcc3d00f4411edbe"
   },
   "review": {
     "scale": 1,
@@ -10696,7 +10852,7 @@
           "dark",
           "checker"
         ],
-        "positions_shown": 6,
+        "positions_shown": 10,
         "truncated": false
       }
     },
@@ -10908,7 +11064,7 @@
       "genki_cast": {
         "file": "review/onion-34.png",
         "background": "checker",
-        "positions_shown": 6,
+        "positions_shown": 10,
         "truncated": false
       }
     },
@@ -11543,7 +11699,7 @@
       {
         "id": "png_byte_copy",
         "status": "pass",
-        "value": 202,
+        "value": 206,
         "threshold": null
       },
       {
@@ -11586,8 +11742,8 @@
     "inputs": [
       {
         "path": "../source/clips-manifest.json",
-        "sha256": "a1a3b4da80919c33a68f5c1a5477f4ab5ebf521b8c23a11d0cbeb37a331adc23",
-        "bytes": 31989
+        "sha256": "eb47a69497bfa34b050b56b0dc44ac04f99bc19b5b3bb6213002d1f27a6f181e",
+        "bytes": 32489
       },
       {
         "path": "../source/raw_frames/idle_base_00.png",
@@ -12598,6 +12754,26 @@
         "path": "../source/raw_frames/genki_05.png",
         "sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
         "bytes": 16383
+      },
+      {
+        "path": "../source/raw_frames/genki_hold_00.png",
+        "sha256": "3c921e3f08ea98192d2e2573337716c2bbf5073166733d81ef48207f97d5edcd",
+        "bytes": 17213
+      },
+      {
+        "path": "../source/raw_frames/genki_hold_01.png",
+        "sha256": "e7b8deb79d1293135816d3c788580f5825c325cfb445d39c72d9dfb1764c8714",
+        "bytes": 17604
+      },
+      {
+        "path": "../source/raw_frames/genki_hold_02.png",
+        "sha256": "f5541921e2708dc417c70f311dfb5887f6617aa539982fd183b31dca92539b5f",
+        "bytes": 16236
+      },
+      {
+        "path": "../source/raw_frames/genki_hold_03.png",
+        "sha256": "e913a5b9c865ccb37cf33d8c21c0483b7028b1aed8841054ee6f245971fd583b",
+        "bytes": 17083
       }
     ],
     "outputs": [
@@ -13612,6 +13788,26 @@
         "bytes": 16383
       },
       {
+        "path": "frames/frame-202.png",
+        "sha256": "3c921e3f08ea98192d2e2573337716c2bbf5073166733d81ef48207f97d5edcd",
+        "bytes": 17213
+      },
+      {
+        "path": "frames/frame-203.png",
+        "sha256": "e7b8deb79d1293135816d3c788580f5825c325cfb445d39c72d9dfb1764c8714",
+        "bytes": 17604
+      },
+      {
+        "path": "frames/frame-204.png",
+        "sha256": "f5541921e2708dc417c70f311dfb5887f6617aa539982fd183b31dca92539b5f",
+        "bytes": 16236
+      },
+      {
+        "path": "frames/frame-205.png",
+        "sha256": "e913a5b9c865ccb37cf33d8c21c0483b7028b1aed8841054ee6f245971fd583b",
+        "bytes": 17083
+      },
+      {
         "path": "clips/clip-00.webp",
         "sha256": "19a83e00f8406c2955d7d4ccf2f963caedfe5ad435f51f190233e7d40ce106c3",
         "bytes": 95876
@@ -13783,13 +13979,13 @@
       },
       {
         "path": "clips/clip-34.webp",
-        "sha256": "6ebda6aec23177bbfdc4dfd66b80db66fe244b2560effe8d8a7df4cf3c0da510",
-        "bytes": 76966
+        "sha256": "0ebb44f8ba9462951fefd530dc17cea6b8f50dfe584937759c7eef266b5fe968",
+        "bytes": 132428
       },
       {
         "path": "contact-sheet.png",
-        "sha256": "82f6c426db3432cd731af625be07edc9de020d32d1d35fbfb7de99c1898329fc",
-        "bytes": 2988112
+        "sha256": "fcdad452aa4966ca8bf4fce9b8f21f7dc3f88d7f50733282dcc3d00f4411edbe",
+        "bytes": 3052854
       },
       {
         "path": "review/filmstrip-00.png",
@@ -14133,13 +14329,13 @@
       },
       {
         "path": "review/filmstrip-34.png",
-        "sha256": "c8c64bf0a16dcfa371147912ba610ed0f688c72ff94fe20e34869e670f300c2b",
-        "bytes": 287748
+        "sha256": "c01d38c6dc64ad9e9def5b7836cb3f7642568f988e89d1c1e3435df7af8d280b",
+        "bytes": 493009
       },
       {
         "path": "review/onion-34.png",
-        "sha256": "0f9353e86509cff21e3f2cbdadbcddbbe0004f74aeb045ccd23b6fdaeab0c41a",
-        "bytes": 105942
+        "sha256": "7cc0acb73f07e74c277b407cc125d59488f287f56a41c7c498847c721375fb98",
+        "bytes": 180158
       },
       {
         "path": "review/turn-test.png",

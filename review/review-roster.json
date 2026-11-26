@@ -38,10 +38,10 @@
       "tres_sha256": "963cac39b283ac1043198d84dc23f1a232629f17d970ef9535a99cacd81b35ce",
       "fx_tres_path": "review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres",
       "fx_atlas_path": "review/tapion_demo/fx_bundle/godot/tapion_skills_fx-atlas-00.png",
-      "fx_atlas_sha256": "0223a7da91874b0124b3757a9d0bab38df5503255bf675a8693f60e4f9142634",
+      "fx_atlas_sha256": "9d7aaff127bdc30ff7797d8132135ae0e28b56b13b72349d880a3a418030cdaa",
       "fx_atlas_size_px": [
         2630,
-        2338
+        2630
       ],
       "engine_export_path": "review/tapion_demo/godot_bundle/engine-export.json",
       "prefab_path": "review/tapion_demo/TapionDemo.tscn",
@@ -56,7 +56,7 @@
       "default_scale": 1.0,
       "frame_count": 149,
       "clip_count": 34,
-      "fx_clip_count": 19,
+      "fx_clip_count": 20,
       "clips": [
         "idle",
         "walk",
@@ -148,7 +148,8 @@
         "kentaima_wave_fx",
         "kentaima_impact_fx",
         "bukadai_vanish_fx",
-        "bukadai_sphere_fx"
+        "bukadai_sphere_fx",
+        "kentai_burn_fx"
       ],
       "map_sync_metrics": {
         "canvas_size_px": [
@@ -259,7 +260,8 @@
           "kentaima_wave_fx",
           "kentaima_impact_fx",
           "bukadai_vanish_fx",
-          "bukadai_sphere_fx"
+          "bukadai_sphere_fx",
+          "kentai_burn_fx"
         ],
         "locomotion": {
           "kind": "ground",

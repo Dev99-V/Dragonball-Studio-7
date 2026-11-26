@@ -3137,7 +3137,8 @@
       "kentaima_wave_fx",
       "kentaima_impact_fx",
       "bukadai_vanish_fx",
-      "bukadai_sphere_fx"
+      "bukadai_sphere_fx",
+      "kentai_burn_fx"
     ],
     "locomotion": {
       "kind": "ground",

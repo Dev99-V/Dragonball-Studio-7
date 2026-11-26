@@ -284,6 +284,30 @@
     {
       "name": "tele_streak_v_02",
       "file": "raw_frames/tele_streak_v_02.png"
+    },
+    {
+      "name": "kentai_burn_00",
+      "file": "raw_frames/kentai_burn_00.png"
+    },
+    {
+      "name": "kentai_burn_01",
+      "file": "raw_frames/kentai_burn_01.png"
+    },
+    {
+      "name": "kentai_burn_02",
+      "file": "raw_frames/kentai_burn_02.png"
+    },
+    {
+      "name": "kentai_burn_03",
+      "file": "raw_frames/kentai_burn_03.png"
+    },
+    {
+      "name": "kentai_burn_04",
+      "file": "raw_frames/kentai_burn_04.png"
+    },
+    {
+      "name": "kentai_burn_05",
+      "file": "raw_frames/kentai_burn_05.png"
     }
   ],
   "clips": {
@@ -585,6 +609,26 @@
         5,
         5,
         4
+      ]
+    },
+    "kentai_burn_fx": {
+      "loop_policy": "cycle",
+      "role": "fx",
+      "frames": [
+        "kentai_burn_00",
+        "kentai_burn_01",
+        "kentai_burn_02",
+        "kentai_burn_03",
+        "kentai_burn_04",
+        "kentai_burn_05"
+      ],
+      "ticks": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
       ]
     }
   }

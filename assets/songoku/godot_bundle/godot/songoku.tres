@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=191 format=3]
+[gd_resource type="SpriteFrames" load_steps=195 format=3]
 
 [ext_resource type="Texture2D" path="songoku-atlas-00.png" id="1_atlas00"]
 
@@ -947,6 +947,26 @@ atlas = ExtResource("1_atlas00")
 region = Rect2(1755, 3799, 288, 288)
 filter_clip = true
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c189"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(2047, 3799, 288, 288)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c190"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(2339, 3799, 288, 288)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c191"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(2631, 3799, 288, 288)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c192"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(2923, 3799, 288, 288)
+filter_clip = true
+
 [resource]
 animations = [{
 "frames": [{
@@ -1756,23 +1776,35 @@ animations = [{
 "speed": 60.0
 }, {
 "frames": [{
-"duration": 4.98,
+"duration": 7.02,
 "texture": SubResource("AtlasTexture_p0c183")
 }, {
-"duration": 5.04,
+"duration": 6.96,
 "texture": SubResource("AtlasTexture_p0c184")
 }, {
-"duration": 6.0,
+"duration": 7.02,
 "texture": SubResource("AtlasTexture_p0c185")
 }, {
-"duration": 7.98,
+"duration": 7.02,
 "texture": SubResource("AtlasTexture_p0c186")
 }, {
-"duration": 6.0,
+"duration": 6.96,
 "texture": SubResource("AtlasTexture_p0c187")
 }, {
-"duration": 13.98,
+"duration": 7.02,
 "texture": SubResource("AtlasTexture_p0c188")
+}, {
+"duration": 7.02,
+"texture": SubResource("AtlasTexture_p0c189")
+}, {
+"duration": 6.96,
+"texture": SubResource("AtlasTexture_p0c190")
+}, {
+"duration": 8.04,
+"texture": SubResource("AtlasTexture_p0c191")
+}, {
+"duration": 9.96,
+"texture": SubResource("AtlasTexture_p0c192")
 }],
 "loop": false,
 "name": &"genki_cast",

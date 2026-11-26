@@ -3022,7 +3022,7 @@
         "owner_approved": false,
         "method": "imagegen_complete_body_keyframes",
         "turn_method": "instant_flip",
-        "atlas_sha256": "744adbde39ae93f240d74f955dde5f3be63565010f0d83c606097f4924bcdb32",
+        "atlas_sha256": "9b846745c2d62e4df8e3fb11a562422b9118b6ae8ba54d60afdc14a4b76229bc",
         "previous_revision_atlas_sha256": "28bd7f6ad319baa34d3af73a743f0681526ad57f98bdb92c72af529d6b3ec9f0",
         "reviewed_at": "2026-11-26T04:32:00Z",
         "checks": {

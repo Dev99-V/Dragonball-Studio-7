@@ -33,6 +33,7 @@ STATE_PATH = ROOT / "state.json"
 
 WORK_GENKI = ROOT / "work" / "characters" / "songoku_genki"
 GEN_DIR = WORK_GENKI / "gen_v2"
+HOLD_GEN_DIR = ROOT / "work" / "polish_round2" / "gen"
 QA_DIR = WORK_GENKI / "qa"
 BACKUP_DIR = ROOT / "docs" / "releases" / "archive"
 BACKUP_ATLAS = BACKUP_DIR / "songoku-v0.18.0-atlas-00.png"
@@ -272,23 +273,28 @@ def main() -> int:
     else:
         assert sha256_file(backup_atlas) == orig_approved_sha, "Existing backup atlas hash mismatch!"
 
-    # 2. Register all 6 Genki v2 whole-pose frames modeled after Owner's image copy 4.png reference!
-    #    pose_0 (ready) -> pose_1 (arms bent up) -> pose_2 (arms overhead 5s hold) -> pose_3 (lunge wind-up)
-    #    -> pose_4 (downward hurl + sweeping motion arc) -> pose_5 (crouched follow-through)
+    # 2. Register all 10 Genki whole-pose frames (Owner image copy 4.png + 4 fluttering overhead hold loop frames!):
+    #    #0 genki_00 (ready) -> #1 genki_01 (arms bent up) -> #2 genki_02 (arms overhead)
+    #    -> #3..#6 genki_hold_00..03 (4-frame overhead hair/gi/sash flutter loop @ 120ms for 5.0s charge!)
+    #    -> #7 genki_03 (lunge wind-up) -> #8 genki_04 (downward hurl + arc) -> #9 genki_05 (crouched follow-through)
     specs = {
-        "genki_00": {"body_h": 124, "use_hair_crown_h": False, "y1": 247, "cx": 144.0},
-        "genki_01": {"body_h": 128, "use_hair_crown_h": False, "y1": 247, "cx": 144.0},
-        "genki_02": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0},
-        "genki_03": {"body_h": 120, "use_hair_crown_h": False, "y1": 247, "cx": 144.0},
-        "genki_04": {"body_h": 92,  "use_body_comp_h": True,   "y1": 247, "cx": 144.0},
-        "genki_05": {"body_h": 96,  "use_hair_crown_h": False, "y1": 247, "cx": 144.0},
+        "genki_00":      {"body_h": 124, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_00" / "generated.png"},
+        "genki_01":      {"body_h": 128, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_01" / "generated.png"},
+        "genki_02":      {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_02" / "generated.png"},
+        "genki_hold_00": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_00" / "generated.png"},
+        "genki_hold_01": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_01" / "generated.png"},
+        "genki_hold_02": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_02" / "generated.png"},
+        "genki_hold_03": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_03" / "generated.png"},
+        "genki_03":      {"body_h": 120, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_03" / "generated.png"},
+        "genki_04":      {"body_h": 92,  "use_body_comp_h": True,   "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_04" / "generated.png"},
+        "genki_05":      {"body_h": 96,  "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_05" / "generated.png"},
     }
 
     bar_ref = Image.open(RAW_DIR / "bar_00.png").convert("RGBA")
     strip_items: List[Tuple[str, Image.Image]] = [("REF bar_00", bar_ref)]
     saved_paths: List[pathlib.Path] = []
     for fid, sp in specs.items():
-        gen_p = GEN_DIR / fid / "generated.png"
+        gen_p = sp["src"]
         assert gen_p.is_file(), f"Missing generated frame {gen_p}"
         im = register_genki_body_frame(fid, gen_p, sp)
         dst = RAW_DIR / f"{fid}.png"
@@ -316,9 +322,13 @@ def main() -> int:
     manifest["clips"]["genki_cast"] = {
         "loop_policy": "oneshot",
         "role": "player",
-        "frames": ["genki_00", "genki_01", "genki_02", "genki_03", "genki_04", "genki_05"],
-        "ticks": [5, 5, 6, 8, 6, 14],
-        "events": [{"name": "custom:genki_throw", "at": 4}],
+        "frames": [
+            "genki_00", "genki_01", "genki_02",
+            "genki_hold_00", "genki_hold_01", "genki_hold_02", "genki_hold_03",
+            "genki_03", "genki_04", "genki_05",
+        ],
+        "ticks": [7, 7, 7, 7, 7, 7, 7, 7, 8, 10],
+        "events": [{"name": "custom:genki_throw", "at": 8}],
     }
     MANIFEST_PATH.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

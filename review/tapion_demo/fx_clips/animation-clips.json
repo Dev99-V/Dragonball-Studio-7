@@ -2,7 +2,7 @@
   "schema": "generate2dsprite.animation_clips.v2",
   "source_manifest": {
     "path": "../fx_source/clips-manifest.json",
-    "file_sha256": "8fdccfd69cebafb161da31cdbaa4065e9e1cbbeaf0109d5cc158acfb1f096ce0",
+    "file_sha256": "4961a1a1c5882ef753f348ba2ba8a75e7b31f9a9fd35abe4dc440970cbce9df7",
     "copy": "source-manifest.json"
   },
   "frame_size": [
@@ -1398,6 +1398,126 @@
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-68.png"
+    },
+    {
+      "index": 69,
+      "name": "kentai_burn_00",
+      "source": {
+        "path": "../fx_source/raw_frames/kentai_burn_00.png",
+        "file_sha256": "9b321e76f85207d437b42425bf1775380af5069a08acd87d0e9bfb84c9419880",
+        "bytes": 37141,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "3ea6d84b6e2586b8d9f8784953f5d8e4a8d128cbe5cf9fb1f347f52dba043d65",
+      "transparent_pixel_count": 71221,
+      "visible_pixel_count": 11723,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-69.png"
+    },
+    {
+      "index": 70,
+      "name": "kentai_burn_01",
+      "source": {
+        "path": "../fx_source/raw_frames/kentai_burn_01.png",
+        "file_sha256": "235aefc006654f2aa33cf0b42107ba44b3c045e715e9bd6507d57fedd1b35401",
+        "bytes": 62303,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "cb3d0e485fd6ff70079c1ffd2a4d2636d6d9970e37b324b42ca828c658fac8ee",
+      "transparent_pixel_count": 60320,
+      "visible_pixel_count": 22624,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-70.png"
+    },
+    {
+      "index": 71,
+      "name": "kentai_burn_02",
+      "source": {
+        "path": "../fx_source/raw_frames/kentai_burn_02.png",
+        "file_sha256": "5004c88369b9f6bec22b0e214123f9ff003bd93cf21af45c602e4b2333fb075c",
+        "bytes": 34048,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "27ed86980075c164829c4bcf45c093c5a2b841b00a3157c679f28927007a883e",
+      "transparent_pixel_count": 72486,
+      "visible_pixel_count": 10458,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-71.png"
+    },
+    {
+      "index": 72,
+      "name": "kentai_burn_03",
+      "source": {
+        "path": "../fx_source/raw_frames/kentai_burn_03.png",
+        "file_sha256": "b4edeee37212861158de6de0371f13cdf29fc9948458f8fce52c56b6636c9fde",
+        "bytes": 41100,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "a2b797b9750a0b80434a73d85da8f87d426cdafcce41a4e8fe876ae594a3a466",
+      "transparent_pixel_count": 69122,
+      "visible_pixel_count": 13822,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-72.png"
+    },
+    {
+      "index": 73,
+      "name": "kentai_burn_04",
+      "source": {
+        "path": "../fx_source/raw_frames/kentai_burn_04.png",
+        "file_sha256": "c81b06f85a733250388e6f640b8cecd74c1172ec7c6851ecaebc04a7a1927ce0",
+        "bytes": 47659,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "14712c6042cd39fd4b272901a690ac9461d31cd46ae0888179617b7ced17ef6d",
+      "transparent_pixel_count": 66754,
+      "visible_pixel_count": 16190,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-73.png"
+    },
+    {
+      "index": 74,
+      "name": "kentai_burn_05",
+      "source": {
+        "path": "../fx_source/raw_frames/kentai_burn_05.png",
+        "file_sha256": "ad94867678a0a374ef8e21ac0d5d75724dd25f8d56da57186b753058f5915e02",
+        "bytes": 38482,
+        "size": [
+          288,
+          288
+        ],
+        "mode": "RGBA"
+      },
+      "rgba_pixel_sha256": "552438d55a381c6f6f2b88075a5fdc6108d80bde54e9b21a0197df80d2888415",
+      "transparent_pixel_count": 68115,
+      "visible_pixel_count": 14829,
+      "near_duplicates": [],
+      "holds": [],
+      "file": "frames/frame-74.png"
     }
   ],
   "clips": {
@@ -3663,6 +3783,176 @@
         "alpha_mae": 34.672671,
         "changed_visible_pixels": 12016
       }
+    },
+    "kentai_burn_fx": {
+      "frames": [
+        69,
+        70,
+        71,
+        72,
+        73,
+        74
+      ],
+      "duration_ms": [
+        83,
+        84,
+        83,
+        83,
+        84,
+        83
+      ],
+      "loop": true,
+      "total_duration_ms": 500,
+      "nominal_fps": 12.0,
+      "average_fps": 12.0,
+      "loop_policy": "cycle",
+      "timing_source": "ticks",
+      "ticks": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "tick_hz": 60,
+      "fps_rational": "12/1",
+      "events_ms": [],
+      "role": "fx",
+      "tick_grid": {
+        "hz": 60,
+        "max_drift_ms": 0.333,
+        "frame_ticks": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "zero_tick_positions": [],
+        "even": true,
+        "cycle_ticks": 30.0,
+        "cycle_aligned": true,
+        "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
+      },
+      "holds": [],
+      "seam": {
+        "frames": 6,
+        "seam": 24.594808,
+        "adjacent_median": 35.817452,
+        "adjacent_p95": 42.28667,
+        "adjacent_max": 43.408016,
+        "seam_over_median": 0.686671,
+        "seam_over_p95": 0.581621,
+        "method": "premultiplied RGBA mean absolute difference (0-255); seam = last -> first",
+        "adjacent_mean": 36.040664,
+        "wrap_ratio": 0.682418
+      },
+      "preview": {
+        "file": "clips/clip-19.webp",
+        "decoded_frames": [
+          {
+            "index": 0,
+            "start_ms": 0,
+            "duration_ms": 83,
+            "clip_positions": [
+              0
+            ]
+          },
+          {
+            "index": 1,
+            "start_ms": 83,
+            "duration_ms": 84,
+            "clip_positions": [
+              1
+            ]
+          },
+          {
+            "index": 2,
+            "start_ms": 167,
+            "duration_ms": 83,
+            "clip_positions": [
+              2
+            ]
+          },
+          {
+            "index": 3,
+            "start_ms": 250,
+            "duration_ms": 83,
+            "clip_positions": [
+              3
+            ]
+          },
+          {
+            "index": 4,
+            "start_ms": 333,
+            "duration_ms": 84,
+            "clip_positions": [
+              4
+            ]
+          },
+          {
+            "index": 5,
+            "start_ms": 417,
+            "duration_ms": 83,
+            "clip_positions": [
+              5
+            ]
+          }
+        ],
+        "decoded_frame_count": 6,
+        "total_duration_ms": 500,
+        "native_loop_count": 0,
+        "timeline_verified": true,
+        "alpha_and_visible_rgb_exact": true,
+        "hidden_rgb_guaranteed": false,
+        "lossless": true,
+        "file_sha256": "441662920fc15f6c9c58e8a98135ae828b432bd15cf430b817349725bf84ff10"
+      },
+      "transitions": [
+        {
+          "from_position": 0,
+          "to_position": 1,
+          "premultiplied_rgb_mae": 29.507065,
+          "alpha_mae": 48.854709,
+          "changed_visible_pixels": 25117
+        },
+        {
+          "from_position": 1,
+          "to_position": 2,
+          "premultiplied_rgb_mae": 34.739697,
+          "alpha_mae": 69.412977,
+          "changed_visible_pixels": 27830
+        },
+        {
+          "from_position": 2,
+          "to_position": 3,
+          "premultiplied_rgb_mae": 24.280888,
+          "alpha_mae": 42.487703,
+          "changed_visible_pixels": 19050
+        },
+        {
+          "from_position": 3,
+          "to_position": 4,
+          "premultiplied_rgb_mae": 30.950083,
+          "alpha_mae": 50.41956,
+          "changed_visible_pixels": 23204
+        },
+        {
+          "from_position": 4,
+          "to_position": 5,
+          "premultiplied_rgb_mae": 33.030533,
+          "alpha_mae": 52.113534,
+          "changed_visible_pixels": 23984
+        }
+      ],
+      "last_to_first": {
+        "applies_to_playback": true,
+        "premultiplied_rgb_mae": 21.43228,
+        "alpha_mae": 34.082393,
+        "changed_visible_pixels": 18819
+      }
     }
   },
   "states": {},
@@ -3689,7 +3979,7 @@
     "requested_scale": 1,
     "annotated_with_shared_root": true,
     "not_a_runtime_atlas": true,
-    "file_sha256": "860465fc33be0b2f3defce1715a3155c3b80ac5fa1e791e376303211fa413612"
+    "file_sha256": "72701c27817f6c31aaf3b5045aee077dd67dabfdf60bd030443d10b2ca45dd3c"
   },
   "review": {
     "scale": 1,
@@ -3889,6 +4179,16 @@
         ],
         "positions_shown": 4,
         "truncated": false
+      },
+      "kentai_burn_fx": {
+        "file": "review/filmstrip-19.png",
+        "backgrounds": [
+          "light",
+          "dark",
+          "checker"
+        ],
+        "positions_shown": 6,
+        "truncated": false
       }
     },
     "onion": {
@@ -4004,6 +4304,12 @@
         "file": "review/onion-18.png",
         "background": "checker",
         "positions_shown": 4,
+        "truncated": false
+      },
+      "kentai_burn_fx": {
+        "file": "review/onion-19.png",
+        "background": "checker",
+        "positions_shown": 6,
         "truncated": false
       }
     },
@@ -4339,9 +4645,26 @@
           ],
           "mirrored_offset_px": 0,
           "turn_slide_px": 62.0
+        },
+        {
+          "clip": "kentai_burn_fx",
+          "frame": 69,
+          "anchor_screen_x": 456,
+          "rows": [
+            [
+              1952,
+              2240
+            ],
+            [
+              2256,
+              2544
+            ]
+          ],
+          "mirrored_offset_px": 0,
+          "turn_slide_px": 6.0
         }
       ],
-      "clips_shown": 19,
+      "clips_shown": 20,
       "truncated": false
     }
   },
@@ -4366,13 +4689,13 @@
       {
         "id": "png_byte_copy",
         "status": "pass",
-        "value": 69,
+        "value": 75,
         "threshold": null
       },
       {
         "id": "webp_timeline",
         "status": "pass",
-        "value": 19,
+        "value": 20,
         "threshold": null
       },
       {
@@ -4409,8 +4732,8 @@
     "inputs": [
       {
         "path": "../fx_source/clips-manifest.json",
-        "sha256": "8fdccfd69cebafb161da31cdbaa4065e9e1cbbeaf0109d5cc158acfb1f096ce0",
-        "bytes": 12131
+        "sha256": "4961a1a1c5882ef753f348ba2ba8a75e7b31f9a9fd35abe4dc440970cbce9df7",
+        "bytes": 13030
       },
       {
         "path": "../fx_source/raw_frames/anta_stream_00.png",
@@ -4756,6 +5079,36 @@
         "path": "../fx_source/raw_frames/tele_streak_v_02.png",
         "sha256": "261c4a39948b1eaf29a6ff960540b6ebe0c5456ceaba400370d1a7dcce657148",
         "bytes": 8605
+      },
+      {
+        "path": "../fx_source/raw_frames/kentai_burn_00.png",
+        "sha256": "9b321e76f85207d437b42425bf1775380af5069a08acd87d0e9bfb84c9419880",
+        "bytes": 37141
+      },
+      {
+        "path": "../fx_source/raw_frames/kentai_burn_01.png",
+        "sha256": "235aefc006654f2aa33cf0b42107ba44b3c045e715e9bd6507d57fedd1b35401",
+        "bytes": 62303
+      },
+      {
+        "path": "../fx_source/raw_frames/kentai_burn_02.png",
+        "sha256": "5004c88369b9f6bec22b0e214123f9ff003bd93cf21af45c602e4b2333fb075c",
+        "bytes": 34048
+      },
+      {
+        "path": "../fx_source/raw_frames/kentai_burn_03.png",
+        "sha256": "b4edeee37212861158de6de0371f13cdf29fc9948458f8fce52c56b6636c9fde",
+        "bytes": 41100
+      },
+      {
+        "path": "../fx_source/raw_frames/kentai_burn_04.png",
+        "sha256": "c81b06f85a733250388e6f640b8cecd74c1172ec7c6851ecaebc04a7a1927ce0",
+        "bytes": 47659
+      },
+      {
+        "path": "../fx_source/raw_frames/kentai_burn_05.png",
+        "sha256": "ad94867678a0a374ef8e21ac0d5d75724dd25f8d56da57186b753058f5915e02",
+        "bytes": 38482
       }
     ],
     "outputs": [
@@ -5105,6 +5458,36 @@
         "bytes": 8605
       },
       {
+        "path": "frames/frame-69.png",
+        "sha256": "9b321e76f85207d437b42425bf1775380af5069a08acd87d0e9bfb84c9419880",
+        "bytes": 37141
+      },
+      {
+        "path": "frames/frame-70.png",
+        "sha256": "235aefc006654f2aa33cf0b42107ba44b3c045e715e9bd6507d57fedd1b35401",
+        "bytes": 62303
+      },
+      {
+        "path": "frames/frame-71.png",
+        "sha256": "5004c88369b9f6bec22b0e214123f9ff003bd93cf21af45c602e4b2333fb075c",
+        "bytes": 34048
+      },
+      {
+        "path": "frames/frame-72.png",
+        "sha256": "b4edeee37212861158de6de0371f13cdf29fc9948458f8fce52c56b6636c9fde",
+        "bytes": 41100
+      },
+      {
+        "path": "frames/frame-73.png",
+        "sha256": "c81b06f85a733250388e6f640b8cecd74c1172ec7c6851ecaebc04a7a1927ce0",
+        "bytes": 47659
+      },
+      {
+        "path": "frames/frame-74.png",
+        "sha256": "ad94867678a0a374ef8e21ac0d5d75724dd25f8d56da57186b753058f5915e02",
+        "bytes": 38482
+      },
+      {
         "path": "clips/clip-00.webp",
         "sha256": "5e3054a6271820a54836dfb12b56884d506db6b169677ddebecf9f473322bcbd",
         "bytes": 58844
@@ -5200,9 +5583,14 @@
         "bytes": 15908
       },
       {
+        "path": "clips/clip-19.webp",
+        "sha256": "441662920fc15f6c9c58e8a98135ae828b432bd15cf430b817349725bf84ff10",
+        "bytes": 204450
+      },
+      {
         "path": "contact-sheet.png",
-        "sha256": "860465fc33be0b2f3defce1715a3155c3b80ac5fa1e791e376303211fa413612",
-        "bytes": 773813
+        "sha256": "72701c27817f6c31aaf3b5045aee077dd67dabfdf60bd030443d10b2ca45dd3c",
+        "bytes": 1009977
       },
       {
         "path": "review/filmstrip-00.png",
@@ -5395,9 +5783,19 @@
         "bytes": 85567
       },
       {
+        "path": "review/filmstrip-19.png",
+        "sha256": "07774e4f126387f9cb29191a381a05ddb0efc977664df92edc434f84f78f2dbb",
+        "bytes": 724530
+      },
+      {
+        "path": "review/onion-19.png",
+        "sha256": "eb8d7a94f800297526ec68dc250d343c879a4c2c427925034e28a73827231d87",
+        "bytes": 280485
+      },
+      {
         "path": "review/turn-test.png",
-        "sha256": "499a004f519a9f8b9cb39b6ac8f04b070fc366486e4e47c28e9b072d0c2a5744",
-        "bytes": 396226
+        "sha256": "0260ae38f3a258da829b87727478804dc15bcb668e47e79075343c228b40368d",
+        "bytes": 468269
       }
     ],
     "tool": {

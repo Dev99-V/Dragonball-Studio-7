@@ -200,8 +200,13 @@ var hero_infinite_mana_enabled: bool = false
 var pk_tan_sat_enabled: bool = false
 var show_monster_ranges_enabled: bool = false
 var field_manager = null
+var _field_ambient_flash_node: Node2D = null
 var _field_overlay_node: Node2D = null
 var _field_back_overlay_node: Node2D = null
+var _camera_shake_timer_s: float = 0.0
+var _camera_shake_dur_s: float = 0.0
+var _camera_shake_amp_px: float = 0.0
+var _camera_shake_phase_s: float = 0.0
 var mobile_pad = null
 var hero_avatar_panel: PanelContainer = null
 var hero_avatar_rect: TextureRect = null
@@ -352,6 +357,14 @@ func _ensure_field_manager() -> void:
 			if _field_overlay_node != null and is_instance_valid(_field_overlay_node):
 				_field_overlay_node.queue_redraw()
 		)
+	if _field_ambient_flash_node == null or not is_instance_valid(_field_ambient_flash_node):
+		# Dedicated area-brightening layer STRICTLY ABOVE background/terrain (-10/-20) and STRICTLY BELOW all monsters (10), heroes (20), bosses (30)!
+		_field_ambient_flash_node = Node2D.new()
+		_field_ambient_flash_node.name = "FieldAmbientFlashLayer"
+		_field_ambient_flash_node.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_field_ambient_flash_node.z_index = 5
+		add_child(_field_ambient_flash_node)
+		_field_ambient_flash_node.draw.connect(_on_field_ambient_flash_draw)
 	if _field_back_overlay_node == null or not is_instance_valid(_field_back_overlay_node):
 		_field_back_overlay_node = Node2D.new()
 		_field_back_overlay_node.name = "FieldBackOverlayLayer"
@@ -366,6 +379,38 @@ func _ensure_field_manager() -> void:
 		_field_overlay_node.z_index = 65
 		add_child(_field_overlay_node)
 		_field_overlay_node.draw.connect(_on_field_overlay_draw)
+
+
+func _on_field_ambient_flash_draw() -> void:
+	if _field_ambient_flash_node == null or not is_instance_valid(_field_ambient_flash_node):
+		return
+	if field_mode_enabled and field_manager != null and field_manager.active and field_manager.has_method(&"draw_ambient_flash_overlays"):
+		field_manager.draw_ambient_flash_overlays(_field_ambient_flash_node)
+
+
+func trigger_camera_micro_shake(amp_px: float = 5.5, duration_s: float = 0.45) -> void:
+	_camera_shake_amp_px = maxf(_camera_shake_amp_px, amp_px)
+	_camera_shake_dur_s = maxf(0.05, duration_s)
+	_camera_shake_timer_s = maxf(_camera_shake_timer_s, duration_s)
+
+
+func _step_camera_micro_shake(delta: float) -> void:
+	if _camera_shake_timer_s > 0.0:
+		_camera_shake_timer_s = maxf(0.0, _camera_shake_timer_s - delta)
+		_camera_shake_phase_s += delta
+		if _arena_camera != null:
+			var decay: float = clampf(_camera_shake_timer_s / maxf(0.05, _camera_shake_dur_s), 0.0, 1.0)
+			var amp: float = _camera_shake_amp_px * decay
+			_arena_camera.offset = Vector2(
+				roundf(sin(_camera_shake_phase_s * 68.0) * amp),
+				roundf(cos(_camera_shake_phase_s * 54.0) * amp * 0.72)
+			)
+		if _camera_shake_timer_s <= 0.0:
+			_camera_shake_amp_px = 0.0
+			if _arena_camera != null:
+				_arena_camera.offset = Vector2.ZERO
+	elif _arena_camera != null and _arena_camera.offset != Vector2.ZERO:
+		_arena_camera.offset = Vector2.ZERO
 
 
 func _on_field_back_overlay_draw() -> void:
@@ -3685,6 +3730,7 @@ func _reconcile_chilopoda_terrain(node: Node2D, char_id: String, min_b: float, m
 
 
 func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_req: bool = false, drop_req: bool = false, is_run: bool = false, analog_vec: Vector2 = Vector2.ZERO) -> void:
+	_step_camera_micro_shake(delta)
 	if player_node == null or delta <= 0.0:
 		return
 	_step_player_light_cooldown(delta)
@@ -4348,6 +4394,9 @@ func _draw() -> void:
 			if is_instance_valid(item_n) and item_n.visible:
 				_draw_pixel_contact_shadow(item_n.position.x, item_n.position.y, 28.0, item_n.scale.x, true)
 
+	if _field_ambient_flash_node != null and is_instance_valid(_field_ambient_flash_node):
+		_field_ambient_flash_node.visible = field_mode_enabled and field_manager != null and field_manager.active
+		_field_ambient_flash_node.queue_redraw()
 	if _field_back_overlay_node != null and is_instance_valid(_field_back_overlay_node):
 		_field_back_overlay_node.visible = field_mode_enabled and field_manager != null and field_manager.active
 		_field_back_overlay_node.queue_redraw()
