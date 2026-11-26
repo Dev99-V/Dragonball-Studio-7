@@ -27,8 +27,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SRC_DIR = ROOT / "Genki"
 GEN_DIR = ROOT / "work" / "polish_round2" / "gen"
 GEN_R3_DIR = ROOT / "work" / "polish_round3" / "gen"
+GEN_R5_DIR = ROOT / "work" / "polish_round5" / "gen"
 WORK_DIR = ROOT / "work" / "characters" / "songoku_genki" / "fx_extract_v2"
-QA_DIR = ROOT / "work" / "polish_round3" / "qa"
+QA_DIR = ROOT / "work" / "polish_round5" / "qa"
 OUT_FX_DIR = ROOT / "assets" / "fx" / "genki_fx"
 BUILD_CLIPS_SCRIPT = ROOT / ".agents" / "skills" / "generate2dsprite" / "scripts" / "build_animation_clips.py"
 EXPORT_ENGINE_SCRIPT = ROOT / ".agents" / "skills" / "generate2dsprite" / "scripts" / "export_engine.py"
@@ -157,6 +158,49 @@ def measure_inner_sphere_diameter(crop: np.ndarray) -> float:
     return 0.5 * float((ys.max() - ys.min() + 1) + (xs.max() - xs.min() + 1))
 
 
+def measure_core_sphere(crop: np.ndarray) -> Tuple[float, float, float]:
+    """Measure exact solid inner orb diameter & sphere center (cx, cy) via Euclidean distance transform
+    (completely immune to asymmetric outer lightning wisps, rays, or broken rings!).
+    """
+    a = crop[:, :, 3] > 0
+    if not a.any():
+        return 1.0, crop.shape[1] * 0.5, crop.shape[0] * 0.5
+    dist = ndimage.distance_transform_edt(a)
+    max_r = float(dist.max())
+    cy, cx = np.unravel_index(int(np.argmax(dist)), dist.shape)
+    return max(1.0, 2.0 * max_r), float(cx), float(cy)
+
+
+def place_orb_centered_on_core(crop: np.ndarray, scale: float, core_cx: float, core_cy: float) -> Image.Image:
+    """Scale by exact core diameter and align the TRUE ORB CENTER strictly to (192, 192)
+    so asymmetric lightning arcs NEVER cause the sphere to jitter sideways or jump in size!
+    """
+    nw = max(4, int(round(crop.shape[1] * scale)))
+    nh = max(4, int(round(crop.shape[0] * scale)))
+    # Preserve exact core scale unless outer rays would clip past 384x384; clamp gently only if needed
+    if nw > CANVAS_W - 4 or nh > CANVAS_H - 4:
+        fit = min((CANVAS_W - 4) / float(nw), (CANVAS_H - 4) / float(nh))
+        nw = max(4, int(round(nw * fit)))
+        nh = max(4, int(round(nh * fit)))
+        scale = scale * fit
+    im = Image.fromarray(crop, "RGBA").resize((nw, nh), Image.Resampling.NEAREST)
+    arr = np.array(im, dtype=np.uint8)
+    m = arr[:, :, 3] >= 128
+    r, g, b = arr[:, :, 0].astype(np.int16), arr[:, :, 1].astype(np.int16), arr[:, :, 2].astype(np.int16)
+    pink = m & ((r - g) > 38) & ((b - g) > 38) & (g < 165)
+    m = m & ~pink
+    arr[~m] = [0, 0, 0, 0]
+    arr[m, 3] = 255
+    canvas = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
+    sc_cx = core_cx * scale
+    sc_cy = core_cy * scale
+    # Lock TRUE ORB CENTER strictly to (192, 192) — NEVER clamp/shift the sphere center!
+    px = int(round(ORB_CENTER[0] - sc_cx))
+    py = int(round(ORB_CENTER[1] - sc_cy))
+    canvas.paste(Image.fromarray(arr, "RGBA"), (px, py))
+    return canvas
+
+
 def place_centered(crop: np.ndarray, scale: float) -> Image.Image:
     nw = max(4, int(round(crop.shape[1] * scale)))
     nh = max(4, int(round(crop.shape[0] * scale)))
@@ -243,11 +287,9 @@ def main() -> int:
         orig_crops[idx] = arr[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
         print(f"  [orig Genki/{idx}.png] crop={orig_crops[idx].shape[1]}x{orig_crops[idx].shape[0]} key_rem={meta['opaque_key_px']}")
 
-    # Shared orb scale from original 1..8 (fit largest orb 8.png comfortably in 360x360 so 1..6 preserve exact relative growth!)
+    # Shared orb scale for flight frames 7..8 & base reference
     max_orb_side = max(max(orig_crops[i].shape[0], orig_crops[i].shape[1]) for i in range(1, 9))
     orb_scale = 360.0 / float(max_orb_side)
-    # Exact inner sphere diameter of Genki/6, 7, 8 after orb_scale!
-    orb6_diam = measure_inner_sphere_diameter(orig_crops[6]) * orb_scale
     fly_sphere_diam = 0.5 * (measure_inner_sphere_diameter(orig_crops[7]) + measure_inner_sphere_diameter(orig_crops[8])) * orb_scale
 
     # Shared ground-impact + explosion scale from original 9..16
@@ -255,36 +297,85 @@ def main() -> int:
     max_exp_h = max(orig_crops[i].shape[0] for i in range(9, 17))
     explode_scale = min(368.0 / float(max_exp_w), 336.0 / float(max_exp_h))
 
-    # 2. Place all 24 frames with exact smooth size progression!
+    # 2. Place ALL charge frames with STRICTLY MONOTONIC smooth core_diam progression (ZERO sudden jump, ZERO shrink!):
+    #    6 -> 18 -> 30 -> 42 -> 54 -> 66 -> 84 -> 104 -> 124 -> 148 -> 176 -> 204 px,
+    #    and ALL 4 full-size hold frames (`charge_6a..6d`) locked to 204 px WITH crisp surrounding blue-cyan auxiliary rays!
     placed: Dict[str, Image.Image] = {}
-    for i in range(1, 9):
+    placed["orig_01"] = place_centered(orig_crops[1], orb_scale)
+
+    def resolve_gen(gname: str) -> pathlib.Path:
+        for d in (GEN_R5_DIR, GEN_R3_DIR, GEN_DIR):
+            p = d / gname / "generated.png"
+            if p.is_file():
+                return p
+        raise FileNotFoundError(f"Missing generated asset {gname}")
+
+    charge_targets = [
+        ("orig_02",   ("orig", 2),                18.0),
+        ("bridge_2b", ("gen", "genki_bridge_2b"), 30.0),
+        ("orig_03",   ("orig", 3),                42.0),
+        ("bridge_3b", ("gen", "genki_bridge_3b"), 54.0),
+        ("orig_04",   ("orig", 4),                66.0),
+        ("bridge_4a", ("gen", "genki_bridge_4a"), 84.0),
+        ("bridge_4b", ("gen", "genki_bridge_4b"), 102.0),
+        ("orig_05",   ("orig", 5),                120.0),
+        ("bridge_5a", ("gen", "genki_bridge_5a"), 144.0),
+        ("bridge_5b", ("gen", "genki_bridge_5b"), 168.0),
+        ("charge_6a", ("gen", "genki_charge_6a"), 192.0),
+        ("charge_6b", ("gen", "genki_charge_6b"), 192.0),
+        ("charge_6c", ("gen", "genki_charge_6c"), 192.0),
+        ("charge_6d", ("gen", "genki_charge_6d"), 192.0),
+    ]
+    for fid, (kind, ref), target_core_d in charge_targets:
+        crop = orig_crops[int(ref)] if kind == "orig" else key_gen_magenta_fx(resolve_gen(str(ref)))
+        cd, ccx, ccy = measure_core_sphere(crop)
+        sc = target_core_d / max(1.0, cd)
+        placed[fid] = place_orb_centered_on_core(crop, sc, ccx, ccy)
+
+    # Flight frames (`orig_07, fly_7b, orig_08, fly_8b`) & Ground detonation (`orig_09..16`) preserved 100%!
+    for i in (7, 8):
         placed[f"orig_{i:02d}"] = place_centered(orig_crops[i], orb_scale)
+    for key, gname in (("fly_7b", "genki_fly_7b"), ("fly_8b", "genki_fly_8b")):
+        crop = key_gen_magenta_fx(resolve_gen(gname))
+        sc = fly_sphere_diam / max(1.0, measure_inner_sphere_diameter(crop))
+        placed[key] = place_centered(crop, sc)
     for i in range(9, 17):
         placed[f"orig_{i:02d}"] = place_ground_anchored(orig_crops[i], explode_scale)
 
-    # Bridge & flight frames sized cleanly by outer span (2b..4b) or inner sphere diameter (5b, 6b, 6c, 7b, 8b)!
-    gen_specs = {
-        "bridge_2b": ("genki_bridge_2b", "outer", 0.5 * (max(orig_crops[2].shape[:2]) + max(orig_crops[3].shape[:2])) * orb_scale),
-        "bridge_3b": ("genki_bridge_3b", "outer", 0.5 * (max(orig_crops[3].shape[:2]) + max(orig_crops[4].shape[:2])) * orb_scale),
-        "bridge_4b": ("genki_bridge_4b", "outer", 0.5 * (max(orig_crops[4].shape[:2]) + max(orig_crops[5].shape[:2])) * orb_scale),
-        "bridge_5b": ("genki_bridge_5b", "sphere", 0.86 * orb6_diam),
-        "charge_6b": ("genki_charge_6b", "sphere", orb6_diam),
-        "charge_6c": ("genki_charge_6c", "sphere", orb6_diam),
-        "fly_7b":    ("genki_fly_7b",    "sphere", fly_sphere_diam),
-        "fly_8b":    ("genki_fly_8b",    "sphere", fly_sphere_diam),
-    }
-    for key, (gname, mode, target_px) in gen_specs.items():
-        src_p = (GEN_R3_DIR / gname / "generated.png") if (GEN_R3_DIR / gname / "generated.png").is_file() else (GEN_DIR / gname / "generated.png")
-        crop = key_gen_magenta_fx(src_p)
-        denom = measure_inner_sphere_diameter(crop) if mode == "sphere" else float(max(crop.shape[0], crop.shape[1]))
-        sc = target_px / max(1.0, denom)
-        placed[key] = place_centered(crop, sc)
+    # Automated Quantitative Smoothness & Auxiliary-Ray Gate across ALL 15 charge+hold frames!
+    charge_seq = [
+        "orig_01", "orig_02", "bridge_2b", "orig_03", "bridge_3b",
+        "orig_04", "bridge_4a", "bridge_4b", "orig_05", "bridge_5a",
+        "bridge_5b", "charge_6a",
+    ]
+    hold_seq = ["charge_6a", "charge_6b", "charge_6c", "charge_6d"]
+    prev_d = 0.0
+    print("=== GENKI CHARGE SMOOTHNESS & AUX-RAY AUDIT ===")
+    for fid in charge_seq + hold_seq[1:]:
+        arr = np.array(placed[fid], dtype=np.uint8)
+        a = arr[:, :, 3] > 0
+        dist = ndimage.distance_transform_edt(a)
+        cr = float(dist.max())
+        cd = 2.0 * cr
+        cy, cx = np.unravel_index(int(np.argmax(dist)), dist.shape)
+        yy, xx = np.mgrid[0:arr.shape[0], 0:arr.shape[1]]
+        rad = np.sqrt((yy - cy) ** 2 + (xx - cx) ** 2)
+        aux_px = int((a & (rad > cr + 6.0)).sum())
+        delta = cd - prev_d if fid in charge_seq else 0.0
+        print(f"  [{fid:10s}] core_diam={cd:6.1f}px (delta={delta:+5.1f}px) center=({cx:5.1f},{cy:5.1f}) aux_ray_px={aux_px}")
+        if fid in charge_seq:
+            assert cd >= prev_d - 0.5, f"Non-monotonic shrink on {fid}: {cd:.1f} < {prev_d:.1f}"
+            prev_d = cd
+        if fid in hold_seq:
+            assert aux_px >= 900, f"Missing surrounding blue auxiliary rays on final hold frame {fid}: aux_px={aux_px}"
+            assert abs(cd - 192.0) <= 14.0, f"Hold frame {fid} core_diam drifted from 192px: {cd:.1f}"
+            assert abs(cx - 192.0) <= 2.5 and abs(cy - 192.0) <= 2.5, f"Hold frame {fid} orb center wobbled: ({cx:.1f},{cy:.1f})"
 
-    # Save all 24 raw frames & QA 3-bg strips
+    # Save all 27 raw frames & QA 3-bg strips
     frame_order = [
         "orig_01", "orig_02", "bridge_2b", "orig_03", "bridge_3b",
-        "orig_04", "bridge_4b", "orig_05", "bridge_5b", "orig_06",
-        "charge_6b", "charge_6c",
+        "orig_04", "bridge_4a", "bridge_4b", "orig_05", "bridge_5a",
+        "bridge_5b", "charge_6a", "charge_6b", "charge_6c", "charge_6d",
         "orig_07", "fly_7b", "orig_08", "fly_8b",
         "orig_09", "orig_10", "orig_11", "orig_12",
         "orig_13", "orig_14", "orig_15", "orig_16",
@@ -292,9 +383,10 @@ def main() -> int:
     for fid in frame_order:
         placed[fid].save(raw_dir / f"{fid}.png")
 
-    render_3bg_strip([(k, placed[k]) for k in frame_order[:12]], QA_DIR / "qa_genki_fx_v2_charge_12f_3bg.png")
-    render_3bg_strip([(k, placed[k]) for k in frame_order[12:16]], QA_DIR / "qa_genki_fx_v2_fly_4f_3bg.png")
-    render_3bg_strip([(k, placed[k]) for k in frame_order[16:]], QA_DIR / "qa_genki_fx_v2_impact_explode_8f_3bg.png")
+    render_3bg_strip([(k, placed[k]) for k in charge_seq], QA_DIR / "qa_genki_fx_r5_charge_12f_3bg.png")
+    render_3bg_strip([(k, placed[k]) for k in hold_seq], QA_DIR / "qa_genki_fx_r5_hold_4f_3bg.png")
+    render_3bg_strip([(k, placed[k]) for k in frame_order[15:19]], QA_DIR / "qa_genki_fx_v2_fly_4f_3bg.png")
+    render_3bg_strip([(k, placed[k]) for k in frame_order[19:]], QA_DIR / "qa_genki_fx_v2_impact_explode_8f_3bg.png")
 
     manifest = {
         "schema": "generate2dsprite.animation_clips.v2",
@@ -310,14 +402,14 @@ def main() -> int:
             "genki_charge_fx": {
                 "loop_policy": "oneshot",
                 "role": "fx",
-                "frames": ["orig_01", "orig_02", "bridge_2b", "orig_03", "bridge_3b", "orig_04", "bridge_4b", "orig_05", "bridge_5b", "orig_06"],
-                "duration_ms": [120] * 10,
+                "frames": charge_seq,
+                "duration_ms": [120] * len(charge_seq),
             },
             "genki_charge_hold_fx": {
                 "loop_policy": "cycle",
                 "role": "fx",
-                "frames": ["orig_06", "charge_6b", "charge_6c"],
-                "duration_ms": [120, 120, 120],
+                "frames": hold_seq,
+                "duration_ms": [120] * len(hold_seq),
             },
             "genki_fly_fx": {
                 "loop_policy": "cycle",

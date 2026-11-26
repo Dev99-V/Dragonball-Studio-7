@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips_out/animation-clips.json",
-    "sha256": "d813b336ffe2a2ad3cbebdfb24b4f81e09858cdf839b49b67114acebdb835dee",
-    "bytes": 50285,
+    "sha256": "666096e695173bb322363a0291700af275d227dbcf38b47f68da73ae9e89ceca",
+    "bytes": 54315,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -34,10 +34,10 @@
       {
         "index": 0,
         "size": [
-          1942,
+          2330,
           1942
         ],
-        "cells": 24,
+        "cells": 27,
         "clips": [
           "genki_charge_fx",
           "genki_charge_hold_fx",
@@ -50,8 +50,8 @@
   },
   "scale": {
     "pixel_size": 0.01,
-    "subject_height_px": 209.0,
-    "world_height": 2.09,
+    "subject_height_px": 217.5,
+    "world_height": 2.1750000000000003,
     "source": "Godot default pixel size",
     "subject_height_source": "median visible height of clip genki_charge_fx"
   },
@@ -67,7 +67,9 @@
         6,
         7,
         8,
-        9
+        9,
+        10,
+        11
       ],
       "duration_ms": [
         120,
@@ -79,9 +81,11 @@
         120,
         120,
         120,
+        120,
+        120,
         120
       ],
-      "total_duration_ms": 1200,
+      "total_duration_ms": 1440,
       "loop": false,
       "loop_policy": "oneshot",
       "events_ms": [],
@@ -100,18 +104,22 @@
           7,
           8,
           7,
+          7,
+          7,
           7
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 72.0,
-        "cycle_aligned": true,
+        "cycle_ticks": 86.4,
+        "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
       "godot": {
         "speed": 60.0,
         "basis": "fixed fps",
         "relative_durations": [
+          7.2,
+          7.2,
           7.2,
           7.2,
           7.2,
@@ -127,16 +135,18 @@
     },
     "genki_charge_hold_fx": {
       "frames": [
-        9,
-        10,
-        11
+        11,
+        12,
+        13,
+        14
       ],
       "duration_ms": [
         120,
         120,
+        120,
         120
       ],
-      "total_duration_ms": 360,
+      "total_duration_ms": 480,
       "loop": true,
       "loop_policy": "cycle",
       "events_ms": [],
@@ -148,11 +158,12 @@
         "frame_ticks": [
           7,
           7,
-          8
+          8,
+          7
         ],
         "zero_tick_positions": [],
         "even": false,
-        "cycle_ticks": 21.6,
+        "cycle_ticks": 28.8,
         "cycle_aligned": false,
         "method": "cumulative integer-ms frame boundaries rounded half-up to the nearest tick"
       },
@@ -162,16 +173,17 @@
         "relative_durations": [
           7.2,
           7.2,
+          7.2,
           7.2
         ]
       }
     },
     "genki_fly_fx": {
       "frames": [
-        12,
-        13,
-        14,
-        15
+        15,
+        16,
+        17,
+        18
       ],
       "duration_ms": [
         80,
@@ -213,10 +225,10 @@
     },
     "genki_impact_fx": {
       "frames": [
-        16,
-        17,
-        18,
-        19
+        19,
+        20,
+        21,
+        22
       ],
       "duration_ms": [
         100,
@@ -258,10 +270,10 @@
     },
     "genki_explode_fx": {
       "frames": [
-        20,
-        21,
-        22,
-        23
+        23,
+        24,
+        25,
+        26
       ],
       "duration_ms": [
         120,
@@ -367,13 +379,13 @@
   "files": [
     {
       "path": "godot/genki_fx-atlas-00.png",
-      "sha256": "ff1233fc27e3b9cb7b05223105a33b9076c201e899dea2c95f044d8b258051c1",
-      "bytes": 1363936
+      "sha256": "ee47e4e7a3eb6aca6418c8b4bf20485a75a79bcbf535e7f71aff5f6625c6dfd9",
+      "bytes": 1523392
     },
     {
       "path": "godot/genki_fx.tres",
-      "sha256": "dbbcf567dfe22f71a336b4016d5cc9206eb00a0396ea86b42ff1d991f8a0a985",
-      "bytes": 5711
+      "sha256": "6970661fc4c4d0e0f304d89097493d214c42761b7284249f48a11fbe8b4887b7",
+      "bytes": 6355
     },
     {
       "path": "godot/genki_fx.tscn",
@@ -407,15 +419,15 @@
       {
         "id": "atlas_max_side_px",
         "status": "pass",
-        "value": 1942,
+        "value": 2330,
         "threshold": 4096
       },
       {
         "id": "source_frame_hashes",
         "status": "pass",
         "value": {
-          "verified": 24,
-          "frames": 24
+          "verified": 27,
+          "frames": 27
         },
         "threshold": null
       }
@@ -423,8 +435,8 @@
     "inputs": [
       {
         "path": "../clips_out/animation-clips.json",
-        "sha256": "d813b336ffe2a2ad3cbebdfb24b4f81e09858cdf839b49b67114acebdb835dee",
-        "bytes": 50285
+        "sha256": "666096e695173bb322363a0291700af275d227dbcf38b47f68da73ae9e89ceca",
+        "bytes": 54315
       },
       {
         "path": "../clips_out/frames/frame-00.png",
@@ -433,116 +445,131 @@
       },
       {
         "path": "../clips_out/frames/frame-01.png",
-        "sha256": "827c1285af9a1bf2768a0369b69fa4212cf3d79a7c1bac064ecf04a5df92e1ff",
-        "bytes": 5892
+        "sha256": "a7a6a3c53ed2ba1a8c7a90115f9de8dff922d4cd5b990345ed950bb020574ad1",
+        "bytes": 5328
       },
       {
         "path": "../clips_out/frames/frame-02.png",
-        "sha256": "9bb8d3419222e2370adbfeb203baa0306fa955102537d2d52f4c3d07a0070126",
-        "bytes": 5444
+        "sha256": "1f0878a793eceebdd3db8125c66775c936a4f1264cca62d352506095f3aa3797",
+        "bytes": 9380
       },
       {
         "path": "../clips_out/frames/frame-03.png",
-        "sha256": "51e16937a9e1541778d83f79cdd31c6127bddfdd8053c2e262c08e27499cacae",
-        "bytes": 8286
+        "sha256": "4f202bce7b82e94827baf012ef27a93baef47dd6dae2e4c43e970279a112f576",
+        "bytes": 7567
       },
       {
         "path": "../clips_out/frames/frame-04.png",
-        "sha256": "da520175a73f293ba20391764d4406f690ab1a0075843775d6768c06883a3b40",
-        "bytes": 16605
+        "sha256": "649e67bb823fc69d315c69b9518f8c3da6db68765c8d47a428fb2d47d1b04da5",
+        "bytes": 20133
       },
       {
         "path": "../clips_out/frames/frame-05.png",
-        "sha256": "43ed0a642b45612fbc24d2913fab6652859beff846cb806d0961a66ac13d106d",
-        "bytes": 37249
+        "sha256": "e703bde9fcdca9ddb58153dae11116d88c59bba5bab861d72b20b3a4f76ee4b6",
+        "bytes": 66495
       },
       {
         "path": "../clips_out/frames/frame-06.png",
-        "sha256": "28095ac719025e05737097ae8200d70983877ac98e7f526b2e5014e9ccfd408c",
-        "bytes": 27849
+        "sha256": "eb15b3dc51fba7304a6a16406d86a0f57f4928f41e82f7c4046b8b3c1692b688",
+        "bytes": 29030
       },
       {
         "path": "../clips_out/frames/frame-07.png",
-        "sha256": "21fd50848277b6f1f252b613a03dbc8de374b5cca5cd14ef6e1053a1c645dfde",
-        "bytes": 49810
+        "sha256": "ae4f8f2b2dc598029f8bcfa7f8fafa1f5c27b6038e171a4c7cf90cb9ef946900",
+        "bytes": 29095
       },
       {
         "path": "../clips_out/frames/frame-08.png",
-        "sha256": "8cb73edadc43fc5d6172d1691683028c886bc39f50f392ee4ff1ee8acb3af5f9",
-        "bytes": 59125
+        "sha256": "7a4653a5a46ef02d70a78ed6aabb611cbb1ff480c47c89c41a59e89f700ff204",
+        "bytes": 42490
       },
       {
         "path": "../clips_out/frames/frame-09.png",
-        "sha256": "5d86ecfc1305784231afe7cb761e522ebc4741d22425f4ba1f6be9812f21877b",
-        "bytes": 72947
+        "sha256": "3cc1e8a34242e36ba1378ca9e0ddf0c264a34d7a2b0302bb7e2bba3bbd195a6f",
+        "bytes": 45854
       },
       {
         "path": "../clips_out/frames/frame-10.png",
-        "sha256": "353e994ce75630a59c5109e288a536732e020901f1bfd6d7e276bda3e7bc5d5d",
-        "bytes": 57853
+        "sha256": "f95d9f02c6a209f479c2fcb1677a5a4d718e536701b05087d9b90c773716be87",
+        "bytes": 49054
       },
       {
         "path": "../clips_out/frames/frame-11.png",
-        "sha256": "abb9b2763938cf4a11d6c0e0fd7868f1fb8b77e6400f2d7b90f7c73e902639da",
-        "bytes": 61364
+        "sha256": "3af5c471fbda791d90115e346002e3dbb479ad2ac8ba9620a5ab78fc3a87718f",
+        "bytes": 61799
       },
       {
         "path": "../clips_out/frames/frame-12.png",
+        "sha256": "25bae0d1a607267046e556ac9dd58989ec24af39ba5031d04d2b058da008d818",
+        "bytes": 61830
+      },
+      {
+        "path": "../clips_out/frames/frame-13.png",
+        "sha256": "38cbb373d6ab9536c35bb31709f8813301d813ef7986b91081c9c4e97c0d6471",
+        "bytes": 67053
+      },
+      {
+        "path": "../clips_out/frames/frame-14.png",
+        "sha256": "cf3c8265527174a9c6417de21c17f1ae18cd29c1b19c8e9c20bb8e9a8a9e6902",
+        "bytes": 62514
+      },
+      {
+        "path": "../clips_out/frames/frame-15.png",
         "sha256": "bb6e01a4b88da220d8a79372345ccbd832aad5f855404200b2d12338dfa50c29",
         "bytes": 83216
       },
       {
-        "path": "../clips_out/frames/frame-13.png",
+        "path": "../clips_out/frames/frame-16.png",
         "sha256": "234a4986c02eca91421279a7390f340aba77ce1a0d025fba9ea41bb3e1779608",
         "bytes": 75379
       },
       {
-        "path": "../clips_out/frames/frame-14.png",
+        "path": "../clips_out/frames/frame-17.png",
         "sha256": "5f12c05b54b4615545dce1221ec9d28a01772f1bf8d4e0304e90c02b3d98cd91",
         "bytes": 96979
       },
       {
-        "path": "../clips_out/frames/frame-15.png",
+        "path": "../clips_out/frames/frame-18.png",
         "sha256": "ca08fbb97590c8ba1a3b93e8829e8159069e192901b0fd9ee1e075ed060ef8f6",
         "bytes": 76220
       },
       {
-        "path": "../clips_out/frames/frame-16.png",
+        "path": "../clips_out/frames/frame-19.png",
         "sha256": "a4acd1f2ec7dcb0ed6127b1b1100e99152192db9f399c903c7f9518f6ec626fc",
         "bytes": 71586
       },
       {
-        "path": "../clips_out/frames/frame-17.png",
+        "path": "../clips_out/frames/frame-20.png",
         "sha256": "b9fc69625a8852d969a8f369d4120dad94275902a2615d116549fbad6a44680f",
         "bytes": 74694
       },
       {
-        "path": "../clips_out/frames/frame-18.png",
+        "path": "../clips_out/frames/frame-21.png",
         "sha256": "ebd850ad479b03f6bc8aefa24b1a77d5699e2435281b7ce2af5a9dc1af657856",
         "bytes": 69075
       },
       {
-        "path": "../clips_out/frames/frame-19.png",
+        "path": "../clips_out/frames/frame-22.png",
         "sha256": "ddc17f8a7b68d04b66bd2a3fc0c81dacdd74517e1d0174a02ed3f3681a1f6429",
         "bytes": 53497
       },
       {
-        "path": "../clips_out/frames/frame-20.png",
+        "path": "../clips_out/frames/frame-23.png",
         "sha256": "6e6d65916c5d8d478bc96550f4a05fdd52512c660bca0b5d4344645401d72651",
         "bytes": 49775
       },
       {
-        "path": "../clips_out/frames/frame-21.png",
+        "path": "../clips_out/frames/frame-24.png",
         "sha256": "7805571b819a145679047f2bd51e044eadfc943175e92bc044acb4f80791abee",
         "bytes": 112338
       },
       {
-        "path": "../clips_out/frames/frame-22.png",
+        "path": "../clips_out/frames/frame-25.png",
         "sha256": "2c917d2aba2801724f00a4e08c1208bc2b45c92c7261b792308ef27a72992b6f",
         "bytes": 114677
       },
       {
-        "path": "../clips_out/frames/frame-23.png",
+        "path": "../clips_out/frames/frame-26.png",
         "sha256": "6bfe907071a3b23afa86f563ad125723b14096eccdc2b025a28f6423b78654c4",
         "bytes": 60763
       }
@@ -550,11 +577,11 @@
     "outputs": [
       {
         "path": "godot/genki_fx-atlas-00.png",
-        "sha256": "ff1233fc27e3b9cb7b05223105a33b9076c201e899dea2c95f044d8b258051c1"
+        "sha256": "ee47e4e7a3eb6aca6418c8b4bf20485a75a79bcbf535e7f71aff5f6625c6dfd9"
       },
       {
         "path": "godot/genki_fx.tres",
-        "sha256": "dbbcf567dfe22f71a336b4016d5cc9206eb00a0396ea86b42ff1d991f8a0a985"
+        "sha256": "6970661fc4c4d0e0f304d89097493d214c42761b7284249f48a11fbe8b4887b7"
       },
       {
         "path": "godot/genki_fx.tscn",

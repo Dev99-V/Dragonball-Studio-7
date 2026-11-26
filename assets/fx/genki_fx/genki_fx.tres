@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=26 format=3]
+[gd_resource type="SpriteFrames" load_steps=29 format=3]
 
 [ext_resource type="Texture2D" path="genki_fx-atlas-00.png" id="1_atlas00"]
 
@@ -29,97 +29,112 @@ filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c5"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(3, 391, 384, 384)
+region = Rect2(1943, 3, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c6"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(391, 391, 384, 384)
+region = Rect2(3, 391, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c7"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(779, 391, 384, 384)
+region = Rect2(391, 391, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c8"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(1167, 391, 384, 384)
+region = Rect2(779, 391, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c9"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(1555, 391, 384, 384)
+region = Rect2(1167, 391, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c10"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(3, 779, 384, 384)
+region = Rect2(1555, 391, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c11"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(391, 779, 384, 384)
+region = Rect2(1943, 391, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c12"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(779, 779, 384, 384)
+region = Rect2(3, 779, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c13"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(1167, 779, 384, 384)
+region = Rect2(391, 779, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c14"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(1555, 779, 384, 384)
+region = Rect2(779, 779, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c15"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(3, 1167, 384, 384)
+region = Rect2(1167, 779, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c16"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(391, 1167, 384, 384)
+region = Rect2(1555, 779, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c17"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(779, 1167, 384, 384)
+region = Rect2(1943, 779, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c18"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(1167, 1167, 384, 384)
+region = Rect2(3, 1167, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c19"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(1555, 1167, 384, 384)
+region = Rect2(391, 1167, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c20"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(3, 1555, 384, 384)
+region = Rect2(779, 1167, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c21"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(391, 1555, 384, 384)
+region = Rect2(1167, 1167, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c22"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(779, 1555, 384, 384)
+region = Rect2(1555, 1167, 384, 384)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p0c23"]
 atlas = ExtResource("1_atlas00")
-region = Rect2(1167, 1555, 384, 384)
+region = Rect2(1943, 1167, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c24"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(3, 1555, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c25"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(391, 1555, 384, 384)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p0c26"]
+atlas = ExtResource("1_atlas00")
+region = Rect2(779, 1555, 384, 384)
 filter_clip = true
 
 [resource]
@@ -154,14 +169,6 @@ animations = [{
 }, {
 "duration": 7.2,
 "texture": SubResource("AtlasTexture_p0c9")
-}],
-"loop": false,
-"name": &"genki_charge_fx",
-"speed": 60.0
-}, {
-"frames": [{
-"duration": 7.2,
-"texture": SubResource("AtlasTexture_p0c9")
 }, {
 "duration": 7.2,
 "texture": SubResource("AtlasTexture_p0c10")
@@ -169,22 +176,39 @@ animations = [{
 "duration": 7.2,
 "texture": SubResource("AtlasTexture_p0c11")
 }],
+"loop": false,
+"name": &"genki_charge_fx",
+"speed": 60.0
+}, {
+"frames": [{
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c11")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c12")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c13")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c14")
+}],
 "loop": true,
 "name": &"genki_charge_hold_fx",
 "speed": 60.0
 }, {
 "frames": [{
 "duration": 4.8,
-"texture": SubResource("AtlasTexture_p0c12")
-}, {
-"duration": 4.8,
-"texture": SubResource("AtlasTexture_p0c13")
-}, {
-"duration": 4.8,
-"texture": SubResource("AtlasTexture_p0c14")
-}, {
-"duration": 4.8,
 "texture": SubResource("AtlasTexture_p0c15")
+}, {
+"duration": 4.8,
+"texture": SubResource("AtlasTexture_p0c16")
+}, {
+"duration": 4.8,
+"texture": SubResource("AtlasTexture_p0c17")
+}, {
+"duration": 4.8,
+"texture": SubResource("AtlasTexture_p0c18")
 }],
 "loop": true,
 "name": &"genki_fly_fx",
@@ -192,16 +216,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 6.0,
-"texture": SubResource("AtlasTexture_p0c16")
-}, {
-"duration": 6.0,
-"texture": SubResource("AtlasTexture_p0c17")
-}, {
-"duration": 6.0,
-"texture": SubResource("AtlasTexture_p0c18")
-}, {
-"duration": 6.0,
 "texture": SubResource("AtlasTexture_p0c19")
+}, {
+"duration": 6.0,
+"texture": SubResource("AtlasTexture_p0c20")
+}, {
+"duration": 6.0,
+"texture": SubResource("AtlasTexture_p0c21")
+}, {
+"duration": 6.0,
+"texture": SubResource("AtlasTexture_p0c22")
 }],
 "loop": false,
 "name": &"genki_impact_fx",
@@ -209,16 +233,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 7.2,
-"texture": SubResource("AtlasTexture_p0c20")
-}, {
-"duration": 7.2,
-"texture": SubResource("AtlasTexture_p0c21")
-}, {
-"duration": 7.2,
-"texture": SubResource("AtlasTexture_p0c22")
-}, {
-"duration": 7.2,
 "texture": SubResource("AtlasTexture_p0c23")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c24")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c25")
+}, {
+"duration": 7.2,
+"texture": SubResource("AtlasTexture_p0c26")
 }],
 "loop": false,
 "name": &"genki_explode_fx",

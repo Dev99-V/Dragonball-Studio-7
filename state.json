@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-26T07:00:53Z",
+  "updated_at": "2026-11-26T07:28:59Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.18.0",
@@ -167,9 +167,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "POLISH-R4",
+    "active_task_id": "POLISH-R5",
     "status": "done",
-    "summary": "Fix Son Goku genki_cast #0 face, #1 & #9 hair to canonical idle_combat, and refine #3..#6 floating leg motion from #2 to subtle ~5px narrow-widen hover oscillation",
+    "summary": "Fix Genki FX monotonic core growth (6->192px, 12f charge, zero pop/shrink), lock sphere center (192,192), and keep crisp blue auxiliary gather rays/arcs on all 4 final hold frames (charge_6a..6d)",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1456,6 +1456,12 @@
       "timestamp": "2026-11-26T07:00:53Z",
       "status": "done",
       "summary": "Fix Son Goku genki_cast #0 face, #1 & #9 hair to canonical idle_combat, and refine #3..#6 floating leg motion from #2 to subtle ~5px narrow-widen hover oscillation"
+    },
+    {
+      "id": "POLISH-R5",
+      "timestamp": "2026-11-26T07:28:59Z",
+      "status": "done",
+      "summary": "Fix Genki FX monotonic core growth (6->192px, 12f charge, zero pop/shrink), lock sphere center (192,192), and keep crisp blue auxiliary gather rays/arcs on all 4 final hold frames (charge_6a..6d)"
     }
   ],
   "quick_resume_commands": [
@@ -1801,5 +1807,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-26T07:00:53Z"
+  "last_updated_utc": "2026-11-26T07:28:59Z"
 }

@@ -4873,17 +4873,17 @@ func _draw_hero_genki_charge_and_reflection(canvas: CanvasItem, goku: Node2D, c_
 				if cfc > 0 and _genki_elapsed_s < form_dur_s:
 					var cfi: int = clampi(int(floor(_genki_elapsed_s / GENKI_CHARGE_FRAME_S)), 0, cfc - 1)
 					orb_tex = gfx.get_frame_texture(&"genki_charge_fx", cfi)
-					scale_mul = 0.78 + 0.16 * clampf(_genki_elapsed_s / maxf(0.1, form_dur_s), 0.0, 1.0)
+					scale_mul = 0.86 + 0.14 * clampf(_genki_elapsed_s / maxf(0.1, form_dur_s), 0.0, 1.0)
 				elif gfx.has_animation(hold_clip):
 					var lfc: int = gfx.get_frame_count(hold_clip)
 					var lfi: int = int(floor(maxf(0.0, _genki_elapsed_s - form_dur_s) / GENKI_CHARGE_FRAME_S)) % maxi(1, lfc)
 					orb_tex = gfx.get_frame_texture(hold_clip, lfi)
 					var charge_grow: float = clampf((_genki_elapsed_s - form_dur_s) / maxf(0.1, GENKI_CHARGE_DURATION_S - form_dur_s), 0.0, 1.0)
-					scale_mul = 0.94 + 0.18 * charge_grow + 0.012 * float(_genki_contrib_count)
+					scale_mul = 1.00 + 0.22 * charge_grow + 0.012 * float(_genki_contrib_count)
 			else:
 				var t_rel: float = clampf(_genki_elapsed_s / GENKI_THROW_RELEASE_S, 0.0, 1.0)
 				draw_pos = orb_pos.lerp(goku.position + Vector2(_genki_locked_facing_x * 56.0, -142.0 * c_sc), t_rel)
-				scale_mul = 1.12 + 0.012 * float(_genki_contrib_count)
+				scale_mul = 1.22 + 0.012 * float(_genki_contrib_count)
 				if gfx.has_animation(hold_clip):
 					var lfc2: int = gfx.get_frame_count(hold_clip)
 					orb_tex = gfx.get_frame_texture(hold_clip, int(floor(_sim_time_s / GENKI_CHARGE_FRAME_S)) % maxi(1, lfc2))
