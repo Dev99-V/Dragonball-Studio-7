@@ -33,8 +33,9 @@ STATE_PATH = ROOT / "state.json"
 
 WORK_GENKI = ROOT / "work" / "characters" / "songoku_genki"
 GEN_DIR = WORK_GENKI / "gen_v2"
-HOLD_GEN_DIR = ROOT / "work" / "polish_round3" / "gen"
-QA_DIR = ROOT / "work" / "polish_round3" / "qa"
+R4_GEN_DIR = ROOT / "work" / "polish_round4" / "gen"
+HOLD_GEN_DIR = R4_GEN_DIR
+QA_DIR = ROOT / "work" / "polish_round4" / "qa"
 BACKUP_DIR = ROOT / "docs" / "releases" / "archive"
 BACKUP_ATLAS = BACKUP_DIR / "songoku-v0.18.0-atlas-00.png"
 
@@ -76,13 +77,13 @@ def clean_spurious_white_chest_badge(arr: np.ndarray) -> np.ndarray:
     g = out[:, :, 1].astype(np.int16)
     b = out[:, :, 2].astype(np.int16)
     a = out[:, :, 3] > 0
-    # Torso chest ROI (38%..62% height, 32%..68% width)
+    # Torso chest ROI (35%..65% height, 30%..76% width — catches right-chest kanji badge cleanly too!)
     roi = np.zeros((h, w), dtype=bool)
-    roi[int(h * 0.38):int(h * 0.62), int(w * 0.32):int(w * 0.68)] = True
-    # Pure white/pale neutral spot completely surrounded by gi/undershirt
-    white_spot = a & roi & (r > 215) & (g > 215) & (b > 210)
+    roi[int(h * 0.35):int(h * 0.65), int(w * 0.30):int(w * 0.76)] = True
+    # Pure white/pale neutral spot inside orange gi / dark outline
+    white_spot = a & roi & (r > 205) & (g > 205) & (b > 200)
     lbl, n = ndimage.label(white_spot, structure=np.ones((3, 3), dtype=np.int32))
-    gi_orange = a & (r > 180) & (g >= 70) & (g <= 160) & (b < 65) & ((r - g) > 40)
+    gi_orange = a & (r > 175) & (g >= 65) & (g <= 165) & (b < 70) & ((r - g) > 35)
     gi_blue = a & (b > 90) & (r < 95) & (g < 145)
     fill_col = np.array([232, 118, 24, 255], dtype=np.uint8)
     if gi_orange.sum() > 20:
@@ -95,13 +96,15 @@ def clean_spurious_white_chest_badge(arr: np.ndarray) -> np.ndarray:
     for ci in range(1, n + 1):
         comp = lbl == ci
         sz = int(comp.sum())
-        if 8 <= sz <= int(h * w * 0.015):
-            # Include 1px dark ring around the badge if surrounded by orange gi or undershirt blue
-            dil = ndimage.binary_dilation(comp, iterations=5) & ~comp
-            if (dil & (gi_orange | gi_blue)).sum() > sz * 0.45 and (dil & gi_orange).sum() > sz * 0.15:
+        if 4 <= sz <= int(h * w * 0.018):
+            # Include 1px dark ring around the badge if adjacent to orange gi
+            dil = ndimage.binary_dilation(comp, iterations=6) & ~comp
+            if (dil & gi_orange).sum() >= max(6, int(sz * 0.25)):
                 ring = ndimage.binary_dilation(comp, iterations=2) & ~comp
                 dark_ring = ring & (r < 95) & (g < 95) & (b < 95)
-                patch = comp | dark_ring
+                # Only replace interior dark ring pixels adjacent to orange gi (never eat outer sprite outline!)
+                inner_dark = dark_ring & ndimage.binary_dilation(gi_orange, iterations=3) & ~ndimage.binary_dilation(~a, iterations=1)
+                patch = comp | inner_dark
                 out[patch] = fill_col
     return out
 
@@ -294,8 +297,8 @@ def main() -> int:
     #    -> #3..#6 genki_hold_00..03 (4-frame overhead hair/gi/sash flutter loop @ 120ms for 5.0s charge!)
     #    -> #7 genki_03 (lunge wind-up) -> #8 genki_04 (downward hurl + arc) -> #9 genki_05 (crouched follow-through)
     specs = {
-        "genki_00":      {"body_h": 124, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_00" / "generated.png"},
-        "genki_01":      {"body_h": 128, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_01" / "generated.png"},
+        "genki_00":      {"body_h": 124, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": R4_GEN_DIR / "genki_00" / "generated.png"},
+        "genki_01":      {"body_h": 126, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": R4_GEN_DIR / "genki_01" / "generated.png"},
         "genki_02":      {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_02" / "generated.png"},
         "genki_hold_00": {"body_h": 124, "use_hair_crown_h": True, "hover_torso_anchor": True, "crown_y": 123, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_00" / "generated.png"},
         "genki_hold_01": {"body_h": 124, "use_hair_crown_h": True, "hover_torso_anchor": True, "crown_y": 123, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_01" / "generated.png"},
@@ -303,11 +306,11 @@ def main() -> int:
         "genki_hold_03": {"body_h": 124, "use_hair_crown_h": True, "hover_torso_anchor": True, "crown_y": 123, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_03" / "generated.png"},
         "genki_03":      {"body_h": 120, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_03" / "generated.png"},
         "genki_04":      {"body_h": 92,  "use_body_comp_h": True,   "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_04" / "generated.png"},
-        "genki_05":      {"body_h": 96,  "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_05" / "generated.png"},
+        "genki_05":      {"body_h": 96,  "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": R4_GEN_DIR / "genki_05" / "generated.png"},
     }
 
-    bar_ref = Image.open(RAW_DIR / "bar_00.png").convert("RGBA")
-    strip_items: List[Tuple[str, Image.Image]] = [("REF bar_00", bar_ref)]
+    bar_ref = Image.open(RAW_DIR / "idle_combat_00.png").convert("RGBA")
+    strip_items: List[Tuple[str, Image.Image]] = [("REF idle_combat_00", bar_ref)]
     saved_paths: List[pathlib.Path] = []
     for fid, sp in specs.items():
         gen_p = sp["src"]
@@ -318,10 +321,11 @@ def main() -> int:
         saved_paths.append(dst)
         arr = np.array(im)
         ys, xs = np.where(arr[:, :, 3] > 0)
-        foot = arr[max(0, int(ys.max()) - 7):int(ys.max()) + 1, :, 3] > 0
+        foot = arr[max(0, int(ys.max()) - 10):int(ys.max()) + 1, :, 3] > 0
         fxs = np.where(foot)[1]
         smid = 0.5 * (int(fxs.min()) + int(fxs.max())) if len(fxs) else float(np.median(xs))
-        print(f"  [{fid}] bbox=({xs.min()},{ys.min()})..({xs.max()},{ys.max()}) w={xs.max()-xs.min()+1} h={ys.max()-ys.min()+1} stance_mid={smid:.1f} boot_y={ys.max()}")
+        fspan = int(fxs.max() - fxs.min() + 1) if len(fxs) else 0
+        print(f"  [{fid:14s}] bbox=({xs.min()},{ys.min()})..({xs.max()},{ys.max()}) w={xs.max()-xs.min()+1} h={ys.max()-ys.min()+1} stance_mid={smid:.1f} foot_span={fspan} boot_y={ys.max()}")
         strip_items.append((fid, im))
 
     # 3. Render 3-background QA filmstrip comparing side-by-side with canonical bar_00!

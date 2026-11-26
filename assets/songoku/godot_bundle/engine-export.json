@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips/animation-clips.json",
-    "sha256": "e0faa68458fd36ff521fc93d3975f67573205b40bfff7a5974d203365d4c19b9",
-    "bytes": 385600,
+    "sha256": "0002ce1885f7ddddde5406a3ae3938201097a0947d4b6acff08ff08aa70e4306",
+    "bytes": 385596,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -2658,8 +2658,8 @@
   "files": [
     {
       "path": "godot/songoku-atlas-00.png",
-      "sha256": "70a366e512f8c2dfdfda758cc35236835b481a7c3287a714f68a851511e1d59a",
-      "bytes": 2978779
+      "sha256": "fad40dd11f7d7dce7ddbac8ce33c50cbce7d120fe8961037b022c2c6bee9acd6",
+      "bytes": 2982910
     },
     {
       "path": "godot/songoku.tres",
@@ -2714,8 +2714,8 @@
     "inputs": [
       {
         "path": "../clips/animation-clips.json",
-        "sha256": "e0faa68458fd36ff521fc93d3975f67573205b40bfff7a5974d203365d4c19b9",
-        "bytes": 385600
+        "sha256": "0002ce1885f7ddddde5406a3ae3938201097a0947d4b6acff08ff08aa70e4306",
+        "bytes": 385596
       },
       {
         "path": "../clips/frames/frame-00.png",
@@ -3699,23 +3699,23 @@
       },
       {
         "path": "../clips/frames/frame-196.png",
-        "sha256": "b7bde883f419b5257a48cd666d8a5add76c4f1a0a6cf0edbd83c4e8c65238a72",
-        "bytes": 14227
+        "sha256": "943047a501d4b00ec8726496fee8f3bb8c72a693224fa606d05c3c859f76da0a",
+        "bytes": 14527
       },
       {
         "path": "../clips/frames/frame-197.png",
-        "sha256": "9e098c6fe32f3200b7cfb9de23c00cf81aff28efbfea158250c3f566de1f0216",
-        "bytes": 13736
+        "sha256": "9244e9b390cb9d8358c8025031839c604dee6e9fd251c514889254141c0064b1",
+        "bytes": 15069
       },
       {
         "path": "../clips/frames/frame-198.png",
-        "sha256": "cf4defd0f8b92decd72ac824a4277e6b25106a98999e22a71d7e5f076a96a00e",
-        "bytes": 15152
+        "sha256": "fad7553ffcb3ef690026c5b6484f400672feab846b69b356161bc28df0b9e44e",
+        "bytes": 15115
       },
       {
         "path": "../clips/frames/frame-199.png",
-        "sha256": "780fc625c4304ca59dc3360006b9a73596b53550cc56e4bd1e43f02aa4f44a81",
-        "bytes": 16834
+        "sha256": "8cce1e01e92cf1ee453da5b81d58a5358fbb9835de8eaf3f112c9c522729b06f",
+        "bytes": 16843
       },
       {
         "path": "../clips/frames/frame-200.png",
@@ -3724,34 +3724,34 @@
       },
       {
         "path": "../clips/frames/frame-201.png",
-        "sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
-        "bytes": 16383
+        "sha256": "0cc795d6cc8eac7afa343d8755eaf6e28aa1bc5c4365a82156b6c0f08b22034e",
+        "bytes": 15858
       },
       {
         "path": "../clips/frames/frame-202.png",
-        "sha256": "8f1866332503107e8591ac80359dac4f5b2e2f923af9737b6a847ccb65842bb5",
-        "bytes": 15374
+        "sha256": "ae7ddbc848abdf972030a97ffd9b478bbb1061650d7ca45e9dc631e1cd535876",
+        "bytes": 15630
       },
       {
         "path": "../clips/frames/frame-203.png",
-        "sha256": "9715897436b569435d106a14680a9603635e1e83ef8dedfc4e679ed5f524154b",
-        "bytes": 14687
+        "sha256": "98bca04af95737c96d1f6730b8ace655155c8404d6b7b27ced0fa3e1d78493dd",
+        "bytes": 15159
       },
       {
         "path": "../clips/frames/frame-204.png",
-        "sha256": "8122bcb9be359ed873bdf83bb3df373baffa7d519686e792a330d76248a4e1b1",
-        "bytes": 14492
+        "sha256": "0f5c4c1664e8a68f81cbc24deb28bec08d85c03fb076a49121bee184e60ad873",
+        "bytes": 16125
       },
       {
         "path": "../clips/frames/frame-205.png",
-        "sha256": "8a34bffc96c2ce38e7f45f1fb3fada99373aa790d656da168874beaaac5db983",
-        "bytes": 15479
+        "sha256": "d117ab8194b49683a46f1377d82b5340d3dbfdcf40ae1d5adebb46e5968d6560",
+        "bytes": 15821
       }
     ],
     "outputs": [
       {
         "path": "godot/songoku-atlas-00.png",
-        "sha256": "70a366e512f8c2dfdfda758cc35236835b481a7c3287a714f68a851511e1d59a"
+        "sha256": "fad40dd11f7d7dce7ddbac8ce33c50cbce7d120fe8961037b022c2c6bee9acd6"
       },
       {
         "path": "godot/songoku.tres",

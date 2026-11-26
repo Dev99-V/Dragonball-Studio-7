@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-26T06:38:08Z",
+  "updated_at": "2026-11-26T07:00:53Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.18.0",
@@ -167,9 +167,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "POLISH-R3",
+    "active_task_id": "POLISH-R4",
     "status": "done",
-    "summary": "Mahasenko air==ground parity, ~10px on-body Kentai micro-burn FX, Genki bridge gather lines, Goku mid-air floating leg sway, and 1-view K70E Cell Arena Solo PvP map (2400x1080 red-line floor, z=80 non-colliding pillars, quick UI toggle, 0 monsters)",
+    "summary": "Fix Son Goku genki_cast #0 face, #1 & #9 hair to canonical idle_combat, and refine #3..#6 floating leg motion from #2 to subtle ~5px narrow-widen hover oscillation",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1450,6 +1450,12 @@
       "timestamp": "2026-11-26T06:38:08Z",
       "status": "done",
       "summary": "Mahasenko air==ground parity, ~10px on-body Kentai micro-burn FX, Genki bridge gather lines, Goku mid-air floating leg sway, and 1-view K70E Cell Arena Solo PvP map (2400x1080 red-line floor, z=80 non-colliding pillars, quick UI toggle, 0 monsters)"
+    },
+    {
+      "id": "POLISH-R4",
+      "timestamp": "2026-11-26T07:00:53Z",
+      "status": "done",
+      "summary": "Fix Son Goku genki_cast #0 face, #1 & #9 hair to canonical idle_combat, and refine #3..#6 floating leg motion from #2 to subtle ~5px narrow-widen hover oscillation"
     }
   ],
   "quick_resume_commands": [
@@ -1795,5 +1801,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-26T06:38:08Z"
+  "last_updated_utc": "2026-11-26T07:00:53Z"
 }

@@ -4003,17 +4003,17 @@
       "name": "genki_00",
       "source": {
         "path": "../source/raw_frames/genki_00.png",
-        "file_sha256": "b7bde883f419b5257a48cd666d8a5add76c4f1a0a6cf0edbd83c4e8c65238a72",
-        "bytes": 14227,
+        "file_sha256": "943047a501d4b00ec8726496fee8f3bb8c72a693224fa606d05c3c859f76da0a",
+        "bytes": 14527,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "22bceb4acbc1a8013d567547bac21dae88a7204d38e344056d13a273550338f0",
-      "transparent_pixel_count": 78312,
-      "visible_pixel_count": 4632,
+      "rgba_pixel_sha256": "4172d9a3be0d5a660a2eb70c9da2b70649a3fb397821bdbd33fe486d193b0241",
+      "transparent_pixel_count": 78159,
+      "visible_pixel_count": 4785,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-196.png"
@@ -4023,17 +4023,17 @@
       "name": "genki_01",
       "source": {
         "path": "../source/raw_frames/genki_01.png",
-        "file_sha256": "9e098c6fe32f3200b7cfb9de23c00cf81aff28efbfea158250c3f566de1f0216",
-        "bytes": 13736,
+        "file_sha256": "9244e9b390cb9d8358c8025031839c604dee6e9fd251c514889254141c0064b1",
+        "bytes": 15069,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "85edcf78cbe4aca9fcf4f5e311a816617d0173917b3125e7a1e0c302928ff05d",
-      "transparent_pixel_count": 78491,
-      "visible_pixel_count": 4453,
+      "rgba_pixel_sha256": "591efbe98c1a10f1f3e95007d5b317fcaf8776a1b8b86ee299049eb3be43d3bc",
+      "transparent_pixel_count": 78139,
+      "visible_pixel_count": 4805,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-197.png"
@@ -4043,15 +4043,15 @@
       "name": "genki_02",
       "source": {
         "path": "../source/raw_frames/genki_02.png",
-        "file_sha256": "cf4defd0f8b92decd72ac824a4277e6b25106a98999e22a71d7e5f076a96a00e",
-        "bytes": 15152,
+        "file_sha256": "fad7553ffcb3ef690026c5b6484f400672feab846b69b356161bc28df0b9e44e",
+        "bytes": 15115,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "2f02730c6900c5c372a47b8f098230fb18df503c73f584c6f42229d1218f98d5",
+      "rgba_pixel_sha256": "73b2d86abb6218cfe97d90d1de7d20e1a9e5fcc81d3d7700bd80cb20321b643e",
       "transparent_pixel_count": 78326,
       "visible_pixel_count": 4618,
       "near_duplicates": [],
@@ -4063,15 +4063,15 @@
       "name": "genki_03",
       "source": {
         "path": "../source/raw_frames/genki_03.png",
-        "file_sha256": "780fc625c4304ca59dc3360006b9a73596b53550cc56e4bd1e43f02aa4f44a81",
-        "bytes": 16834,
+        "file_sha256": "8cce1e01e92cf1ee453da5b81d58a5358fbb9835de8eaf3f112c9c522729b06f",
+        "bytes": 16843,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "c6bb9e5a7dfb73cc014df58a8907fc6033d452069df78b0fe21c1fae2985fe3d",
+      "rgba_pixel_sha256": "5523cd9380929bcaefe5b5dc0dfd9d383175d3ffb57ca3d3c3c33b07599c48b3",
       "transparent_pixel_count": 77767,
       "visible_pixel_count": 5177,
       "near_duplicates": [],
@@ -4103,17 +4103,17 @@
       "name": "genki_05",
       "source": {
         "path": "../source/raw_frames/genki_05.png",
-        "file_sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
-        "bytes": 16383,
+        "file_sha256": "0cc795d6cc8eac7afa343d8755eaf6e28aa1bc5c4365a82156b6c0f08b22034e",
+        "bytes": 15858,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "5b7dbafe00847716c4a97103ac5acf0c1c80e5872f6c2f151f5f68ea3f789ae3",
-      "transparent_pixel_count": 77613,
-      "visible_pixel_count": 5331,
+      "rgba_pixel_sha256": "a152995c51d58531e223f47d0eac368742901a04ce297c48602e0b55dc4fe66d",
+      "transparent_pixel_count": 77996,
+      "visible_pixel_count": 4948,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-201.png"
@@ -4123,17 +4123,17 @@
       "name": "genki_hold_00",
       "source": {
         "path": "../source/raw_frames/genki_hold_00.png",
-        "file_sha256": "8f1866332503107e8591ac80359dac4f5b2e2f923af9737b6a847ccb65842bb5",
-        "bytes": 15374,
+        "file_sha256": "ae7ddbc848abdf972030a97ffd9b478bbb1061650d7ca45e9dc631e1cd535876",
+        "bytes": 15630,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "3d4d83b2b79096dfb9237fe01347853776aeccab5544f6d032c49e00de6a0752",
-      "transparent_pixel_count": 78686,
-      "visible_pixel_count": 4258,
+      "rgba_pixel_sha256": "1373693d1490bcc1de2e34c3b492ccf36f0399b58105f647459397de07218ac6",
+      "transparent_pixel_count": 78240,
+      "visible_pixel_count": 4704,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-202.png"
@@ -4143,17 +4143,17 @@
       "name": "genki_hold_01",
       "source": {
         "path": "../source/raw_frames/genki_hold_01.png",
-        "file_sha256": "9715897436b569435d106a14680a9603635e1e83ef8dedfc4e679ed5f524154b",
-        "bytes": 14687,
+        "file_sha256": "98bca04af95737c96d1f6730b8ace655155c8404d6b7b27ced0fa3e1d78493dd",
+        "bytes": 15159,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "a21cf5b4de1151d7c3afc9a8f2c532ba3620934d72840643a61ef0f862cec1f8",
-      "transparent_pixel_count": 78881,
-      "visible_pixel_count": 4063,
+      "rgba_pixel_sha256": "18d9620cd8a5812f7b1dc651b32c9b6b98cb1be201b0f62a46624318b1bdbf41",
+      "transparent_pixel_count": 78357,
+      "visible_pixel_count": 4587,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-203.png"
@@ -4163,17 +4163,17 @@
       "name": "genki_hold_02",
       "source": {
         "path": "../source/raw_frames/genki_hold_02.png",
-        "file_sha256": "8122bcb9be359ed873bdf83bb3df373baffa7d519686e792a330d76248a4e1b1",
-        "bytes": 14492,
+        "file_sha256": "0f5c4c1664e8a68f81cbc24deb28bec08d85c03fb076a49121bee184e60ad873",
+        "bytes": 16125,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "ff9f610f5fb5bf48a40d1692b9d34fb3def12f2947a901397918f73225711204",
-      "transparent_pixel_count": 78937,
-      "visible_pixel_count": 4007,
+      "rgba_pixel_sha256": "32b5dd72fe2932cfec902983fcaa30050043851b6375fe20b4866837479de530",
+      "transparent_pixel_count": 78131,
+      "visible_pixel_count": 4813,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-204.png"
@@ -4183,17 +4183,17 @@
       "name": "genki_hold_03",
       "source": {
         "path": "../source/raw_frames/genki_hold_03.png",
-        "file_sha256": "8a34bffc96c2ce38e7f45f1fb3fada99373aa790d656da168874beaaac5db983",
-        "bytes": 15479,
+        "file_sha256": "d117ab8194b49683a46f1377d82b5340d3dbfdcf40ae1d5adebb46e5968d6560",
+        "bytes": 15821,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "bad21331ff8799b961c23e9f68b011c28dd37c5416171fa4456124da0006c019",
-      "transparent_pixel_count": 78649,
-      "visible_pixel_count": 4295,
+      "rgba_pixel_sha256": "dcf4d7fc0a55ca576daebf62f4091b66203e85d3a541210cd14ffb09180651d0",
+      "transparent_pixel_count": 78171,
+      "visible_pixel_count": 4773,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-205.png"
@@ -10275,78 +10275,78 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "15e0dfc7f58173c1637812cc410910cbc6c3bf29aa41b1641e2fc5a9c8536a91"
+        "file_sha256": "cffac629f9b4893eebcbd9b8282f6014c8d1786f4ae421ab0398f2a1de4eceb8"
       },
       "transitions": [
         {
           "from_position": 0,
           "to_position": 1,
-          "premultiplied_rgb_mae": 5.237288,
-          "alpha_mae": 6.440791,
-          "changed_visible_pixels": 5588
+          "premultiplied_rgb_mae": 5.330412,
+          "alpha_mae": 5.417028,
+          "changed_visible_pixels": 5676
         },
         {
           "from_position": 1,
           "to_position": 2,
-          "premultiplied_rgb_mae": 5.914657,
-          "alpha_mae": 5.789026,
-          "changed_visible_pixels": 5474
+          "premultiplied_rgb_mae": 5.98192,
+          "alpha_mae": 6.065719,
+          "changed_visible_pixels": 5695
         },
         {
           "from_position": 2,
           "to_position": 3,
-          "premultiplied_rgb_mae": 4.639054,
-          "alpha_mae": 5.687572,
-          "changed_visible_pixels": 5363
+          "premultiplied_rgb_mae": 3.756768,
+          "alpha_mae": 2.514829,
+          "changed_visible_pixels": 5068
         },
         {
           "from_position": 3,
           "to_position": 4,
-          "premultiplied_rgb_mae": 4.171927,
-          "alpha_mae": 4.387117,
-          "changed_visible_pixels": 4870
+          "premultiplied_rgb_mae": 3.46541,
+          "alpha_mae": 2.524052,
+          "changed_visible_pixels": 5053
         },
         {
           "from_position": 4,
           "to_position": 5,
-          "premultiplied_rgb_mae": 3.328736,
-          "alpha_mae": 3.578559,
-          "changed_visible_pixels": 4616
+          "premultiplied_rgb_mae": 3.694698,
+          "alpha_mae": 2.871455,
+          "changed_visible_pixels": 5166
         },
         {
           "from_position": 5,
           "to_position": 6,
-          "premultiplied_rgb_mae": 3.674547,
-          "alpha_mae": 3.676939,
-          "changed_visible_pixels": 4747
+          "premultiplied_rgb_mae": 3.22901,
+          "alpha_mae": 2.072121,
+          "changed_visible_pixels": 5128
         },
         {
           "from_position": 6,
           "to_position": 7,
-          "premultiplied_rgb_mae": 10.981405,
-          "alpha_mae": 17.019676,
-          "changed_visible_pixels": 7504
+          "premultiplied_rgb_mae": 10.774487,
+          "alpha_mae": 16.607711,
+          "changed_visible_pixels": 7675
         },
         {
           "from_position": 7,
           "to_position": 8,
-          "premultiplied_rgb_mae": 11.827397,
+          "premultiplied_rgb_mae": 11.820899,
           "alpha_mae": 16.921296,
           "changed_visible_pixels": 8451
         },
         {
           "from_position": 8,
           "to_position": 9,
-          "premultiplied_rgb_mae": 10.969184,
-          "alpha_mae": 11.282914,
-          "changed_visible_pixels": 7609
+          "premultiplied_rgb_mae": 10.071583,
+          "alpha_mae": 10.314489,
+          "changed_visible_pixels": 7262
         }
       ],
       "last_to_first": {
         "applies_to_playback": false,
-        "premultiplied_rgb_mae": 10.378786,
-        "alpha_mae": 15.196578,
-        "changed_visible_pixels": 7453
+        "premultiplied_rgb_mae": 9.474159,
+        "alpha_mae": 13.567166,
+        "changed_visible_pixels": 7072
       }
     }
   },
@@ -10494,7 +10494,7 @@
     "requested_scale": 1,
     "annotated_with_shared_root": true,
     "not_a_runtime_atlas": true,
-    "file_sha256": "323c143b12538271b6c8ad12b1095bb6834bfde4571a768617b5eeeebfa072b4"
+    "file_sha256": "aaa5880aa5e57411cece32211f5e4e26f6b65639d9ae321440ca27eb1203cde0"
   },
   "review": {
     "scale": 1,
@@ -11671,7 +11671,7 @@
             ]
           ],
           "mirrored_offset_px": 0,
-          "turn_slide_px": 2.0
+          "turn_slide_px": 0.0
         }
       ],
       "clips_shown": 35,
@@ -12727,23 +12727,23 @@
       },
       {
         "path": "../source/raw_frames/genki_00.png",
-        "sha256": "b7bde883f419b5257a48cd666d8a5add76c4f1a0a6cf0edbd83c4e8c65238a72",
-        "bytes": 14227
+        "sha256": "943047a501d4b00ec8726496fee8f3bb8c72a693224fa606d05c3c859f76da0a",
+        "bytes": 14527
       },
       {
         "path": "../source/raw_frames/genki_01.png",
-        "sha256": "9e098c6fe32f3200b7cfb9de23c00cf81aff28efbfea158250c3f566de1f0216",
-        "bytes": 13736
+        "sha256": "9244e9b390cb9d8358c8025031839c604dee6e9fd251c514889254141c0064b1",
+        "bytes": 15069
       },
       {
         "path": "../source/raw_frames/genki_02.png",
-        "sha256": "cf4defd0f8b92decd72ac824a4277e6b25106a98999e22a71d7e5f076a96a00e",
-        "bytes": 15152
+        "sha256": "fad7553ffcb3ef690026c5b6484f400672feab846b69b356161bc28df0b9e44e",
+        "bytes": 15115
       },
       {
         "path": "../source/raw_frames/genki_03.png",
-        "sha256": "780fc625c4304ca59dc3360006b9a73596b53550cc56e4bd1e43f02aa4f44a81",
-        "bytes": 16834
+        "sha256": "8cce1e01e92cf1ee453da5b81d58a5358fbb9835de8eaf3f112c9c522729b06f",
+        "bytes": 16843
       },
       {
         "path": "../source/raw_frames/genki_04.png",
@@ -12752,28 +12752,28 @@
       },
       {
         "path": "../source/raw_frames/genki_05.png",
-        "sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
-        "bytes": 16383
+        "sha256": "0cc795d6cc8eac7afa343d8755eaf6e28aa1bc5c4365a82156b6c0f08b22034e",
+        "bytes": 15858
       },
       {
         "path": "../source/raw_frames/genki_hold_00.png",
-        "sha256": "8f1866332503107e8591ac80359dac4f5b2e2f923af9737b6a847ccb65842bb5",
-        "bytes": 15374
+        "sha256": "ae7ddbc848abdf972030a97ffd9b478bbb1061650d7ca45e9dc631e1cd535876",
+        "bytes": 15630
       },
       {
         "path": "../source/raw_frames/genki_hold_01.png",
-        "sha256": "9715897436b569435d106a14680a9603635e1e83ef8dedfc4e679ed5f524154b",
-        "bytes": 14687
+        "sha256": "98bca04af95737c96d1f6730b8ace655155c8404d6b7b27ced0fa3e1d78493dd",
+        "bytes": 15159
       },
       {
         "path": "../source/raw_frames/genki_hold_02.png",
-        "sha256": "8122bcb9be359ed873bdf83bb3df373baffa7d519686e792a330d76248a4e1b1",
-        "bytes": 14492
+        "sha256": "0f5c4c1664e8a68f81cbc24deb28bec08d85c03fb076a49121bee184e60ad873",
+        "bytes": 16125
       },
       {
         "path": "../source/raw_frames/genki_hold_03.png",
-        "sha256": "8a34bffc96c2ce38e7f45f1fb3fada99373aa790d656da168874beaaac5db983",
-        "bytes": 15479
+        "sha256": "d117ab8194b49683a46f1377d82b5340d3dbfdcf40ae1d5adebb46e5968d6560",
+        "bytes": 15821
       }
     ],
     "outputs": [
@@ -13759,23 +13759,23 @@
       },
       {
         "path": "frames/frame-196.png",
-        "sha256": "b7bde883f419b5257a48cd666d8a5add76c4f1a0a6cf0edbd83c4e8c65238a72",
-        "bytes": 14227
+        "sha256": "943047a501d4b00ec8726496fee8f3bb8c72a693224fa606d05c3c859f76da0a",
+        "bytes": 14527
       },
       {
         "path": "frames/frame-197.png",
-        "sha256": "9e098c6fe32f3200b7cfb9de23c00cf81aff28efbfea158250c3f566de1f0216",
-        "bytes": 13736
+        "sha256": "9244e9b390cb9d8358c8025031839c604dee6e9fd251c514889254141c0064b1",
+        "bytes": 15069
       },
       {
         "path": "frames/frame-198.png",
-        "sha256": "cf4defd0f8b92decd72ac824a4277e6b25106a98999e22a71d7e5f076a96a00e",
-        "bytes": 15152
+        "sha256": "fad7553ffcb3ef690026c5b6484f400672feab846b69b356161bc28df0b9e44e",
+        "bytes": 15115
       },
       {
         "path": "frames/frame-199.png",
-        "sha256": "780fc625c4304ca59dc3360006b9a73596b53550cc56e4bd1e43f02aa4f44a81",
-        "bytes": 16834
+        "sha256": "8cce1e01e92cf1ee453da5b81d58a5358fbb9835de8eaf3f112c9c522729b06f",
+        "bytes": 16843
       },
       {
         "path": "frames/frame-200.png",
@@ -13784,28 +13784,28 @@
       },
       {
         "path": "frames/frame-201.png",
-        "sha256": "66ac7ed7124e70167f83dac5fd83fa63fb72ad9a4f6f2d528ad3091b60483614",
-        "bytes": 16383
+        "sha256": "0cc795d6cc8eac7afa343d8755eaf6e28aa1bc5c4365a82156b6c0f08b22034e",
+        "bytes": 15858
       },
       {
         "path": "frames/frame-202.png",
-        "sha256": "8f1866332503107e8591ac80359dac4f5b2e2f923af9737b6a847ccb65842bb5",
-        "bytes": 15374
+        "sha256": "ae7ddbc848abdf972030a97ffd9b478bbb1061650d7ca45e9dc631e1cd535876",
+        "bytes": 15630
       },
       {
         "path": "frames/frame-203.png",
-        "sha256": "9715897436b569435d106a14680a9603635e1e83ef8dedfc4e679ed5f524154b",
-        "bytes": 14687
+        "sha256": "98bca04af95737c96d1f6730b8ace655155c8404d6b7b27ced0fa3e1d78493dd",
+        "bytes": 15159
       },
       {
         "path": "frames/frame-204.png",
-        "sha256": "8122bcb9be359ed873bdf83bb3df373baffa7d519686e792a330d76248a4e1b1",
-        "bytes": 14492
+        "sha256": "0f5c4c1664e8a68f81cbc24deb28bec08d85c03fb076a49121bee184e60ad873",
+        "bytes": 16125
       },
       {
         "path": "frames/frame-205.png",
-        "sha256": "8a34bffc96c2ce38e7f45f1fb3fada99373aa790d656da168874beaaac5db983",
-        "bytes": 15479
+        "sha256": "d117ab8194b49683a46f1377d82b5340d3dbfdcf40ae1d5adebb46e5968d6560",
+        "bytes": 15821
       },
       {
         "path": "clips/clip-00.webp",
@@ -13979,13 +13979,13 @@
       },
       {
         "path": "clips/clip-34.webp",
-        "sha256": "15e0dfc7f58173c1637812cc410910cbc6c3bf29aa41b1641e2fc5a9c8536a91",
-        "bytes": 123466
+        "sha256": "cffac629f9b4893eebcbd9b8282f6014c8d1786f4ae421ab0398f2a1de4eceb8",
+        "bytes": 129666
       },
       {
         "path": "contact-sheet.png",
-        "sha256": "323c143b12538271b6c8ad12b1095bb6834bfde4571a768617b5eeeebfa072b4",
-        "bytes": 3045162
+        "sha256": "aaa5880aa5e57411cece32211f5e4e26f6b65639d9ae321440ca27eb1203cde0",
+        "bytes": 3049087
       },
       {
         "path": "review/filmstrip-00.png",
@@ -14329,18 +14329,18 @@
       },
       {
         "path": "review/filmstrip-34.png",
-        "sha256": "5338f236a023e451d3bdf0f68e423278a308e9279eaadfd41993dc50decc9ee9",
-        "bytes": 471422
+        "sha256": "16f66e8368e57242ecfa077903e0c8976336e891c068fd4d4e2b665baabf407a",
+        "bytes": 481427
       },
       {
         "path": "review/onion-34.png",
-        "sha256": "4822b01eccdcf2fed14eb7ce554fd4ebf8a98546ff186c345038b0a1d7350dbf",
-        "bytes": 173643
+        "sha256": "3381223f8dfc013f4be59bd3a5c119259be00430c825f07c3f89f7270f33178c",
+        "bytes": 175262
       },
       {
         "path": "review/turn-test.png",
-        "sha256": "aafb020a8e500905fe3268acae54c247bc4d556789272791aed1b69c14193ce0",
-        "bytes": 1075897
+        "sha256": "72078c8f1611fd0807384e39d85c4ebfd97b9f6b430d9f752b12e9154524f824",
+        "bytes": 1076337
       }
     ],
     "tool": {
