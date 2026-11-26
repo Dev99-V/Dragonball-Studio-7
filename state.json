@@ -1,6 +1,6 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-26T05:54:15Z",
+  "updated_at": "2026-11-26T06:38:08Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
     "version": "0.18.0",
@@ -167,9 +167,9 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "GENKI-POLISH-KENTAI-BURN-AND-AI-SURVIVAL",
-    "status": "ready_for_owner_human_test",
-    "summary": "Tapion kentai_burn_fx 6f lua+khoi xanh, Goku genki_cast 10f (4f loop phap phoi), genki_fx 24f du 1..16 + 4f noi + 4f bay (+40% toc) + 120ms no/van cong + rung & sang tang duoi z=5, AI auto HP<30% hoi mau & HP<10% khien",
+    "active_task_id": "POLISH-R3",
+    "status": "done",
+    "summary": "Mahasenko air==ground parity, ~10px on-body Kentai micro-burn FX, Genki bridge gather lines, Goku mid-air floating leg sway, and 1-view K70E Cell Arena Solo PvP map (2400x1080 red-line floor, z=80 non-colliding pillars, quick UI toggle, 0 monsters)",
     "next_steps_summary": [
       "11/11 nhân vật đã hoàn thiện & chốt trên main; sẵn sàng nhận concept/sheet nhân vật, item hoặc map mới từ Owner."
     ],
@@ -1444,6 +1444,12 @@
       "timestamp": "2026-11-26T05:54:15Z",
       "status": "ready_for_owner_human_test",
       "summary": "Tapion kentai_burn_fx 6f lua+khoi xanh, Goku genki_cast 10f (4f loop phap phoi), genki_fx 24f du 1..16 + 4f noi + 4f bay (+40% toc) + 120ms no/van cong + rung & sang tang duoi z=5, AI auto HP<30% hoi mau & HP<10% khien"
+    },
+    {
+      "id": "POLISH-R3",
+      "timestamp": "2026-11-26T06:38:08Z",
+      "status": "done",
+      "summary": "Mahasenko air==ground parity, ~10px on-body Kentai micro-burn FX, Genki bridge gather lines, Goku mid-air floating leg sway, and 1-view K70E Cell Arena Solo PvP map (2400x1080 red-line floor, z=80 non-colliding pillars, quick UI toggle, 0 monsters)"
     }
   ],
   "quick_resume_commands": [
@@ -1789,5 +1795,5 @@
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-26T05:54:15Z"
+  "last_updated_utc": "2026-11-26T06:38:08Z"
 }

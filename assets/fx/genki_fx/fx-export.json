@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../clips_out/animation-clips.json",
-    "sha256": "eaf9aab55bba558d1668a043f82014c361eed19b37e769918a2b181ef0f02de5",
-    "bytes": 50289,
+    "sha256": "d813b336ffe2a2ad3cbebdfb24b4f81e09858cdf839b49b67114acebdb835dee",
+    "bytes": 50285,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -50,8 +50,8 @@
   },
   "scale": {
     "pixel_size": 0.01,
-    "subject_height_px": 207.0,
-    "world_height": 2.07,
+    "subject_height_px": 209.0,
+    "world_height": 2.09,
     "source": "Godot default pixel size",
     "subject_height_source": "median visible height of clip genki_charge_fx"
   },
@@ -367,8 +367,8 @@
   "files": [
     {
       "path": "godot/genki_fx-atlas-00.png",
-      "sha256": "50fa9e577418bbd9607554c46741eb894e708b0f21f64abb41d1680578a969b9",
-      "bytes": 1378289
+      "sha256": "ff1233fc27e3b9cb7b05223105a33b9076c201e899dea2c95f044d8b258051c1",
+      "bytes": 1363936
     },
     {
       "path": "godot/genki_fx.tres",
@@ -423,8 +423,8 @@
     "inputs": [
       {
         "path": "../clips_out/animation-clips.json",
-        "sha256": "eaf9aab55bba558d1668a043f82014c361eed19b37e769918a2b181ef0f02de5",
-        "bytes": 50289
+        "sha256": "d813b336ffe2a2ad3cbebdfb24b4f81e09858cdf839b49b67114acebdb835dee",
+        "bytes": 50285
       },
       {
         "path": "../clips_out/frames/frame-00.png",
@@ -438,8 +438,8 @@
       },
       {
         "path": "../clips_out/frames/frame-02.png",
-        "sha256": "f38abe0f1857ecdedd9bd7b7e647e9dcb8b5d226aea840630f760c62e5a41ba0",
-        "bytes": 12744
+        "sha256": "9bb8d3419222e2370adbfeb203baa0306fa955102537d2d52f4c3d07a0070126",
+        "bytes": 5444
       },
       {
         "path": "../clips_out/frames/frame-03.png",
@@ -448,8 +448,8 @@
       },
       {
         "path": "../clips_out/frames/frame-04.png",
-        "sha256": "f161b7f9aeca5b631579cc9a21bcea2f06149029e9ff496c54579a9501b768dd",
-        "bytes": 24735
+        "sha256": "da520175a73f293ba20391764d4406f690ab1a0075843775d6768c06883a3b40",
+        "bytes": 16605
       },
       {
         "path": "../clips_out/frames/frame-05.png",
@@ -458,8 +458,8 @@
       },
       {
         "path": "../clips_out/frames/frame-06.png",
-        "sha256": "ab3ea866eb6cd17b14d7669b86d1cb74d3a65ef6451464a61060a569c776c7d6",
-        "bytes": 40047
+        "sha256": "28095ac719025e05737097ae8200d70983877ac98e7f526b2e5014e9ccfd408c",
+        "bytes": 27849
       },
       {
         "path": "../clips_out/frames/frame-07.png",
@@ -468,8 +468,8 @@
       },
       {
         "path": "../clips_out/frames/frame-08.png",
-        "sha256": "13cf530465eaa85b98062365aee13c51b387ab9feb4eb6e3a274ba8fae8ae754",
-        "bytes": 45995
+        "sha256": "8cb73edadc43fc5d6172d1691683028c886bc39f50f392ee4ff1ee8acb3af5f9",
+        "bytes": 59125
       },
       {
         "path": "../clips_out/frames/frame-09.png",
@@ -550,7 +550,7 @@
     "outputs": [
       {
         "path": "godot/genki_fx-atlas-00.png",
-        "sha256": "50fa9e577418bbd9607554c46741eb894e708b0f21f64abb41d1680578a969b9"
+        "sha256": "ff1233fc27e3b9cb7b05223105a33b9076c201e899dea2c95f044d8b258051c1"
       },
       {
         "path": "godot/genki_fx.tres",

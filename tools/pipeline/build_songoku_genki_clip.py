@@ -33,8 +33,8 @@ STATE_PATH = ROOT / "state.json"
 
 WORK_GENKI = ROOT / "work" / "characters" / "songoku_genki"
 GEN_DIR = WORK_GENKI / "gen_v2"
-HOLD_GEN_DIR = ROOT / "work" / "polish_round2" / "gen"
-QA_DIR = WORK_GENKI / "qa"
+HOLD_GEN_DIR = ROOT / "work" / "polish_round3" / "gen"
+QA_DIR = ROOT / "work" / "polish_round3" / "qa"
 BACKUP_DIR = ROOT / "docs" / "releases" / "archive"
 BACKUP_ATLAS = BACKUP_DIR / "songoku-v0.18.0-atlas-00.png"
 
@@ -195,21 +195,37 @@ def register_genki_body_frame(fid: str, src_path: pathlib.Path, spec: Dict[str, 
     rarr[~rmask] = [0, 0, 0, 0]
     rarr[rmask, 3] = 255
 
-    # Anchor by exact stance midpoint (or body center for motion-arc frame) & boot bottom y1!
+    # Anchor by exact stance midpoint (or torso/hair-crown hover anchor for mid-air leg sway frames!)
     rys, rxs = np.where(rmask)
-    if body_cx_frac is not None and body_bot_frac is not None:
-        smid = body_cx_frac * float(nw)
-        ry1 = int(round(body_bot_frac * float(nh)))
+    if bool(spec.get("hover_torso_anchor", False)):
+        # Keep head, torso & raised hands ROCK-SOLID across genki_hold_00..03 while the 2 dangling legs gently sway underneath!
+        cr, cg, cb = rarr[:, :, 0].astype(np.int16), rarr[:, :, 1].astype(np.int16), rarr[:, :, 2].astype(np.int16)
+        gold_c = rmask & (((cr > 175) & (cg > 145) & (cb < 150) & ((cr - cb) > 35)) | ((cb > 170) & (cg > 170) & (cr < 210)))
+        crown_y0 = max(0, int(np.percentile(np.where(gold_c)[0], 1)) - 2) if gold_c.sum() >= 30 else int(rys.min())
+        # Torso horizontal center measured strictly on upper orange gi (between crown+22 and crown+68) so swinging legs never shift X!
+        t_lo = min(nh - 1, crown_y0 + 24)
+        t_hi = min(nh, crown_y0 + 72)
+        torso_gi = rmask[t_lo:t_hi, :] & (cr[t_lo:t_hi, :] > 170) & (cg[t_lo:t_hi, :] >= 65) & (cg[t_lo:t_hi, :] <= 165) & (cb[t_lo:t_hi, :] < 75)
+        txs = np.where(torso_gi)[1]
+        smid = float(np.median(txs)) if len(txs) >= 20 else float(np.median(rxs))
+        cx_target = float(spec.get("cx", 144.0))
+        crown_target = int(spec.get("crown_y", 123))
+        px = max(2, min(CANVAS_W - nw - 2, int(round(cx_target - smid))))
+        py = max(2, min(CANVAS_H - nh - 2, crown_target - crown_y0))
     else:
-        ry1 = int(rys.max())
-        foot_band = rmask[max(0, ry1 - 7):ry1 + 1, :]
-        fxs = np.where(foot_band)[1]
-        smid = 0.5 * (int(fxs.min()) + int(fxs.max())) if len(fxs) else float(np.median(rxs))
+        if body_cx_frac is not None and body_bot_frac is not None:
+            smid = body_cx_frac * float(nw)
+            ry1 = int(round(body_bot_frac * float(nh)))
+        else:
+            ry1 = int(rys.max())
+            foot_band = rmask[max(0, ry1 - 7):ry1 + 1, :]
+            fxs = np.where(foot_band)[1]
+            smid = 0.5 * (int(fxs.min()) + int(fxs.max())) if len(fxs) else float(np.median(rxs))
 
-    y1_target = int(spec.get("y1", 247))
-    cx_target = float(spec.get("cx", 144.0))
-    px = max(2, min(CANVAS_W - nw - 2, int(round(cx_target - smid))))
-    py = max(2, min(CANVAS_H - nh - 2, y1_target - ry1))
+        y1_target = int(spec.get("y1", 247))
+        cx_target = float(spec.get("cx", 144.0))
+        px = max(2, min(CANVAS_W - nw - 2, int(round(cx_target - smid))))
+        py = max(2, min(CANVAS_H - nh - 2, y1_target - ry1))
 
     canvas = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
     canvas.paste(Image.fromarray(rarr, "RGBA"), (px, py))
@@ -281,10 +297,10 @@ def main() -> int:
         "genki_00":      {"body_h": 124, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_00" / "generated.png"},
         "genki_01":      {"body_h": 128, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_01" / "generated.png"},
         "genki_02":      {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_02" / "generated.png"},
-        "genki_hold_00": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_00" / "generated.png"},
-        "genki_hold_01": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_01" / "generated.png"},
-        "genki_hold_02": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_02" / "generated.png"},
-        "genki_hold_03": {"body_h": 124, "use_hair_crown_h": True,  "y1": 247, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_03" / "generated.png"},
+        "genki_hold_00": {"body_h": 124, "use_hair_crown_h": True, "hover_torso_anchor": True, "crown_y": 123, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_00" / "generated.png"},
+        "genki_hold_01": {"body_h": 124, "use_hair_crown_h": True, "hover_torso_anchor": True, "crown_y": 123, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_01" / "generated.png"},
+        "genki_hold_02": {"body_h": 124, "use_hair_crown_h": True, "hover_torso_anchor": True, "crown_y": 123, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_02" / "generated.png"},
+        "genki_hold_03": {"body_h": 124, "use_hair_crown_h": True, "hover_torso_anchor": True, "crown_y": 123, "cx": 144.0, "src": HOLD_GEN_DIR / "genki_hold_03" / "generated.png"},
         "genki_03":      {"body_h": 120, "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_03" / "generated.png"},
         "genki_04":      {"body_h": 92,  "use_body_comp_h": True,   "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_04" / "generated.png"},
         "genki_05":      {"body_h": 96,  "use_hair_crown_h": False, "y1": 247, "cx": 144.0, "src": GEN_DIR / "genki_05" / "generated.png"},

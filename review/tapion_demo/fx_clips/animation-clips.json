@@ -964,17 +964,17 @@
       "name": "maha_beam_air_00",
       "source": {
         "path": "../fx_source/raw_frames/maha_beam_air_00.png",
-        "file_sha256": "ab77609ba57d73b8c93ae58208b4854bea40eea124d66db81a2c9122b70183bb",
-        "bytes": 3888,
+        "file_sha256": "1a8de08e81a7c129a8c09a99c4bc9efcaa9bdb57fc3e31f6a44839f4bb985530",
+        "bytes": 3395,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "627f9917a24ac97849c5b9e70fe33b81cdd41611ca31e4f3b3385cf06112c3a0",
-      "transparent_pixel_count": 76893,
-      "visible_pixel_count": 6051,
+      "rgba_pixel_sha256": "ca0cb40acdd4910d9cc4c91536cdb9bc3c905615e4e7638a03aed79c93a507b2",
+      "transparent_pixel_count": 78453,
+      "visible_pixel_count": 4491,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-47.png"
@@ -984,17 +984,17 @@
       "name": "maha_beam_air_01",
       "source": {
         "path": "../fx_source/raw_frames/maha_beam_air_01.png",
-        "file_sha256": "1359e38dcc5344687ae9c5c737a33b8856d22402f90e0e38b42e0e0636797558",
-        "bytes": 4477,
+        "file_sha256": "cc9b130399fd0857835e681c2a28977c5ce753e295858690e1dbce739c3b6508",
+        "bytes": 3827,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "6e4fb5a44d819d89f2b2da49c01be017f63b656fcce2379c31305babfdd83984",
-      "transparent_pixel_count": 79042,
-      "visible_pixel_count": 3902,
+      "rgba_pixel_sha256": "93dedda35d85a166984a1e9bd1fa79df7d1c7991f67c721f21f425079e81d039",
+      "transparent_pixel_count": 80014,
+      "visible_pixel_count": 2930,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-48.png"
@@ -1004,17 +1004,17 @@
       "name": "maha_beam_air_02",
       "source": {
         "path": "../fx_source/raw_frames/maha_beam_air_02.png",
-        "file_sha256": "814324bd207ed18190df24950ef330ae067782847e8b116e622fe29158379faf",
-        "bytes": 3939,
+        "file_sha256": "5e3f9df434d27c8762ae22b987e24c57b681d005877973653d820766dea093c1",
+        "bytes": 3374,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "622b49cbfb8d7a68b12fbfefd6c0173ce796ad2187a73464ebef06aaa1356508",
-      "transparent_pixel_count": 80572,
-      "visible_pixel_count": 2372,
+      "rgba_pixel_sha256": "8ae8a71984643e07f7c3784534954d7650aca046985f5f7bc0264170da2a6b60",
+      "transparent_pixel_count": 81178,
+      "visible_pixel_count": 1766,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-49.png"
@@ -1404,17 +1404,17 @@
       "name": "kentai_burn_00",
       "source": {
         "path": "../fx_source/raw_frames/kentai_burn_00.png",
-        "file_sha256": "9b321e76f85207d437b42425bf1775380af5069a08acd87d0e9bfb84c9419880",
-        "bytes": 37141,
+        "file_sha256": "54f2afda168e4403cdb293ae6605772321487a979a16832fde0b7c88c0558e9a",
+        "bytes": 8524,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "3ea6d84b6e2586b8d9f8784953f5d8e4a8d128cbe5cf9fb1f347f52dba043d65",
-      "transparent_pixel_count": 71221,
-      "visible_pixel_count": 11723,
+      "rgba_pixel_sha256": "8c90c6fb330e71aeca461fe4dbabe18588f0c0052bdf692042c75f48d227905e",
+      "transparent_pixel_count": 78784,
+      "visible_pixel_count": 4160,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-69.png"
@@ -1424,17 +1424,17 @@
       "name": "kentai_burn_01",
       "source": {
         "path": "../fx_source/raw_frames/kentai_burn_01.png",
-        "file_sha256": "235aefc006654f2aa33cf0b42107ba44b3c045e715e9bd6507d57fedd1b35401",
-        "bytes": 62303,
+        "file_sha256": "8858822e5e4d75f88c33c8a6d7a9d03afc0531d50835f77f381974ff6321ab6f",
+        "bytes": 22682,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "cb3d0e485fd6ff70079c1ffd2a4d2636d6d9970e37b324b42ca828c658fac8ee",
-      "transparent_pixel_count": 60320,
-      "visible_pixel_count": 22624,
+      "rgba_pixel_sha256": "83d998c31bfda0c887bfff983c1b4a0a37a48913389b585a677c4b8a80fc0cf9",
+      "transparent_pixel_count": 68917,
+      "visible_pixel_count": 14027,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-70.png"
@@ -1444,17 +1444,17 @@
       "name": "kentai_burn_02",
       "source": {
         "path": "../fx_source/raw_frames/kentai_burn_02.png",
-        "file_sha256": "5004c88369b9f6bec22b0e214123f9ff003bd93cf21af45c602e4b2333fb075c",
-        "bytes": 34048,
+        "file_sha256": "953cda8fee87ddae621f5f0632256b1d6a444ab7ad67e5c24b8f3c1bc61c4e87",
+        "bytes": 34269,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "27ed86980075c164829c4bcf45c093c5a2b841b00a3157c679f28927007a883e",
-      "transparent_pixel_count": 72486,
-      "visible_pixel_count": 10458,
+      "rgba_pixel_sha256": "625743b9bdb21f4f68bd354e4a29965024176e781de09325849a9d5db19835ff",
+      "transparent_pixel_count": 61587,
+      "visible_pixel_count": 21357,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-71.png"
@@ -1464,17 +1464,17 @@
       "name": "kentai_burn_03",
       "source": {
         "path": "../fx_source/raw_frames/kentai_burn_03.png",
-        "file_sha256": "b4edeee37212861158de6de0371f13cdf29fc9948458f8fce52c56b6636c9fde",
-        "bytes": 41100,
+        "file_sha256": "3576d60b1cc9ab56c39cfd56395c7640f0f5d6264c393382ede1a3c6944a4bab",
+        "bytes": 32961,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "a2b797b9750a0b80434a73d85da8f87d426cdafcce41a4e8fe876ae594a3a466",
-      "transparent_pixel_count": 69122,
-      "visible_pixel_count": 13822,
+      "rgba_pixel_sha256": "f2befd5827c19415925ae43c99c2faedf1af0f6b780fdcfbb7886e2009dd424f",
+      "transparent_pixel_count": 61131,
+      "visible_pixel_count": 21813,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-72.png"
@@ -1484,17 +1484,17 @@
       "name": "kentai_burn_04",
       "source": {
         "path": "../fx_source/raw_frames/kentai_burn_04.png",
-        "file_sha256": "c81b06f85a733250388e6f640b8cecd74c1172ec7c6851ecaebc04a7a1927ce0",
-        "bytes": 47659,
+        "file_sha256": "2a95c61dd556d64730ccf3a1cd01e40977f17140dcacb7cbd4e907490bd41fbd",
+        "bytes": 23720,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "14712c6042cd39fd4b272901a690ac9461d31cd46ae0888179617b7ced17ef6d",
-      "transparent_pixel_count": 66754,
-      "visible_pixel_count": 16190,
+      "rgba_pixel_sha256": "befd0d15b65f30da9f519a17e34550a9e4dc8720734841096d2ec9b8f58863f3",
+      "transparent_pixel_count": 68738,
+      "visible_pixel_count": 14206,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-73.png"
@@ -1504,17 +1504,17 @@
       "name": "kentai_burn_05",
       "source": {
         "path": "../fx_source/raw_frames/kentai_burn_05.png",
-        "file_sha256": "ad94867678a0a374ef8e21ac0d5d75724dd25f8d56da57186b753058f5915e02",
-        "bytes": 38482,
+        "file_sha256": "cd8760b2ae59a8b770d88e0e497b61889436db30b50d1a3e753339e6931a88c6",
+        "bytes": 1464,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "552438d55a381c6f6f2b88075a5fdc6108d80bde54e9b21a0197df80d2888415",
-      "transparent_pixel_count": 68115,
-      "visible_pixel_count": 14829,
+      "rgba_pixel_sha256": "7d14bd28219a1239a4653e88d8bb1c930f8ef08336bfd05b6d634a743d590326",
+      "transparent_pixel_count": 82696,
+      "visible_pixel_count": 248,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-74.png"
@@ -2570,29 +2570,29 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "b67359c3e048e09618f4b02d6a75121314d311357517467cf7ccadb49f3dba40"
+        "file_sha256": "07a8e48dea09ce29e9616527db899ad5fd5bb5fb951b9713d21db1111cea8b20"
       },
       "transitions": [
         {
           "from_position": 0,
           "to_position": 1,
-          "premultiplied_rgb_mae": 6.816941,
-          "alpha_mae": 8.780382,
-          "changed_visible_pixels": 4289
+          "premultiplied_rgb_mae": 5.079214,
+          "alpha_mae": 6.536097,
+          "changed_visible_pixels": 3198
         },
         {
           "from_position": 1,
           "to_position": 2,
-          "premultiplied_rgb_mae": 8.051308,
-          "alpha_mae": 9.287652,
-          "changed_visible_pixels": 5879
+          "premultiplied_rgb_mae": 5.95679,
+          "alpha_mae": 6.815864,
+          "changed_visible_pixels": 4359
         }
       ],
       "last_to_first": {
         "applies_to_playback": false,
-        "premultiplied_rgb_mae": 11.354207,
-        "alpha_mae": 14.434136,
-        "changed_visible_pixels": 6282
+        "premultiplied_rgb_mae": 8.346406,
+        "alpha_mae": 10.55429,
+        "changed_visible_pixels": 4623
       }
     },
     "mahasenko_impact_fx": {
@@ -3839,15 +3839,15 @@
       "holds": [],
       "seam": {
         "frames": 6,
-        "seam": 24.594808,
-        "adjacent_median": 35.817452,
-        "adjacent_p95": 42.28667,
-        "adjacent_max": 43.408016,
-        "seam_over_median": 0.686671,
-        "seam_over_p95": 0.581621,
+        "seam": 9.285259,
+        "adjacent_median": 23.046833,
+        "adjacent_p95": 25.79068,
+        "adjacent_max": 26.411763,
+        "seam_over_median": 0.402887,
+        "seam_over_p95": 0.360024,
         "method": "premultiplied RGBA mean absolute difference (0-255); seam = last -> first",
-        "adjacent_mean": 36.040664,
-        "wrap_ratio": 0.682418
+        "adjacent_mean": 22.787183,
+        "wrap_ratio": 0.407477
       },
       "preview": {
         "file": "clips/clip-19.webp",
@@ -3908,50 +3908,50 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "441662920fc15f6c9c58e8a98135ae828b432bd15cf430b817349725bf84ff10"
+        "file_sha256": "202ebd4a81f18c652983cdeebf75f68492582ea3f31c225eb12c70612953aca9"
       },
       "transitions": [
         {
           "from_position": 0,
           "to_position": 1,
-          "premultiplied_rgb_mae": 29.507065,
-          "alpha_mae": 48.854709,
-          "changed_visible_pixels": 25117
+          "premultiplied_rgb_mae": 20.317278,
+          "alpha_mae": 30.334744,
+          "changed_visible_pixels": 14018
         },
         {
           "from_position": 1,
           "to_position": 2,
-          "premultiplied_rgb_mae": 34.739697,
-          "alpha_mae": 69.412977,
-          "changed_visible_pixels": 27830
+          "premultiplied_rgb_mae": 20.087713,
+          "alpha_mae": 31.92419,
+          "changed_visible_pixels": 22852
         },
         {
           "from_position": 2,
           "to_position": 3,
-          "premultiplied_rgb_mae": 24.280888,
-          "alpha_mae": 42.487703,
-          "changed_visible_pixels": 19050
+          "premultiplied_rgb_mae": 26.914902,
+          "alpha_mae": 24.902344,
+          "changed_visible_pixels": 25635
         },
         {
           "from_position": 3,
           "to_position": 4,
-          "premultiplied_rgb_mae": 30.950083,
-          "alpha_mae": 50.41956,
-          "changed_visible_pixels": 23204
+          "premultiplied_rgb_mae": 17.514114,
+          "alpha_mae": 40.683051,
+          "changed_visible_pixels": 24616
         },
         {
           "from_position": 4,
           "to_position": 5,
-          "premultiplied_rgb_mae": 33.030533,
-          "alpha_mae": 52.113534,
-          "changed_visible_pixels": 23984
+          "premultiplied_rgb_mae": 9.967071,
+          "alpha_mae": 43.496094,
+          "changed_visible_pixels": 14301
         }
       ],
       "last_to_first": {
         "applies_to_playback": true,
-        "premultiplied_rgb_mae": 21.43228,
-        "alpha_mae": 34.082393,
-        "changed_visible_pixels": 18819
+        "premultiplied_rgb_mae": 7.916369,
+        "alpha_mae": 13.391927,
+        "changed_visible_pixels": 4382
       }
     }
   },
@@ -3979,7 +3979,7 @@
     "requested_scale": 1,
     "annotated_with_shared_root": true,
     "not_a_runtime_atlas": true,
-    "file_sha256": "72701c27817f6c31aaf3b5045aee077dd67dabfdf60bd030443d10b2ca45dd3c"
+    "file_sha256": "3e418b600498c2a7c07e4985216c5e5e6a2adc949ac22494487ceb1fa558f677"
   },
   "review": {
     "scale": 1,
@@ -4474,7 +4474,7 @@
             ]
           ],
           "mirrored_offset_px": 0,
-          "turn_slide_px": 119.0
+          "turn_slide_px": 100.0
         },
         {
           "clip": "mahasenko_impact_fx",
@@ -4661,7 +4661,7 @@
             ]
           ],
           "mirrored_offset_px": 0,
-          "turn_slide_px": 6.0
+          "turn_slide_px": 9.0
         }
       ],
       "clips_shown": 20,
@@ -4972,18 +4972,18 @@
       },
       {
         "path": "../fx_source/raw_frames/maha_beam_air_00.png",
-        "sha256": "ab77609ba57d73b8c93ae58208b4854bea40eea124d66db81a2c9122b70183bb",
-        "bytes": 3888
+        "sha256": "1a8de08e81a7c129a8c09a99c4bc9efcaa9bdb57fc3e31f6a44839f4bb985530",
+        "bytes": 3395
       },
       {
         "path": "../fx_source/raw_frames/maha_beam_air_01.png",
-        "sha256": "1359e38dcc5344687ae9c5c737a33b8856d22402f90e0e38b42e0e0636797558",
-        "bytes": 4477
+        "sha256": "cc9b130399fd0857835e681c2a28977c5ce753e295858690e1dbce739c3b6508",
+        "bytes": 3827
       },
       {
         "path": "../fx_source/raw_frames/maha_beam_air_02.png",
-        "sha256": "814324bd207ed18190df24950ef330ae067782847e8b116e622fe29158379faf",
-        "bytes": 3939
+        "sha256": "5e3f9df434d27c8762ae22b987e24c57b681d005877973653d820766dea093c1",
+        "bytes": 3374
       },
       {
         "path": "../fx_source/raw_frames/maha_beam_h_00.png",
@@ -5082,33 +5082,33 @@
       },
       {
         "path": "../fx_source/raw_frames/kentai_burn_00.png",
-        "sha256": "9b321e76f85207d437b42425bf1775380af5069a08acd87d0e9bfb84c9419880",
-        "bytes": 37141
+        "sha256": "54f2afda168e4403cdb293ae6605772321487a979a16832fde0b7c88c0558e9a",
+        "bytes": 8524
       },
       {
         "path": "../fx_source/raw_frames/kentai_burn_01.png",
-        "sha256": "235aefc006654f2aa33cf0b42107ba44b3c045e715e9bd6507d57fedd1b35401",
-        "bytes": 62303
+        "sha256": "8858822e5e4d75f88c33c8a6d7a9d03afc0531d50835f77f381974ff6321ab6f",
+        "bytes": 22682
       },
       {
         "path": "../fx_source/raw_frames/kentai_burn_02.png",
-        "sha256": "5004c88369b9f6bec22b0e214123f9ff003bd93cf21af45c602e4b2333fb075c",
-        "bytes": 34048
+        "sha256": "953cda8fee87ddae621f5f0632256b1d6a444ab7ad67e5c24b8f3c1bc61c4e87",
+        "bytes": 34269
       },
       {
         "path": "../fx_source/raw_frames/kentai_burn_03.png",
-        "sha256": "b4edeee37212861158de6de0371f13cdf29fc9948458f8fce52c56b6636c9fde",
-        "bytes": 41100
+        "sha256": "3576d60b1cc9ab56c39cfd56395c7640f0f5d6264c393382ede1a3c6944a4bab",
+        "bytes": 32961
       },
       {
         "path": "../fx_source/raw_frames/kentai_burn_04.png",
-        "sha256": "c81b06f85a733250388e6f640b8cecd74c1172ec7c6851ecaebc04a7a1927ce0",
-        "bytes": 47659
+        "sha256": "2a95c61dd556d64730ccf3a1cd01e40977f17140dcacb7cbd4e907490bd41fbd",
+        "bytes": 23720
       },
       {
         "path": "../fx_source/raw_frames/kentai_burn_05.png",
-        "sha256": "ad94867678a0a374ef8e21ac0d5d75724dd25f8d56da57186b753058f5915e02",
-        "bytes": 38482
+        "sha256": "cd8760b2ae59a8b770d88e0e497b61889436db30b50d1a3e753339e6931a88c6",
+        "bytes": 1464
       }
     ],
     "outputs": [
@@ -5349,18 +5349,18 @@
       },
       {
         "path": "frames/frame-47.png",
-        "sha256": "ab77609ba57d73b8c93ae58208b4854bea40eea124d66db81a2c9122b70183bb",
-        "bytes": 3888
+        "sha256": "1a8de08e81a7c129a8c09a99c4bc9efcaa9bdb57fc3e31f6a44839f4bb985530",
+        "bytes": 3395
       },
       {
         "path": "frames/frame-48.png",
-        "sha256": "1359e38dcc5344687ae9c5c737a33b8856d22402f90e0e38b42e0e0636797558",
-        "bytes": 4477
+        "sha256": "cc9b130399fd0857835e681c2a28977c5ce753e295858690e1dbce739c3b6508",
+        "bytes": 3827
       },
       {
         "path": "frames/frame-49.png",
-        "sha256": "814324bd207ed18190df24950ef330ae067782847e8b116e622fe29158379faf",
-        "bytes": 3939
+        "sha256": "5e3f9df434d27c8762ae22b987e24c57b681d005877973653d820766dea093c1",
+        "bytes": 3374
       },
       {
         "path": "frames/frame-50.png",
@@ -5459,33 +5459,33 @@
       },
       {
         "path": "frames/frame-69.png",
-        "sha256": "9b321e76f85207d437b42425bf1775380af5069a08acd87d0e9bfb84c9419880",
-        "bytes": 37141
+        "sha256": "54f2afda168e4403cdb293ae6605772321487a979a16832fde0b7c88c0558e9a",
+        "bytes": 8524
       },
       {
         "path": "frames/frame-70.png",
-        "sha256": "235aefc006654f2aa33cf0b42107ba44b3c045e715e9bd6507d57fedd1b35401",
-        "bytes": 62303
+        "sha256": "8858822e5e4d75f88c33c8a6d7a9d03afc0531d50835f77f381974ff6321ab6f",
+        "bytes": 22682
       },
       {
         "path": "frames/frame-71.png",
-        "sha256": "5004c88369b9f6bec22b0e214123f9ff003bd93cf21af45c602e4b2333fb075c",
-        "bytes": 34048
+        "sha256": "953cda8fee87ddae621f5f0632256b1d6a444ab7ad67e5c24b8f3c1bc61c4e87",
+        "bytes": 34269
       },
       {
         "path": "frames/frame-72.png",
-        "sha256": "b4edeee37212861158de6de0371f13cdf29fc9948458f8fce52c56b6636c9fde",
-        "bytes": 41100
+        "sha256": "3576d60b1cc9ab56c39cfd56395c7640f0f5d6264c393382ede1a3c6944a4bab",
+        "bytes": 32961
       },
       {
         "path": "frames/frame-73.png",
-        "sha256": "c81b06f85a733250388e6f640b8cecd74c1172ec7c6851ecaebc04a7a1927ce0",
-        "bytes": 47659
+        "sha256": "2a95c61dd556d64730ccf3a1cd01e40977f17140dcacb7cbd4e907490bd41fbd",
+        "bytes": 23720
       },
       {
         "path": "frames/frame-74.png",
-        "sha256": "ad94867678a0a374ef8e21ac0d5d75724dd25f8d56da57186b753058f5915e02",
-        "bytes": 38482
+        "sha256": "cd8760b2ae59a8b770d88e0e497b61889436db30b50d1a3e753339e6931a88c6",
+        "bytes": 1464
       },
       {
         "path": "clips/clip-00.webp",
@@ -5529,8 +5529,8 @@
       },
       {
         "path": "clips/clip-08.webp",
-        "sha256": "b67359c3e048e09618f4b02d6a75121314d311357517467cf7ccadb49f3dba40",
-        "bytes": 3866
+        "sha256": "07a8e48dea09ce29e9616527db899ad5fd5bb5fb951b9713d21db1111cea8b20",
+        "bytes": 3182
       },
       {
         "path": "clips/clip-09.webp",
@@ -5584,13 +5584,13 @@
       },
       {
         "path": "clips/clip-19.webp",
-        "sha256": "441662920fc15f6c9c58e8a98135ae828b432bd15cf430b817349725bf84ff10",
-        "bytes": 204450
+        "sha256": "202ebd4a81f18c652983cdeebf75f68492582ea3f31c225eb12c70612953aca9",
+        "bytes": 90492
       },
       {
         "path": "contact-sheet.png",
-        "sha256": "72701c27817f6c31aaf3b5045aee077dd67dabfdf60bd030443d10b2ca45dd3c",
-        "bytes": 1009977
+        "sha256": "3e418b600498c2a7c07e4985216c5e5e6a2adc949ac22494487ceb1fa558f677",
+        "bytes": 884249
       },
       {
         "path": "review/filmstrip-00.png",
@@ -5674,13 +5674,13 @@
       },
       {
         "path": "review/filmstrip-08.png",
-        "sha256": "cb9e8c7f1b3e2fc57dd2b1e039d68823612c74cc95f92a9d389ea93ab475a5bc",
-        "bytes": 55986
+        "sha256": "2e8ec92b0184887f0c3f75882dba59aff884e2bd113559685de13a87c974811c",
+        "bytes": 51365
       },
       {
         "path": "review/onion-08.png",
-        "sha256": "3f657ee26ffd6489c4207ac6fb9f7a1fec3569a01e79281eff541250ef8c5476",
-        "bytes": 22984
+        "sha256": "fe128f2cac2578d14003545bd65952accaecfc55796e67dbb74246c436409c5c",
+        "bytes": 20696
       },
       {
         "path": "review/filmstrip-09.png",
@@ -5784,18 +5784,18 @@
       },
       {
         "path": "review/filmstrip-19.png",
-        "sha256": "07774e4f126387f9cb29191a381a05ddb0efc977664df92edc434f84f78f2dbb",
-        "bytes": 724530
+        "sha256": "13e9b17b734c0ef90e58e30b2cf885cfbac041934dee97e5d4ff0a9876a5ed2a",
+        "bytes": 346074
       },
       {
         "path": "review/onion-19.png",
-        "sha256": "eb8d7a94f800297526ec68dc250d343c879a4c2c427925034e28a73827231d87",
-        "bytes": 280485
+        "sha256": "a98d56ba8579fde511fdfddc6f427343a4d9505408bab611601bb27a12721077",
+        "bytes": 126365
       },
       {
         "path": "review/turn-test.png",
-        "sha256": "0260ae38f3a258da829b87727478804dc15bcb668e47e79075343c228b40368d",
-        "bytes": 468269
+        "sha256": "32c0e68b5511f9350c552aac805a7edd02a360fd4028a8353365e1ce24530f46",
+        "bytes": 414286
       }
     ],
     "tool": {

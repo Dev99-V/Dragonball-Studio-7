@@ -38,7 +38,7 @@
       "tres_sha256": "963cac39b283ac1043198d84dc23f1a232629f17d970ef9535a99cacd81b35ce",
       "fx_tres_path": "review/tapion_demo/fx_bundle/godot/tapion_skills_fx.tres",
       "fx_atlas_path": "review/tapion_demo/fx_bundle/godot/tapion_skills_fx-atlas-00.png",
-      "fx_atlas_sha256": "9d7aaff127bdc30ff7797d8132135ae0e28b56b13b72349d880a3a418030cdaa",
+      "fx_atlas_sha256": "b260f56db6479f86d2cedac0fe94f0d4d34ba59e3bf050304b0de9d83c315f96",
       "fx_atlas_size_px": [
         2630,
         2630

@@ -1,0 +1,88 @@
+{
+  "schema": "dr7-studio.map_terrain.v2",
+  "map_id": "cell_arena",
+  "display_name": "Đấu Trường Solo PvP (1-View K70E)",
+  "art_source": "original_png_extracted",
+  "fixed_single_view": true,
+  "has_transition_header": false,
+  "monsters_enabled": false,
+  "backdrop": {
+    "mode": "fixed_1view_k70e",
+    "bg_path": "assets/maps/cell_arena/cell-arena-bg.png",
+    "bg_res_path": "res://assets/maps/cell_arena/cell-arena-bg.png",
+    "bg_web_path": "/assets/maps/cell_arena/cell-arena-bg.png",
+    "sha256": "af0614361f14c93b2dfd73cbce7f75abc7d466149b3c34b33c7c5ad55de50e7d",
+    "image_size_px": [
+      2400,
+      1080
+    ],
+    "world_bounds": {
+      "left_x": 0,
+      "right_x": 2400,
+      "top_y": 0,
+      "bottom_y": 1080
+    }
+  },
+  "foreground_pillars": {
+    "path": "assets/maps/cell_arena/cell-arena-foreground-pillars.png",
+    "res_path": "res://assets/maps/cell_arena/cell-arena-foreground-pillars.png",
+    "web_path": "/assets/maps/cell_arena/cell-arena-foreground-pillars.png",
+    "sha256": "1d29e495a71900dbcde7e49084589467468d2469dce899a6b853181d8bf80ad2",
+    "z_index": 80,
+    "collision": false,
+    "blocks_skills": false,
+    "blocks_characters": false
+  },
+  "viewport": {
+    "width": 2400,
+    "height": 1080,
+    "ppu_reference": 64,
+    "tile_px": 32
+  },
+  "ground": {
+    "ground_y": 935.2,
+    "surface_top_y": 919.2,
+    "render_scale": 2,
+    "floor_profile": [
+      {
+        "x": 0.0,
+        "y": 981.1
+      },
+      {
+        "x": 245.7,
+        "y": 981.1
+      },
+      {
+        "x": 399.7,
+        "y": 935.2
+      },
+      {
+        "x": 2000.3,
+        "y": 935.2
+      },
+      {
+        "x": 2156.1,
+        "y": 977.4
+      },
+      {
+        "x": 2400.0,
+        "y": 977.4
+      }
+    ]
+  },
+  "tileset": {
+    "path": "assets/maps/cell_arena/tiles/ground_tileset.png",
+    "res_path": "res://assets/maps/cell_arena/tiles/ground_tileset.png",
+    "web_path": "/assets/maps/cell_arena/tiles/ground_tileset.png",
+    "sha256": "509c75ac8fd87f1c1138730cab0a1283da7402e8dd794066328126aeed1012f0",
+    "tile_px": 32,
+    "columns": 4,
+    "rows": 1,
+    "image_size_px": [
+      128,
+      32
+    ],
+    "alpha_hardness_pct": 100.0
+  },
+  "platforms": []
+}

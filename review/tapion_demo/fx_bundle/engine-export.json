@@ -7,8 +7,8 @@
   },
   "source": {
     "path": "../fx_clips/animation-clips.json",
-    "sha256": "c2dabb28f132251414d5307eaa4975fbba9dd62f767bf199cd62ccb9d6a5a27b",
-    "bytes": 160092,
+    "sha256": "2f695e55d946a28c06e531a33c584f56ac011e2839aa9aa40635f4dc3fc14ba3",
+    "bytes": 160075,
     "schema": "generate2dsprite.animation_clips.v2"
   },
   "targets": [
@@ -1162,8 +1162,8 @@
   "files": [
     {
       "path": "godot/tapion_skills_fx-atlas-00.png",
-      "sha256": "9d7aaff127bdc30ff7797d8132135ae0e28b56b13b72349d880a3a418030cdaa",
-      "bytes": 1057497
+      "sha256": "b260f56db6479f86d2cedac0fe94f0d4d34ba59e3bf050304b0de9d83c315f96",
+      "bytes": 914552
     },
     {
       "path": "godot/tapion_skills_fx.tres",
@@ -1218,8 +1218,8 @@
     "inputs": [
       {
         "path": "../fx_clips/animation-clips.json",
-        "sha256": "c2dabb28f132251414d5307eaa4975fbba9dd62f767bf199cd62ccb9d6a5a27b",
-        "bytes": 160092
+        "sha256": "2f695e55d946a28c06e531a33c584f56ac011e2839aa9aa40635f4dc3fc14ba3",
+        "bytes": 160075
       },
       {
         "path": "../fx_clips/frames/frame-00.png",
@@ -1458,18 +1458,18 @@
       },
       {
         "path": "../fx_clips/frames/frame-47.png",
-        "sha256": "ab77609ba57d73b8c93ae58208b4854bea40eea124d66db81a2c9122b70183bb",
-        "bytes": 3888
+        "sha256": "1a8de08e81a7c129a8c09a99c4bc9efcaa9bdb57fc3e31f6a44839f4bb985530",
+        "bytes": 3395
       },
       {
         "path": "../fx_clips/frames/frame-48.png",
-        "sha256": "1359e38dcc5344687ae9c5c737a33b8856d22402f90e0e38b42e0e0636797558",
-        "bytes": 4477
+        "sha256": "cc9b130399fd0857835e681c2a28977c5ce753e295858690e1dbce739c3b6508",
+        "bytes": 3827
       },
       {
         "path": "../fx_clips/frames/frame-49.png",
-        "sha256": "814324bd207ed18190df24950ef330ae067782847e8b116e622fe29158379faf",
-        "bytes": 3939
+        "sha256": "5e3f9df434d27c8762ae22b987e24c57b681d005877973653d820766dea093c1",
+        "bytes": 3374
       },
       {
         "path": "../fx_clips/frames/frame-50.png",
@@ -1568,39 +1568,39 @@
       },
       {
         "path": "../fx_clips/frames/frame-69.png",
-        "sha256": "9b321e76f85207d437b42425bf1775380af5069a08acd87d0e9bfb84c9419880",
-        "bytes": 37141
+        "sha256": "54f2afda168e4403cdb293ae6605772321487a979a16832fde0b7c88c0558e9a",
+        "bytes": 8524
       },
       {
         "path": "../fx_clips/frames/frame-70.png",
-        "sha256": "235aefc006654f2aa33cf0b42107ba44b3c045e715e9bd6507d57fedd1b35401",
-        "bytes": 62303
+        "sha256": "8858822e5e4d75f88c33c8a6d7a9d03afc0531d50835f77f381974ff6321ab6f",
+        "bytes": 22682
       },
       {
         "path": "../fx_clips/frames/frame-71.png",
-        "sha256": "5004c88369b9f6bec22b0e214123f9ff003bd93cf21af45c602e4b2333fb075c",
-        "bytes": 34048
+        "sha256": "953cda8fee87ddae621f5f0632256b1d6a444ab7ad67e5c24b8f3c1bc61c4e87",
+        "bytes": 34269
       },
       {
         "path": "../fx_clips/frames/frame-72.png",
-        "sha256": "b4edeee37212861158de6de0371f13cdf29fc9948458f8fce52c56b6636c9fde",
-        "bytes": 41100
+        "sha256": "3576d60b1cc9ab56c39cfd56395c7640f0f5d6264c393382ede1a3c6944a4bab",
+        "bytes": 32961
       },
       {
         "path": "../fx_clips/frames/frame-73.png",
-        "sha256": "c81b06f85a733250388e6f640b8cecd74c1172ec7c6851ecaebc04a7a1927ce0",
-        "bytes": 47659
+        "sha256": "2a95c61dd556d64730ccf3a1cd01e40977f17140dcacb7cbd4e907490bd41fbd",
+        "bytes": 23720
       },
       {
         "path": "../fx_clips/frames/frame-74.png",
-        "sha256": "ad94867678a0a374ef8e21ac0d5d75724dd25f8d56da57186b753058f5915e02",
-        "bytes": 38482
+        "sha256": "cd8760b2ae59a8b770d88e0e497b61889436db30b50d1a3e753339e6931a88c6",
+        "bytes": 1464
       }
     ],
     "outputs": [
       {
         "path": "godot/tapion_skills_fx-atlas-00.png",
-        "sha256": "9d7aaff127bdc30ff7797d8132135ae0e28b56b13b72349d880a3a418030cdaa"
+        "sha256": "b260f56db6479f86d2cedac0fe94f0d4d34ba59e3bf050304b0de9d83c315f96"
       },
       {
         "path": "godot/tapion_skills_fx.tres",

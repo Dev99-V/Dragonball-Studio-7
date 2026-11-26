@@ -9,6 +9,8 @@ signal logout_requested()
 
 const STAGE_JSON_PATH := "res://assets/maps/rocky_plateau/arena-stage.json"
 const TERRAIN_JSON_PATH := "res://assets/maps/rocky_plateau/terrain.json"
+const CELL_ARENA_STAGE_JSON_PATH := "res://assets/maps/cell_arena/arena-stage.json"
+const CELL_ARENA_TERRAIN_JSON_PATH := "res://assets/maps/cell_arena/terrain.json"
 const EXTENDED_MAP_PATH := "res://assets/maps/rocky_plateau/rocky-plateau-extended-4steps.png"
 const FOREGROUND_PLANTED_TREES_PATH := "res://assets/maps/rocky_plateau/rocky-plateau-foreground-trees.png"
 const FOREGROUND_TREES_PATH := "res://assets/maps/rocky_plateau/rocky-plateau-foreground-trees.png"
@@ -60,11 +62,14 @@ var _map_right_x: float = MAP_RIGHT_X
 var _map_top_y: float = MAP_TOP_Y
 var _map_bottom_y: float = MAP_BOTTOM_Y
 var _extended_step_configs: Array[Dictionary] = []
+var _active_floor_profile: Array[Dictionary] = []
+var _fixed_single_view_map: bool = false
 var _foreground_trees_cfg: Dictionary = {}
 var _arena_camera: Camera2D = null
 var _bg_left_ext: Sprite2D = null
 var _bg_right_ext: Sprite2D = null
 var _foreground_trees: Node2D = null
+var _foreground_pillars: Sprite2D = null
 var pixel_perfect_enabled: bool = false
 var display_layout_info: Dictionary = {}
 var net_transport: NetworkTransport = null
@@ -211,6 +216,7 @@ var mobile_pad = null
 var hero_avatar_panel: PanelContainer = null
 var hero_avatar_rect: TextureRect = null
 var pk_toggle_button: Button = null
+var map_switch_button: Button = null
 var hero_selector: OptionButton = null
 var boss_selector: OptionButton = null
 var infinite_mana_button: Button = null
@@ -1150,6 +1156,13 @@ func _apply_hud_safe_area() -> void:
 		pk_toggle_button.offset_right = 264.0 + ins_l
 		pk_toggle_button.offset_top = 104.0 + ins_t
 		pk_toggle_button.offset_bottom = 144.0 + ins_t
+	if map_switch_button != null and is_instance_valid(map_switch_button):
+		map_switch_button.anchor_left = 0.0
+		map_switch_button.anchor_right = 0.0
+		map_switch_button.offset_left = 96.0 + ins_l
+		map_switch_button.offset_right = 264.0 + ins_l
+		map_switch_button.offset_top = 150.0 + ins_t
+		map_switch_button.offset_bottom = 190.0 + ins_t
 
 	# Right cluster (Column R1: Gọi Shenron + Ngọc + Phím/Ẩn UI; Column R2: Vô hạn mana + Bất tử + Tướng + Dropdown Gọi Boss)
 	if summon_button != null:
@@ -1425,6 +1438,17 @@ func _setup_field_hud_controls() -> void:
 		hud_layer.add_child(pk_toggle_button)
 	_sync_pk_toggle_button()
 
+	if map_switch_button == null:
+		map_switch_button = Button.new()
+		map_switch_button.name = "MapSwitchButton"
+		map_switch_button.tooltip_text = "Chuyển nhanh giữa Cao Nguyên và Đấu Trường Solo PvP (1-view K70E, không quái)"
+		map_switch_button.pressed.connect(func() -> void:
+			var next_map := "cell_arena" if current_map_id != "cell_arena" else "rocky_plateau"
+			switch_map(next_map)
+		)
+		hud_layer.add_child(map_switch_button)
+	_sync_map_switch_button()
+
 	# Right cluster controls (next to Gọi Shenron)
 	infinite_mana_button = Button.new()
 	infinite_mana_button.name = "InfiniteManaButton"
@@ -1574,12 +1598,136 @@ func set_show_monster_ranges(enabled: bool) -> void:
 	queue_redraw()
 
 
+func _sync_map_switch_button() -> void:
+	if map_switch_button == null or not is_instance_valid(map_switch_button):
+		return
+	if current_map_id == "cell_arena":
+		map_switch_button.text = "🏔️ Cao Nguyên"
+		map_switch_button.add_theme_color_override("font_color", Color(0.55, 0.94, 1.0, 1.0))
+	else:
+		map_switch_button.text = "🏟️ Đấu Trường"
+		map_switch_button.remove_theme_color_override("font_color")
+
+
+func _load_floor_profile_from_cfg(terrain_doc: Dictionary, stage_doc: Dictionary) -> void:
+	_active_floor_profile.clear()
+	var raw_prof: Variant = null
+	var g_doc: Variant = terrain_doc.get("ground", {})
+	if g_doc is Dictionary and g_doc.has("floor_profile"):
+		raw_prof = g_doc.get("floor_profile")
+	if raw_prof == null:
+		var gp_doc: Variant = stage_doc.get("gameplay", {})
+		if gp_doc is Dictionary and gp_doc.has("floor_profile"):
+			raw_prof = gp_doc.get("floor_profile")
+	if raw_prof is Array:
+		for item in raw_prof:
+			if item is Dictionary and item.has("x") and item.has("y"):
+				_active_floor_profile.append({"x": float(item["x"]), "y": float(item["y"])})
+		_active_floor_profile.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return float(a["x"]) < float(b["x"])
+		)
+
+
+func _sample_floor_profile_y(world_x: float) -> float:
+	if _active_floor_profile.is_empty():
+		return ground_y
+	if world_x <= float(_active_floor_profile[0]["x"]):
+		return float(_active_floor_profile[0]["y"])
+	for i in range(_active_floor_profile.size() - 1):
+		var a: Dictionary = _active_floor_profile[i]
+		var b: Dictionary = _active_floor_profile[i + 1]
+		var ax := float(a["x"])
+		var bx := float(b["x"])
+		if world_x <= bx:
+			if bx <= ax + 0.0001:
+				return float(b["y"])
+			var t := clampf((world_x - ax) / (bx - ax), 0.0, 1.0)
+			return lerpf(float(a["y"]), float(b["y"]), t)
+	return float(_active_floor_profile[_active_floor_profile.size() - 1]["y"])
+
+
+func switch_map(map_id: String) -> bool:
+	var target_id := map_id.strip_edges()
+	if target_id.is_empty():
+		target_id = "rocky_plateau"
+	var stage_p := CELL_ARENA_STAGE_JSON_PATH if target_id == "cell_arena" else STAGE_JSON_PATH
+	var terrain_p := CELL_ARENA_TERRAIN_JSON_PATH if target_id == "cell_arena" else TERRAIN_JSON_PATH
+	var new_stage := _read_json_dict(stage_p)
+	var new_terrain := _read_json_dict(terrain_p)
+	if new_stage.is_empty() or new_terrain.is_empty():
+		return false
+
+	current_map_id = target_id
+	stage_config = new_stage
+	terrain_config = new_terrain
+	_fixed_single_view_map = bool(stage_config.get("fixed_single_view", false))
+	var gp: Dictionary = stage_config.get("gameplay", {})
+	ground_y = float(gp.get("ground_y", 840.0))
+	player_spawn_x = float(gp.get("player_spawn_x", 560.0))
+	dummy_spawn_x = float(gp.get("dummy_spawn_x", 1360.0))
+	terrain_platforms.clear()
+	var raw_plats: Variant = terrain_config.get("platforms", [])
+	if raw_plats is Array:
+		for p in raw_plats:
+			if p is Dictionary:
+				terrain_platforms.append(p)
+	_load_floor_profile_from_cfg(terrain_config, stage_config)
+
+	if _fixed_single_view_map:
+		_extended_map_res_path = ""
+		_extended_step_configs.clear()
+		_foreground_trees_cfg = {}
+		var map_cfg: Dictionary = stage_config.get("map", {})
+		var wb: Dictionary = map_cfg.get("world_bounds", {})
+		_map_left_x = float(wb.get("left_x", 0.0))
+		_map_right_x = float(wb.get("right_x", 2460.0))
+		_map_top_y = float(wb.get("top_y", 0.0))
+		_map_bottom_y = float(wb.get("bottom_y", 1080.0))
+		if _foreground_trees != null and is_instance_valid(_foreground_trees):
+			_foreground_trees.visible = false
+	else:
+		_load_extended_map_config()
+		if _foreground_pillars != null and is_instance_valid(_foreground_pillars):
+			_foreground_pillars.visible = false
+		if _foreground_trees != null and is_instance_valid(_foreground_trees):
+			_foreground_trees.visible = true
+
+	ai_controller.configure_from_stage(stage_config)
+	_apply_stage_layout()
+	_setup_foreground_pillars()
+	_update_walkable_bounds()
+	_sync_map_switch_button()
+
+	if field_mode_enabled and field_manager != null:
+		var saved_cid := active_character_id if not active_character_id.is_empty() else DEFAULT_HERO_ID
+		var had_player := bool(field_manager.player_spawned)
+		var spawn_monsters := bool(stage_config.get("monsters_enabled", current_map_id != "cell_arena"))
+		_clear_dropped_items()
+		field_manager.start_field(false, spawn_monsters)
+		field_manager.set_pk_tan_sat_enabled(pk_tan_sat_enabled)
+		field_manager.set_player_infinite_mana(hero_infinite_mana_enabled)
+		field_manager.set_player_immortal(hero_immortal_enabled)
+		if had_player:
+			var custom_x := player_spawn_x if current_map_id == "cell_arena" else -999999.0
+			set_field_hero_visible(true, saved_cid, custom_x)
+	elif player_node != null and is_instance_valid(player_node):
+		var px := clampf(player_spawn_x, walkable_min_x, walkable_max_x)
+		player_node.position = Vector2(px, _ground_y_at(px))
+		player_vy = 0.0
+
+	_update_follow_camera()
+	_update_hud()
+	queue_redraw()
+	return true
+
+
 func set_sandbox_map_id(map_id: String, map_stage_override: Dictionary = {}) -> void:
 	current_map_id = map_id.strip_edges()
 	if current_map_id.is_empty():
 		current_map_id = "rocky_plateau"
 	if not map_stage_override.is_empty():
 		stage_config = map_stage_override.duplicate(true)
+	_sync_map_switch_button()
 	_update_hud()
 	queue_redraw()
 
@@ -1609,7 +1757,7 @@ func spawn_boss_drum_now() -> Dictionary:
 func set_hud_ui_hidden(hidden: bool) -> void:
 	hud_ui_hidden = hidden
 	var vis_flag := not hidden
-	for n in [hud_label, pk_toggle_button, pad_settings_button, infinite_mana_button, immortal_button, toggle_hero_button, boss_selector, boss_spawn_button, summon_button, item_toggle_button, item_drop_test_button, item_pickup_button]:
+	for n in [hud_label, pk_toggle_button, map_switch_button, pad_settings_button, infinite_mana_button, immortal_button, toggle_hero_button, boss_selector, boss_spawn_button, summon_button, item_toggle_button, item_drop_test_button, item_pickup_button]:
 		if n != null and is_instance_valid(n):
 			n.visible = vis_flag
 	if toggle_ui_button != null:
@@ -2209,6 +2357,8 @@ func _load_extended_map_config() -> void:
 
 
 func _has_extended_terrain_steps() -> bool:
+	if _fixed_single_view_map or _extended_map_res_path.is_empty():
+		return false
 	return ResourceLoader.exists(_extended_map_res_path)
 
 
@@ -2239,11 +2389,20 @@ func _get_terrain_step_edges() -> Array[float]:
 func _get_fighter_walk_bounds_x(entry: Dictionary, sc: float) -> Vector2:
 	var vis_w := _get_visible_logic_size().x
 	var center_x := float(viewport_width) * 0.5
-	var view_left := _map_left_x if _has_extended_terrain_steps() else (center_x - vis_w * 0.5)
-	var view_right := _map_right_x if _has_extended_terrain_steps() else (center_x + vis_w * 0.5)
+	var use_world := _has_extended_terrain_steps() or _fixed_single_view_map
+	var view_left := _map_left_x if use_world else (center_x - vis_w * 0.5)
+	var view_right := _map_right_x if use_world else (center_x + vis_w * 0.5)
 	var dims := _get_body_dims(entry)
 	var raw_half := (float(dims.x) * sc * 0.5) if dims.x > 0 else (70.0 * sc)
 	var pad := clampf(raw_half, 16.0, maxf(16.0, vis_w * 0.45))
+	if _fixed_single_view_map:
+		var gp: Dictionary = stage_config.get("gameplay", {})
+		var wb_x: Array = gp.get("walkable_bounds_x", [68.0, _map_right_x - 68.0])
+		var lo_b := maxf(view_left + pad, float(wb_x[0]) if wb_x.size() >= 2 else (view_left + 68.0))
+		var hi_b := minf(view_right - pad, float(wb_x[1]) if wb_x.size() >= 2 else (view_right - 68.0))
+		if hi_b <= lo_b:
+			return Vector2(view_left + 68.0, view_right - 68.0)
+		return Vector2(lo_b, hi_b)
 	return Vector2(view_left + pad, view_right - pad)
 
 
@@ -2271,6 +2430,17 @@ func _update_background_cover() -> void:
 	var tex_size := background_sprite.texture.get_size()
 	if tex_size.x <= 0.0 or tex_size.y <= 0.0:
 		_update_walkable_bounds()
+		return
+	if _fixed_single_view_map:
+		background_sprite.scale = Vector2.ONE
+		background_sprite.position = Vector2(_map_left_x, _map_top_y)
+		if _bg_left_ext != null:
+			_bg_left_ext.visible = false
+		if _bg_right_ext != null:
+			_bg_right_ext.visible = false
+		_update_walkable_bounds()
+		_update_follow_camera()
+		queue_redraw()
 		return
 	var vis := _get_visible_logic_size()
 	if _has_extended_terrain_steps():
@@ -2341,19 +2511,46 @@ func _setup_foreground_trees() -> void:
 		_foreground_trees.add_child(tree_sprite)
 
 
+func _setup_foreground_pillars() -> void:
+	var pil_cfg: Variant = terrain_config.get("foreground_pillars", {})
+	if not (pil_cfg is Dictionary) or (pil_cfg as Dictionary).is_empty():
+		if _foreground_pillars != null and is_instance_valid(_foreground_pillars):
+			_foreground_pillars.visible = false
+		return
+	var pdict := pil_cfg as Dictionary
+	var p_res := str(pdict.get("res_path", ""))
+	var p_tex := _load_texture_2d(p_res)
+	if p_tex == null:
+		if _foreground_pillars != null and is_instance_valid(_foreground_pillars):
+			_foreground_pillars.visible = false
+		return
+	if _foreground_pillars == null or not is_instance_valid(_foreground_pillars):
+		_foreground_pillars = Sprite2D.new()
+		_foreground_pillars.name = "CellArenaForegroundPillars"
+		_foreground_pillars.centered = false
+		add_child(_foreground_pillars)
+	_foreground_pillars.texture = p_tex
+	_foreground_pillars.position = Vector2(_map_left_x, _map_top_y)
+	_foreground_pillars.scale = Vector2.ONE
+	# Topmost world layer ABOVE characters (20), bosses (30), and skill FX (65..70) with ZERO collision!
+	_foreground_pillars.z_index = int(pdict.get("z_index", 80))
+	_foreground_pillars.visible = true
+
+
 func _update_follow_camera() -> void:
 	if _arena_camera == null:
 		return
 	var vis := _get_visible_logic_size()
 	var has_ext := _has_extended_terrain_steps()
-	var left_b := _map_left_x if has_ext else 0.0
-	var right_b := _map_right_x if has_ext else float(viewport_width)
-	var top_b := _map_top_y if has_ext else 0.0
-	var bottom_b := _map_bottom_y if has_ext else float(viewport_height)
+	var use_world := has_ext or _fixed_single_view_map
+	var left_b := _map_left_x if use_world else 0.0
+	var right_b := _map_right_x if use_world else float(viewport_width)
+	var top_b := _map_top_y if use_world else 0.0
+	var bottom_b := _map_bottom_y if use_world else float(viewport_height)
 	var map_w := maxf(1.0, right_b - left_b)
 	var map_h := maxf(1.0, bottom_b - top_b)
 
-	var cam_zoom := maxf(1.0, maxf(vis.x / map_w, vis.y / map_h)) if has_ext else 1.0
+	var cam_zoom := maxf(1.0, maxf(vis.x / map_w, vis.y / map_h)) if use_world else 1.0
 	_arena_camera.zoom = Vector2(cam_zoom, cam_zoom)
 
 	var eff_half_w := (vis.x / cam_zoom) * 0.5
@@ -2363,12 +2560,12 @@ func _update_follow_camera() -> void:
 	var min_cam_y := top_b + eff_half_h
 	var max_cam_y := bottom_b - eff_half_h
 
-	var target_x := player_node.position.x if player_node != null else ((left_b + eff_half_w) if field_mode_enabled else float(viewport_width) * 0.5)
+	var target_x := player_node.position.x if player_node != null else ((left_b + right_b) * 0.5 if _fixed_single_view_map else ((left_b + eff_half_w) if field_mode_enabled else float(viewport_width) * 0.5))
 	var cam_x := (left_b + right_b) * 0.5 if min_cam_x >= max_cam_x else clampf(target_x, min_cam_x, max_cam_x)
 
-	var base_cam_y := float(viewport_height) * 0.5
+	var base_cam_y := (top_b + bottom_b) * 0.5 if _fixed_single_view_map else float(viewport_height) * 0.5
 	var follow_dy := 0.0
-	if player_node != null:
+	if (not _fixed_single_view_map) and player_node != null:
 		if player_node.position.y > ground_y:
 			follow_dy = minf(60.0, (player_node.position.y - ground_y) * 0.45)
 		elif player_node.position.y < 180.0:
@@ -2409,6 +2606,8 @@ static func _step_wall_x_at_y(spec: Dictionary, y: float) -> float:
 
 
 func _ground_y_at(world_x: float) -> float:
+	if not _active_floor_profile.is_empty():
+		return _sample_floor_profile_y(world_x)
 	if not _has_extended_terrain_steps():
 		return ground_y
 	var y := ground_y
@@ -2420,6 +2619,8 @@ func _ground_y_at(world_x: float) -> float:
 
 
 func _terrain_surface_y_at(world_x: float) -> float:
+	if not _active_floor_profile.is_empty():
+		return _sample_floor_profile_y(world_x)
 	if not _has_extended_terrain_steps():
 		return ground_y
 	var prev_y := ground_y
@@ -2437,13 +2638,27 @@ func _terrain_surface_y_at(world_x: float) -> float:
 
 
 func terrain_blocks_segment(from_pos: Vector2, to_pos: Vector2) -> bool:
-	# Exact continuous intersection against the piecewise-linear terrain profile (floors + sloped cliff walls).
+	# Exact continuous intersection against the piecewise-linear terrain profile (floors + sloped cliff walls / Cell Arena red-line floor).
 	# Allow a projectile originating on the exact surface y == surface_y to launch upward into open air,
 	# while still blocking any segment starting strictly inside solid ground or touching/crossing terrain.
 	if from_pos.y > _terrain_surface_y_at(from_pos.x) + 0.001:
 		return true
 	if to_pos.y >= _terrain_surface_y_at(to_pos.x):
 		return true
+	if not _active_floor_profile.is_empty():
+		var dx_p := to_pos.x - from_pos.x
+		if absf(dx_p) <= 0.0001:
+			return maxf(from_pos.y, to_pos.y) >= _sample_floor_profile_y(from_pos.x)
+		var min_px := minf(from_pos.x, to_pos.x)
+		var max_px := maxf(from_pos.x, to_pos.x)
+		for knot in _active_floor_profile:
+			var kx := float(knot["x"])
+			if kx > min_px and kx < max_px:
+				var tk := (kx - from_pos.x) / dx_p
+				var yk := lerpf(from_pos.y, to_pos.y, tk)
+				if yk >= float(knot["y"]):
+					return true
+		return false
 	var specs := _get_terrain_step_specs()
 	if specs.is_empty():
 		return false
@@ -2557,7 +2772,8 @@ func _setup_terrain_layer() -> void:
 	_terrain_root.visible = show_pixel_terrain
 	add_child(_terrain_root)
 
-	var keep_orig_bg := str((terrain_config.get("backdrop", {}) as Dictionary).get("mode", "")) == "original_jpg"
+	var bd_mode := str((terrain_config.get("backdrop", {}) as Dictionary).get("mode", ""))
+	var keep_orig_bg := (bd_mode == "original_jpg" or bd_mode == "fixed_1view_k70e")
 	if background_sprite != null:
 		var bg_parent := background_sprite.get_parent() as Node2D
 		if bg_parent != null:
@@ -2616,27 +2832,46 @@ func _setup_terrain_layer() -> void:
 		_ground_tilemap.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_ground_tilemap.scale = Vector2(g_scale, g_scale)
 		_ground_tilemap.position = Vector2(0.0, surf_top_y)
-		# The review panorama contains its own foreground; the old tiled overlay ended mid-step.
-		_ground_tilemap.visible = not ResourceLoader.exists(EXTENDED_MAP_PATH)
+		# The review panorama and Cell Arena 1-view background contain their faithful original floor art; keep TileMapLayer backing solid logic.
+		_ground_tilemap.visible = (not _fixed_single_view_map) and (not ResourceLoader.exists(EXTENDED_MAP_PATH))
 		for gx in range(-16, 56):
 			var c_idx := posmod(gx, cols)
 			for gy in range(12):
 				_ground_tilemap.set_cell(Vector2i(gx, gy), 0, Vector2i(c_idx, mini(gy, rows - 1)))
 		_terrain_root.add_child(_ground_tilemap)
 
-	# Solid stepped terrain: tops support actors and vertical faces stop skills/projectiles.
+	# Solid stepped terrain or exact piecewise-linear red-line floor polygon (+ boundary walls on fixed 1-view maps).
 	var ground_body := StaticBody2D.new()
 	ground_body.name = "GroundFloorCollider"
-	for section in _get_terrain_sections():
-		var left_x := float(section["left_x"])
-		var right_x := float(section["right_x"])
-		var top_y := float(section["ground_y"])
-		var ground_shape := CollisionShape2D.new()
-		var ground_rect := RectangleShape2D.new()
-		ground_rect.size = Vector2(right_x - left_x, 1400.0 - top_y)
-		ground_shape.shape = ground_rect
-		ground_shape.position = Vector2((left_x + right_x) * 0.5, (top_y + 1400.0) * 0.5)
-		ground_body.add_child(ground_shape)
+	if not _active_floor_profile.is_empty():
+		var poly := CollisionPolygon2D.new()
+		poly.name = "FloorProfilePolygon"
+		var pts := PackedVector2Array()
+		for knot in _active_floor_profile:
+			pts.append(Vector2(float(knot["x"]), float(knot["y"])))
+		pts.append(Vector2(float(_active_floor_profile[_active_floor_profile.size() - 1]["x"]), 1400.0))
+		pts.append(Vector2(float(_active_floor_profile[0]["x"]), 1400.0))
+		poly.polygon = pts
+		ground_body.add_child(poly)
+		# Solid left & right world boundary walls so no actor/skill clips out of the 1-view arena!
+		for side_x in [_map_left_x - 32.0, _map_right_x + 32.0]:
+			var w_shape := CollisionShape2D.new()
+			var w_rect := RectangleShape2D.new()
+			w_rect.size = Vector2(64.0, 2000.0)
+			w_shape.shape = w_rect
+			w_shape.position = Vector2(side_x, 540.0)
+			ground_body.add_child(w_shape)
+	else:
+		for section in _get_terrain_sections():
+			var left_x := float(section["left_x"])
+			var right_x := float(section["right_x"])
+			var top_y := float(section["ground_y"])
+			var ground_shape := CollisionShape2D.new()
+			var ground_rect := RectangleShape2D.new()
+			ground_rect.size = Vector2(right_x - left_x, 1400.0 - top_y)
+			ground_shape.shape = ground_rect
+			ground_shape.position = Vector2((left_x + right_x) * 0.5, (top_y + 1400.0) * 0.5)
+			ground_body.add_child(ground_shape)
 	_terrain_root.add_child(ground_body)
 
 	# One-Way Rocky Platforms (Sprite2D + StaticBody2D collider)
@@ -2725,6 +2960,12 @@ func _integrate_player_vertical(delta: float, jumped: bool = false) -> Dictionar
 		_player_drop_timer_s = maxf(0.0, _player_drop_timer_s - delta)
 
 	var sup_y := _ground_y_at(px)
+	# Smoothly adhere to gentle downward ramps (e.g. Cell Arena red-line apron slope) when walking without jumping!
+	if (not _active_floor_profile.is_empty()) and (not jumped) and _prev_player_on_ground and player_vy >= 0.0 and prev_y < sup_y and (sup_y - prev_y) <= 18.0:
+		player_node.position.y = sup_y
+		player_vy = 0.0
+		_prev_player_on_ground = true
+		return {"y": sup_y, "vy": 0.0, "support_y": sup_y, "on_ground": true, "landed": false, "jumped": false}
 	if not jumped and prev_y < sup_y - 0.5 and player_vy == 0.0:
 		player_vy = gravity_px_per_s2 * delta
 	var step_dy := player_vy * delta
@@ -4643,6 +4884,9 @@ func get_stage_metrics() -> Dictionary:
 		"stretch_aspect": str(ProjectSettings.get_setting("display/window/stretch/aspect", "expand")),
 		"renderer": str(ProjectSettings.get_setting("rendering/renderer/rendering_method", "gl_compatibility")),
 		"display_layout": display_layout_info.duplicate(true),
+		"map_id": current_map_id,
+		"fixed_single_view": _fixed_single_view_map,
+		"foreground_pillars_z_index": (_foreground_pillars.z_index if (_foreground_pillars != null and is_instance_valid(_foreground_pillars) and _foreground_pillars.visible) else -1),
 		"ground_y": ground_y,
 		"terrain_loaded": not terrain_config.is_empty(),
 		"platforms_count": terrain_platforms.size(),

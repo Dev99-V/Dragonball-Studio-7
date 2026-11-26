@@ -4123,17 +4123,17 @@
       "name": "genki_hold_00",
       "source": {
         "path": "../source/raw_frames/genki_hold_00.png",
-        "file_sha256": "3c921e3f08ea98192d2e2573337716c2bbf5073166733d81ef48207f97d5edcd",
-        "bytes": 17213,
+        "file_sha256": "8f1866332503107e8591ac80359dac4f5b2e2f923af9737b6a847ccb65842bb5",
+        "bytes": 15374,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "5007092f4f940dc3e5b100c9b71e8a18f141f5f50d9fa3c84823943cd9ef93ff",
-      "transparent_pixel_count": 78028,
-      "visible_pixel_count": 4916,
+      "rgba_pixel_sha256": "3d4d83b2b79096dfb9237fe01347853776aeccab5544f6d032c49e00de6a0752",
+      "transparent_pixel_count": 78686,
+      "visible_pixel_count": 4258,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-202.png"
@@ -4143,17 +4143,17 @@
       "name": "genki_hold_01",
       "source": {
         "path": "../source/raw_frames/genki_hold_01.png",
-        "file_sha256": "e7b8deb79d1293135816d3c788580f5825c325cfb445d39c72d9dfb1764c8714",
-        "bytes": 17604,
+        "file_sha256": "9715897436b569435d106a14680a9603635e1e83ef8dedfc4e679ed5f524154b",
+        "bytes": 14687,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "599548593c40e12e1be76442d79732bcf6e4f3547cce00d447c7ae9f3ddf7712",
-      "transparent_pixel_count": 77906,
-      "visible_pixel_count": 5038,
+      "rgba_pixel_sha256": "a21cf5b4de1151d7c3afc9a8f2c532ba3620934d72840643a61ef0f862cec1f8",
+      "transparent_pixel_count": 78881,
+      "visible_pixel_count": 4063,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-203.png"
@@ -4163,17 +4163,17 @@
       "name": "genki_hold_02",
       "source": {
         "path": "../source/raw_frames/genki_hold_02.png",
-        "file_sha256": "f5541921e2708dc417c70f311dfb5887f6617aa539982fd183b31dca92539b5f",
-        "bytes": 16236,
+        "file_sha256": "8122bcb9be359ed873bdf83bb3df373baffa7d519686e792a330d76248a4e1b1",
+        "bytes": 14492,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "d7c41eaf493b78328f432c277a7dd54b92410f3d3be251fd3032e5a3b024a58d",
-      "transparent_pixel_count": 78312,
-      "visible_pixel_count": 4632,
+      "rgba_pixel_sha256": "ff9f610f5fb5bf48a40d1692b9d34fb3def12f2947a901397918f73225711204",
+      "transparent_pixel_count": 78937,
+      "visible_pixel_count": 4007,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-204.png"
@@ -4183,17 +4183,17 @@
       "name": "genki_hold_03",
       "source": {
         "path": "../source/raw_frames/genki_hold_03.png",
-        "file_sha256": "e913a5b9c865ccb37cf33d8c21c0483b7028b1aed8841054ee6f245971fd583b",
-        "bytes": 17083,
+        "file_sha256": "8a34bffc96c2ce38e7f45f1fb3fada99373aa790d656da168874beaaac5db983",
+        "bytes": 15479,
         "size": [
           288,
           288
         ],
         "mode": "RGBA"
       },
-      "rgba_pixel_sha256": "0c66bf4e05888fe3264eaf82df56cc4508c1e9963f8e661e8cb53eacfa68f30e",
-      "transparent_pixel_count": 78041,
-      "visible_pixel_count": 4903,
+      "rgba_pixel_sha256": "bad21331ff8799b961c23e9f68b011c28dd37c5416171fa4456124da0006c019",
+      "transparent_pixel_count": 78649,
+      "visible_pixel_count": 4295,
       "near_duplicates": [],
       "holds": [],
       "file": "frames/frame-205.png"
@@ -10275,7 +10275,7 @@
         "alpha_and_visible_rgb_exact": true,
         "hidden_rgb_guaranteed": false,
         "lossless": true,
-        "file_sha256": "0ebb44f8ba9462951fefd530dc17cea6b8f50dfe584937759c7eef266b5fe968"
+        "file_sha256": "15e0dfc7f58173c1637812cc410910cbc6c3bf29aa41b1641e2fc5a9c8536a91"
       },
       "transitions": [
         {
@@ -10295,37 +10295,37 @@
         {
           "from_position": 2,
           "to_position": 3,
-          "premultiplied_rgb_mae": 3.783147,
-          "alpha_mae": 3.019025,
-          "changed_visible_pixels": 5258
+          "premultiplied_rgb_mae": 4.639054,
+          "alpha_mae": 5.687572,
+          "changed_visible_pixels": 5363
         },
         {
           "from_position": 3,
           "to_position": 4,
-          "premultiplied_rgb_mae": 4.266461,
-          "alpha_mae": 3.031322,
-          "changed_visible_pixels": 5470
+          "premultiplied_rgb_mae": 4.171927,
+          "alpha_mae": 4.387117,
+          "changed_visible_pixels": 4870
         },
         {
           "from_position": 4,
           "to_position": 5,
-          "premultiplied_rgb_mae": 3.914243,
-          "alpha_mae": 3.129702,
-          "changed_visible_pixels": 5331
+          "premultiplied_rgb_mae": 3.328736,
+          "alpha_mae": 3.578559,
+          "changed_visible_pixels": 4616
         },
         {
           "from_position": 5,
           "to_position": 6,
-          "premultiplied_rgb_mae": 2.793294,
-          "alpha_mae": 1.866139,
-          "changed_visible_pixels": 5063
+          "premultiplied_rgb_mae": 3.674547,
+          "alpha_mae": 3.676939,
+          "changed_visible_pixels": 4747
         },
         {
           "from_position": 6,
           "to_position": 7,
-          "premultiplied_rgb_mae": 11.399314,
-          "alpha_mae": 17.48083,
-          "changed_visible_pixels": 7882
+          "premultiplied_rgb_mae": 10.981405,
+          "alpha_mae": 17.019676,
+          "changed_visible_pixels": 7504
         },
         {
           "from_position": 7,
@@ -10494,7 +10494,7 @@
     "requested_scale": 1,
     "annotated_with_shared_root": true,
     "not_a_runtime_atlas": true,
-    "file_sha256": "fcdad452aa4966ca8bf4fce9b8f21f7dc3f88d7f50733282dcc3d00f4411edbe"
+    "file_sha256": "323c143b12538271b6c8ad12b1095bb6834bfde4571a768617b5eeeebfa072b4"
   },
   "review": {
     "scale": 1,
@@ -12757,23 +12757,23 @@
       },
       {
         "path": "../source/raw_frames/genki_hold_00.png",
-        "sha256": "3c921e3f08ea98192d2e2573337716c2bbf5073166733d81ef48207f97d5edcd",
-        "bytes": 17213
+        "sha256": "8f1866332503107e8591ac80359dac4f5b2e2f923af9737b6a847ccb65842bb5",
+        "bytes": 15374
       },
       {
         "path": "../source/raw_frames/genki_hold_01.png",
-        "sha256": "e7b8deb79d1293135816d3c788580f5825c325cfb445d39c72d9dfb1764c8714",
-        "bytes": 17604
+        "sha256": "9715897436b569435d106a14680a9603635e1e83ef8dedfc4e679ed5f524154b",
+        "bytes": 14687
       },
       {
         "path": "../source/raw_frames/genki_hold_02.png",
-        "sha256": "f5541921e2708dc417c70f311dfb5887f6617aa539982fd183b31dca92539b5f",
-        "bytes": 16236
+        "sha256": "8122bcb9be359ed873bdf83bb3df373baffa7d519686e792a330d76248a4e1b1",
+        "bytes": 14492
       },
       {
         "path": "../source/raw_frames/genki_hold_03.png",
-        "sha256": "e913a5b9c865ccb37cf33d8c21c0483b7028b1aed8841054ee6f245971fd583b",
-        "bytes": 17083
+        "sha256": "8a34bffc96c2ce38e7f45f1fb3fada99373aa790d656da168874beaaac5db983",
+        "bytes": 15479
       }
     ],
     "outputs": [
@@ -13789,23 +13789,23 @@
       },
       {
         "path": "frames/frame-202.png",
-        "sha256": "3c921e3f08ea98192d2e2573337716c2bbf5073166733d81ef48207f97d5edcd",
-        "bytes": 17213
+        "sha256": "8f1866332503107e8591ac80359dac4f5b2e2f923af9737b6a847ccb65842bb5",
+        "bytes": 15374
       },
       {
         "path": "frames/frame-203.png",
-        "sha256": "e7b8deb79d1293135816d3c788580f5825c325cfb445d39c72d9dfb1764c8714",
-        "bytes": 17604
+        "sha256": "9715897436b569435d106a14680a9603635e1e83ef8dedfc4e679ed5f524154b",
+        "bytes": 14687
       },
       {
         "path": "frames/frame-204.png",
-        "sha256": "f5541921e2708dc417c70f311dfb5887f6617aa539982fd183b31dca92539b5f",
-        "bytes": 16236
+        "sha256": "8122bcb9be359ed873bdf83bb3df373baffa7d519686e792a330d76248a4e1b1",
+        "bytes": 14492
       },
       {
         "path": "frames/frame-205.png",
-        "sha256": "e913a5b9c865ccb37cf33d8c21c0483b7028b1aed8841054ee6f245971fd583b",
-        "bytes": 17083
+        "sha256": "8a34bffc96c2ce38e7f45f1fb3fada99373aa790d656da168874beaaac5db983",
+        "bytes": 15479
       },
       {
         "path": "clips/clip-00.webp",
@@ -13979,13 +13979,13 @@
       },
       {
         "path": "clips/clip-34.webp",
-        "sha256": "0ebb44f8ba9462951fefd530dc17cea6b8f50dfe584937759c7eef266b5fe968",
-        "bytes": 132428
+        "sha256": "15e0dfc7f58173c1637812cc410910cbc6c3bf29aa41b1641e2fc5a9c8536a91",
+        "bytes": 123466
       },
       {
         "path": "contact-sheet.png",
-        "sha256": "fcdad452aa4966ca8bf4fce9b8f21f7dc3f88d7f50733282dcc3d00f4411edbe",
-        "bytes": 3052854
+        "sha256": "323c143b12538271b6c8ad12b1095bb6834bfde4571a768617b5eeeebfa072b4",
+        "bytes": 3045162
       },
       {
         "path": "review/filmstrip-00.png",
@@ -14329,13 +14329,13 @@
       },
       {
         "path": "review/filmstrip-34.png",
-        "sha256": "c01d38c6dc64ad9e9def5b7836cb3f7642568f988e89d1c1e3435df7af8d280b",
-        "bytes": 493009
+        "sha256": "5338f236a023e451d3bdf0f68e423278a308e9279eaadfd41993dc50decc9ee9",
+        "bytes": 471422
       },
       {
         "path": "review/onion-34.png",
-        "sha256": "7cc0acb73f07e74c277b407cc125d59488f287f56a41c7c498847c721375fb98",
-        "bytes": 180158
+        "sha256": "4822b01eccdcf2fed14eb7ce554fd4ebf8a98546ff186c345038b0a1d7350dbf",
+        "bytes": 173643
       },
       {
         "path": "review/turn-test.png",

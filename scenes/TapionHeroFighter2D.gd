@@ -74,7 +74,7 @@ const TAPION_SKILL_MAX_RANGE_PX: float = 1175.0
 const MAHASENKO_SPEED_PX_S: float = 2500.0
 const KENTAIMA_SPEED_PX_S: float = 2500.0
 const ANTAMINA_SPEED_PX_S: float = 4000.0
-const MAHA_BEAM_AIR_BASE_RAD: float = 0.587  # Measured PCA axis of 70%-scaled maha_beam_air_00 (+33.63 deg)
+const MAHA_BEAM_AIR_BASE_RAD: float = 0.578  # Measured PCA axis of ground-parity maha_beam_air_00 (+33.11 deg)
 
 # Exact measured fingertip hand offsets relative to Tapion anchor [144, 248]:
 # - Ground Mahasenko (`maha_gnd_02` fingertips x=232 -> +88, +4px gap matching `image copy.png` yellow Rect(234,180) => (+92, -64))

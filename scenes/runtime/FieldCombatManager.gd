@@ -4523,21 +4523,50 @@ func _draw_hero_phase2_fx_overlays(canvas: CanvasItem) -> void:
 
 
 func _draw_kentai_burn_on_rect(canvas: CanvasItem, body_rect: Rect2, phase_seed: float = 0.0) -> void:
-	## Pixel-art green burning fire & dark emerald smoke wrapping around a Kentaima-afflicted victim!
+	## Refined crisp micro pixel-art green flame+smoke burn points (~10-14px each) burning directly ON the
+	## victim's body silhouette and disappearing organically by staggered density (Owner 2026-11-26).
 	if body_rect.size.x < 4.0 or body_rect.size.y < 4.0:
 		return
 	var tfx := _get_tapion_fx_frames()
 	if tfx != null and tfx.has_animation(&"kentai_burn_fx"):
 		var fc: int = tfx.get_frame_count(&"kentai_burn_fx")
 		if fc > 0:
-			var fi: int = int(floor((_sim_time_s + phase_seed) * 12.5)) % fc
-			var tex := tfx.get_frame_texture(&"kentai_burn_fx", fi)
-			if tex != null:
-				var bw: float = maxf(body_rect.size.x * 1.48, 86.0)
-				var bh: float = maxf(body_rect.size.y * 1.28, 94.0)
-				var center: Vector2 = body_rect.get_center() + Vector2(0.0, 2.0)
-				canvas.draw_texture_rect(tex, Rect2(center - Vector2(bw * 0.5, bh * 0.5), Vector2(bw, bh)), false, Color(1.0, 1.0, 1.0, 0.94))
-				return
+			# 7 organic burn sites strictly inside body_rect (avoiding empty outer halo) with staggered cycle phases
+			# so individual ~10px micro-flames ignite, flicker, puff dark-green smoke, and vanish naturally by density!
+			const BURN_POINTS := [
+				[0.34, 0.28, 0.00, 1.00],
+				[0.64, 0.34, 0.31, 0.92],
+				[0.48, 0.48, 0.62, 1.08],
+				[0.28, 0.56, 0.17, 0.88],
+				[0.68, 0.60, 0.78, 0.96],
+				[0.42, 0.72, 0.45, 0.90],
+				[0.56, 0.22, 0.89, 0.85],
+			]
+			# Subtle pixel-art ~10-14px flame sprite (24px canvas tile -> ~10-13px crisp visible flame core!)
+			var base_tile: float = clampf(minf(body_rect.size.x, body_rect.size.y) * 0.24, 18.0, 26.0)
+			for bp in BURN_POINTS:
+				var u: float = float(bp[0])
+				var v: float = float(bp[1])
+				var p_off: float = float(bp[2])
+				var sz_mul: float = float(bp[3])
+				# Cycle with natural staggered off-duty density window (active 74% of cycle, rests 26% before re-igniting)
+				var cycle: float = fposmod(_sim_time_s * 1.45 + phase_seed * 0.37 + p_off, 1.0)
+				if cycle >= 0.74:
+					continue
+				var life: float = cycle / 0.74
+				var fi: int = clampi(int(floor(life * float(fc))), 0, fc - 1)
+				var tex := tfx.get_frame_texture(&"kentai_burn_fx", fi)
+				if tex == null:
+					continue
+				var tile_px: float = roundf(base_tile * sz_mul)
+				# Gentle organic rise as flame burns -> turns to dark-green smoke -> disappears
+				var rise_y: float = -life * 6.0
+				var sway_x: float = sin((_sim_time_s * 6.0) + p_off * 12.0) * 1.8
+				var px: float = roundf(body_rect.position.x + body_rect.size.x * u + sway_x - tile_px * 0.5)
+				var py: float = roundf(body_rect.position.y + body_rect.size.y * v + rise_y - tile_px * 0.58)
+				var alpha_f: float = 0.96 if life < 0.78 else clampf((1.0 - life) / 0.22, 0.0, 0.96)
+				canvas.draw_texture_rect(tex, Rect2(Vector2(px, py), Vector2(tile_px, tile_px)), false, Color(1.0, 1.0, 1.0, alpha_f))
+			return
 	OverheadBarsDrawScript.draw_kentai_green_burn_fx(canvas, body_rect, _sim_time_s)
 
 

@@ -26,8 +26,9 @@ from scipy import ndimage
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SRC_DIR = ROOT / "Genki"
 GEN_DIR = ROOT / "work" / "polish_round2" / "gen"
+GEN_R3_DIR = ROOT / "work" / "polish_round3" / "gen"
 WORK_DIR = ROOT / "work" / "characters" / "songoku_genki" / "fx_extract_v2"
-QA_DIR = ROOT / "work" / "polish_round2" / "qa"
+QA_DIR = ROOT / "work" / "polish_round3" / "qa"
 OUT_FX_DIR = ROOT / "assets" / "fx" / "genki_fx"
 BUILD_CLIPS_SCRIPT = ROOT / ".agents" / "skills" / "generate2dsprite" / "scripts" / "build_animation_clips.py"
 EXPORT_ENGINE_SCRIPT = ROOT / ".agents" / "skills" / "generate2dsprite" / "scripts" / "export_engine.py"
@@ -273,7 +274,8 @@ def main() -> int:
         "fly_8b":    ("genki_fly_8b",    "sphere", fly_sphere_diam),
     }
     for key, (gname, mode, target_px) in gen_specs.items():
-        crop = key_gen_magenta_fx(GEN_DIR / gname / "generated.png")
+        src_p = (GEN_R3_DIR / gname / "generated.png") if (GEN_R3_DIR / gname / "generated.png").is_file() else (GEN_DIR / gname / "generated.png")
+        crop = key_gen_magenta_fx(src_p)
         denom = measure_inner_sphere_diameter(crop) if mode == "sphere" else float(max(crop.shape[0], crop.shape[1]))
         sc = target_px / max(1.0, denom)
         placed[key] = place_centered(crop, sc)

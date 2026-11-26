@@ -1,0 +1,82 @@
+{
+  "schema_version": "dr7.arena_stage.v1",
+  "stage_id": "cell_arena",
+  "display_name": "Đấu Trường Solo PvP (1-View K70E)",
+  "fixed_single_view": true,
+  "has_transition_header": false,
+  "monsters_enabled": false,
+  "viewport": {
+    "width": 2400,
+    "height": 1080,
+    "reference_device": "Redmi K70E (2460x1080)",
+    "orientation": "landscape",
+    "stretch_mode": "canvas_items",
+    "stretch_aspect": "expand",
+    "ppu_reference": 64,
+    "tile_px": 32
+  },
+  "map": {
+    "background_path": "assets/maps/cell_arena/cell-arena-bg.png",
+    "background_res_path": "res://assets/maps/cell_arena/cell-arena-bg.png",
+    "background_web_path": "/assets/maps/cell_arena/cell-arena-bg.png",
+    "source_size_px": [
+      1309,
+      600
+    ],
+    "sha256": "af0614361f14c93b2dfd73cbce7f75abc7d466149b3c34b33c7c5ad55de50e7d",
+    "world_bounds": {
+      "left_x": 0,
+      "right_x": 2400,
+      "top_y": 0,
+      "bottom_y": 1080
+    },
+    "foreground_pillars_res_path": "res://assets/maps/cell_arena/cell-arena-foreground-pillars.png",
+    "foreground_pillars_z_index": 80
+  },
+  "gameplay": {
+    "ground_y": 935.2,
+    "floor_profile": [
+      {
+        "x": 0.0,
+        "y": 981.1
+      },
+      {
+        "x": 245.7,
+        "y": 981.1
+      },
+      {
+        "x": 399.7,
+        "y": 935.2
+      },
+      {
+        "x": 2000.3,
+        "y": 935.2
+      },
+      {
+        "x": 2156.1,
+        "y": 977.4
+      },
+      {
+        "x": 2400.0,
+        "y": 977.4
+      }
+    ],
+    "walkable_bounds_x": [
+      68,
+      2332
+    ],
+    "player_spawn_x": 860,
+    "player_spawn_facing_left_x": 1600,
+    "dummy_spawn_x": 1600,
+    "character_scale_default": 2,
+    "texture_filter": "nearest",
+    "flight": {
+      "min_y": 60,
+      "max_y": 935.2,
+      "default_y": 280,
+      "vertical_speed_px_per_s": 240
+    },
+    "jump_velocity_px_per_s": -780,
+    "gravity_px_per_s2": 2000
+  }
+}
