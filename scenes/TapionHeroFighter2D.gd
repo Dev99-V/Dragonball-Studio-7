@@ -792,6 +792,8 @@ func _step_active_projectiles(delta: float) -> void:
 		if arena != null and bool(arena.call(&"terrain_blocks_segment", old_p, new_p)):
 			hit_now = true
 			impact_p = new_p
+			if arena.has_method(&"notify_projectile_terrain_impact"):
+				arena.call(&"notify_projectile_terrain_impact", new_p, 1.15)
 		elif has_tgt and (t_next >= 0.98 or new_p.distance_to(end_p) <= maxf(60.0, step_dist + 22.0)):
 			hit_now = true
 			if fm_active:

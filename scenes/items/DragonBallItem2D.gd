@@ -43,6 +43,7 @@ var _drop_elapsed_s: float = 0.0
 var _drop_peak_y: float = 830.0
 var _drop_land_x: float = 0.0
 var _drop_target_x: float = 0.0
+var _water_splash_emitted: bool = false
 var ground_y_resolver: Callable = Callable()
 
 var _collect_elapsed_s: float = 0.0
@@ -134,6 +135,7 @@ func _apply_state() -> void:
 				sparkle_fx.play(&"sparkle_fx")
 		else:
 			sparkle_fx.stop()
+	set_process(lifecycle_state == "dropping" or lifecycle_state == "collecting")
 
 
 func set_ball_number(num: int) -> bool:
@@ -175,6 +177,7 @@ func start_drop_from(spawn_pos: Vector2, ground_y_pos: float, roll_dir: float = 
 	)
 	_drop_land_x = spawn_pos.x + _drop_dir * _arc_dx_px * base_scale
 	_drop_target_x = _drop_land_x + _drop_dir * _roll_distance_px * base_scale
+	_water_splash_emitted = false
 	position = spawn_pos
 	_apply_state()
 
@@ -219,6 +222,12 @@ func step_lifecycle(delta: float) -> void:
 				lerpf(_drop_peak_y, _drop_ground_y, u * u)
 			)
 		elif _drop_elapsed_s < t_end:
+			if not _water_splash_emitted:
+				_water_splash_emitted = true
+				var p_layer := get_parent()
+				var st_root := p_layer.get_parent() if p_layer != null else null
+				if st_root != null and st_root.has_method(&"notify_projectile_terrain_impact"):
+					st_root.call(&"notify_projectile_terrain_impact", Vector2(_drop_land_x, _drop_ground_y), 0.72)
 			drop_subphase = "roll"
 			var u := clampf((_drop_elapsed_s - t_land) / maxf(0.001, _roll_duration_s), 0.0, 1.0)
 			var ease_u := 1.0 - (1.0 - u) * (1.0 - u)
@@ -262,6 +271,7 @@ func step_lifecycle(delta: float) -> void:
 			lifecycle_state = "collected"
 			drop_subphase = "collected"
 			visible = false
+			set_process(false)
 			emit_signal("collected", ball_number)
 
 

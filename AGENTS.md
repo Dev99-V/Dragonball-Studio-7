@@ -76,9 +76,10 @@ Chi tiết kỹ thuật chốt tại [docs/adr/0001-architecture-and-scale-roadm
 
 ---
 
-## Điều 6. Phân Biệt `skills.md` & `.agents/skills/`
+## Điều 6. Phân Biệt `skills.md`, `.agents/skills/` & Kiến Trúc Sinh Ảnh `Codex CLI`
 
-- **`.agents/skills/*`**: Thư viện công cụ kỹ thuật (tách nền, `generate2dsprite`, `video2dsprite`, `generate2dmap`, `export_engine.py`).
+- **`.agents/skills/*`**: Thư viện công cụ kỹ thuật (tách nền, `generate2dsprite`, `video2dsprite`, `generate2dmap`, `generate2dmedia`, `export_engine.py`).
+- **Kiến trúc Sinh / Tái Tạo Ảnh Bắt Buộc (`Codex CLI` → `image_gen`, Chốt Owner 2026-11-28)**: Mọi tác vụ sinh mới hoặc tái tạo ảnh (nhân vật, pose, FX, item, map) **BẮT BUỘC** gọi `image_gen` qua **`Codex CLI`** (`python3 .agents/skills/generate2dmedia/scripts/route_media.py image --route codex-cli`, dùng quota đăng nhập `codex`, API = `0đ`); **cấm** tự vẽ code/PIL/SVG (`codeart2d`) hoặc gọi `image-generator` ngoài luồng trừ khi Owner chỉ định rõ.
 - **`skills.md`**: Nhật ký quy trình nghiệp vụ đã qua **Owner Human Test OK** (đọc trước khi làm atlas; chỉ ghi sau khi Owner nghiệm thu). Luôn xem `filmstrip` trên 3 nền (sáng, tối, ô cờ) trước Human Test.
 
 ---
@@ -108,7 +109,7 @@ Chi tiết kỹ thuật chốt tại [docs/adr/0001-architecture-and-scale-roadm
 7. **Kích thước map độc lập màn hình & camera ngang (Owner 2026-11-17)**:
    - Neo kích thước thế giới và biên gameplay của map theo góc nhìn K70E được Owner chọn làm chuẩn; lưu biên theo tọa độ thế giới dùng chung cho mọi thiết bị, có thể mở rộng chiều dài theo từng map. Không lấy mép viewport làm biên map, va chạm hay giới hạn di chuyển; tọa độ, khoảng cách và kết quả combat phải thống nhất giữa các client.
    - Thiết bị có vùng nhìn ngang hẹp hơn chuẩn phải cuộn camera theo player khi đi về phía cuối map, giới hạn camera tại biên map chuẩn; không thay đổi chiều dài map hay kéo giãn nhân vật. Vùng nhìn và camera là hiển thị cục bộ, không thay đổi trạng thái thế giới dùng chung.
-   - Kích thước số cụ thể của map chuẩn và chính sách chiều cao cho màn hình cao hơn K70E cần đo/đối chiếu và Owner chốt; không tự coi kích thước viewport 1920×1080 là biên map đã duyệt. Quy định mới về biên thế giới thay thế cách giới hạn đi lại theo mép màn hình trước đây; việc triển khai và kiểm thử phải được xác minh riêng.
+   - Kích thước số cụ thể của map chuẩn và chính sách chiều cao cho màn hình cao hơn K70E cần đo/đối chiếu và Owner chốt; không tự coi kích thước viewport 1920×1080 là biên map đã duyệt. Thay thế giới hạn đi lại theo mép màn hình cũ; triển khai & kiểm thử phải xác minh riêng.
 8. **Bậc địa hình rắn và tương tác skill (Owner 2026-11-17)**: Mọi bậc hạ cấp phải có mặt ngang đủ rộng, tương đương bậc cao trong cùng đoạn map; mặt cắt đứng và mặt sàn dùng chung tọa độ với ảnh, va chạm và bóng tiếp xúc. Nhân vật đi xuống mép bậc được rơi theo trọng lực; đi ngược lên bị mặt cắt chặn và chỉ vượt khi nhảy đủ cao, không tự nâng chân/trồi lên. Skill/đạn phải dừng hoặc va chạm với mặt cắt và khối đất, không xuyên địa hình. Kiểm đường đi hai chiều và đường bay skill trên các cao độ trước Human Test; áp dụng cho mọi map về sau.
    - Căn chân nhân vật theo **mặt đi được trong ảnh**, không theo mép trước của vách đá; đo ở từng bậc và ở cả frame vừa vượt mép, tránh đứng lơ lửng hoặc chìm sâu trong đất. Nhân vật AI dùng cùng cao độ địa hình.
    - **Nối map và cây tiền cảnh (Owner 2026-11-18)**: Ảnh map là lớp cuối cùng; cây đặt lớp ngay trên map nhưng dưới mọi nhân vật/FX (`Z_map < Z_cây < Z_nhân_vật`), gốc cây nằm dưới mặt đi trên phần vách đất như ảnh mẫu. Với từng bậc mới, đo mặt cắt **tại độ cao chân nhân vật trên ảnh** rồi dùng đúng X đó cho va chạm, bóng, AI và skill; cấm lấy mép lùi phía sau làm X va chạm khiến nhân vật đi quá mép 30–50 px vẫn đứng trên không. Căn chân lùi vào trong mặt sàn theo ảnh mẫu Owner (ảnh 2026-11-18: khoảng 23 px màn hình từ chân đến mép trước), không đặt chân sát mép trước; nếu cao độ mới làm mất độ rơi thì sinh lại **toàn bộ đoạn ảnh nối** với mặt sàn sâu hơn và mép nối liền mạch, không cắt xé ảnh cũ để vá. Kiểm frame đầu tiên tâm chân vượt mặt cắt phải bắt đầu rơi, và kiểm tiếp đất/đi ngược/đạn ở mọi bậc trước Human Test.

@@ -520,6 +520,114 @@ func _initialize() -> void:
 	if mp_btn != null and mp_btn.visible:
 		_check(bool(arena.call(&"_is_point_over_hud_controls", mp_btn.get_global_rect().get_center())), "QA-8.6b: map_switch_button blocks touch target passthrough")
 
+	# =========================================================================
+	# PART 9: NÚI TEINAN (TERMINAL LEFT) <-> SƯỜN NÚI TEINAN (80% WIDTH, 6 STEPS, FROSTED HEADER, PINE & FLORA)
+	# =========================================================================
+	_check(bool(arena.call(&"switch_map", "rocky_plateau")), "9.1: switch_map('rocky_plateau') ready")
+	await process_frame
+	arena.set_field_hero_visible(true, "songoku")
+	await process_frame
+	var t_st_init: Dictionary = arena.call(&"get_map_transition_state")
+	_check(str(t_st_init.get("current_display_name", "")) == "Núi Teinan", "9.1b: rocky_plateau display_name is 'Núi Teinan' (got '%s')" % str(t_st_init.get("current_display_name", "")))
+
+	# Terminal Left check on Núi Teinan: standing at leftmost walkable bound must NOT show any transition header!
+	var p_tn: Node2D = arena.player_node
+	var min_wx_tn: float = float(arena.get("walkable_min_x"))
+	var max_wx_tn: float = float(arena.get("walkable_max_x"))
+	p_tn.position = Vector2(min_wx_tn + 10.0, float(arena.call(&"_ground_y_at", min_wx_tn + 10.0)))
+	arena.call(&"_update_map_transition_header")
+	var t_st_left: Dictionary = arena.call(&"get_map_transition_state")
+	_check(not bool(t_st_left.get("header_visible", true)), "9.2: Núi Teinan is terminal on left -> NO left transition header")
+
+	# Verify Son Goku preserves SSJ1 across map switches (Owner A4)!
+	p_tn.set("is_ssj", true)
+	# Verify NO early trigger when hero is 65px away from the slim 26px right portal (body has NOT touched frosted glass!)
+	p_tn.position = Vector2(max_wx_tn - 65.0, float(arena.call(&"_ground_y_at", max_wx_tn - 65.0)))
+	arena.set("_map_transition_cooldown_s", 0.0)
+	arena.call(&"_update_map_transition_header")
+	var t_st_far: Dictionary = arena.call(&"get_map_transition_state")
+	_check(not bool(t_st_far.get("portal_touching", true)), "9.2b: Character 65px away from slim 26px portal MUST NOT trigger early transition")
+
+	# Right end of Núi Teinan -> Physically touching slim 26px frosted-glass portal auto-switches to Sườn núi Teinan at (-140, 515) AND preserves SSJ1!
+	p_tn.position = Vector2(max_wx_tn, float(arena.call(&"_ground_y_at", max_wx_tn)))
+	arena.set("_map_transition_cooldown_s", 0.0)
+	arena.call(&"_update_map_transition_header")
+	var t_st_right: Dictionary = arena.call(&"get_map_transition_state")
+	_check(bool(t_st_right.get("portal_layer_visible", false)) and bool(t_st_right.get("portal_touching", false)) and absf(float(t_st_right.get("portal_width_px", 0.0)) - 26.0) < 0.5 and str(t_st_right.get("side", "")) == "right" and str(t_st_right.get("target_map_id", "")) == "teinan_slope" and str(t_st_right.get("target_display_name", "")) == "Sườn núi Teinan", "9.3: Physically touching slim 26px frosted-glass portal at right end of Núi Teinan detects 'Sườn núi Teinan'")
+
+	# Walk character right (+1) into the frosted-glass portal -> automatic character-touch transition preserving Goku SSJ1!
+	arena.call(&"step_player_movement", 0.1, 1)
+	await process_frame
+	var ts_w: float = float(arena.get("_map_right_x")) - float(arena.get("_map_left_x"))
+	var ts_h: float = float(arena.get("_map_bottom_y")) - float(arena.get("_map_top_y"))
+	_check(str(arena.get("current_map_id")) == "teinan_slope" and absf(ts_w - 4800.0) < 0.5 and absf(ts_h - 1350.0) < 0.5, "9.4: Character touching right frosted-glass portal auto-transitioned to Sườn núi Teinan (4800x1350)")
+	var p_ts: Node2D = arena.player_node
+	_check(absf(p_ts.position.x - (-140.0)) < 15.0 and absf(p_ts.position.y - 515.0) < 2.0 and not bool(arena.get("player_facing_left")) and bool(p_ts.get("is_ssj")), "9.5: Spawned at (-140, 515) AND preserved Son Goku SSJ1 state across map switch (got %.1f, %.1f, ssj=%s)" % [p_ts.position.x, p_ts.position.y, str(p_ts.get("is_ssj"))])
+	_check((fm.get("slots") as Array).size() == 0, "9.6: Sườn núi Teinan demo has 0 monsters configured")
+
+	var fg_trees_node := arena.get("_foreground_trees") as Node2D
+	_check(fg_trees_node != null and fg_trees_node.z_index == -15 and fg_trees_node.get_child_count() >= 1 and (fg_trees_node.get_child(0) as Node2D).scale.is_equal_approx(Vector2.ONE), "9.7: Mounted 1:1 native pine canopy overhang at z=-15 (above waterfall z=-16, below characters z=10..20, 0%% downscale shimmer)")
+
+	# Bidirectional step verification across Owner v6 blocking hill & organic boulder/turf profile:
+	# (a) First tick crossing downward Step 1 (drop_x = 110: 515 -> 575) MUST begin falling!
+	p_ts.position = Vector2(109.0, 515.0)
+	arena.set("player_vy", 0.0)
+	p_ts.position.x = 114.0
+	var v_drop1: Dictionary = arena.call(&"_integrate_player_vertical", 1.0 / 60.0, false)
+	_check(p_ts.position.y > 515.0 and float(arena.get("player_vy")) > 0.0 and not bool(v_drop1.get("landed", true)), "9.8a: Crossing downward Step 1 (x=110, 515->575) immediately starts gravity fall on tick 1")
+
+	# (b) Walking right on Courtyard (y=768) into Step 4 organic cục đất rise (x=1425, y=672) blocks ground walk, while normal jump clears it!
+	var res_blocked_r: float = float(arena.call(&"_resolve_terrain_horizontal_move", 1380.0, 1480.0, 768.0, false, -216.0, 4536.0, 40.0))
+	var res_jump_r: float = float(arena.call(&"_resolve_terrain_horizontal_move", 1380.0, 1480.0, 665.0, false, -216.0, 4536.0, 40.0))
+	_check(res_blocked_r < 1425.0 and absf(res_jump_r - 1480.0) < 0.5, "9.8b: Step 4 cục đất rise (x=1425, 768->672) blocks ground walk (%.1f) and allows jump (%.1f)" % [res_blocked_r, res_jump_r])
+
+	# (c) Blocking hill approach (785 -> 678 -> 570 -> 682 -> 792, each <= 112px) blocks unjumped walk both ways & allows normal jump!
+	var res_mesa_blk: float = float(arena.call(&"_resolve_terrain_horizontal_move", 3420.0, 3550.0, 678.0, false, -216.0, 4536.0, 40.0))
+	var res_mesa_jmp: float = float(arena.call(&"_resolve_terrain_horizontal_move", 3420.0, 3550.0, 562.0, false, -216.0, 4536.0, 40.0))
+	var res_right_blk: float = float(arena.call(&"_resolve_terrain_horizontal_move", 4340.0, 4210.0, 792.0, false, -216.0, 4536.0, 40.0))
+	var res_right_jmp: float = float(arena.call(&"_resolve_terrain_horizontal_move", 4340.0, 4210.0, 675.0, false, -216.0, 4536.0, 40.0))
+	_check(res_mesa_blk < 3485.0 and absf(res_mesa_jmp - 3550.0) < 0.5 and res_right_blk > 4265.0 and absf(res_right_jmp - 4210.0) < 0.5, "9.8c: Blocking hill steps (3485 & 4265) block ground walk and allow normal jump in both directions")
+
+	# (d) Projectile LOS blocked by both left boulder cliff and raised organic mesa face!
+	_check(bool(arena.call(&"terrain_blocks_segment", Vector2(360.0, 710.0), Vector2(210.0, 710.0))), "9.8d: Projectile blocked by left boulder face")
+	_check(bool(arena.call(&"terrain_blocks_segment", Vector2(3400.0, 625.0), Vector2(3580.0, 625.0))), "9.8e: Projectile blocked by Step 9 organic mesa face")
+
+	# (e) Widened 740px Pebble-Rich River [2205..2945] + Standalone .tres WaterfallRiverCompleteAsset (-20% speed tpf=5) + intact 13f Splash!
+	var w_init: Dictionary = arena.call(&"get_interactive_water_metrics")
+	var river_bed_y: float = float(arena.call(&"_ground_y_at", 2593.0))
+	_check(bool(w_init.get("enabled", false)) and absf(float(w_init.get("width_px", 0.0)) - 740.0) < 0.1 and absf(river_bed_y - 895.0) < 0.1, "9.10a: Widened 740px pebble-rich river ford [2205..2945] has walkable stone floor y=895 (got %.1f)" % river_bed_y)
+	_check(bool(w_init.get("standalone_tres_mounted", false)) and bool(w_init.get("waterfall_mounted", false)) and bool(w_init.get("ankle_rim_mounted", false)) and int(w_init.get("waterfall_z_index", 0)) == -16 and int(w_init.get("ankle_rim_z_index", 0)) >= 31, "9.10b: Standalone waterfall_river.tres asset (-16) & ankle wave strip (>=31) mounted")
+	_check(absf(float(arena.call(&"get_water_wade_sink_px", 2593.0, 895.0)) - 6.0) < 0.1 and absf(float(arena.call(&"get_water_wade_sink_px", 2593.0, 800.0))) < 0.01 and absf(float(arena.call(&"get_water_wade_sink_px", 3100.0, 785.0))) < 0.01 and absf(float(arena.call(&"get_water_speed_multiplier", 2593.0, 895.0)) - 1.0) < 0.01, "9.10c: Grounded wading sinks ~6px in [2205..2945], 0px airborne/dry, and preserves 100%% walk speed")
+	p_ts.position = Vector2(2593.0, 895.0)
+	for _wi in range(18):
+		arena.call(&"step_interactive_water", 1.0 / 60.0)
+	var w_stepped: Dictionary = arena.call(&"get_interactive_water_metrics")
+	_check(int(w_stepped.get("waterfall_frame", 0)) > 0 and int(w_stepped.get("ankle_rim_frame", 0)) > 0 and int(w_stepped.get("active_splash_count", 0)) >= 1, "9.10d: 60Hz standalone waterfall_river.tres (-20%% speed) & ankle wave frames advance and plunge zone spawns splashes")
+	_check(bool(arena.call(&"notify_projectile_terrain_impact", Vector2(2680.0, 895.0), 1.35)) and not bool(arena.call(&"notify_projectile_terrain_impact", Vector2(3120.0, 785.0), 1.35)), "9.10e: Projectile/skill impacts inside river zone trigger intact 13-frame water splash plumes + ripples")
+
+	# (e2) Verify Shenron summon layer sits strictly ABOVE HP/Mana FieldOverlayLayer (z=65) AND HUDLayer (layer=1)!
+	var sh_parent_layer := arena.shenron_summon.get_parent() as CanvasLayer
+	var main_hud_layer := arena.get_node_or_null("HUDLayer") as CanvasLayer
+	var sh_ctrl_layer := arena.wish_panel.get_parent() as CanvasLayer
+	_check(arena.shenron_summon.z_index > arena._field_overlay_node.z_index and sh_parent_layer != null and sh_parent_layer.follow_viewport_enabled and main_hud_layer != null and sh_parent_layer.layer > main_hud_layer.layer and sh_ctrl_layer != null and sh_ctrl_layer.layer > sh_parent_layer.layer, "9.10f: Shenron layer (CanvasLayer=%d, z=%d) renders strictly above HP/Mana FieldOverlay (z=%d) and HUDLayer (CanvasLayer=%d)" % [sh_parent_layer.layer if sh_parent_layer != null else -1, arena.shenron_summon.z_index, arena._field_overlay_node.z_index, main_hud_layer.layer if main_hud_layer != null else -1])
+
+	# (f) Right end of Sườn núi Teinan (wy=792): physically touching slim 26px portal displays pending Map 3 notice!
+	var max_wx_ts: float = float(arena.get("walkable_max_x"))
+	p_ts.position = Vector2(max_wx_ts, float(arena.call(&"_ground_y_at", max_wx_ts)))
+	arena.set("_map_transition_cooldown_s", 0.0)
+	arena.call(&"step_player_movement", 0.05, 1)
+	var t_st_pend: Dictionary = arena.call(&"get_map_transition_state")
+	_check(str(arena.get("current_map_id")) == "teinan_slope" and absf(p_ts.position.y - 792.0) < 2.0 and absf(float(t_st_pend.get("portal_width_px", 0.0)) - 26.0) < 0.5 and bool(t_st_pend.get("pending_next_map", false)) and float(arena.get("_wish_notice_timer_s")) > 0.0, "9.9a: Physically touching slim 26px right portal at wy=792 displays pending Map 3 notice without leaving map")
+
+	# (g) Walking left (-1) to physically touch slim 26px left portal auto-returns to Núi Teinan AND preserves Son Goku SSJ1!
+	var min_wx_ts: float = float(arena.get("walkable_min_x"))
+	p_ts.position = Vector2(min_wx_ts, float(arena.call(&"_ground_y_at", min_wx_ts)))
+	arena.set("_map_transition_cooldown_s", 0.0)
+	arena.call(&"step_player_movement", 0.05, -1)
+	await process_frame
+	var w_after_leave: Dictionary = arena.call(&"get_interactive_water_metrics")
+	_check(str(arena.get("current_map_id")) == "rocky_plateau" and arena.player_node.position.x > 5500.0 and bool(arena.get("player_facing_left")) and bool(arena.player_node.get("is_ssj")) and (fm.get("slots") as Array).size() == 14 and not bool(w_after_leave.get("enabled", true)) and not bool(w_after_leave.get("standalone_tres_mounted", true)), "9.9b: Physically touching slim left portal auto-returned to Núi Teinan facing left preserving Goku SSJ1, 14 monsters & freed water nodes")
+
 	if _fails.is_empty():
 		print("=== ALL TAPION, GENKI & CELL ARENA CHECKS PASSED ===")
 		quit(0)

@@ -1,6 +1,18 @@
 {
   "schema": "dr7-studio.map_terrain.v2",
   "map_id": "rocky_plateau",
+  "display_name": "Núi Teinan",
+  "has_transition_header": true,
+  "transitions": {
+    "left": null,
+    "right": {
+      "target_map_id": "teinan_slope",
+      "target_display_name": "Sườn núi Teinan",
+      "trigger_zone_width_px": 320.0,
+      "spawn_x": 260.0,
+      "facing_left": false
+    }
+  },
   "art_source": "original_jpg_extracted",
   "backdrop": {
     "mode": "original_jpg",

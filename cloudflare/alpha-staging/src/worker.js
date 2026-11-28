@@ -431,7 +431,7 @@ export class ZoneRoomDO {
     const key = this._zoneKey(m, zid);
     if (this.zones.has(key)) return this.zones.get(key);
     const monsters = new Map();
-    if (m !== "cell_arena") {
+    if (m !== "cell_arena" && m !== "teinan_slope") {
       for (const d of DEFAULT_MONSTERS) {
         monsters.set(d.id, {
           id: d.id,
@@ -482,8 +482,8 @@ export class ZoneRoomDO {
         } else if (now >= p.respawn_at) {
           p.alive = true;
           p.hp = p.max_hp;
-          p.x = z.map_id === "cell_arena" ? 1200 : 560;
-          p.y = z.map_id === "cell_arena" ? 935.2 : 840;
+          p.x = z.map_id === "cell_arena" ? 1200 : (z.map_id === "teinan_slope" ? -140 : 560);
+          p.y = z.map_id === "cell_arena" ? 935.2 : (z.map_id === "teinan_slope" ? 515 : 840);
           p.act = "idle";
           p.respawn_at = 0;
           changed = true;
@@ -700,8 +700,8 @@ export class ZoneRoomDO {
       info.zone_id = targetZone;
       info.zone_key = newZ.key;
       newZ.sockets.add(ws);
-      const defX = targetMap === "cell_arena" ? 1200 : 560;
-      const defY = targetMap === "cell_arena" ? 935.2 : 840;
+      const defX = targetMap === "cell_arena" ? 1200 : (targetMap === "teinan_slope" ? -140 : 560);
+      const defY = targetMap === "cell_arena" ? 935.2 : (targetMap === "teinan_slope" ? 515 : 840);
       if (preserved && oldMap !== targetMap) {
         preserved.x = defX;
         preserved.y = defY;
@@ -752,7 +752,10 @@ export class ZoneRoomDO {
         return;
       }
       const isCellArena = z.map_id === "cell_arena";
-      const rx = Math.max(isCellArena ? 24 : -216, Math.min(isCellArena ? 2376 : 6336, Number(pkt.x ?? p.x)));
+      const isTeinanSlope = z.map_id === "teinan_slope";
+      const minX = isCellArena ? 24 : -216;
+      const maxX = isCellArena ? 2376 : (isTeinanSlope ? 4536 : 6336);
+      const rx = Math.max(minX, Math.min(maxX, Number(pkt.x ?? p.x)));
       const ry = Math.max(40, Math.min(isCellArena ? 982 : 1060, Number(pkt.y ?? p.y)));
       p.x = Math.round(rx * 10) / 10;
       p.y = Math.round(ry * 10) / 10;

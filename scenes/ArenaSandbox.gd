@@ -9,6 +9,8 @@ signal logout_requested()
 
 const STAGE_JSON_PATH := "res://assets/maps/rocky_plateau/arena-stage.json"
 const TERRAIN_JSON_PATH := "res://assets/maps/rocky_plateau/terrain.json"
+const TEINAN_SLOPE_STAGE_JSON_PATH := "res://assets/maps/teinan_slope/arena-stage.json"
+const TEINAN_SLOPE_TERRAIN_JSON_PATH := "res://assets/maps/teinan_slope/terrain.json"
 const CELL_ARENA_STAGE_JSON_PATH := "res://assets/maps/cell_arena/arena-stage.json"
 const CELL_ARENA_TERRAIN_JSON_PATH := "res://assets/maps/cell_arena/terrain.json"
 const EXTENDED_MAP_PATH := "res://assets/maps/rocky_plateau/rocky-plateau-extended-4steps.png"
@@ -49,6 +51,7 @@ const MobileActionPadScript := preload("res://scenes/runtime/MobileActionPad.gd"
 const FieldCombatManagerScript := preload("res://scenes/runtime/FieldCombatManager.gd")
 const WebSocketTransportScript := preload("res://scenes/net/WebSocketTransport.gd")
 const ZoneClientSyncScript := preload("res://scenes/net/ZoneClientSync.gd")
+const DragonBallLoadingOverlayScript := preload("res://scenes/ui/DragonBallLoadingOverlay.gd")
 
 var shenron_summon: ShenronSummon2D
 var summon_button: Button
@@ -65,11 +68,46 @@ var _extended_step_configs: Array[Dictionary] = []
 var _active_floor_profile: Array[Dictionary] = []
 var _fixed_single_view_map: bool = false
 var _foreground_trees_cfg: Dictionary = {}
+var _camera_vertical_follow_cfg: Dictionary = {}
+var _interactive_water_cfg: Dictionary = {}
+var _water_enabled: bool = false
+var _water_min_x: float = 0.0
+var _water_max_x: float = 0.0
+var _water_bed_y: float = 820.0
+var _water_wade_depth_px: float = 6.0
+var _water_spray_min_x: float = 0.0
+var _water_spray_max_x: float = 0.0
+var _waterfall_river_asset: AnimatedSprite2D = null
+var _waterfall_sprite: Sprite2D = null
+var _water_surface_sprite: Sprite2D = null
+var _water_ankle_rim_sprite: Sprite2D = null
+var _water_ripple_overlay: Node2D = null
+var _water_splash_tex: Texture2D = null
+var _water_anim_elapsed_s: float = 0.0
+var _water_spray_accum_s: float = 0.0
+var _active_water_ripples: Array = []
+var _world_portal_layer: Node2D = null
+var _map_loading_layer: CanvasLayer = null
+var _shenron_world_layer: CanvasLayer = null
+var _shenron_ui_layer: CanvasLayer = null
+var _map_loading_overlay: Control = null
+var _map_transition_in_progress: bool = false
+var _map_transition_cooldown_s: float = 0.0
+var _pending_portal_notice_shown: bool = false
+var _portal_anim_time_s: float = 0.0
 var _arena_camera: Camera2D = null
 var _bg_left_ext: Sprite2D = null
 var _bg_right_ext: Sprite2D = null
 var _foreground_trees: Node2D = null
+var _foreground_flora: Node2D = null
 var _foreground_pillars: Sprite2D = null
+var map_transition_header: PanelContainer = null
+var map_transition_button: Button = null
+var map_transition_title_lbl: Label = null
+var map_transition_sub_lbl: Label = null
+var _active_transition_side: String = ""
+var _active_transition_spec: Dictionary = {}
+var _enter_key_was_down: bool = false
 var pixel_perfect_enabled: bool = false
 var display_layout_info: Dictionary = {}
 var net_transport: NetworkTransport = null
@@ -230,6 +268,13 @@ var boss_spawn_button: Button = null
 var _hero_selector_syncing: bool = false
 var _boss_selector_syncing: bool = false
 var _arena_theme: Theme = null
+var _roster_by_id: Dictionary = {}
+var _roster_cache_len: int = -1
+var _terrain_cache_key: int = 0
+var _cached_terrain_sections: Array = []
+var _cached_terrain_step_specs: Array[Dictionary] = []
+var _hud_tick_div: int = 0
+var _last_hud_struct_hash: int = 0
 
 @onready var background_sprite: Sprite2D = get_node_or_null("BackgroundLayer/BackgroundSprite")
 @onready var fighters_layer: Node2D = get_node_or_null("FightersLayer")
@@ -237,6 +282,8 @@ var _arena_theme: Theme = null
 
 
 func _ready() -> void:
+	if DisplayServer.get_name() != "headless":
+		Engine.max_fps = 60
 	i18n_manager = I18nManagerScript.new()
 	load_stage_and_roster()
 	_apply_stage_layout()
@@ -498,14 +545,8 @@ func _on_auto_battle_toggled(enabled: bool) -> void:
 
 
 func _trigger_songoku_auto_transform_on_hit() -> void:
-	if not _is_hero_songoku(player_node):
-		return
-	if bool(player_node.get("is_ssj")):
-		return
-	var tclip: String = str(player_node.call(&"trigger_transform_toggle"))
-	_play_fighter_clip(player_node, tclip)
-	_spawn_ground_dust(player_node.position.x, _ground_y_at(player_node.position.x), 1.05)
-	_sync_field_pad_state()
+	# Owner A4 rule (2026-11-28): SSJ1 is STRICTLY controlled by manual player toggle only (never auto-activated on hit/AI).
+	return
 
 
 func _on_target_cycle_requested() -> void:
@@ -666,6 +707,8 @@ func is_player_airborne_for_genki() -> bool:
 func _sync_field_pad_state() -> void:
 	if mobile_pad == null or not is_instance_valid(mobile_pad) or field_manager == null:
 		return
+	if mobile_pad.has_method(&"begin_batch_update"):
+		mobile_pad.call(&"begin_batch_update")
 	mobile_pad.set_mana_and_pointer_state(field_manager.player_mana, field_manager.player_max_mana, field_manager.pointer_kind)
 	if _is_hero_songoku(player_node) and mobile_pad.has_method(&"set_hero_stamina_and_state"):
 		mobile_pad.call(
@@ -697,6 +740,8 @@ func _sync_field_pad_state() -> void:
 				float(player_node.get("genki_cooldown_s")),
 				is_player_airborne_for_genki()
 			)
+	if mobile_pad.has_method(&"end_batch_update"):
+		mobile_pad.call(&"end_batch_update")
 
 
 func _on_touch_action(action_name: String) -> void:
@@ -985,8 +1030,22 @@ func _request_player_action(clip_name: String) -> bool:
 
 func _setup_summon_control() -> void:
 	var hud_layer := get_node("HUDLayer")
+	if _shenron_world_layer == null or not is_instance_valid(_shenron_world_layer):
+		_shenron_world_layer = CanvasLayer.new()
+		_shenron_world_layer.name = "ShenronWorldLayer"
+		# Layer 5 sits strictly above world FieldOverlayLayer (layer 0, z=65 HP/Mana bars) AND HUDLayer (layer 1 UI),
+		# while following the world Camera2D 1:1 so Shenron renders cleanly above all HP/Mana bars and game UI!
+		_shenron_world_layer.layer = 5
+		_shenron_world_layer.follow_viewport_enabled = true
+		add_child(_shenron_world_layer)
+	if _shenron_ui_layer == null or not is_instance_valid(_shenron_ui_layer):
+		_shenron_ui_layer = CanvasLayer.new()
+		_shenron_ui_layer.name = "ShenronUILayer"
+		_shenron_ui_layer.layer = 10
+		add_child(_shenron_ui_layer)
 	shenron_summon = ShenronSummonScript.new()
-	add_child(shenron_summon)
+	_shenron_world_layer.add_child(shenron_summon)
+	shenron_summon.z_index = 95
 	shenron_summon.summon_ready.connect(_on_shenron_summon_ready)
 	shenron_summon.wish_selected.connect(_on_shenron_wish_selected)
 	shenron_summon.dismissed.connect(_on_shenron_dismissed)
@@ -998,7 +1057,7 @@ func _setup_summon_control() -> void:
 	summon_button.offset_top = 78.0
 	summon_button.offset_bottom = 134.0
 	summon_button.text = "Gọi Shenron"
-	hud_layer.add_child(summon_button)
+	_shenron_ui_layer.add_child(summon_button)
 	summon_button.pressed.connect(_on_summon_button_pressed)
 	wish_panel = PanelContainer.new()
 	wish_panel.anchor_left = 1.0
@@ -1022,7 +1081,7 @@ func _setup_summon_control() -> void:
 		w_btn.pressed.connect(func() -> void: _on_wish_button_pressed(wid))
 		vbox.add_child(w_btn)
 	wish_panel.add_child(vbox)
-	hud_layer.add_child(wish_panel)
+	_shenron_ui_layer.add_child(wish_panel)
 	wish_notice_label = Label.new()
 	wish_notice_label.anchor_left = 0.5
 	wish_notice_label.anchor_right = 0.5
@@ -1033,7 +1092,7 @@ func _setup_summon_control() -> void:
 	wish_notice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	wish_notice_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.35))
 	wish_notice_label.visible = false
-	hud_layer.add_child(wish_notice_label)
+	_shenron_ui_layer.add_child(wish_notice_label)
 
 	# Crisp Red Center-Screen "CHIẾN ĐẤU" Banner (pop-in on Peace -> Combat transition, hides immediately after 0.55s)
 	combat_banner_label = Label.new()
@@ -1163,6 +1222,16 @@ func _apply_hud_safe_area() -> void:
 		map_switch_button.offset_right = 264.0 + ins_l
 		map_switch_button.offset_top = 150.0 + ins_t
 		map_switch_button.offset_bottom = 190.0 + ins_t
+
+	if map_transition_header != null and is_instance_valid(map_transition_header):
+		map_transition_header.anchor_left = 0.5
+		map_transition_header.anchor_right = 0.5
+		map_transition_header.anchor_top = 0.0
+		map_transition_header.anchor_bottom = 0.0
+		map_transition_header.offset_left = -220.0
+		map_transition_header.offset_right = 220.0
+		map_transition_header.offset_top = 56.0 + ins_t
+		map_transition_header.offset_bottom = 122.0 + ins_t
 
 	# Right cluster (Column R1: Gọi Shenron + Ngọc + Phím/Ẩn UI; Column R2: Vô hạn mana + Bất tử + Tướng + Dropdown Gọi Boss)
 	if summon_button != null:
@@ -1441,13 +1510,14 @@ func _setup_field_hud_controls() -> void:
 	if map_switch_button == null:
 		map_switch_button = Button.new()
 		map_switch_button.name = "MapSwitchButton"
-		map_switch_button.tooltip_text = "Chuyển nhanh giữa Cao Nguyên và Đấu Trường Solo PvP (1-view K70E, không quái)"
+		map_switch_button.tooltip_text = "Chuyển nhanh giữa Núi Teinan và Đấu Trường Solo PvP (1-view K70E, không quái)"
 		map_switch_button.pressed.connect(func() -> void:
 			var next_map := "cell_arena" if current_map_id != "cell_arena" else "rocky_plateau"
 			switch_map(next_map)
 		)
 		hud_layer.add_child(map_switch_button)
 	_sync_map_switch_button()
+	_setup_map_transition_header(hud_layer)
 
 	# Right cluster controls (next to Gọi Shenron)
 	infinite_mana_button = Button.new()
@@ -1509,8 +1579,12 @@ func _setup_field_hud_controls() -> void:
 
 	if _arena_theme != null:
 		for c in hud_layer.get_children():
-			if c is Control and c != mobile_pad:
+			if c is Control and c != mobile_pad and c != map_transition_header:
 				(c as Control).theme = _arena_theme
+		if _shenron_ui_layer != null and is_instance_valid(_shenron_ui_layer):
+			for c in _shenron_ui_layer.get_children():
+				if c is Control:
+					(c as Control).theme = _arena_theme
 	_apply_hud_safe_area()
 
 
@@ -1598,11 +1672,329 @@ func set_show_monster_ranges(enabled: bool) -> void:
 	queue_redraw()
 
 
+func _setup_map_transition_header(hud_layer: Node) -> void:
+	if hud_layer == null or (map_transition_header != null and is_instance_valid(map_transition_header)):
+		return
+	map_transition_header = PanelContainer.new()
+	map_transition_header.name = "MapTransitionFrostedHeader"
+	map_transition_header.visible = false
+	map_transition_header.mouse_filter = Control.MOUSE_FILTER_STOP
+	var glass_sb := StyleBoxFlat.new()
+	glass_sb.bg_color = Color(0.08, 0.14, 0.24, 0.72)
+	glass_sb.border_color = Color(0.86, 0.96, 1.0, 0.82)
+	glass_sb.set_border_width_all(2)
+	glass_sb.set_corner_radius_all(16)
+	glass_sb.shadow_color = Color(0.0, 0.0, 0.0, 0.36)
+	glass_sb.shadow_size = 8
+	glass_sb.content_margin_left = 18.0
+	glass_sb.content_margin_right = 18.0
+	glass_sb.content_margin_top = 8.0
+	glass_sb.content_margin_bottom = 8.0
+	map_transition_header.add_theme_stylebox_override("panel", glass_sb)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 2)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	map_transition_header.add_child(vbox)
+
+	map_transition_title_lbl = Label.new()
+	map_transition_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	map_transition_title_lbl.add_theme_font_size_override("font_size", 22)
+	map_transition_title_lbl.add_theme_color_override("font_color", Color(0.96, 0.99, 1.0, 1.0))
+	map_transition_title_lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.08, 0.16, 0.95))
+	map_transition_title_lbl.add_theme_constant_override("outline_size", 4)
+	map_transition_title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(map_transition_title_lbl)
+
+	map_transition_sub_lbl = Label.new()
+	map_transition_sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	map_transition_sub_lbl.add_theme_font_size_override("font_size", 13)
+	map_transition_sub_lbl.add_theme_color_override("font_color", Color(0.62, 0.92, 1.0, 0.92))
+	map_transition_sub_lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.08, 0.16, 0.88))
+	map_transition_sub_lbl.add_theme_constant_override("outline_size", 2)
+	map_transition_sub_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(map_transition_sub_lbl)
+
+	map_transition_button = Button.new()
+	map_transition_button.name = "TransitionTriggerBtn"
+	map_transition_button.flat = true
+	map_transition_button.text = ""
+	map_transition_button.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var empty_sb := StyleBoxEmpty.new()
+	for st_name in ["normal", "hover", "pressed", "disabled", "focus"]:
+		map_transition_button.add_theme_stylebox_override(st_name, empty_sb)
+	map_transition_button.pressed.connect(func() -> void:
+		trigger_active_map_transition()
+	)
+	map_transition_header.add_child(map_transition_button)
+	hud_layer.add_child(map_transition_header)
+
+
+func _setup_world_portal_layer() -> void:
+	if _fixed_single_view_map or not bool(stage_config.get("has_transition_header", false)):
+		if _world_portal_layer != null and is_instance_valid(_world_portal_layer):
+			_world_portal_layer.visible = false
+		return
+	if _world_portal_layer == null or not is_instance_valid(_world_portal_layer):
+		_world_portal_layer = Node2D.new()
+		_world_portal_layer.name = "WorldTransitionPortals"
+		_world_portal_layer.z_index = 36
+		_world_portal_layer.draw.connect(_on_world_portal_layer_draw)
+		add_child(_world_portal_layer)
+	_world_portal_layer.visible = true
+	_world_portal_layer.queue_redraw()
+
+
+func _draw_single_world_frosted_portal(canvas: CanvasItem, side: String, spec: Dictionary, is_touching: bool) -> void:
+	var is_right := (side == "right")
+	var pw := clampf(float(spec.get("portal_width_px", 26.0)), 18.0, 96.0)
+	var ph := clampf(float(spec.get("portal_height_px", 196.0)), 96.0, 260.0)
+	var x0 := (_map_right_x - pw) if is_right else _map_left_x
+	var anchor_x := x0 + pw * 0.5
+	var sample_x := clampf((_map_right_x - 32.0) if is_right else (_map_left_x + 32.0), walkable_min_x, walkable_max_x)
+	var gy := _ground_y_at(sample_x)
+	var y0 := gy - ph
+	var pulse := 0.5 + 0.5 * sin(_portal_anim_time_s * 3.8)
+	var glass_alpha := 0.40 if is_touching else (0.25 + 0.06 * pulse)
+	var border_alpha := 0.98 if is_touching else (0.80 + 0.12 * pulse)
+
+	# Outer soft cyan aura + slim frosted glass strip flush against map boundary (matching 1.png / 3.png red box!)
+	canvas.draw_rect(Rect2(x0 - 3.0, y0 - 3.0, pw + 6.0, ph + 5.0), Color(0.24, 0.86, 1.0, 0.13 + 0.06 * pulse), true)
+	canvas.draw_rect(Rect2(x0, y0, pw, ph), Color(0.76, 0.93, 1.0, glass_alpha), true)
+	var inset := minf(3.0, pw * 0.14)
+	canvas.draw_rect(Rect2(x0 + inset, y0 + 4.0, maxf(4.0, pw - inset * 2.0), ph - 8.0), Color(0.10, 0.22, 0.36, 0.26), true)
+	# Frosted glass sheen bands
+	var sheen_shift := fposmod(_portal_anim_time_s * 26.0, 48.0)
+	canvas.draw_rect(Rect2(x0 + inset, y0 + 14.0 + sheen_shift * 0.6, maxf(4.0, pw - inset * 2.0), 12.0), Color(0.95, 0.99, 1.0, 0.24), true)
+	canvas.draw_rect(Rect2(x0 + inset + 2.0, y0 + 82.0 + sheen_shift * 0.4, maxf(4.0, pw - (inset + 2.0) * 2.0), 8.0), Color(0.92, 0.99, 1.0, 0.18), true)
+	# Crisp frosted silver-cyan border + ground threshold bar resting right on redline floor gy
+	canvas.draw_rect(Rect2(x0, y0, pw, ph), Color(0.88, 0.98, 1.0, border_alpha), false, 2.0)
+	canvas.draw_rect(Rect2(x0 - 2.0, gy - 4.0, pw + 4.0, 5.0), Color(0.52, 0.98, 0.78, 0.88), true)
+
+	# Compact directional green-cyan arrow scaled cleanly inside slim 26px frosted portal
+	var dir_s := 1.0 if is_right else -1.0
+	var hw := maxf(6.5, pw * 0.34)
+	var bob_x := dir_s * (1.8 * sin(_portal_anim_time_s * 5.2))
+	var cx := anchor_x + bob_x
+	var cy := y0 + ph * 0.50
+	var arrow_pts := PackedVector2Array([
+		Vector2(cx - dir_s * hw, cy - 5.0),
+		Vector2(cx + dir_s * (hw * 0.12), cy - 5.0),
+		Vector2(cx + dir_s * (hw * 0.12), cy - 12.0),
+		Vector2(cx + dir_s * hw, cy),
+		Vector2(cx + dir_s * (hw * 0.12), cy + 12.0),
+		Vector2(cx + dir_s * (hw * 0.12), cy + 5.0),
+		Vector2(cx - dir_s * hw, cy + 5.0),
+	])
+	canvas.draw_colored_polygon(arrow_pts, Color(0.24, 0.96, 0.56, 0.95))
+	var arrow_closed := arrow_pts.duplicate()
+	arrow_closed.append(arrow_pts[0])
+	canvas.draw_polyline(arrow_closed, Color(0.92, 1.0, 0.96, 0.98), 1.5)
+
+	# Destination label badge anchored cleanly inside map edge above frosted portal
+	var font := ThemeDB.fallback_font
+	if font != null:
+		var title := str(spec.get("target_display_name", spec.get("target_map_id", "Map tiếp theo")))
+		var badge_txt := ("%s ➔" % title) if is_right else ("⬅ %s" % title)
+		var tw := clampf(float(badge_txt.length()) * 8.6 + 20.0, 118.0, 224.0)
+		var bx := clampf(anchor_x - tw * 0.5, _map_left_x + 4.0, _map_right_x - tw - 4.0)
+		var by := y0 - 30.0
+		canvas.draw_rect(Rect2(bx, by, tw, 24.0), Color(0.06, 0.13, 0.24, 0.82), true)
+		canvas.draw_rect(Rect2(bx, by, tw, 24.0), Color(0.82, 0.96, 1.0, 0.85), false, 1.5)
+		canvas.draw_string(font, Vector2(bx, by + 17.0), badge_txt, HORIZONTAL_ALIGNMENT_CENTER, tw, 14, Color(0.95, 0.99, 1.0, 1.0))
+
+
+func _on_world_portal_layer_draw() -> void:
+	if _world_portal_layer == null or _fixed_single_view_map or not bool(stage_config.get("has_transition_header", false)):
+		return
+	var trans_cfg: Variant = stage_config.get("transitions", {})
+	if not (trans_cfg is Dictionary):
+		return
+	var tdict := trans_cfg as Dictionary
+	var l_val: Variant = tdict.get("left", null)
+	if l_val is Dictionary and not (l_val as Dictionary).is_empty():
+		_draw_single_world_frosted_portal(_world_portal_layer, "left", l_val as Dictionary, _active_transition_side == "left")
+	var r_val: Variant = tdict.get("right", null)
+	if r_val is Dictionary and not (r_val as Dictionary).is_empty():
+		_draw_single_world_frosted_portal(_world_portal_layer, "right", r_val as Dictionary, _active_transition_side == "right")
+
+
+func _ensure_map_loading_overlay() -> Control:
+	if _map_loading_overlay != null and is_instance_valid(_map_loading_overlay):
+		return _map_loading_overlay
+	if _map_loading_layer == null or not is_instance_valid(_map_loading_layer):
+		_map_loading_layer = CanvasLayer.new()
+		_map_loading_layer.name = "MapTransitionLoadingLayer"
+		_map_loading_layer.layer = 96
+		add_child(_map_loading_layer)
+	_map_loading_overlay = DragonBallLoadingOverlayScript.new()
+	_map_loading_overlay.name = "MapTransitionLoadingOverlay"
+	_map_loading_overlay.step_duration_s = 0.14
+	_map_loading_layer.add_child(_map_loading_overlay)
+	if not display_layout_info.is_empty() and _map_loading_overlay.has_method("apply_safe_area"):
+		_map_loading_overlay.call("apply_safe_area", display_layout_info)
+	return _map_loading_overlay
+
+
+func _get_portal_world_rect(side: String, spec: Dictionary) -> Rect2:
+	var is_right := (side == "right")
+	var pw := clampf(float(spec.get("portal_width_px", 26.0)), 18.0, 96.0)
+	var ph := clampf(float(spec.get("portal_height_px", 196.0)), 96.0, 260.0)
+	var x0 := (_map_right_x - pw) if is_right else _map_left_x
+	var sample_x := clampf((_map_right_x - 32.0) if is_right else (_map_left_x + 32.0), walkable_min_x, walkable_max_x)
+	var gy := _ground_y_at(sample_x)
+	return Rect2(x0, gy - ph, pw, ph)
+
+
+func _is_player_physically_touching_portal(side: String, spec: Dictionary) -> bool:
+	if player_node == null or not is_instance_valid(player_node):
+		return false
+	var prect := _get_portal_world_rect(side, spec)
+	var player_rect := get_fighter_body_rect(player_node, active_character_id, char_scale)
+	if player_rect.size.x <= 1.0 or player_rect.size.y <= 1.0:
+		var px := player_node.position.x
+		var py := player_node.position.y
+		var half_w := maxf(24.0, walkable_min_x - _map_left_x)
+		player_rect = Rect2(px - half_w, py - 96.0, half_w * 2.0, 96.0)
+	return player_rect.intersects(prect)
+
+
+func _update_map_transition_header() -> void:
+	if map_transition_header != null and is_instance_valid(map_transition_header):
+		# Top-center HUD click banner retired in favor of physical world-space frosted-glass portals at map ends!
+		map_transition_header.visible = false
+	_setup_world_portal_layer()
+	if _fixed_single_view_map or not bool(stage_config.get("has_transition_header", false)) or player_node == null or not is_instance_valid(player_node):
+		_active_transition_side = ""
+		_active_transition_spec.clear()
+		return
+	if field_mode_enabled and field_manager != null and (not field_manager.player_spawned or field_manager.player_dead):
+		_active_transition_side = ""
+		_active_transition_spec.clear()
+		return
+	var trans_cfg: Variant = stage_config.get("transitions", {})
+	if not (trans_cfg is Dictionary):
+		_active_transition_side = ""
+		_active_transition_spec.clear()
+		return
+	var tdict := trans_cfg as Dictionary
+	var matched_side := ""
+	var matched_spec: Dictionary = {}
+
+	var right_val: Variant = tdict.get("right", null)
+	if right_val is Dictionary and not (right_val as Dictionary).is_empty():
+		var rspec := right_val as Dictionary
+		if _is_player_physically_touching_portal("right", rspec):
+			matched_side = "right"
+			matched_spec = rspec
+
+	if matched_side.is_empty():
+		var left_val: Variant = tdict.get("left", null)
+		if left_val is Dictionary and not (left_val as Dictionary).is_empty():
+			var lspec := left_val as Dictionary
+			if _is_player_physically_touching_portal("left", lspec):
+				matched_side = "left"
+				matched_spec = lspec
+
+	if matched_side.is_empty():
+		_active_transition_side = ""
+		_active_transition_spec.clear()
+		_pending_portal_notice_shown = false
+		return
+
+	if _active_transition_side != matched_side or _active_transition_spec != matched_spec:
+		_active_transition_side = matched_side
+		_active_transition_spec = matched_spec.duplicate(true)
+		if _world_portal_layer != null and is_instance_valid(_world_portal_layer):
+			_world_portal_layer.queue_redraw()
+
+
+func _step_portal_character_touch(move_dir_x: int) -> void:
+	if _map_transition_in_progress or _map_transition_cooldown_s > 0.0 or _active_transition_side.is_empty() or _active_transition_spec.is_empty():
+		return
+	if player_node == null or not is_instance_valid(player_node):
+		return
+	if not _is_player_physically_touching_portal(_active_transition_side, _active_transition_spec):
+		return
+	var touching := false
+	if _active_transition_side == "right" and move_dir_x > 0:
+		touching = true
+	elif _active_transition_side == "left" and move_dir_x < 0:
+		touching = true
+	if not touching:
+		return
+	if bool(_active_transition_spec.get("pending_next_map", false)) or str(_active_transition_spec.get("target_map_id", "")).strip_edges().is_empty():
+		if not _pending_portal_notice_shown:
+			_pending_portal_notice_shown = true
+			if wish_notice_label != null and is_instance_valid(wish_notice_label):
+				wish_notice_label.text = str(_active_transition_spec.get("pending_notice", "◆ Khu vực tiếp theo sắp mở!"))
+				wish_notice_label.visible = true
+				_wish_notice_timer_s = 2.4
+		return
+	trigger_active_map_transition()
+
+
+func trigger_active_map_transition() -> bool:
+	if _map_transition_in_progress or _active_transition_side.is_empty() or _active_transition_spec.is_empty():
+		return false
+	if bool(_active_transition_spec.get("pending_next_map", false)):
+		if wish_notice_label != null and is_instance_valid(wish_notice_label):
+			wish_notice_label.text = str(_active_transition_spec.get("pending_notice", "◆ Khu vực tiếp theo sắp mở!"))
+			wish_notice_label.visible = true
+			_wish_notice_timer_s = 2.4
+		return false
+	var target_map := str(_active_transition_spec.get("target_map_id", "")).strip_edges()
+	if target_map.is_empty():
+		return false
+	var target_name := str(_active_transition_spec.get("target_display_name", target_map))
+	var target_spawn_x := float(_active_transition_spec.get("spawn_x", -999999.0))
+	var face_left := bool(_active_transition_spec.get("facing_left", false))
+	_map_transition_cooldown_s = 0.50
+	if DisplayServer.get_name() == "headless":
+		return switch_map(target_map, target_spawn_x, face_left, true)
+	_map_transition_in_progress = true
+	var overlay := _ensure_map_loading_overlay()
+	overlay.call("start_loading", "Đang di chuyển tới %s..." % target_name, 12.0)
+	call_deferred("_execute_async_map_transition", target_map, target_spawn_x, face_left)
+	return true
+
+
+func _execute_async_map_transition(target_map: String, target_spawn_x: float, face_left: bool) -> void:
+	var tree := get_tree()
+	if tree != null:
+		await tree.process_frame
+		await tree.process_frame
+	switch_map(target_map, target_spawn_x, face_left, true)
+	if tree != null:
+		await tree.process_frame
+		await tree.create_timer(0.20).timeout
+	if _map_loading_overlay != null and is_instance_valid(_map_loading_overlay):
+		_map_loading_overlay.call("finish_success")
+	_map_transition_in_progress = false
+
+
+func get_map_transition_state() -> Dictionary:
+	var has_portal := _world_portal_layer != null and is_instance_valid(_world_portal_layer) and _world_portal_layer.visible
+	return {
+		"current_map_id": current_map_id,
+		"current_display_name": str(stage_config.get("display_name", current_map_id)),
+		"portal_layer_visible": has_portal,
+		"portal_width_px": float(_active_transition_spec.get("portal_width_px", 26.0)),
+		"header_visible": not _active_transition_side.is_empty(),
+		"portal_touching": not _active_transition_side.is_empty(),
+		"pending_next_map": bool(_active_transition_spec.get("pending_next_map", false)),
+		"side": _active_transition_side,
+		"target_map_id": str(_active_transition_spec.get("target_map_id", "")),
+		"target_display_name": str(_active_transition_spec.get("target_display_name", "")),
+	}
+
+
 func _sync_map_switch_button() -> void:
 	if map_switch_button == null or not is_instance_valid(map_switch_button):
 		return
 	if current_map_id == "cell_arena":
-		map_switch_button.text = "🏔️ Cao Nguyên"
+		map_switch_button.text = "🏔️ Núi Teinan"
 		map_switch_button.add_theme_color_override("font_color", Color(0.55, 0.94, 1.0, 1.0))
 	else:
 		map_switch_button.text = "🏟️ Đấu Trường"
@@ -1646,12 +2038,21 @@ func _sample_floor_profile_y(world_x: float) -> float:
 	return float(_active_floor_profile[_active_floor_profile.size() - 1]["y"])
 
 
-func switch_map(map_id: String) -> bool:
+func _resolve_map_paths(target_id: String) -> Array[String]:
+	if target_id == "cell_arena":
+		return [CELL_ARENA_STAGE_JSON_PATH, CELL_ARENA_TERRAIN_JSON_PATH]
+	if target_id == "teinan_slope":
+		return [TEINAN_SLOPE_STAGE_JSON_PATH, TEINAN_SLOPE_TERRAIN_JSON_PATH]
+	return [STAGE_JSON_PATH, TERRAIN_JSON_PATH]
+
+
+func switch_map(map_id: String, override_spawn_x: float = -999999.0, override_facing_left: bool = false, has_facing_override: bool = false) -> bool:
 	var target_id := map_id.strip_edges()
 	if target_id.is_empty():
 		target_id = "rocky_plateau"
-	var stage_p := CELL_ARENA_STAGE_JSON_PATH if target_id == "cell_arena" else STAGE_JSON_PATH
-	var terrain_p := CELL_ARENA_TERRAIN_JSON_PATH if target_id == "cell_arena" else TERRAIN_JSON_PATH
+	var paths := _resolve_map_paths(target_id)
+	var stage_p := paths[0]
+	var terrain_p := paths[1]
 	var new_stage := _read_json_dict(stage_p)
 	var new_terrain := _read_json_dict(terrain_p)
 	if new_stage.is_empty() or new_terrain.is_empty():
@@ -1660,6 +2061,24 @@ func switch_map(map_id: String) -> bool:
 	current_map_id = target_id
 	stage_config = new_stage
 	terrain_config = new_terrain
+	_terrain_cache_key = 0
+	_active_transition_side = ""
+	_active_transition_spec.clear()
+	if map_transition_header != null and is_instance_valid(map_transition_header):
+		map_transition_header.visible = false
+	if _foreground_trees != null and is_instance_valid(_foreground_trees):
+		_foreground_trees.queue_free()
+	_foreground_trees = null
+	if _foreground_flora != null and is_instance_valid(_foreground_flora):
+		_foreground_flora.queue_free()
+	_foreground_flora = null
+	_teardown_interactive_water_layers()
+	_camera_vertical_follow_cfg.clear()
+	_interactive_water_cfg.clear()
+	_water_enabled = false
+	_pending_portal_notice_shown = false
+	_map_transition_cooldown_s = 0.45
+
 	_fixed_single_view_map = bool(stage_config.get("fixed_single_view", false))
 	var gp: Dictionary = stage_config.get("gameplay", {})
 	ground_y = float(gp.get("ground_y", 840.0))
@@ -1683,14 +2102,10 @@ func switch_map(map_id: String) -> bool:
 		_map_right_x = float(wb.get("right_x", 2460.0))
 		_map_top_y = float(wb.get("top_y", 0.0))
 		_map_bottom_y = float(wb.get("bottom_y", 1080.0))
-		if _foreground_trees != null and is_instance_valid(_foreground_trees):
-			_foreground_trees.visible = false
 	else:
 		_load_extended_map_config()
 		if _foreground_pillars != null and is_instance_valid(_foreground_pillars):
 			_foreground_pillars.visible = false
-		if _foreground_trees != null and is_instance_valid(_foreground_trees):
-			_foreground_trees.visible = true
 
 	ai_controller.configure_from_stage(stage_config)
 	_apply_stage_layout()
@@ -1706,6 +2121,13 @@ func switch_map(map_id: String) -> bool:
 	if field_mode_enabled and field_manager != null:
 		var saved_cid := active_character_id if not active_character_id.is_empty() else DEFAULT_HERO_ID
 		var had_player := bool(field_manager.player_spawned)
+		var saved_goku_ssj := false
+		var saved_goku_stamina := 100.0
+		var saved_goku_ki := 50.0
+		if had_player and player_node != null and is_instance_valid(player_node) and _is_hero_songoku(player_node) and not (player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion"))):
+			saved_goku_ssj = bool(player_node.get("is_ssj"))
+			saved_goku_stamina = float(player_node.get("stamina"))
+			saved_goku_ki = float(player_node.get("ki"))
 		var spawn_monsters := bool(stage_config.get("monsters_enabled", current_map_id != "cell_arena"))
 		_clear_dropped_items()
 		field_manager.start_field(false, spawn_monsters)
@@ -1713,19 +2135,35 @@ func switch_map(map_id: String) -> bool:
 		field_manager.set_player_infinite_mana(hero_infinite_mana_enabled)
 		field_manager.set_player_immortal(hero_immortal_enabled)
 		if had_player:
-			var custom_x := player_spawn_x if current_map_id == "cell_arena" else -999999.0
+			var custom_x := override_spawn_x if override_spawn_x > -900000.0 else (player_spawn_x if (current_map_id == "cell_arena" or current_map_id == "teinan_slope") else -999999.0)
 			set_field_hero_visible(true, saved_cid, custom_x)
+			if saved_goku_ssj and player_node != null and is_instance_valid(player_node) and _is_hero_songoku(player_node):
+				player_node.set("is_ssj", true)
+				player_node.set("stamina", saved_goku_stamina)
+				player_node.set("ki", saved_goku_ki)
+				var g_spr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+				if g_spr != null and g_spr.sprite_frames != null and g_spr.sprite_frames.has_animation(&"idle_ssj_aura"):
+					g_spr.play(&"idle_ssj_aura")
+				_sync_field_pad_state()
+			if has_facing_override and player_node != null and is_instance_valid(player_node):
+				player_facing_left = override_facing_left
+				player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
 	elif player_node != null and is_instance_valid(player_node):
-		var px := clampf(player_spawn_x, walkable_min_x, walkable_max_x)
+		var eff_sx := override_spawn_x if override_spawn_x > -900000.0 else player_spawn_x
+		var px := clampf(eff_sx, walkable_min_x, walkable_max_x)
 		player_node.position = Vector2(px, _ground_y_at(px))
 		player_vy = 0.0
+		if has_facing_override:
+			player_facing_left = override_facing_left
+			player_node.scale = Vector2(-char_scale if player_facing_left else char_scale, char_scale)
 
 	var sync_target_map := zone_sync.pending_map_id if (zone_sync != null and not zone_sync.pending_map_id.is_empty()) else (zone_sync.current_map_id if zone_sync != null else "")
 	if alpha_session_active and zone_sync != null and sync_target_map != current_map_id:
 		zone_sync.request_zone_switch(current_map_id, zone_sync.current_zone_id)
 
 	_update_follow_camera()
-	_update_hud()
+	_update_map_transition_header()
+	_update_hud(true)
 	queue_redraw()
 	return true
 
@@ -1772,6 +2210,8 @@ func set_hud_ui_hidden(hidden: bool) -> void:
 	if toggle_ui_button != null:
 		toggle_ui_button.text = "👁️ Hiện UI" if hidden else "👁️ Ẩn UI"
 	_apply_hud_safe_area()
+	if not hidden:
+		_update_hud(true)
 
 
 func enable_field_mode(enabled: bool, spawn_hero: bool = false) -> void:
@@ -2282,6 +2722,8 @@ func load_stage_and_roster() -> void:
 	var sil_doc := _read_json_dict(BODY_SILHOUETTES_JSON_PATH)
 	var sil_chars: Variant = sil_doc.get("characters", {})
 	_body_silhouettes = sil_chars if sil_chars is Dictionary else {}
+	_rebuild_roster_lookup_cache()
+	_terrain_cache_key = 0
 	_update_walkable_bounds()
 
 
@@ -2343,6 +2785,9 @@ func _load_extended_map_config() -> void:
 	_map_bottom_y = MAP_BOTTOM_Y
 	_extended_step_configs.clear()
 	_foreground_trees_cfg = {}
+	_camera_vertical_follow_cfg = {}
+	_interactive_water_cfg = {}
+	_water_enabled = false
 
 	var map_cfg: Variant = stage_config.get("map", {})
 	var ext: Dictionary = map_cfg.get("extended_map", {}) if map_cfg is Dictionary else {}
@@ -2368,6 +2813,19 @@ func _load_extended_map_config() -> void:
 		var fg_val: Variant = ext.get("foreground_trees", {})
 		if fg_val is Dictionary:
 			_foreground_trees_cfg = fg_val
+		var cvf_val: Variant = ext.get("camera_vertical_follow", {})
+		if cvf_val is Dictionary:
+			_camera_vertical_follow_cfg = cvf_val
+		var iw_val: Variant = ext.get("interactive_water", terrain_config.get("interactive_water", {}))
+		if iw_val is Dictionary and bool((iw_val as Dictionary).get("enabled", false)):
+			_interactive_water_cfg = iw_val as Dictionary
+			_water_enabled = true
+			_water_min_x = float(_interactive_water_cfg.get("min_world_x", 2220.0))
+			_water_max_x = float(_interactive_water_cfg.get("max_world_x", 2720.0))
+			_water_bed_y = float(_interactive_water_cfg.get("bed_world_y", 820.0))
+			_water_wade_depth_px = float(_interactive_water_cfg.get("wade_depth_px", 6.0))
+			_water_spray_min_x = float(_interactive_water_cfg.get("waterfall_spray_min_x", 2235.0))
+			_water_spray_max_x = float(_interactive_water_cfg.get("waterfall_spray_max_x", 2515.0))
 	if _extended_step_configs.is_empty():
 		_extended_step_configs = [
 			{"drop_x": STEP_ONE_X, "wall_x": STEP_ONE_WALL_X, "drop_y": STEP_ONE_DROP_Y},
@@ -2386,19 +2844,37 @@ func _has_extended_terrain_steps() -> bool:
 	return ResourceLoader.exists(_extended_map_res_path)
 
 
-func _get_terrain_sections() -> Array:
-	if not _has_extended_terrain_steps():
-		return [{"left_x": _map_left_x, "right_x": _map_right_x, "ground_y": ground_y}]
-	var sections: Array = []
+func _ensure_terrain_geometry_cache() -> void:
+	var has_ext := _has_extended_terrain_steps()
+	var key: int = hash(current_map_id) ^ (1 if has_ext else 0) ^ (2 if _fixed_single_view_map else 0) ^ hash(_map_left_x) ^ hash(_map_right_x) ^ hash(ground_y) ^ (_extended_step_configs.size() * 97)
+	if _terrain_cache_key == key and not _cached_terrain_sections.is_empty():
+		return
+	_terrain_cache_key = key
+	_cached_terrain_sections.clear()
+	_cached_terrain_step_specs.clear()
+	if not has_ext:
+		_cached_terrain_sections.append({"left_x": _map_left_x, "right_x": _map_right_x, "ground_y": ground_y})
+		return
 	var prev_x := _map_left_x
 	var prev_y := ground_y
 	for st in _extended_step_configs:
 		var dx := float(st["drop_x"])
-		sections.append({"left_x": prev_x, "right_x": dx, "ground_y": prev_y})
+		var lower_y := ground_y + float(st["drop_y"])
+		_cached_terrain_sections.append({"left_x": prev_x, "right_x": dx, "ground_y": prev_y})
+		_cached_terrain_step_specs.append({
+			"drop_x": dx,
+			"wall_x": float(st["wall_x"]),
+			"upper_y": prev_y,
+			"lower_y": lower_y,
+		})
 		prev_x = dx
-		prev_y = ground_y + float(st["drop_y"])
-	sections.append({"left_x": prev_x, "right_x": _map_right_x, "ground_y": prev_y})
-	return sections
+		prev_y = lower_y
+	_cached_terrain_sections.append({"left_x": prev_x, "right_x": _map_right_x, "ground_y": prev_y})
+
+
+func _get_terrain_sections() -> Array:
+	_ensure_terrain_geometry_cache()
+	return _cached_terrain_sections
 
 
 func _get_terrain_step_edges() -> Array[float]:
@@ -2474,6 +2950,7 @@ func _update_background_cover() -> void:
 			background_sprite.scale = Vector2.ONE
 			background_sprite.position = Vector2(_map_left_x, _map_top_y)
 			_setup_foreground_trees()
+			_setup_interactive_water_layers()
 			_update_walkable_bounds()
 			_update_follow_camera()
 			queue_redraw()
@@ -2528,11 +3005,50 @@ func _setup_foreground_trees() -> void:
 		tree_sprite.texture = atlas
 		tree_sprite.centered = false
 		tree_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		tree_sprite.scale = tree_scale
-		var tx := float(pl.get("trunk_world_x", 0.0)) - float(pl.get("trunk_source_x", 0.0)) * tree_scale.x
-		var ty := float(pl.get("rear_grass_world_y", ground_y)) - float(pl.get("root_bottom_src_y", 0.0)) * tree_scale.y
+		var item_sc := tree_scale
+		var pl_sc: Variant = pl.get("scale", null)
+		if pl_sc is Array and pl_sc.size() >= 2:
+			item_sc = Vector2(float(pl_sc[0]), float(pl_sc[1]))
+		tree_sprite.scale = item_sc
+		var tx := float(pl.get("trunk_world_x", 0.0)) - float(pl.get("trunk_source_x", 0.0)) * item_sc.x
+		var ty := float(pl.get("rear_grass_world_y", ground_y)) - float(pl.get("root_bottom_src_y", 0.0)) * item_sc.y
 		tree_sprite.position = Vector2(tx, ty)
 		_foreground_trees.add_child(tree_sprite)
+
+	var aux_val: Variant = _foreground_trees_cfg.get("auxiliary_props", {})
+	if aux_val is Dictionary and not (aux_val as Dictionary).is_empty():
+		var aux_cfg := aux_val as Dictionary
+		var aux_tex := _load_texture_2d(str(aux_cfg.get("res_path", "")))
+		var aux_pls: Variant = aux_cfg.get("placements", [])
+		if aux_tex != null and aux_pls is Array and not (aux_pls as Array).is_empty():
+			if _foreground_flora == null or not is_instance_valid(_foreground_flora):
+				_foreground_flora = Node2D.new()
+				_foreground_flora.name = "ForegroundAuxiliaryFlora"
+				_foreground_flora.z_index = int(aux_cfg.get("z_index", -19))
+				add_child(_foreground_flora)
+			var a_list := aux_pls as Array
+			for ai in range(a_list.size()):
+				if not (a_list[ai] is Dictionary):
+					continue
+				var ap: Dictionary = a_list[ai]
+				var areg: Array = ap.get("region", [])
+				if areg.size() < 4:
+					continue
+				var a_atlas := AtlasTexture.new()
+				a_atlas.atlas = aux_tex
+				a_atlas.region = Rect2(float(areg[0]), float(areg[1]), float(areg[2]), float(areg[3]))
+				var f_sp := Sprite2D.new()
+				f_sp.name = "FloraProp%d" % (ai + 1)
+				f_sp.texture = a_atlas
+				f_sp.centered = false
+				f_sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				var asc_v: Variant = ap.get("scale", [1.0, 1.0])
+				var asc := Vector2(float(asc_v[0]), float(asc_v[1])) if (asc_v is Array and asc_v.size() >= 2) else Vector2.ONE
+				var anc_v: Variant = ap.get("anchor_src_px", [48.0, 92.0])
+				var anc := Vector2(float(anc_v[0]), float(anc_v[1])) if (anc_v is Array and anc_v.size() >= 2) else Vector2.ZERO
+				f_sp.scale = asc
+				f_sp.position = Vector2(float(ap.get("world_x", 0.0)) - anc.x * asc.x, float(ap.get("world_y", ground_y)) - anc.y * asc.y)
+				_foreground_flora.add_child(f_sp)
 
 
 func _setup_foreground_pillars() -> void:
@@ -2559,6 +3075,396 @@ func _setup_foreground_pillars() -> void:
 	# Topmost world layer ABOVE characters (20), bosses (30), and skill FX (65..70) with ZERO collision!
 	_foreground_pillars.z_index = int(pdict.get("z_index", 80))
 	_foreground_pillars.visible = true
+
+
+func _teardown_interactive_water_layers() -> void:
+	if _waterfall_river_asset != null and is_instance_valid(_waterfall_river_asset):
+		_waterfall_river_asset.queue_free()
+	_waterfall_river_asset = null
+	if _waterfall_sprite != null and is_instance_valid(_waterfall_sprite):
+		_waterfall_sprite.queue_free()
+	_waterfall_sprite = null
+	if _water_surface_sprite != null and is_instance_valid(_water_surface_sprite):
+		_water_surface_sprite.queue_free()
+	_water_surface_sprite = null
+	if _water_ankle_rim_sprite != null and is_instance_valid(_water_ankle_rim_sprite):
+		_water_ankle_rim_sprite.queue_free()
+	_water_ankle_rim_sprite = null
+	if _water_ripple_overlay != null and is_instance_valid(_water_ripple_overlay):
+		_water_ripple_overlay.queue_free()
+	_water_ripple_overlay = null
+	_water_splash_tex = null
+	_active_water_ripples.clear()
+	_water_anim_elapsed_s = 0.0
+	_water_spray_accum_s = 0.0
+
+
+func _setup_interactive_water_layers() -> void:
+	if not _water_enabled:
+		_teardown_interactive_water_layers()
+		return
+	var wra_cfg: Variant = _interactive_water_cfg.get("waterfall_river_asset", {})
+	if wra_cfg is Dictionary and not (wra_cfg as Dictionary).is_empty() and (_waterfall_river_asset == null or not is_instance_valid(_waterfall_river_asset)):
+		var wra_d := wra_cfg as Dictionary
+		var tres_p := str(wra_d.get("tres_res_path", ""))
+		var sf_res := load(tres_p) as SpriteFrames if (not tres_p.is_empty() and ResourceLoader.exists(tres_p)) else null
+		if sf_res != null:
+			_waterfall_river_asset = AnimatedSprite2D.new()
+			_waterfall_river_asset.name = "WaterfallRiverCompleteAsset"
+			_waterfall_river_asset.sprite_frames = sf_res
+			var anim_n := StringName(str(wra_d.get("animation", "flow")))
+			if sf_res.has_animation(anim_n):
+				_waterfall_river_asset.animation = anim_n
+			_waterfall_river_asset.centered = false
+			_waterfall_river_asset.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			var wp_a: Variant = wra_d.get("world_pos", [2144.0, 180.0])
+			var wra_x := float(wp_a[0]) if (wp_a is Array and wp_a.size() >= 2) else 2144.0
+			var wra_y := float(wp_a[1]) if (wp_a is Array and wp_a.size() >= 2) else 180.0
+			_waterfall_river_asset.position = Vector2(wra_x, wra_y)
+			_waterfall_river_asset.z_index = int(wra_d.get("z_index", -16))
+			add_child(_waterfall_river_asset)
+			_waterfall_river_asset.play()
+
+	var wf_cfg: Variant = _interactive_water_cfg.get("waterfall_anim", {})
+	if wf_cfg is Dictionary and not (wf_cfg as Dictionary).is_empty() and (_waterfall_sprite == null or not is_instance_valid(_waterfall_sprite)):
+		var wf_d := wf_cfg as Dictionary
+		var wf_tex := _load_texture_2d(str(wf_d.get("res_path", "")))
+		if wf_tex != null:
+			_waterfall_sprite = Sprite2D.new()
+			_waterfall_sprite.name = "WaterfallFlowAnim"
+			_waterfall_sprite.texture = wf_tex
+			_waterfall_sprite.hframes = maxi(1, int(wf_d.get("frame_count", 12)))
+			_waterfall_sprite.frame = 0
+			_waterfall_sprite.centered = false
+			var wp_arr: Variant = wf_d.get("world_pos", [2060.0, 220.0])
+			var wpx := float(wp_arr[0]) if (wp_arr is Array and wp_arr.size() >= 2) else 2060.0
+			var wpy := float(wp_arr[1]) if (wp_arr is Array and wp_arr.size() >= 2) else 220.0
+			_waterfall_sprite.position = Vector2(wpx, wpy)
+			_waterfall_sprite.z_index = int(wf_d.get("z_index", -17))
+			add_child(_waterfall_sprite)
+
+	var surf_cfg: Variant = _interactive_water_cfg.get("river_surface_anim", {})
+	if surf_cfg is Dictionary and not (surf_cfg as Dictionary).is_empty() and (_water_surface_sprite == null or not is_instance_valid(_water_surface_sprite)):
+		var sf_d := surf_cfg as Dictionary
+		var sf_tex := _load_texture_2d(str(sf_d.get("res_path", "")))
+		if sf_tex != null:
+			_water_surface_sprite = Sprite2D.new()
+			_water_surface_sprite.name = "RiverSurfaceWaveAnim"
+			_water_surface_sprite.texture = sf_tex
+			_water_surface_sprite.hframes = maxi(1, int(sf_d.get("frame_count", 12)))
+			_water_surface_sprite.frame = 0
+			_water_surface_sprite.centered = false
+			var sp_arr: Variant = sf_d.get("world_pos", [2060.0, 660.0])
+			var spx := float(sp_arr[0]) if (sp_arr is Array and sp_arr.size() >= 2) else 2060.0
+			var spy := float(sp_arr[1]) if (sp_arr is Array and sp_arr.size() >= 2) else 660.0
+			_water_surface_sprite.position = Vector2(spx, spy)
+			_water_surface_sprite.z_index = int(sf_d.get("z_index", -16))
+			add_child(_water_surface_sprite)
+
+	var rim_cfg: Variant = _interactive_water_cfg.get("ankle_rim_anim", {})
+	if rim_cfg is Dictionary and (_water_ankle_rim_sprite == null or not is_instance_valid(_water_ankle_rim_sprite)):
+		var rim_d := rim_cfg as Dictionary
+		var rim_tex := _load_texture_2d(str(rim_d.get("res_path", "")))
+		if rim_tex != null:
+			_water_ankle_rim_sprite = Sprite2D.new()
+			_water_ankle_rim_sprite.name = "WaterAnkleRimAnim"
+			_water_ankle_rim_sprite.texture = rim_tex
+			_water_ankle_rim_sprite.hframes = maxi(1, int(rim_d.get("hframes", rim_d.get("frame_count", 12))))
+			_water_ankle_rim_sprite.vframes = maxi(1, int(rim_d.get("vframes", 1)))
+			_water_ankle_rim_sprite.frame = 0
+			_water_ankle_rim_sprite.centered = false
+			_water_ankle_rim_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			var rp_arr: Variant = rim_d.get("world_pos", [2235.0, 886.0])
+			var rpx := float(rp_arr[0]) if (rp_arr is Array and rp_arr.size() >= 2) else 2235.0
+			var rpy := float(rp_arr[1]) if (rp_arr is Array and rp_arr.size() >= 2) else 886.0
+			_water_ankle_rim_sprite.position = Vector2(rpx, rpy)
+			_water_ankle_rim_sprite.z_index = maxi(31, int(rim_d.get("z_index", 31)))
+			add_child(_water_ankle_rim_sprite)
+
+	if _water_ripple_overlay == null or not is_instance_valid(_water_ripple_overlay):
+		_water_ripple_overlay = Node2D.new()
+		_water_ripple_overlay.name = "WaterRippleOverlay"
+		_water_ripple_overlay.z_index = 32
+		_water_ripple_overlay.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_water_ripple_overlay.draw.connect(_on_water_ripple_overlay_draw)
+		add_child(_water_ripple_overlay)
+
+	var sp_cfg: Variant = _interactive_water_cfg.get("splash_fx", {})
+	if sp_cfg is Dictionary:
+		_water_splash_tex = _load_texture_2d(str((sp_cfg as Dictionary).get("res_path", "")))
+
+
+func is_x_in_interactive_water(world_x: float) -> bool:
+	return _water_enabled and world_x >= _water_min_x and world_x <= _water_max_x
+
+
+func is_point_in_interactive_water(world_x: float, world_y: float, y_tol_px: float = 24.0) -> bool:
+	return is_x_in_interactive_water(world_x) and absf(world_y - _water_bed_y) <= y_tol_px
+
+
+func get_water_wade_sink_px(world_x: float, world_y: float) -> float:
+	if not _water_enabled or world_x <= _water_min_x or world_x >= _water_max_x:
+		return 0.0
+	if world_y < _water_bed_y - 3.5:
+		return 0.0
+	var edge_d := minf(world_x - _water_min_x, _water_max_x - world_x)
+	var ramp := clampf(edge_d / 20.0, 0.0, 1.0)
+	return snappedf(_water_wade_depth_px * ramp, 0.1)
+
+
+func get_water_speed_multiplier(world_x: float, world_y: float) -> float:
+	if is_point_in_interactive_water(world_x, world_y, 24.0):
+		return clampf(float(_interactive_water_cfg.get("speed_multiplier", 1.0)), 0.5, 1.5)
+	return 1.0
+
+
+func spawn_water_splash(world_x: float, surface_y: float = -999999.0, scale_mult: float = 1.0, add_ripple: bool = true) -> bool:
+	if not is_x_in_interactive_water(world_x):
+		return false
+	var sy := _water_bed_y if surface_y < -900000.0 else surface_y
+	if _water_splash_tex == null:
+		var sp_cfg0: Variant = _interactive_water_cfg.get("splash_fx", {})
+		if sp_cfg0 is Dictionary:
+			_water_splash_tex = _load_texture_2d(str((sp_cfg0 as Dictionary).get("res_path", "")))
+	if _dust_fx_layer == null or not is_instance_valid(_dust_fx_layer):
+		_dust_fx_layer = Node2D.new()
+		_dust_fx_layer.name = "GroundDustLayer"
+		_dust_fx_layer.z_index = 9
+		_dust_fx_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(_dust_fx_layer)
+	var sp_cfg: Dictionary = _interactive_water_cfg.get("splash_fx", {}) if _interactive_water_cfg.get("splash_fx", {}) is Dictionary else {}
+	var fcount := maxi(1, int(sp_cfg.get("frame_count", 13)))
+	var tpf := maxi(1, int(sp_cfg.get("ticks_per_frame", 3)))
+	var base_sc := float(sp_cfg.get("scale", 1.35)) * clampf(scale_mult, 0.65, 1.65)
+	var seq: Array = []
+	if fcount >= 13:
+		seq = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] if scale_mult >= 0.85 else [0, 1, 2, 7, 8, 9, 10, 11, 12]
+	if _water_splash_tex != null:
+		var sp := Sprite2D.new()
+		sp.texture = _water_splash_tex
+		sp.hframes = fcount
+		sp.frame = int(seq[0]) if not seq.is_empty() else 0
+		sp.centered = true
+		var fsz: Variant = sp_cfg.get("frame_size_1x_px", [160, 80])
+		var fh_1x := float(fsz[1]) if (fsz is Array and fsz.size() >= 2) else 80.0
+		sp.offset = Vector2(0.0, -(fh_1x * 0.5 - 8.0))
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sp.scale = Vector2(base_sc, base_sc)
+		sp.position = Vector2(clampf(world_x, _water_min_x + 8.0, _water_max_x - 8.0), sy)
+		sp.z_index = 25
+		_dust_fx_layer.add_child(sp)
+		_active_dust_fx.append({
+			"sprite": sp,
+			"elapsed_s": 0.0,
+			"frame_count": seq.size() if not seq.is_empty() else fcount,
+			"frames_seq": seq,
+			"ticks_per_frame": tpf,
+			"kind": "water_splash",
+		})
+	if add_ripple:
+		_active_water_ripples.append({
+			"x": clampf(world_x, _water_min_x + 12.0, _water_max_x - 12.0),
+			"y": sy,
+			"age_s": 0.0,
+			"dur_s": 0.44,
+			"max_hw": 36.0 * clampf(scale_mult, 0.75, 1.65),
+		})
+		while _active_water_ripples.size() > 28:
+			_active_water_ripples.remove_at(0)
+		if _water_ripple_overlay != null and is_instance_valid(_water_ripple_overlay):
+			_water_ripple_overlay.queue_redraw()
+	return true
+
+
+func notify_projectile_terrain_impact(impact_pos: Vector2, scale_mult: float = 1.15) -> bool:
+	if not _water_enabled:
+		return false
+	if impact_pos.x < _water_min_x or impact_pos.x > _water_max_x or impact_pos.y < _water_bed_y - 42.0:
+		return false
+	var ok := spawn_water_splash(impact_pos.x, _water_bed_y, scale_mult, true)
+	if ok and scale_mult >= 1.18:
+		spawn_water_splash(clampf(impact_pos.x - 28.0, _water_min_x + 8.0, _water_max_x - 8.0), _water_bed_y, scale_mult * 0.78, false)
+		spawn_water_splash(clampf(impact_pos.x + 28.0, _water_min_x + 8.0, _water_max_x - 8.0), _water_bed_y, scale_mult * 0.78, false)
+	return ok
+
+
+func _apply_entity_water_wade_visual(node: Node2D, scale_val: float) -> float:
+	if node == null or not is_instance_valid(node):
+		return 0.0
+	var spr := node.get_node_or_null("Sprite") as AnimatedSprite2D
+	if spr == null:
+		return 0.0
+	var sink_px := get_water_wade_sink_px(node.position.x, node.position.y)
+	spr.position.y = roundf(sink_px / maxf(0.1, absf(scale_val)))
+	return sink_px
+
+
+func step_interactive_water(delta: float) -> void:
+	if not _water_enabled:
+		return
+	var dt := maxf(0.0, delta)
+	_water_anim_elapsed_s += dt
+	var wra_cfg: Dictionary = _interactive_water_cfg.get("waterfall_river_asset", {}) if _interactive_water_cfg.get("waterfall_river_asset", {}) is Dictionary else {}
+	var wra_fc := maxi(1, int(wra_cfg.get("frame_count", 12)))
+	var wra_tpf := maxf(1.0, float(wra_cfg.get("ticks_per_frame", 5.88)))
+	if _waterfall_river_asset != null and is_instance_valid(_waterfall_river_asset):
+		_waterfall_river_asset.pause()
+		_waterfall_river_asset.frame = int(floor(_water_anim_elapsed_s * 60.0 / wra_tpf)) % wra_fc
+	var wf_cfg: Dictionary = _interactive_water_cfg.get("waterfall_anim", {}) if _interactive_water_cfg.get("waterfall_anim", {}) is Dictionary else {}
+	var wf_fc := maxi(1, int(wf_cfg.get("frame_count", 12)))
+	var wf_tpf := maxf(1.0, float(wf_cfg.get("ticks_per_frame", 5.88)))
+	if _waterfall_sprite != null and is_instance_valid(_waterfall_sprite):
+		_waterfall_sprite.frame = int(floor(_water_anim_elapsed_s * 60.0 / wf_tpf)) % wf_fc
+	var sf_cfg: Dictionary = _interactive_water_cfg.get("river_surface_anim", {}) if _interactive_water_cfg.get("river_surface_anim", {}) is Dictionary else {}
+	var sf_fc := maxi(1, int(sf_cfg.get("frame_count", 12)))
+	var sf_tpf := maxf(1.0, float(sf_cfg.get("ticks_per_frame", 5.88)))
+	if _water_surface_sprite != null and is_instance_valid(_water_surface_sprite):
+		_water_surface_sprite.frame = int(floor(_water_anim_elapsed_s * 60.0 / sf_tpf)) % sf_fc
+	var rim_cfg: Dictionary = _interactive_water_cfg.get("ankle_rim_anim", {}) if _interactive_water_cfg.get("ankle_rim_anim", {}) is Dictionary else {}
+	var rim_fc := maxi(1, int(rim_cfg.get("frame_count", 12)))
+	var rim_tpf := maxf(1.0, float(rim_cfg.get("ticks_per_frame", 5.88)))
+	if _water_ankle_rim_sprite != null and is_instance_valid(_water_ankle_rim_sprite):
+		_water_ankle_rim_sprite.frame = int(floor(_water_anim_elapsed_s * 60.0 / rim_tpf)) % rim_fc
+
+	for ri in range(_active_water_ripples.size() - 1, -1, -1):
+		var rp: Dictionary = _active_water_ripples[ri]
+		rp["age_s"] = float(rp.get("age_s", 0.0)) + dt
+		if float(rp["age_s"]) >= float(rp.get("dur_s", 0.44)):
+			_active_water_ripples.remove_at(ri)
+
+	var any_wader := false
+	var spray_wader_x := -999999.0
+	if player_node != null and is_instance_valid(player_node) and player_node.visible:
+		var psink := get_water_wade_sink_px(player_node.position.x, player_node.position.y)
+		if psink > 0.0:
+			any_wader = true
+			if player_node.position.x >= _water_spray_min_x and player_node.position.x <= _water_spray_max_x:
+				spray_wader_x = player_node.position.x
+			# Keep idle/action sprites sunk cleanly when not in Goku combat_move hover
+			var pspr := player_node.get_node_or_null("Sprite") as AnimatedSprite2D
+			if pspr != null and String(pspr.animation) != "combat_move":
+				pspr.position.y = roundf(psink / maxf(0.1, char_scale))
+	if dummy_node != null and is_instance_valid(dummy_node) and dummy_node.visible:
+		if _apply_entity_water_wade_visual(dummy_node, enemy_scale) > 0.0:
+			any_wader = true
+			if spray_wader_x < -900000.0 and dummy_node.position.x >= _water_spray_min_x and dummy_node.position.x <= _water_spray_max_x:
+				spray_wader_x = dummy_node.position.x
+	if field_mode_enabled and field_manager != null and field_manager.active:
+		for slot in field_manager._get_combat_slots():
+			if bool(slot.get("alive", false)) and not bool(slot.get("is_flying", false)):
+				var mnode := slot.get("node") as Node2D
+				if mnode != null and is_instance_valid(mnode) and mnode.visible:
+					if _apply_entity_water_wade_visual(mnode, float(slot.get("scale_val", 2.0))) > 0.0:
+						any_wader = true
+						if spray_wader_x < -900000.0 and mnode.position.x >= _water_spray_min_x and mnode.position.x <= _water_spray_max_x:
+							spray_wader_x = mnode.position.x
+
+	if spray_wader_x > -900000.0:
+		_water_spray_accum_s += dt
+		if _water_spray_accum_s >= 0.28:
+			_water_spray_accum_s = 0.0
+			spawn_water_splash(spray_wader_x, _water_bed_y, 0.70, true)
+	else:
+		_water_spray_accum_s = 0.0
+
+	if _water_ripple_overlay != null and is_instance_valid(_water_ripple_overlay):
+		var need_draw := any_wader or not _active_water_ripples.is_empty()
+		if _water_ripple_overlay.visible != need_draw:
+			_water_ripple_overlay.visible = need_draw
+		if need_draw:
+			_water_ripple_overlay.queue_redraw()
+
+
+func _draw_single_ankle_ripple_ring(canvas: CanvasItem, wx: float, wy: float, hw: float, alpha_val: float) -> void:
+	var rx0 := maxf(_water_min_x + 4.0, wx - hw)
+	var rx1 := minf(_water_max_x - 4.0, wx + hw)
+	if rx1 <= rx0 + 4.0:
+		return
+	var foam_col := Color(0.88, 0.99, 1.0, clampf(alpha_val, 0.0, 0.92))
+	var aqua_col := Color(0.22, 0.82, 0.92, clampf(alpha_val * 0.72, 0.0, 0.75))
+	canvas.draw_rect(Rect2(rx0, wy - 2.0, rx1 - rx0, 2.0), aqua_col)
+	var tip_w := minf(10.0, (rx1 - rx0) * 0.26)
+	canvas.draw_rect(Rect2(rx0, wy - 3.0, tip_w, 3.0), foam_col)
+	canvas.draw_rect(Rect2(rx1 - tip_w, wy - 3.0, tip_w, 3.0), foam_col)
+
+
+func _draw_entity_water_simulation_ripple(canvas: CanvasItem, wx: float, wy: float, pulse: float) -> void:
+	var sp_cfg: Dictionary = _interactive_water_cfg.get("splash_fx", {}) if _interactive_water_cfg.get("splash_fx", {}) is Dictionary else {}
+	var fcount := int(sp_cfg.get("frame_count", 0))
+	if _water_splash_tex != null and fcount >= 13:
+		var fsz: Variant = sp_cfg.get("frame_size_1x_px", [160, 80])
+		var fw_1x := float(fsz[0]) if (fsz is Array and fsz.size() >= 2) else 160.0
+		var fh_1x := float(fsz[1]) if (fsz is Array and fsz.size() >= 2) else 80.0
+		var r_idx := 10 + (int(floor(_water_anim_elapsed_s * 10.0)) % 3)
+		var src_rect := Rect2(float(r_idx) * fw_1x, 0.0, fw_1x, fh_1x)
+		var dst_w := fw_1x * 1.15
+		var dst_h := fh_1x * 1.15
+		canvas.draw_texture_rect_region(
+			_water_splash_tex,
+			Rect2(wx - dst_w * 0.5, wy - dst_h + 10.0, dst_w, dst_h),
+			src_rect,
+			Color(1.0, 1.0, 1.0, 0.88)
+		)
+	else:
+		_draw_single_ankle_ripple_ring(canvas, wx, wy, lerpf(18.0, 36.0, pulse), (1.0 - pulse) * 0.68)
+
+
+func _on_water_ripple_overlay_draw() -> void:
+	if not _water_enabled or _water_ripple_overlay == null:
+		return
+	# 1. Ambient rhythmic 3-frame surface ripple simulation (frames 10..12 of image copy.png) around every grounded entity in water
+	var pulse := fposmod(_water_anim_elapsed_s * 1.8, 1.0)
+	if player_node != null and is_instance_valid(player_node) and player_node.visible:
+		if get_water_wade_sink_px(player_node.position.x, player_node.position.y) > 0.0:
+			_draw_entity_water_simulation_ripple(_water_ripple_overlay, player_node.position.x, _water_bed_y + 2.0, pulse)
+	if dummy_node != null and is_instance_valid(dummy_node) and dummy_node.visible:
+		if get_water_wade_sink_px(dummy_node.position.x, dummy_node.position.y) > 0.0:
+			_draw_entity_water_simulation_ripple(_water_ripple_overlay, dummy_node.position.x, _water_bed_y + 2.0, pulse)
+	if field_mode_enabled and field_manager != null and field_manager.active:
+		for slot in field_manager._get_combat_slots():
+			if bool(slot.get("alive", false)) and not bool(slot.get("is_flying", false)):
+				var mnode := slot.get("node") as Node2D
+				if mnode != null and is_instance_valid(mnode) and mnode.visible:
+					if get_water_wade_sink_px(mnode.position.x, mnode.position.y) > 0.0:
+						_draw_entity_water_simulation_ripple(_water_ripple_overlay, mnode.position.x, _water_bed_y + 2.0, pulse)
+	# 2. Expanding impact/footstep/skill concentric pixel ripples
+	for rp in _active_water_ripples:
+		var prog := clampf(float(rp.get("age_s", 0.0)) / maxf(0.05, float(rp.get("dur_s", 0.44))), 0.0, 1.0)
+		var hw := lerpf(12.0, float(rp.get("max_hw", 36.0)), prog)
+		var a := (1.0 - prog) * 0.85
+		_draw_single_ankle_ripple_ring(_water_ripple_overlay, float(rp["x"]), float(rp["y"]) + 2.0, hw, a)
+
+
+func get_interactive_water_metrics() -> Dictionary:
+	var splash_cnt := 0
+	for d in _active_dust_fx:
+		if d is Dictionary and str(d.get("kind", "")) == "water_splash":
+			splash_cnt += 1
+	var has_wra := _waterfall_river_asset != null and is_instance_valid(_waterfall_river_asset)
+	var has_wf := has_wra or (_waterfall_sprite != null and is_instance_valid(_waterfall_sprite))
+	var wf_fr := _waterfall_river_asset.frame if has_wra else (_waterfall_sprite.frame if (_waterfall_sprite != null and is_instance_valid(_waterfall_sprite)) else -1)
+	var wf_z := _waterfall_river_asset.z_index if has_wra else (_waterfall_sprite.z_index if (_waterfall_sprite != null and is_instance_valid(_waterfall_sprite)) else 0)
+	return {
+		"enabled": _water_enabled,
+		"min_world_x": _water_min_x,
+		"max_world_x": _water_max_x,
+		"width_px": (_water_max_x - _water_min_x) if _water_enabled else 0.0,
+		"bed_world_y": _water_bed_y,
+		"wade_depth_px": _water_wade_depth_px,
+		"speed_multiplier": float(_interactive_water_cfg.get("speed_multiplier", 1.0)) if _water_enabled else 1.0,
+		"standalone_tres_mounted": has_wra,
+		"waterfall_mounted": has_wf,
+		"waterfall_frame": wf_fr,
+		"waterfall_z_index": wf_z,
+		"river_surface_mounted": has_wra or (_water_surface_sprite != null and is_instance_valid(_water_surface_sprite)),
+		"river_surface_frame": wf_fr if has_wra else (_water_surface_sprite.frame if (_water_surface_sprite != null and is_instance_valid(_water_surface_sprite)) else -1),
+		"river_surface_z_index": wf_z if has_wra else (_water_surface_sprite.z_index if (_water_surface_sprite != null and is_instance_valid(_water_surface_sprite)) else 0),
+		"ankle_rim_mounted": _water_ankle_rim_sprite != null and is_instance_valid(_water_ankle_rim_sprite),
+		"ankle_rim_frame": _water_ankle_rim_sprite.frame if (_water_ankle_rim_sprite != null and is_instance_valid(_water_ankle_rim_sprite)) else -1,
+		"ankle_rim_z_index": _water_ankle_rim_sprite.z_index if (_water_ankle_rim_sprite != null and is_instance_valid(_water_ankle_rim_sprite)) else 0,
+		"active_splash_count": splash_cnt,
+		"active_ripple_count": _active_water_ripples.size(),
+	}
 
 
 func _update_follow_camera() -> void:
@@ -2588,32 +3494,45 @@ func _update_follow_camera() -> void:
 	var cam_x := (left_b + right_b) * 0.5 if min_cam_x >= max_cam_x else clampf(target_x, min_cam_x, max_cam_x)
 
 	var base_cam_y := (top_b + bottom_b) * 0.5 if _fixed_single_view_map else float(viewport_height) * 0.5
-	var follow_dy := 0.0
-	if (not _fixed_single_view_map) and player_node != null:
+	var target_y := base_cam_y
+	if (not _fixed_single_view_map) and bool(_camera_vertical_follow_cfg.get("enabled", false)):
+		var py_off := float(_camera_vertical_follow_cfg.get("player_y_offset_px", -135.0))
+		var cfg_min_y := maxf(min_cam_y, float(_camera_vertical_follow_cfg.get("min_cam_y", min_cam_y)))
+		var cfg_max_y := minf(max_cam_y, float(_camera_vertical_follow_cfg.get("max_cam_y", max_cam_y)))
+		if cfg_max_y < cfg_min_y:
+			cfg_max_y = cfg_min_y
+		if player_node != null:
+			var raw_ty := player_node.position.y + py_off
+			if raw_ty < cfg_min_y - 36.0:
+				target_y = maxf(min_cam_y, raw_ty)
+			else:
+				target_y = clampf(raw_ty, cfg_min_y, cfg_max_y)
+		else:
+			target_y = clampf(ground_y + py_off, cfg_min_y, cfg_max_y)
+	elif (not _fixed_single_view_map) and player_node != null:
+		var follow_dy := 0.0
 		if player_node.position.y > ground_y:
 			follow_dy = minf(60.0, (player_node.position.y - ground_y) * 0.45)
 		elif player_node.position.y < 180.0:
 			follow_dy = maxf(-120.0, (player_node.position.y - 180.0) * 0.6)
-	var target_y := base_cam_y + follow_dy
+		target_y = base_cam_y + follow_dy
 	var cam_y := (top_b + bottom_b) * 0.5 if min_cam_y >= max_cam_y else clampf(target_y, min_cam_y, max_cam_y)
 	_arena_camera.position = Vector2(cam_x, cam_y)
 
 
+func get_visible_world_x_bounds(margin_px: float = 240.0) -> Vector2:
+	if _arena_camera == null or DisplayServer.get_name() == "headless":
+		return Vector2(-999999.0, 999999.0)
+	var vis := _get_visible_logic_size()
+	var zx := maxf(0.1, _arena_camera.zoom.x)
+	var half_w := (vis.x / zx) * 0.5 + margin_px
+	var cx := _arena_camera.position.x + _arena_camera.offset.x
+	return Vector2(cx - half_w, cx + half_w)
+
+
 func _get_terrain_step_specs() -> Array[Dictionary]:
-	if not _has_extended_terrain_steps():
-		return []
-	var specs: Array[Dictionary] = []
-	var prev_y := ground_y
-	for st in _extended_step_configs:
-		var lower_y := ground_y + float(st["drop_y"])
-		specs.append({
-			"drop_x": float(st["drop_x"]),
-			"wall_x": float(st["wall_x"]),
-			"upper_y": prev_y,
-			"lower_y": lower_y,
-		})
-		prev_y = lower_y
-	return specs
+	_ensure_terrain_geometry_cache()
+	return _cached_terrain_step_specs
 
 
 static func _step_wall_x_at_y(spec: Dictionary, y: float) -> float:
@@ -2699,12 +3618,12 @@ func terrain_blocks_segment(from_pos: Vector2, to_pos: Vector2) -> bool:
 		if drop_x > min_sx and drop_x < max_sx:
 			var t_drop := (drop_x - from_pos.x) / dx
 			var y_drop := lerpf(from_pos.y, to_pos.y, t_drop)
-			if y_drop >= upper_y:
+			if y_drop >= minf(upper_y, lower_y):
 				return true
 		if wall_x > min_sx and wall_x < max_sx:
 			var t_wall := (wall_x - from_pos.x) / dx
 			var y_wall := lerpf(from_pos.y, to_pos.y, t_wall)
-			if y_wall >= lower_y:
+			if y_wall >= maxf(upper_y, lower_y):
 				return true
 	return false
 
@@ -2716,11 +3635,18 @@ func _can_cross_terrain_step(from_x: float, to_x: float, foot_y: float, flying: 
 	for spec in _get_terrain_step_specs():
 		var drop_x := float(spec["drop_x"])
 		var upper_y := float(spec["upper_y"])
-		var wall_x := _step_wall_x_at_y(spec, foot_y)
-		var guard_x := wall_x + 52.0 if not flying else wall_x
-		if to_x < from_x and min_x <= guard_x and max_x >= drop_x:
-			if foot_y > upper_y - clearance:
-				return false
+		var lower_y := float(spec["lower_y"])
+		if lower_y > upper_y:
+			var wall_x := _step_wall_x_at_y(spec, foot_y)
+			var guard_x := wall_x + 52.0 if not flying else wall_x
+			if to_x < from_x and min_x <= guard_x and max_x >= drop_x:
+				if foot_y > upper_y - clearance:
+					return false
+		elif lower_y < upper_y:
+			var guard_lx := drop_x - 52.0 if not flying else drop_x
+			if to_x > from_x and min_x <= drop_x and max_x >= guard_lx:
+				if foot_y > lower_y - clearance:
+					return false
 	return true
 
 
@@ -2743,7 +3669,7 @@ func _resolve_terrain_horizontal_move(from_x: float, raw_target_x: float, foot_y
 			var drop_x := float(spec["drop_x"])
 			var upper_y := float(spec["upper_y"])
 			var lower_y := float(spec["lower_y"])
-			if foot_y > upper_y - clearance:
+			if lower_y > upper_y and foot_y > upper_y - clearance:
 				var wall_x_at_foot := _step_wall_x_at_y(spec, foot_y)
 				var height_ratio := clampf((foot_y - upper_y) / maxf(1.0, lower_y - upper_y), 0.25, 1.0)
 				var eff_pad := base_pad * height_ratio
@@ -3047,6 +3973,9 @@ func step_player_vertical_physics(delta: float, jump_pressed: bool, drop_pressed
 
 
 func _spawn_ground_dust(world_x: float, surface_y: float, scale_mult: float = 1.0) -> void:
+	if is_point_in_interactive_water(world_x, surface_y, 26.0):
+		spawn_water_splash(world_x, _water_bed_y, scale_mult, true)
+		return
 	if _dust_fx_tex == null:
 		var dust_cfg: Dictionary = terrain_config.get("dust_fx", {})
 		_dust_fx_tex = _load_texture_2d(str(dust_cfg.get("res_path", "")))
@@ -3091,7 +4020,11 @@ func _step_ground_dust(delta: float) -> void:
 			sp.queue_free()
 			_active_dust_fx.remove_at(i)
 		else:
-			sp.frame = fidx
+			var seq_v: Variant = d.get("frames_seq", [])
+			if seq_v is Array and fidx < (seq_v as Array).size():
+				sp.frame = int((seq_v as Array)[fidx])
+			else:
+				sp.frame = fidx
 
 
 func compute_contact_shadow_params(pos_x: float, pos_y: float, base_half_w: float = 56.0, visible_flag: bool = true) -> Dictionary:
@@ -3378,9 +4311,27 @@ func _ensure_fighter_locomotion(fighter: Node2D, clip_name: String, preserve_pha
 		_play_locomotion_preserving_phase(spr, sname, preserve_phase, fighter)
 
 
+func _rebuild_roster_lookup_cache() -> void:
+	_roster_by_id.clear()
+	for entry in roster_characters:
+		if entry is Dictionary:
+			var cid := str(entry.get("character_id", ""))
+			if not cid.is_empty():
+				_roster_by_id[cid] = entry
+	_roster_cache_len = roster_characters.size()
+
+
 func _find_character_entry_ro(char_id: String) -> Dictionary:
+	if char_id.is_empty():
+		return {}
+	if _roster_cache_len != roster_characters.size():
+		_rebuild_roster_lookup_cache()
+	var hit: Variant = _roster_by_id.get(char_id, null)
+	if hit is Dictionary:
+		return hit
 	for entry in roster_characters:
 		if entry is Dictionary and str(entry.get("character_id", "")) == char_id:
+			_roster_by_id[char_id] = entry
 			return entry
 	return {}
 
@@ -4134,7 +5085,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 		else:
 			player_node.call(&"reset_combat_move")
 			walk_speed = 200.0
-	var base_speed := walk_speed * 1.6 if is_run else walk_speed
+	var base_speed := (walk_speed * 1.6 if is_run else walk_speed) * get_water_speed_multiplier(player_node.position.x, player_node.position.y)
 	_player_turn_boost_s = maxf(0.0, _player_turn_boost_s - delta)
 	var turning_now := _is_fighter_turning(player_node)
 
@@ -4197,6 +5148,11 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 			player_node.set("jump_land_hold_s", 0.09)
 
 	var sup_now := get_nearest_support_y_below(player_node.position.x, player_node.position.y)
+	_update_map_transition_header()
+	var prev_map_before_touch := current_map_id
+	_step_portal_character_touch(dir)
+	if current_map_id != prev_map_before_touch or player_node == null or not is_instance_valid(player_node):
+		return
 	if not is_flying and not is_stationary and player_node.position.y >= sup_now - 2.0 and dir != 0 and not turning_now:
 		_step_dust_accum_px += absf(player_node.position.x - prev_px)
 		if _step_dust_accum_px >= 96.0:
@@ -4205,10 +5161,12 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 	elif dir == 0:
 		_step_dust_accum_px = 64.0
 
+	var p_wade_sink_px := get_water_wade_sink_px(player_node.position.x, player_node.position.y) if (not is_flying) else 0.0
+	var p_wade_off_local := roundf(p_wade_sink_px / maxf(0.1, char_scale))
 	if not turning_now:
 		var spr := player_node.get_node_or_null("Sprite")
 		if spr is AnimatedSprite2D and action_playing:
-			(spr as AnimatedSprite2D).position.y = 0.0
+			(spr as AnimatedSprite2D).position.y = p_wade_off_local
 		if spr is AnimatedSprite2D and not action_playing:
 			var aspr := spr as AnimatedSprite2D
 			var target_clip := &"idle"
@@ -4218,7 +5176,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 				var g_airborne := (not is_flying) and (player_node.position.y < sup_now - 3.0)
 				target_clip = player_node.call(&"resolve_locomotion_clip", g_moving, g_airborne)
 				if target_clip == &"jump" and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"jump"):
-					aspr.position.y = 0.0
+					aspr.position.y = p_wade_off_local
 					var jframe: int = int(player_node.call(&"resolve_jump_pose_frame", player_vy, not g_airborne))
 					if aspr.animation != &"jump":
 						aspr.animation = &"jump"
@@ -4229,7 +5187,7 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 					# Exact Owner v10 combat_move continuous dash + analog brake (NO aura):
 					# #0 = back dash (400 px/s) / #3 = fwd dash (500 px/s) with low dynamic hover (~10 +/- 2.5px) + front/rear wind streaks!
 					# #1 = back brake / #2 = fwd brake drop smoothly to floor (0px).
-					aspr.position.y = -roundf(goku_cm_hop_y / maxf(0.1, char_scale))
+					aspr.position.y = -roundf((goku_cm_hop_y - p_wade_sink_px) / maxf(0.1, char_scale))
 					if bool(player_node.call(&"consume_combat_move_just_landed")):
 						_spawn_ground_dust(player_node.position.x, sup_now, 0.58)
 					if aspr.animation != &"combat_move":
@@ -4238,16 +5196,20 @@ func step_player_movement(delta: float, move_dir: int, fly_dir_y: int = 0, jump_
 					aspr.frame = clampi(goku_cm_frame, 0, maxi(0, aspr.sprite_frames.get_frame_count(&"combat_move") - 1))
 					return
 				else:
-					aspr.position.y = 0.0
+					aspr.position.y = p_wade_off_local
 			elif not is_flying and player_node.position.y < sup_now - 3.0 and aspr.sprite_frames != null and aspr.sprite_frames.has_animation(&"jump"):
+				aspr.position.y = 0.0
 				target_clip = &"jump"
 			elif (dir != 0 or eff_fly_dir_y != 0 or moving_fly) and aspr.sprite_frames != null:
+				aspr.position.y = p_wade_off_local
 				if is_run and aspr.sprite_frames.has_animation(&"run"):
 					target_clip = &"run"
 				elif aspr.sprite_frames.has_animation(&"walk"):
 					target_clip = &"walk"
 				elif aspr.sprite_frames.has_animation(&"fly"):
 					target_clip = &"fly"
+			else:
+				aspr.position.y = p_wade_off_local
 			if aspr.animation != target_clip or not aspr.is_playing():
 				_play_locomotion_preserving_phase(aspr, target_clip, _should_preserve_idle_walk_phase(entry))
 
@@ -4256,6 +5218,11 @@ func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
 		return
 	_step_camera_micro_shake(delta)
+	if _map_transition_cooldown_s > 0.0:
+		_map_transition_cooldown_s = maxf(0.0, _map_transition_cooldown_s - delta)
+	_portal_anim_time_s += maxf(0.0, delta)
+	if _world_portal_layer != null and is_instance_valid(_world_portal_layer) and _world_portal_layer.visible:
+		_world_portal_layer.queue_redraw()
 
 	if _wish_notice_timer_s > 0.0:
 		_wish_notice_timer_s = maxf(0.0, _wish_notice_timer_s - delta)
@@ -4300,12 +5267,19 @@ func _physics_process(delta: float) -> void:
 	_k3_was_down = k3_down
 	_k4_was_down = k4_down
 	_k5_was_down = k5_down
+	var enter_down := Input.is_key_pressed(KEY_ENTER) or Input.is_key_pressed(KEY_KP_ENTER)
+	var enter_just := enter_down and not _enter_key_was_down
+	_enter_key_was_down = enter_down
+	if enter_just and map_transition_header != null and map_transition_header.visible:
+		if trigger_active_map_transition():
+			return
 
 	if player_node == null:
 		if field_mode_enabled and field_manager != null and field_manager.active:
 			field_manager.step(delta)
 			_update_follow_camera()
 			_step_ground_dust(delta)
+			step_interactive_water(delta)
 			_update_parallax_scroll()
 			_update_hud()
 			queue_redraw()
@@ -4393,6 +5367,7 @@ func _physics_process(delta: float) -> void:
 			player_vy = 0.0
 
 	_update_follow_camera()
+	_update_map_transition_header()
 
 	if field_mode_enabled and field_manager != null and field_manager.active:
 		field_manager.step(delta)
@@ -4404,6 +5379,7 @@ func _physics_process(delta: float) -> void:
 		step_alpha_network(delta, 0)
 
 	_step_ground_dust(delta)
+	step_interactive_water(delta)
 	_update_parallax_scroll()
 	_update_hud()
 	queue_redraw()
@@ -4502,7 +5478,7 @@ func _is_point_over_hud_controls(screen_pos: Vector2) -> bool:
 		return true
 	if mobile_pad != null and is_instance_valid(mobile_pad) and bool(mobile_pad.call("is_screen_point_over_pad", screen_pos)):
 		return true
-	for ctrl in [logout_button, zone_selector, hero_selector, summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, infinite_mana_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, boss_selector, boss_spawn_button, pk_toggle_button, map_switch_button, hero_avatar_panel]:
+	for ctrl in [map_transition_header, logout_button, zone_selector, hero_selector, summon_button, wish_panel, item_toggle_button, item_drop_test_button, item_pickup_button, infinite_mana_button, toggle_hero_button, pad_settings_button, toggle_ui_button, immortal_button, boss_selector, boss_spawn_button, pk_toggle_button, map_switch_button, hero_avatar_panel]:
 		if ctrl != null and is_instance_valid(ctrl) and (ctrl as Control).visible:
 			if (ctrl as Control).get_global_rect().has_point(screen_pos):
 				return true
@@ -4572,8 +5548,9 @@ func _draw_pixel_contact_shadow(pos_x: float, pos_y: float, body_w: float, scale
 	var sy := float(sp["support_y"])
 	var alpha := float(sp["alpha"])
 	var cfg: Dictionary = terrain_config.get("contact_shadow", {})
-	var outer: Array = cfg.get("outer_rgba", [35, 22, 16, 60])
-	var inner: Array = cfg.get("inner_rgba", [24, 14, 10, 85])
+	var in_water := is_point_in_interactive_water(pos_x, sy, 18.0)
+	var outer: Array = cfg.get("water_outer_rgba", [14, 78, 104, 72]) if in_water else cfg.get("outer_rgba", [35, 22, 16, 60])
+	var inner: Array = cfg.get("water_inner_rgba", [8, 52, 76, 98]) if in_water else cfg.get("inner_rgba", [24, 14, 10, 85])
 	var sec_left := _map_left_x
 	var sec_right := _map_right_x
 	for sec in _get_terrain_sections():
@@ -4650,28 +5627,41 @@ func _draw() -> void:
 	if dummy_node != null:
 		var e_dims := _get_body_dims(_find_character_entry_ro(enemy_character_id))
 		_draw_pixel_contact_shadow(dummy_node.position.x, dummy_node.position.y, float(e_dims.x), enemy_scale, _is_fighter_surface_visible(dummy_node, enemy_character_id))
+	var vis_x_bounds := get_visible_world_x_bounds(260.0)
 	if field_mode_enabled and field_manager != null and field_manager.active:
 		for slot in field_manager._get_combat_slots():
 			if bool(slot.get("alive", false)):
 				var mnode := slot.get("node") as Node2D
 				if mnode != null and is_instance_valid(mnode):
+					if mnode.position.x < vis_x_bounds.x or mnode.position.x > vis_x_bounds.y:
+						continue
 					var cid := str(slot.get("character_id", ""))
 					var m_dims := _get_body_dims(_find_character_entry_ro(cid))
 					_draw_pixel_contact_shadow(mnode.position.x, mnode.position.y, float(m_dims.x), float(slot.get("scale_val", 2.0)), _is_fighter_surface_visible(mnode, cid))
 	if item_drop_enabled:
 		for item_n in _dropped_item_nodes:
 			if is_instance_valid(item_n) and item_n.visible:
-				_draw_pixel_contact_shadow(item_n.position.x, item_n.position.y, 28.0, item_n.scale.x, true)
+				if item_n.position.x >= vis_x_bounds.x and item_n.position.x <= vis_x_bounds.y:
+					_draw_pixel_contact_shadow(item_n.position.x, item_n.position.y, 28.0, item_n.scale.x, true)
 
+	var fm_active: bool = field_mode_enabled and field_manager != null and field_manager.active
 	if _field_ambient_flash_node != null and is_instance_valid(_field_ambient_flash_node):
-		_field_ambient_flash_node.visible = field_mode_enabled and field_manager != null and field_manager.active
-		_field_ambient_flash_node.queue_redraw()
+		var show_flash: bool = fm_active and bool(field_manager.call(&"has_active_ambient_flash"))
+		if _field_ambient_flash_node.visible != show_flash:
+			_field_ambient_flash_node.visible = show_flash
+		if show_flash:
+			_field_ambient_flash_node.queue_redraw()
 	if _field_back_overlay_node != null and is_instance_valid(_field_back_overlay_node):
-		_field_back_overlay_node.visible = field_mode_enabled and field_manager != null and field_manager.active
-		_field_back_overlay_node.queue_redraw()
+		var show_back: bool = fm_active and bool(field_manager.call(&"has_active_back_overlays"))
+		if _field_back_overlay_node.visible != show_back:
+			_field_back_overlay_node.visible = show_back
+		if show_back:
+			_field_back_overlay_node.queue_redraw()
 	if _field_overlay_node != null and is_instance_valid(_field_overlay_node):
-		_field_overlay_node.visible = field_mode_enabled and field_manager != null and field_manager.active
-		_field_overlay_node.queue_redraw()
+		if _field_overlay_node.visible != fm_active:
+			_field_overlay_node.visible = fm_active
+		if fm_active:
+			_field_overlay_node.queue_redraw()
 
 	_draw_ruler_overlay()
 
@@ -4690,10 +5680,42 @@ func _draw() -> void:
 		draw_line(Vector2(ai_controller.zone_max_x, zy - 16.0), Vector2(ai_controller.zone_max_x, zy + 8.0), Color(0.96, 0.62, 0.04, 0.90), 2.0)
 
 
-func _update_hud() -> void:
+func _update_hud(force: bool = false) -> void:
 	if hud_label == null:
 		return
-	var entry := _find_character_entry(active_character_id)
+	if hud_ui_hidden and not force:
+		if ruler_modal_visible and ruler_modal != null and is_instance_valid(ruler_modal):
+			ruler_modal.update_metrics(get_ruler_metrics())
+		return
+	var alive_cnt := 0
+	var boss_alive := false
+	if field_mode_enabled and field_manager != null and field_manager.active:
+		for s in field_manager.slots:
+			if bool(s.get("alive", false)):
+				alive_cnt += 1
+		var bslot_chk: Dictionary = field_manager.boss_slot
+		boss_alive = not bslot_chk.is_empty() and bool(bslot_chk.get("alive", false))
+	var struct_hash: int = (
+		(1 if field_mode_enabled else 0)
+		^ hash(active_character_id)
+		^ hash(char_scale)
+		^ (alive_cnt * 31)
+		^ (256 if boss_alive else 0)
+		^ (512 if (field_manager != null and field_manager.player_spawned) else 0)
+		^ (1024 if (field_manager != null and field_manager.player_dead) else 0)
+		^ (2048 if (field_manager != null and field_manager.player_immortal) else 0)
+		^ (collected_bag_balls.size() * 4099)
+		^ (8192 if utility_ai_enabled else 0)
+	)
+	if player_node != null and _is_hero_songoku(player_node):
+		struct_hash ^= (16384 if bool(player_node.get("is_ssj")) else 0) ^ hash(str(player_node.get("flight_state")))
+	_hud_tick_div = (_hud_tick_div + 1) % 6
+	if not force and struct_hash == _last_hud_struct_hash and _hud_tick_div != 0:
+		if ruler_modal_visible and ruler_modal != null and is_instance_valid(ruler_modal):
+			ruler_modal.update_metrics(get_ruler_metrics())
+		return
+	_last_hud_struct_hash = struct_hash
+	var entry := _find_character_entry_ro(active_character_id)
 	var dims := _get_body_dims(entry)
 	var scaled_w := int(round(float(dims.x) * char_scale))
 	var scaled_h := int(round(float(dims.y) * char_scale))
@@ -4715,10 +5737,6 @@ func _update_hud() -> void:
 		]
 	var vis := _get_visible_logic_size()
 	if field_mode_enabled and field_manager != null and field_manager.active:
-		var alive_cnt := 0
-		for s in field_manager.slots:
-			if bool(s.get("alive", false)):
-				alive_cnt += 1
 		var hero_txt := "Ẩn (bấm Hiện Tướng)"
 		if field_manager.player_spawned and player_node != null:
 			var is_tapion_hero := player_node.has_method(&"is_hero_tapion") and bool(player_node.call(&"is_hero_tapion"))
@@ -4747,8 +5765,12 @@ func _update_hud() -> void:
 			boss_txt = " | Boss: %.0fs" % field_manager.boss_spawn_timer_s
 		else:
 			boss_txt = " | Boss: Chờ Tướng (5')"
-		hud_label.text = "%dx%d | FPS %d/60 | Quái: %d/%d | %s%s | Ngọc: %d" % [
-			int(round(vis.x)), int(round(vis.y)), Engine.get_frames_per_second(), alive_cnt, field_manager.slots.size(), hero_txt, boss_txt, collected_bag_balls.size()
+		var map_disp := str(stage_config.get("display_name", current_map_id))
+		var monsters_on := bool(stage_config.get("monsters_enabled", current_map_id != "cell_arena"))
+		if not monsters_on:
+			boss_txt = ""
+		hud_label.text = "%s | %dx%d | FPS %d/60 | Quái: %d/%d | %s%s | Ngọc: %d" % [
+			map_disp, int(round(vis.x)), int(round(vis.y)), Engine.get_frames_per_second(), alive_cnt, field_manager.slots.size(), hero_txt, boss_txt, collected_bag_balls.size()
 		]
 	else:
 		hud_label.text = "%dx%d | %s | %.2fx Nearest (%dx%dpx, %.1f%% 1080p) | FPS: %d/60 | Speed: %d px/s | Pos: (%d, %d) | [1/2/3/-/+] Scale%s" % [

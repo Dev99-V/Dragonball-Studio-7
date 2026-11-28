@@ -1622,8 +1622,14 @@ func run_test() -> void:
 	if boss_ai_check == null or (float(boss_ai_check.zone_max_x) - float(boss_ai_check.zone_min_x)) < 5000.0:
 		fail("Boss Drum AI must patrol full map (unbounded_zone), got width=%.1f" % (float(boss_ai_check.zone_max_x) - float(boss_ai_check.zone_min_x) if boss_ai_check != null else -1.0))
 		return
-	if arena._item_drop_layer.z_index >= arena.shenron_summon.z_index or arena.shenron_summon.z_index >= arena._field_overlay_node.z_index:
-		fail("Z-index layering mismatch: ItemDrops=%d Shenron=%d FieldOverlay=%d" % [arena._item_drop_layer.z_index, arena.shenron_summon.z_index, arena._field_overlay_node.z_index])
+	if arena._item_drop_layer.z_index >= arena._field_overlay_node.z_index or arena._field_overlay_node.z_index >= arena.shenron_summon.z_index:
+		fail("Z-index layering mismatch (Shenron must sit above HP/Mana FieldOverlay): ItemDrops=%d FieldOverlay=%d Shenron=%d" % [arena._item_drop_layer.z_index, arena._field_overlay_node.z_index, arena.shenron_summon.z_index])
+		return
+	var sh_world_layer := arena.shenron_summon.get_parent() as CanvasLayer
+	var hud_canvas_layer := arena.get_node_or_null("HUDLayer") as CanvasLayer
+	var sh_ui_layer := arena.wish_panel.get_parent() as CanvasLayer
+	if sh_world_layer == null or not sh_world_layer.follow_viewport_enabled or hud_canvas_layer == null or sh_world_layer.layer <= hud_canvas_layer.layer or sh_ui_layer == null or sh_ui_layer.layer <= sh_world_layer.layer:
+		fail("CanvasLayer order mismatch: ShenronWorldLayer must sit above HUDLayer and below ShenronUILayer")
 		return
 	var step_edges: Array[float] = arena.call("_get_terrain_step_edges")
 	if step_edges.size() != 4:
@@ -2473,7 +2479,8 @@ func run_test() -> void:
 		return
 	p1_fm.respawn_player_at_left()
 
-	# v6 T3: Base Goku takes incoming hit -> AUTOMATICALLY activates SSJ1 (`transform_ssj`) + enters combat!
+	# Owner A4 (2026-11-28): Base Goku taking incoming hit enters combat cleanly WITHOUT auto-activating SSJ1;
+	# SSJ1 activates STRICTLY via manual player toggle (`transform_ssj`)!
 	p1_fm.start_field(true)
 	p1_fm.set_player_immortal(false)
 	p1_fm.player_hp = p1_fm.player_max_hp
@@ -2482,8 +2489,12 @@ func run_test() -> void:
 	goku.call(&"reset_hero_state")
 	g_spr.play(&"idle")
 	p1_fm.apply_damage_to_player(20.0, Vector2(-99999.0, -99999.0), false, "melee")
-	if not bool(goku.get("is_ssj")) or String(g_spr.animation) != "transform_ssj" or str(goku.get("game_state")) != "combat":
-		fail("v6 T3: Base Goku taking damage must auto-activate SSJ1 (is_ssj=%s anim=%s state=%s)" % [str(goku.get("is_ssj")), String(g_spr.animation), str(goku.get("game_state"))])
+	if bool(goku.get("is_ssj")) or str(goku.get("game_state")) != "combat":
+		fail("Owner A4: Base Goku taking damage must NOT auto-activate SSJ1 and must enter combat (is_ssj=%s state=%s)" % [str(goku.get("is_ssj")), str(goku.get("game_state"))])
+		return
+	arena._on_touch_action("transform_ssj")
+	if not bool(goku.get("is_ssj")) or String(g_spr.animation) != "transform_ssj":
+		fail("Owner A4: Manual player toggle transform_ssj must activate SSJ1 (is_ssj=%s anim=%s)" % [str(goku.get("is_ssj")), String(g_spr.animation)])
 		return
 
 	# v6 T5: Player Armor Bar (100 max below Mana) drains on hit, breaks to 'hit' (08) STRICTLY ONCE at 0, does NOT re-trigger on subsequent hits while broken, and auto-refills after 3s!

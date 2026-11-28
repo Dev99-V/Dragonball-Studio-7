@@ -213,21 +213,59 @@ func _cell_arena_surface_y_at(world_x: float) -> float:
 	return float(CELL_ARENA_FLOOR_PROFILE[CELL_ARENA_FLOOR_PROFILE.size() - 1]["y"])
 
 
+const TEINAN_SLOPE_STEPS := [
+	{"drop_x": 110.0, "wall_x": 155.0, "upper_y": 515.0, "lower_y": 575.0},
+	{"drop_x": 190.0, "wall_x": 235.0, "upper_y": 575.0, "lower_y": 655.0},
+	{"drop_x": 265.0, "wall_x": 320.0, "upper_y": 655.0, "lower_y": 768.0},
+	{"drop_x": 1425.0, "wall_x": 1480.0, "upper_y": 768.0, "lower_y": 672.0},
+	{"drop_x": 1785.0, "wall_x": 1835.0, "upper_y": 672.0, "lower_y": 612.0},
+	{"drop_x": 2180.0, "wall_x": 2235.0, "upper_y": 612.0, "lower_y": 895.0},
+	{"drop_x": 2945.0, "wall_x": 2995.0, "upper_y": 895.0, "lower_y": 785.0},
+	{"drop_x": 3310.0, "wall_x": 3355.0, "upper_y": 785.0, "lower_y": 678.0},
+	{"drop_x": 3485.0, "wall_x": 3535.0, "upper_y": 678.0, "lower_y": 570.0},
+	{"drop_x": 4075.0, "wall_x": 4120.0, "upper_y": 570.0, "lower_y": 682.0},
+	{"drop_x": 4265.0, "wall_x": 4310.0, "upper_y": 682.0, "lower_y": 792.0},
+]
+
+
+func _teinan_slope_surface_y_at(world_x: float) -> float:
+	var prev_y := 515.0
+	for st in TEINAN_SLOPE_STEPS:
+		var dx := float(st["drop_x"])
+		var wx := float(st["wall_x"])
+		var ny := float(st["lower_y"])
+		if world_x <= dx:
+			return prev_y
+		if world_x < wx and wx > dx:
+			return lerpf(prev_y, ny, (world_x - dx) / (wx - dx))
+		prev_y = ny
+	return prev_y
+
+
 func _terrain_surface_y_for_map(map_id: String, world_x: float) -> float:
 	if map_id == "cell_arena":
 		return _cell_arena_surface_y_at(world_x)
+	if map_id == "teinan_slope":
+		return _teinan_slope_surface_y_at(world_x)
 	return _terrain_surface_y_at(world_x)
 
 
 func _terrain_blocks_segment_for_map(map_id: String, from_pos: Vector2, to_pos: Vector2) -> bool:
-	if map_id != "cell_arena":
-		return _terrain_blocks_segment(from_pos, to_pos)
-	for i in range(9):
-		var t := float(i) / 8.0
-		var pt := from_pos.lerp(to_pos, t)
-		if pt.y > _cell_arena_surface_y_at(pt.x) + 0.001:
-			return true
-	return false
+	if map_id == "cell_arena":
+		for i in range(9):
+			var t := float(i) / 8.0
+			var pt := from_pos.lerp(to_pos, t)
+			if pt.y > _cell_arena_surface_y_at(pt.x) + 0.001:
+				return true
+		return false
+	if map_id == "teinan_slope":
+		for i in range(13):
+			var t2 := float(i) / 12.0
+			var pt2 := from_pos.lerp(to_pos, t2)
+			if pt2.y > _teinan_slope_surface_y_at(pt2.x) + 0.001:
+				return true
+		return false
+	return _terrain_blocks_segment(from_pos, to_pos)
 
 
 func _zone_key(map_id: String, zone_id: int) -> String:
@@ -240,7 +278,7 @@ func _get_or_create_zone(map_id: String, zone_id: int) -> Dictionary:
 	if zones.has(key):
 		return zones[key]
 	var mons := {}
-	if map_id != "cell_arena":
+	if map_id != "cell_arena" and map_id != "teinan_slope":
 		for m in DEFAULT_MONSTER_SLOTS:
 			var mid := str(m["id"])
 			mons[mid] = {
@@ -460,7 +498,7 @@ func _complete_peer_auth(pid: int, claims: Dictionary, req_map: String, req_zone
 	pinfo["zone_key"] = str(z["key"])
 	if not (pid in z["peer_ids"]):
 		z["peer_ids"].append(pid)
-	var eff_spawn_x := clampf(spawn_x, 24.0, 2376.0) if map_id == "cell_arena" else spawn_x
+	var eff_spawn_x := clampf(spawn_x, 24.0, 2376.0) if map_id == "cell_arena" else (clampf(spawn_x, -216.0, 4536.0) if map_id == "teinan_slope" else spawn_x)
 	var spawn_y := _terrain_surface_y_for_map(map_id, eff_spawn_x)
 	var init_mana := PLAYER_MAX_MANA if cid == "songoku" else 0.0
 	z["players"][uid] = {
@@ -546,8 +584,8 @@ func _handle_peer_packet(pid: int, pkt: Dictionary) -> void:
 		if not bool(pdata["alive"]):
 			return
 		var map_id_now := str(z.get("map_id", "rocky_plateau"))
-		var min_bx := 24.0 if map_id_now == "cell_arena" else (_stage_left_x + 24.0)
-		var max_bx := 2376.0 if map_id_now == "cell_arena" else (_stage_right_x - 24.0)
+		var min_bx := 24.0 if map_id_now == "cell_arena" else (-216.0 if map_id_now == "teinan_slope" else (_stage_left_x + 24.0))
+		var max_bx := 2376.0 if map_id_now == "cell_arena" else (4536.0 if map_id_now == "teinan_slope" else (_stage_right_x - 24.0))
 		var req_x := clampf(float(pkt.get("x", pdata["x"])), min_bx, max_bx)
 		var max_y := _terrain_surface_y_for_map(map_id_now, req_x)
 		var req_y := clampf(float(pkt.get("y", pdata["y"])), 40.0, max_y)
@@ -774,7 +812,7 @@ func _switch_peer_zone(pid: int, target_map: String, target_zone: int) -> void:
 	pinfo["zone_key"] = str(new_z["key"])
 	if not (pid in new_z["peer_ids"]):
 		new_z["peer_ids"].append(pid)
-	var default_sx := 1200.0 if target_map == "cell_arena" else 560.0
+	var default_sx := 1200.0 if target_map == "cell_arena" else (-140.0 if target_map == "teinan_slope" else 560.0)
 	var default_sy := _terrain_surface_y_for_map(target_map, default_sx)
 	if preserved_player.is_empty():
 		var init_z_mana := PLAYER_MAX_MANA if str(pinfo["character_id"]) == "songoku" else 0.0
@@ -832,7 +870,7 @@ func _step_active_zones(dt: float) -> void:
 				p["respawn_timer_s"] = maxf(0.0, float(p["respawn_timer_s"]) - dt)
 				if float(p["respawn_timer_s"]) <= 0.0:
 					var rmap := str(z.get("map_id", "rocky_plateau"))
-					var rsx := 1200.0 if rmap == "cell_arena" else 560.0
+					var rsx := 1200.0 if rmap == "cell_arena" else (-140.0 if rmap == "teinan_slope" else 560.0)
 					p["alive"] = true
 					p["hp"] = float(p["max_hp"])
 					p["x"] = rsx

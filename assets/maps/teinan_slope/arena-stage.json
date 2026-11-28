@@ -1,0 +1,317 @@
+{
+  "schema_version": "dr7.arena_stage.v1",
+  "stage_id": "teinan_slope",
+  "display_name": "Sườn núi Teinan",
+  "monsters_enabled": false,
+  "has_transition_header": true,
+  "transitions": {
+    "left": {
+      "target_map_id": "rocky_plateau",
+      "target_display_name": "Núi Teinan",
+      "portal_width_px": 26.0,
+      "portal_height_px": 208.0,
+      "spawn_x": 6120.0,
+      "facing_left": true
+    },
+    "right": {
+      "target_map_id": "",
+      "target_display_name": "Khu vực tiếp theo",
+      "pending_next_map": true,
+      "pending_notice": "◆ Khu vực tiếp theo sắp mở (chờ kết nối Map 3)!",
+      "portal_width_px": 26.0,
+      "portal_height_px": 185.0,
+      "spawn_x": 0.0,
+      "facing_left": false
+    }
+  },
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "aspect_ratio": "16:9",
+    "orientation": "landscape",
+    "stretch_mode": "canvas_items",
+    "stretch_aspect": "expand",
+    "stretch_scale_mode": "fractional",
+    "pixel_perfect_toggle_supported": true,
+    "pixel_perfect_min_height_px": 1080,
+    "renderer": "gl_compatibility",
+    "device_profiles_path": "assets/maps/rocky_plateau/device-profiles.json",
+    "handheld_orientation_code": 0,
+    "ppu_reference": 64,
+    "tile_px": 32
+  },
+  "map": {
+    "background_path": "assets/maps/teinan_slope/teinan-slope-bg.jpg",
+    "background_res_path": "res://assets/maps/teinan_slope/teinan-slope-bg.jpg",
+    "background_web_path": "/assets/maps/teinan_slope/teinan-slope-bg.jpg",
+    "source_size_px": [
+      1192,
+      670
+    ],
+    "sha256": "4697c8baa4f99a1628f350581f226e7a9c6ac3b9ec6d28d9b31ac5c0ad99073c",
+    "render_rect_px": [
+      0,
+      0,
+      1920,
+      1080
+    ],
+    "fit_mode": "cover_16_9",
+    "extended_map": {
+      "approved_by_owner": true,
+      "demo_status": "approved_v0_20_0",
+      "background_path": "assets/maps/teinan_slope/teinan-slope-extended.png",
+      "background_res_path": "res://assets/maps/teinan_slope/teinan-slope-extended.png",
+      "background_web_path": "/assets/maps/teinan_slope/teinan-slope-extended.png",
+      "sha256": "60910131b33fe5dad7e1ea3a41640ae142123e6cd2b1b9d201c08696f69c1e44",
+      "image_size_px": [
+        4800,
+        1350
+      ],
+      "world_bounds": {
+        "left_x": -240,
+        "right_x": 4560,
+        "top_y": -210,
+        "bottom_y": 1140
+      },
+      "camera_vertical_follow": {
+        "enabled": true,
+        "player_y_offset_px": -85.0,
+        "min_cam_y": 390.0,
+        "max_cam_y": 590.0
+      },
+      "steps": [
+        {
+          "drop_x": 110,
+          "wall_x": 155,
+          "drop_y": 60
+        },
+        {
+          "drop_x": 190,
+          "wall_x": 235,
+          "drop_y": 140
+        },
+        {
+          "drop_x": 265,
+          "wall_x": 320,
+          "drop_y": 253
+        },
+        {
+          "drop_x": 1425,
+          "wall_x": 1480,
+          "drop_y": 157
+        },
+        {
+          "drop_x": 1785,
+          "wall_x": 1835,
+          "drop_y": 97
+        },
+        {
+          "drop_x": 2180,
+          "wall_x": 2235,
+          "drop_y": 380
+        },
+        {
+          "drop_x": 2945,
+          "wall_x": 2995,
+          "drop_y": 270
+        },
+        {
+          "drop_x": 3310,
+          "wall_x": 3355,
+          "drop_y": 163
+        },
+        {
+          "drop_x": 3485,
+          "wall_x": 3535,
+          "drop_y": 55
+        },
+        {
+          "drop_x": 4075,
+          "wall_x": 4120,
+          "drop_y": 167
+        },
+        {
+          "drop_x": 4265,
+          "wall_x": 4310,
+          "drop_y": 277
+        }
+      ],
+      "interactive_water": {
+        "enabled": true,
+        "min_world_x": 2205.0,
+        "max_world_x": 2945.0,
+        "width_px": 740.0,
+        "bed_world_y": 895.0,
+        "wade_depth_px": 6.0,
+        "speed_multiplier": 1.0,
+        "waterfall_spray_min_x": 2275.0,
+        "waterfall_spray_max_x": 2715.0,
+        "waterfall_river_asset": {
+          "tres_path": "assets/maps/teinan_slope/fx/waterfall_river.tres",
+          "tres_res_path": "res://assets/maps/teinan_slope/fx/waterfall_river.tres",
+          "atlas_path": "assets/maps/teinan_slope/fx/waterfall_river_atlas.png",
+          "atlas_res_path": "res://assets/maps/teinan_slope/fx/waterfall_river_atlas.png",
+          "atlas_web_path": "/assets/maps/teinan_slope/fx/waterfall_river_atlas.png",
+          "sha256": "e579d49d01a6e7f4e9a0287c340f962f2aa782a2d67f95b3f2e39fa7b543a195",
+          "atlas_size_px": [
+            2944,
+            4096
+          ],
+          "frame_size_px": [
+            1472,
+            1024
+          ],
+          "grid_cols_rows": [
+            2,
+            4
+          ],
+          "frame_count": 8,
+          "animation": "flow",
+          "tick_hz": 60,
+          "ticks_per_frame": 5.88,
+          "world_pos": [
+            1928.0,
+            116.0
+          ],
+          "z_index": -16
+        },
+        "ankle_rim_anim": {
+          "path": "assets/maps/teinan_slope/fx/water_ankle_rim.png",
+          "res_path": "res://assets/maps/teinan_slope/fx/water_ankle_rim.png",
+          "web_path": "/assets/maps/teinan_slope/fx/water_ankle_rim.png",
+          "sha256": "680389a4426e6f94f28f3326f94d51b7aabf98069aa53b687d6444dc4cf0aeef",
+          "frame_size_px": [
+            740,
+            24
+          ],
+          "hframes": 2,
+          "vframes": 4,
+          "frame_count": 8,
+          "ticks_per_frame": 5.88,
+          "world_pos": [
+            2205.0,
+            886.0
+          ],
+          "z_index": 31
+        },
+        "splash_fx": {
+          "path": "assets/maps/teinan_slope/fx/water_splash.png",
+          "res_path": "res://assets/maps/teinan_slope/fx/water_splash.png",
+          "web_path": "/assets/maps/teinan_slope/fx/water_splash.png",
+          "sha256": "8133f6339633a6b1eb4106e93c2447312413f8511378e05d3a9bf94828f93f04",
+          "frame_size_1x_px": [
+            160,
+            80
+          ],
+          "frame_count": 13,
+          "tick_hz": 60,
+          "ticks_per_frame": 3,
+          "scale": 1.35,
+          "alpha_hardness_pct": 100.0,
+          "z_index": 25
+        }
+      },
+      "foreground_trees": {
+        "path": "assets/maps/teinan_slope/teinan-slope-trees.png",
+        "res_path": "res://assets/maps/teinan_slope/teinan-slope-trees.png",
+        "web_path": "/assets/maps/teinan_slope/teinan-slope-trees.png",
+        "sha256": "2b21578a98e3bcf55692bdcd17caf977007fb3c01979b70950d56e42ea16d85d",
+        "alpha_hardness_pct": 97.39,
+        "z_index": -15,
+        "scale": [
+          1.0,
+          1.0
+        ],
+        "placements": [
+          {
+            "region": [
+              16.0,
+              16.0,
+              720.0,
+              720.0
+            ],
+            "scale": [
+              1.0,
+              1.0
+            ],
+            "trunk_source_x": 0.0,
+            "root_bottom_src_y": 0.0,
+            "trunk_world_x": 2496.0,
+            "rear_grass_world_y": -74.0
+          }
+        ],
+        "auxiliary_props": {
+          "path": "",
+          "res_path": "",
+          "web_path": "",
+          "z_index": -19,
+          "placements": []
+        }
+      }
+    }
+  },
+  "gameplay": {
+    "ground_y": 515,
+    "walkable_bounds_x": [
+      -216,
+      4536
+    ],
+    "player_spawn_x": -140,
+    "player_spawn_facing_left_x": 920,
+    "dummy_spawn_x": 640,
+    "character_scale_default": 2,
+    "character_scale_options": [
+      1,
+      2,
+      3
+    ],
+    "character_scale_min": 0.5,
+    "character_scale_max": 3.0,
+    "character_scale_step": 0.05,
+    "character_scale_presets": [
+      1,
+      1.25,
+      1.5,
+      1.75,
+      2,
+      2.5,
+      3
+    ],
+    "texture_filter": "nearest",
+    "screen_shake_enabled": false,
+    "ground_shadow_ellipse_enabled": false,
+    "burrow_dust_scale_default": 2.65,
+    "burrow_dust_scale_options": [
+      1,
+      1.5,
+      2.25,
+      2.65
+    ],
+    "flight": {
+      "min_y": -140,
+      "max_y": 895,
+      "default_y": 210,
+      "screen_middle_y": 440,
+      "middle_offset_px": -260,
+      "vertical_speed_px_per_s": 240
+    },
+    "jump_velocity_px_per_s": -780,
+    "gravity_px_per_s2": 2000,
+    "utility_ai": {
+      "enabled_by_default": false,
+      "distance_metric": "body_edge_2d",
+      "close_edge_px": 50,
+      "mid_max_edge_px": 200,
+      "heavy_max_edge_px": 200,
+      "attack_cooldown_s": 1.0,
+      "light_hits_before_heavy": 2,
+      "zone_width_max_px": 500,
+      "zone_width_default_px": 480,
+      "monster_count_per_map": [
+        0,
+        0
+      ],
+      "monster_spacing_max_px": 500
+    }
+  }
+}

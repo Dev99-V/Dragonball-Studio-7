@@ -1403,9 +1403,8 @@ func _step_auto_approach(delta: float) -> void:
 		var is_goku := _is_hero_songoku_node(p_node)
 		var target_airborne := bool(tgt.get("is_flying", false)) or (m_core.y < p_core.y - 60.0)
 		if is_goku and target_airborne:
-			# v6 T6: Touch/normal attack on airborne monster automatically transforms (if Base), jumps & flies up (`fly_aura`)!
+			# Owner A4 rule: SSJ1 is strictly controlled by manual player toggle; do not force SSJ when attacking airborne in Base.
 			if not bool(p_node.get("is_ssj")):
-				arena.call("_trigger_songoku_auto_transform_on_hit")
 				arena.call("step_player_movement", delta, 0, 0, false, false, false, Vector2.ZERO)
 				return
 			var to_air := m_core - p_core
@@ -1998,18 +1997,14 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 	_spawn_hit_impact_fx(fx_pos, hit_kind, dmg_txt, dmg_col, impact_dir, attacker_cid)
 	if spawn_power_explosion:
 		_spawn_powerup_explosion(fx_pos, DEFAULT_EXPLOSION_SCALE)
-	# Any incoming attack transitions Son Goku Peace -> Combat AND auto-activates SSJ1 if currently Base (Owner v6 T3)!
-	var auto_transformed_now := false
+	# Owner A4 rule (2026-11-28): Incoming damage transitions Son Goku Peace -> Combat WITHOUT auto-activating SSJ1.
+	# SSJ1 is strictly controlled by manual player toggle only.
 	if arena != null and arena.player_node != null and _is_hero_songoku_node(arena.player_node):
 		var entered_combat := bool(arena.player_node.call(&"enter_combat"))
 		if entered_combat:
 			if arena.has_method(&"trigger_combat_state_banner"):
 				arena.call(&"trigger_combat_state_banner")
-		if not bool(arena.player_node.get("is_ssj")):
-			if arena.has_method(&"_trigger_songoku_auto_transform_on_hit"):
-				arena.call(&"_trigger_songoku_auto_transform_on_hit")
-				auto_transformed_now = true
-		elif entered_combat and not genki_cc_immune and not armor_broke_now and not already_armor_broken and not bool(arena.call("_is_player_action_playing")):
+		if bool(arena.player_node.get("is_ssj")) and entered_combat and not genki_cc_immune and not armor_broke_now and not already_armor_broken and not bool(arena.call("_is_player_action_playing")):
 			arena.call("_play_fighter_clip", arena.player_node, "combat_enter")
 	player_hp = maxf(0.0, player_hp - dmg)
 	_local_hp_grace_s = 0.45
@@ -2038,7 +2033,7 @@ func apply_damage_to_player(dmg: float, hit_pos: Vector2 = Vector2(-99999.0, -99
 			if arena.player_node.has_meta(&"_arena_queued_action"):
 				arena.player_node.remove_meta(&"_arena_queued_action")
 			arena.call("_play_fighter_clip", arena.player_node, "ko")
-	elif (not genki_cc_immune) and (armor_broke_now or already_armor_broken) and not auto_transformed_now:
+	elif (not genki_cc_immune) and (armor_broke_now or already_armor_broken):
 		# Broken-armor HIT reaction replays 1:1 in parallel with EVERY incoming hit while armor is broken (Owner 2026-11-26)!
 		# Also cancels Tapion's active Antamina channel WITHOUT losing any target's "Ấn ngục" stacks!
 		if arena != null and arena.player_node != null and _is_hero_songoku_node(arena.player_node):
@@ -2314,7 +2309,13 @@ func _step_slot(slot: Dictionary, delta: float) -> void:
 			var entry: Dictionary = arena.call("_find_character_entry_ro", cid)
 			var spd := float(arena.call("_get_walk_speed_px_per_s", entry, float(slot["scale_val"])))
 			var dims: Vector2i = arena.call("_get_body_dims", entry)
-			arena.call("_move_node_horizontal", mnode, float(move_dir) * spd * delta, false, float(slot["zone_min_x"]), float(slot["zone_max_x"]), float(dims.x) * float(slot["scale_val"]) * 0.5)
+			var moved_dx := absf(float(arena.call("_move_node_horizontal", mnode, float(move_dir) * spd * delta, false, float(slot["zone_min_x"]), float(slot["zone_max_x"]), float(dims.x) * float(slot["scale_val"]) * 0.5)))
+			if moved_dx > 0.0 and arena.has_method(&"is_point_in_interactive_water") and bool(arena.call(&"is_point_in_interactive_water", mnode.position.x, mnode.position.y)):
+				var w_acc := float(slot.get("water_step_accum_px", 0.0)) + moved_dx
+				if w_acc >= 92.0:
+					w_acc = 0.0
+					arena.call(&"spawn_water_splash", mnode.position.x, mnode.position.y, 0.80, true)
+				slot["water_step_accum_px"] = w_acc
 			arena.call("_ensure_fighter_locomotion", mnode, str(slot["locomotion_clip"]), bool(slot["preserve_phase"]))
 		else:
 			arena.call("_ensure_fighter_locomotion", mnode, "idle", bool(slot["preserve_phase"]))
@@ -2681,6 +2682,8 @@ func _step_homing_projectiles(delta: float) -> void:
 		var prev_pos := fx.position
 		var next_pos := prev_pos + new_dir * step_d
 		if bool(arena.call("terrain_blocks_segment", prev_pos, next_pos)):
+			if arena.has_method(&"notify_projectile_terrain_impact"):
+				arena.call(&"notify_projectile_terrain_impact", next_pos, 1.05)
 			_spawn_hit_impact_fx(prev_pos, "melee", "", Color.WHITE)
 			_spawn_powerup_explosion(prev_pos, CLASH_EXPLOSION_SCALE)
 			fx.queue_free()
@@ -2731,8 +2734,11 @@ func _step_slot_vertical(slot: Dictionary, delta: float) -> void:
 	if mnode.position.y < floor_y - 0.5 or vy < 0.0:
 		vy = float(arena.gravity_px_per_s2) * delta if vy == 0.0 else (vy + float(arena.gravity_px_per_s2) * delta)
 		var dy_step := maxf(2.0, vy * delta) if vy >= 0.0 else (vy * delta)
-		mnode.position.y = minf(floor_y, mnode.position.y + dy_step)
-		slot["vy"] = vy
+		var next_my := minf(floor_y, mnode.position.y + dy_step)
+		if next_my >= floor_y - 0.1 and vy >= 150.0 and arena.has_method(&"is_point_in_interactive_water") and bool(arena.call(&"is_point_in_interactive_water", mnode.position.x, floor_y)):
+			arena.call(&"spawn_water_splash", mnode.position.x, floor_y, 1.05, true)
+		mnode.position.y = next_my
+		slot["vy"] = 0.0 if next_my >= floor_y - 0.01 else vy
 	else:
 		mnode.position.y = floor_y
 		slot["vy"] = 0.0
@@ -2824,9 +2830,17 @@ func _compute_slot_edge_gap(slot: Dictionary) -> float:
 
 
 func _find_slot_by_id(sid: String) -> Dictionary:
-	for s in _get_combat_slots():
+	if sid.is_empty():
+		return {}
+	for s in slots:
 		if str(s["id"]) == sid:
 			return s
+	if not boss_slot.is_empty() and str(boss_slot.get("id", "")) == sid:
+		return boss_slot
+	for rk in remote_player_slots.keys():
+		var rs: Dictionary = remote_player_slots[rk]
+		if str(rs.get("id", "")) == sid:
+			return rs
 	return {}
 
 
@@ -2877,13 +2891,47 @@ func _gather_pointer_candidates() -> Array[Dictionary]:
 	return out
 
 
+func _has_any_pointer_candidate() -> bool:
+	for s in slots:
+		if can_attack_slot(s):
+			return true
+	if not boss_slot.is_empty() and can_attack_slot(boss_slot):
+		return true
+	for rk in remote_player_slots.keys():
+		if can_attack_slot(remote_player_slots[rk] as Dictionary):
+			return true
+	if arena != null:
+		for item_n in arena._dropped_item_nodes:
+			if _can_pickup_item(item_n):
+				return true
+		if arena.shenron_summon != null and arena.shenron_summon.active:
+			return true
+	return false
+
+
 func refresh_pointer_valid() -> void:
+	# O(1) fast-path: keep current pointer without allocating/sorting candidates when still valid (>99% of ticks)
+	if pointer_kind == "enemy" and not pointer_slot_id.is_empty():
+		var cur_s := _find_slot_by_id(pointer_slot_id)
+		if not cur_s.is_empty() and can_attack_slot(cur_s):
+			return
+	elif pointer_kind == "item" and pointer_item_node != null:
+		if _can_pickup_item(pointer_item_node):
+			return
+	elif pointer_kind == "npc":
+		if arena != null and arena.shenron_summon != null and arena.shenron_summon.active:
+			return
+	elif pointer_kind == "enemy" and pointer_slot_id.is_empty():
+		if not _has_any_pointer_candidate():
+			return
+
 	var cands := _gather_pointer_candidates()
 	if cands.is_empty():
-		pointer_kind = "enemy"
-		pointer_slot_id = ""
-		pointer_item_node = null
-		pointer_changed.emit(pointer_kind)
+		if pointer_kind != "enemy" or not pointer_slot_id.is_empty() or pointer_item_node != null:
+			pointer_kind = "enemy"
+			pointer_slot_id = ""
+			pointer_item_node = null
+			pointer_changed.emit(pointer_kind)
 		return
 	for c in cands:
 		if pointer_kind == "enemy" and str(c["kind"]) == "enemy" and str(c["id"]) == pointer_slot_id:
@@ -3039,6 +3087,22 @@ func get_active_target_pointer_info() -> Dictionary:
 	return {"visible": false, "persistent": false, "kind": "", "slot_id": "", "tip_pos": Vector2.ZERO}
 
 
+func has_active_ambient_flash() -> bool:
+	return active and _genki_ambient_flash_s > 0.0
+
+
+func has_active_back_overlays() -> bool:
+	if not active or not player_spawned or player_dead or arena == null or arena.player_node == null:
+		return false
+	if not _is_hero_songoku_node(arena.player_node):
+		return false
+	var pspr := (arena.player_node as Node2D).get_node_or_null("Sprite") as AnimatedSprite2D
+	if pspr == null or not pspr.is_playing():
+		return false
+	var an := String(pspr.animation)
+	return (an == "kame_ground_horiz" or an == "kame_ground_up" or an == "kame_air_horiz" or an == "kame_air_down") and pspr.frame >= 2 and pspr.frame <= 4
+
+
 func draw_back_overlays(canvas: CanvasItem) -> void:
 	if not active:
 		return
@@ -3059,72 +3123,108 @@ func draw_overlays(canvas: CanvasItem) -> void:
 		return
 	if show_monster_ranges:
 		_draw_monster_range_overlays(canvas)
-	# 1. Player overhead Green HP + Blue Mana + White Armor bars + Orange vertical Flight KI bar (+ display name in Alpha session)
-	if player_spawned and not player_dead and arena.player_node != null:
-		var p_rect := _get_player_body_rect()
-		var p_top: float = p_rect.position.y - 18.0
-		var p_cx: float = _get_player_core_pos().x
-		var p_ki := -1.0
-		var p_max_ki := 50.0
-		var p_ki_ex := false
+	var cam_bounds := Vector2(-999999.0, 999999.0)
+	if arena != null and arena.has_method(&"get_visible_world_x_bounds"):
+		cam_bounds = arena.call(&"get_visible_world_x_bounds", 260.0) as Vector2
+	var cam_min_x := cam_bounds.x
+	var cam_max_x := cam_bounds.y
+
+	var draw_p := player_spawned and not player_dead and arena.player_node != null
+	var p_rect := Rect2()
+	var p_top := 0.0
+	var p_cx := 0.0
+	var p_ki := -1.0
+	var p_max_ki := 50.0
+	var p_ki_ex := false
+	var p_sb_show := false
+	var p_sb_alpha := 0.0
+	if draw_p:
+		p_rect = _get_player_body_rect()
+		p_top = p_rect.position.y - 18.0
+		p_cx = _get_player_core_pos().x
 		if _is_hero_songoku_node(arena.player_node):
 			p_ki = float(arena.player_node.get("ki"))
 			p_max_ki = float(arena.player_node.get("max_ki"))
 			p_ki_ex = bool(arena.player_node.get("ki_exhausted"))
-		OverheadBarsDrawScript.draw_player_bars(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, local_display_name, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0, p_ki, p_max_ki, p_ki_ex, player_shield_break_icon_timer_s > 0.0, _shield_break_flash_alpha(player_shield_break_icon_timer_s), false, pk_tan_sat_enabled)
-		if player_hard_stun_timer_s > 0.0:
-			OverheadBarsDrawScript.draw_stun_stars_ring(canvas, Vector2(p_cx, p_rect.position.y), _sim_time_s)
-		_draw_hero_phase2_fx_overlays(canvas)
-	_draw_hero_genki_world_fx(canvas)
+		p_sb_show = player_shield_break_icon_timer_s > 0.0
+		p_sb_alpha = _shield_break_flash_alpha(player_shield_break_icon_timer_s)
+		# Pass 1A: Player bar geometry (untextured batch)
+		OverheadBarsDrawScript.draw_player_bars_shapes(canvas, p_cx, p_top, player_hp, player_max_hp, player_mana, player_max_mana, false, player_armor, player_max_armor, player_armor_broken_timer_s > 0.0, p_ki, p_max_ki, p_ki_ex, p_sb_show, p_sb_alpha, false, pk_tan_sat_enabled)
 
-	# 2. All alive monsters + Boss Drum + Remote Players (Vinh / Thái)
+	# Pass 1B: Visible monsters + Boss + Remote Players geometry (frustum-culled + batched before font text!)
+	var vis_slots: Array = []
 	for s in _get_combat_slots():
-		if not bool(s["alive"]) or not is_instance_valid(s["node"]):
+		if not bool(s["alive"]):
+			continue
+		var snode := s.get("node") as Node2D
+		if snode == null or not is_instance_valid(snode):
+			continue
+		if snode.position.x < cam_min_x or snode.position.x > cam_max_x:
 			continue
 		var m_rect := _get_slot_body_rect(s)
 		var e_top := m_rect.position.y - 14.0
 		var e_cx := _get_slot_core_pos(s).x
+		vis_slots.append({"slot": s, "rect": m_rect, "top": e_top, "cx": e_cx})
 		if bool(s.get("is_remote_player", false)):
 			var rk_t := float(s.get("kentai_timer_s", 0.0))
-			var ran_s := int(s.get("an_nguc_stacks", 0))
 			if rk_t > 0.0:
 				_draw_kentai_burn_on_rect(canvas, m_rect, e_cx * 0.013)
 			var r_hostile := is_remote_player_hostile(s)
 			var r_pk_flag := bool(s.get("pk_tan_sat", false))
-			OverheadBarsDrawScript.draw_player_bars(
-				canvas,
-				e_cx,
-				e_top - 4.0,
-				float(s.get("hp", PLAYER_MAX_HP)),
-				float(s.get("max_hp", PLAYER_MAX_HP)),
-				float(s.get("mana", 0.0)),
-				float(s.get("max_mana", PLAYER_MAX_MANA)),
-				str(s.get("display_name", "")),
-				true,
-				-1.0,
-				100.0,
-				false,
-				-1.0,
-				50.0,
-				false,
-				false,
-				0.0,
-				r_hostile,
-				r_pk_flag
+			OverheadBarsDrawScript.draw_player_bars_shapes(
+				canvas, e_cx, e_top - 4.0,
+				float(s.get("hp", PLAYER_MAX_HP)), float(s.get("max_hp", PLAYER_MAX_HP)),
+				float(s.get("mana", 0.0)), float(s.get("max_mana", PLAYER_MAX_MANA)),
+				true, -1.0, 100.0, false, -1.0, 50.0, false, false, 0.0, r_hostile, r_pk_flag
 			)
-			if rk_t > 0.0 or ran_s > 0:
-				OverheadBarsDrawScript.draw_tapion_mark_badges(canvas, e_cx, e_top - 78.0, rk_t, ran_s, _sim_time_s)
 			continue
 		var stunned := float(s["stun_timer_s"]) > 0.0 or float(s.get("hard_stun_timer_s", 0.0)) > 0.0
 		var is_boss := bool(s.get("is_boss", false))
-		var lbl := str(s.get("display_name", "Drum")) if is_boss else str(s["character_id"])
 		var m_cstate := "combat" if is_boss else str(s.get("combat_state", "peace"))
 		var sb_rem: float = float(s.get("shield_break_icon_timer_s", 0.0))
 		var k_rem: float = float(s.get("kentai_timer_s", 0.0))
-		var an_stacks: int = int(s.get("an_nguc_stacks", 0))
 		if k_rem > 0.0:
 			_draw_kentai_burn_on_rect(canvas, m_rect, e_cx * 0.013)
-		OverheadBarsDrawScript.draw_enemy_bars(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, lbl, is_boss, m_cstate, sb_rem > 0.0, _shield_break_flash_alpha(sb_rem))
+		OverheadBarsDrawScript.draw_enemy_bars_shapes(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), float(s["stamina"]), float(s["max_stamina"]), stunned, is_boss, m_cstate, sb_rem > 0.0, _shield_break_flash_alpha(sb_rem))
+
+	# Pass 2: Batched Font Strings for Player + Visible Monsters/Remote Players (single font texture bind!)
+	if draw_p:
+		OverheadBarsDrawScript.draw_player_bars_text(canvas, p_cx, p_top, player_hp, player_max_hp, local_display_name, false, player_armor >= 0.0, p_sb_show, false, pk_tan_sat_enabled)
+	for item_v in vis_slots:
+		var s: Dictionary = item_v["slot"]
+		var e_top: float = float(item_v["top"])
+		var e_cx: float = float(item_v["cx"])
+		if bool(s.get("is_remote_player", false)):
+			var r_hostile := is_remote_player_hostile(s)
+			var r_pk_flag := bool(s.get("pk_tan_sat", false))
+			OverheadBarsDrawScript.draw_player_bars_text(canvas, e_cx, e_top - 4.0, float(s.get("hp", PLAYER_MAX_HP)), float(s.get("max_hp", PLAYER_MAX_HP)), str(s.get("display_name", "")), true, false, false, r_hostile, r_pk_flag)
+		else:
+			var stunned := float(s["stun_timer_s"]) > 0.0 or float(s.get("hard_stun_timer_s", 0.0)) > 0.0
+			var is_boss := bool(s.get("is_boss", false))
+			var lbl := str(s.get("display_name", "Drum")) if is_boss else str(s["character_id"])
+			var sb_rem: float = float(s.get("shield_break_icon_timer_s", 0.0))
+			OverheadBarsDrawScript.draw_enemy_bars_text(canvas, e_cx, e_top, float(s["hp"]), float(s["max_hp"]), stunned, lbl, is_boss, sb_rem > 0.0)
+
+	# Pass 3: Special status badges, stun stars, and hero skill FX overlays
+	if draw_p:
+		if player_hard_stun_timer_s > 0.0:
+			OverheadBarsDrawScript.draw_stun_stars_ring(canvas, Vector2(p_cx, p_rect.position.y), _sim_time_s)
+		_draw_hero_phase2_fx_overlays(canvas)
+	_draw_hero_genki_world_fx(canvas)
+	for item_v in vis_slots:
+		var s: Dictionary = item_v["slot"]
+		var m_rect: Rect2 = item_v["rect"]
+		var e_top: float = float(item_v["top"])
+		var e_cx: float = float(item_v["cx"])
+		if bool(s.get("is_remote_player", false)):
+			var rk_t := float(s.get("kentai_timer_s", 0.0))
+			var ran_s := int(s.get("an_nguc_stacks", 0))
+			if rk_t > 0.0 or ran_s > 0:
+				OverheadBarsDrawScript.draw_tapion_mark_badges(canvas, e_cx, e_top - 78.0, rk_t, ran_s, _sim_time_s)
+			continue
+		var sb_rem: float = float(s.get("shield_break_icon_timer_s", 0.0))
+		var k_rem: float = float(s.get("kentai_timer_s", 0.0))
+		var an_stacks: int = int(s.get("an_nguc_stacks", 0))
 		if k_rem > 0.0 or an_stacks > 0:
 			var mark_y := e_top - (64.0 if sb_rem > 0.0 else 50.0)
 			OverheadBarsDrawScript.draw_tapion_mark_badges(canvas, e_cx, mark_y, k_rem, an_stacks, _sim_time_s)
@@ -4272,6 +4372,8 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 		# Điều 7.8: Stop & explode when hitting solid terrain step/floor
 		if (not bool(pr.get("ignore_terrain", false))) and arena != null and bool(arena.call("terrain_blocks_segment", old_p, new_p)):
 			pr["pos"] = new_p
+			if arena.has_method(&"notify_projectile_terrain_impact"):
+				arena.call(&"notify_projectile_terrain_impact", new_p, 1.15)
 			_spawn_skill_explosion_33(new_p, 0.85)
 			_hero_skill_projectiles.remove_at(i)
 			continue
@@ -4326,6 +4428,8 @@ func _step_hero_skill_projectiles_and_beams(delta: float) -> void:
 				bm["terrain_blocked"] = true
 				bm["fading"] = true
 				bm["fade_age_s"] = 0.0
+				if arena.has_method(&"notify_projectile_terrain_impact"):
+					arena.call(&"notify_projectile_terrain_impact", next_tip, 1.35)
 				_spawn_skill_explosion_33(next_tip, 1.05)
 				continue
 			bm["cur_len"] = cur_len
@@ -4802,6 +4906,8 @@ func _detonate_genki_orb(proj: Dictionary) -> void:
 	var dmg: float = float(proj.get("damage", GENKI_BASE_DAMAGE))
 	var contrib_n: int = int(proj.get("contrib_count", 0))
 	_spawn_genki_explosion_fx(impact_pos, float(proj.get("scale_mul", 1.0)))
+	if arena != null and arena.has_method(&"notify_projectile_terrain_impact"):
+		arena.call(&"notify_projectile_terrain_impact", impact_pos, 1.55)
 	floating_texts.append({
 		"pos": impact_pos + Vector2(0.0, -110.0),
 		"text": "GENKI %d!" % int(round(dmg)) if contrib_n <= 0 else "GENKI %d (+%dP)!" % [int(round(dmg)), contrib_n],

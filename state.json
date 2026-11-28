@@ -1,9 +1,9 @@
 {
   "schema": "dr7-studio.state.v1",
-  "updated_at": "2026-11-26T08:05:09Z",
+  "updated_at": "2026-11-28T09:15:01Z",
   "project": {
     "name": "DR7-Studio — Dragon Ball 2D",
-    "version": "0.19.0",
+    "version": "0.20.0",
     "version_history": [
       {
         "version": "0.1.0",
@@ -134,6 +134,11 @@
         "version": "0.19.0",
         "date": "2026-11-26T08:05:09.802381+00:00",
         "summary": "Owner chốt chính thức v0.19.0: Son Goku Genki + AI sinh tồn (PIPE-023 · 35 clips thân 206f + 27f genki_fx đơn điệu 6->192px đủ tia tụ lực, 24/24 Base Lock), Tapion Hero cắt gọn hoàn chỉnh (PIPE-024 · 30 clip thân 136f + 19 clip FX 74f, bỏ 4 clip thân & 1 clip FX dư, Antamina khóa hướng vòng cung, tầm K70E 1175px, PK Tàn Sát), Đấu Trường Cell Solo PvP 1-view K70E 2400x1080 (sàn 6 điểm rắn, 2 cột z=80 không va chạm, 0 quái, nút chuyển map nhanh), dọn sạch review/tapion_demo/, tapion/, Genki/, work/ và ảnh mẫu gốc; kiểm định độc lập bằng QA subagent trước khi push CI/CD 4 nền tảng."
+      },
+      {
+        "version": "0.20.0",
+        "date": "2026-11-28T09:15:01Z",
+        "summary": "Chốt chính thức v0.20.0: Tối ưu tải CPU/GPU & nhiệt độ Redmi K70E (-72.1% Draw Calls/s, -77.5% Primitives/s, max_fps=60, LRN-149), chuỗi bản đồ Núi Teinan <-> Sườn núi Teinan v9 (4800x1350, 11 bậc rắn 2 chiều, cổng kính mờ 26px chạm thân, giữ SSJ1 qua map, sông sỏi 740px + 13f nước bắn + waterfall_river.tres ngọc bích kèm hoạt ảnh sương mù 2 pha C∞ tại điểm nối thác-sông & 2 mặt bên hông vách đá, tán thông z=-15 nguyên vẹn, LRN-150..159), sửa lớp Shenron trên thanh HP/Mana & UI, khóa quy tắc sinh ảnh Codex CLI và cập nhật CI/CD 4 nền tảng."
       }
     ],
     "genre": "2D Dragon Ball Real-Time Mass Action / RPG",
@@ -154,7 +159,14 @@
     "supported_agents": [
       "Antigravity CLI (agy)",
       "OpenAI Codex CLI (codex)"
-    ]
+    ],
+    "media_generation_architecture": {
+      "status": "locked_owner_rule_2026_11_28",
+      "image_route": "local:codex-cli (codex exec -> image_gen)",
+      "entrypoint": "python3 .agents/skills/generate2dmedia/scripts/route_media.py image --route codex-cli",
+      "cost_model": "0d API (uses signed-in OpenAI Codex CLI subscription quota)",
+      "prohibited_fallbacks": "Do not substitute code-drawn PIL/SVG (codeart2d) or external host subagent image-generator unless explicitly instructed by Owner."
+    }
   },
   "mandatory_files": {
     "constitution": "AGENTS.md",
@@ -172,11 +184,11 @@
     "version_file": "VERSION"
   },
   "current_focus": {
-    "active_task_id": "FINALIZE-v0.19.0",
+    "active_task_id": "TASK-RELEASE-v0.20.0-TEINAN-SLOPE-MIST-V9",
     "status": "completed",
-    "summary": "Đã chốt chính thức v0.19.0: Son Goku Genki + AI sinh tồn (PIPE-023), Tapion cắt gọn 30 clip thân / 19 clip FX (PIPE-024), Đấu Trường Cell 1-view K70E (cell_arena), dọn sạch work/review/raw, vượt qua QA subagent độc lập (sửa sạch 8 lỗi ẩn + 2 lỗi biên online) và đồng bộ CI/CD 4 nền tảng.",
+    "summary": "Hoàn thiện hoạt ảnh sương mù Sườn núi Teinan v9 (điểm nối thác–sông + 2 mặt bên hông vách đá, flowmap 2 pha C∞ không khựng vòng lặp), dọn file nháp dư, đồng bộ SemVer v0.20.0, chạy full kiểm thử, build lại client và đẩy CI/CD lên main.",
     "next_steps_summary": [
-      "13/13 nhân vật + Đấu Trường Cell đã chốt chính thức trên main v0.19.0; sẵn sàng nhận nhiệm vụ tiếp theo từ Owner."
+      "v0.20.0 (K70E Thermal Optimization + Núi Teinan <-> Sườn núi Teinan v9 với hoạt ảnh sương thác & 2 vách đá + Shenron layer fix) đã chốt chính thức và đồng bộ CI/CD 4 nền tảng."
     ],
     "review_artifacts": [],
     "preview_url": "http://localhost:8080/?tab=arena"
@@ -1473,6 +1485,72 @@
       "timestamp": "2026-11-26T08:05:09Z",
       "status": "completed",
       "summary": "Chốt chính thức v0.19.0: cắt gọn Tapion 34->30 clip thân (136f) & 20->19 clip FX (74f) sang assets/tapion + assets/fx/tapion_skills_fx + scenes/TapionHero.tscn (PIPE-024); chốt Son Goku Genki + Cell Arena (PIPE-023); đồng bộ SemVer 0.19.0; chuyển test_antamina_genki_cell_arena.gd vào tests/; dọn sạch review/tapion_demo/, tapion/, Genki/, work/, docs/releases/archive/ và ảnh mẫu root."
+    },
+    {
+      "id": "PERF-K70E-THERMAL-001",
+      "timestamp": "2026-11-28T01:19:13Z",
+      "status": "completed",
+      "summary": "Tối ưu nhiệt độ và tải CPU/GPU trên Redmi K70E (2712x1220) an toàn 100% không chạm kiến trúc asset/pipeline: khóa chuẩn 60 FPS, batch + dirty-check MobileActionPad (-62.3% primitives, 0 idle redraw), 2-pass batching + đa giác pill OverheadBarsDraw + Camera Frustum Culling (-88.1% overlay primitives), cache O(1) roster/terrain/pointer (-97.3% refresh_pointer_valid, -30.6% physics tick), giảm tổng -72.1% draw calls/s và -77.5% primitives/s trên K70E; pass 100% loop.sh test."
+    },
+    {
+      "id": "MAP-TEINAN-SLOPE-DEMO-001",
+      "timestamp": "2026-11-28T02:14:06Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Đổi tên Núi Teinan (map tận cùng trái, 0 cổng trái), thêm header kính mờ chuyển cảnh sang Demo Sườn núi Teinan (5280x1350 = 80%x100%, 6 bậc bo mềm mại 2 chiều, 5 cây tùng z=-20, 14 cảnh vật phụ z=-19, 0 quái), pass full loop.sh test exit 0"
+    },
+    {
+      "id": "ARCH-CODEX-IMAGEGEN-LOCK-001",
+      "timestamp": "2026-11-28T02:18:53Z",
+      "status": "completed",
+      "summary": "Khóa kiến trúc sinh/tái tạo ảnh bắt buộc qua Codex CLI (route_media.py image --route codex-cli -> image_gen, 0d) vào AGENTS.md Điều 6, skills.md, state.json và lerning.md LRN-151"
+    },
+    {
+      "id": "MAP-TEINAN-SLOPE-V2-WATERFALL-500PX",
+      "timestamp": "2026-11-28T03:04:20Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Tái dựng Sườn núi Teinan v2 (4800x1350 = 2400x1350 giữ 100% cảnh gốc ref_concept_redline.jpg + 2400x1350 nối cục đất sang khe sông rộng đúng 500px wx=[2220..2720] và thác đổ sau lưng cục đất có đáy wy=820 bằng phẳng với thềm đá bên phải; bậc lát đá phẳng 548->680->585->670->765->820 qua Codex CLI 0d; animation thác & sông chảy 60Hz, sóng vỗ cổ chân, ngập nhẹ 6px giữ 100% tốc độ chạy và FX té nước/gợn sóng tương tác thực thể, vật phẩm & kỹ năng; đồng bộ Server/Worker, Godot Web & kiểm chứng OpenGL3 K70E)."
+    },
+    {
+      "id": "MAP-TEINAN-SLOPE-V3-PORTAL-WATER-13F",
+      "timestamp": "2026-11-28T04:26:39Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoàn thiện Sườn núi Teinan v3 (4800x1350): cổng kính mờ chạm thực thể ở hai đầu map, nâng điểm xuất hiện +100px (-65, 475) giữ 100% cảnh gốc, dàn đều nền cục đất kín đáy màn hình & gỡ 100% cây/bụi cỏ rời, sinh nguyên tấm phải liền mạch qua Codex CLI 0đ xóa sạch vết ghép khoanh vàng 3.png, kênh sông chảy hết đáy màn hình với sàn đá ngầm 500px wx=[2145..2645] wy=895 + thác loop 12f + mặt sông dao động 12f + 13f VFX water_splash tương tác toàn bộ thực thể/vật phẩm/đạn; đồng bộ Server/Worker, Godot Web & kiểm chứng OpenGL3 K70E."
+    },
+    {
+      "id": "MAP-TEINAN-SLOPE-V4-STEPS-TREES-WATER-ASSET",
+      "timestamp": "2026-11-28T05:20:44Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Hoàn thiện Sườn núi Teinan v4 (4800x1350): thu gọn cổng kính mờ 26px sát mép trái/phải theo ô đỏ 1.png & 3.png, tái dựng 12 mặt cắt bậc đá 2.5D đi/nhảy mượt 2 chiều khớp toàn bộ line đỏ (515->585->670->768->695->636->598->895->774->672->568->680->792), tinh chỉnh & đặt 4 cây khô rễ bám thảm cỏ tại 4 line tím 1.png + 1 cây thông nắng ấm tại khung vàng 2.png (teinan-slope-trees.png 2000x1472 100% binary alpha, z=-20), đóng gói asset thác-sông độc lập waterfall_river.tres (4096x2880 <= 4096x4096, 12f @ 60Hz Nearest từ 3 keyframe Codex CLI) trên kênh sông mở rộng 800px wx=[2235..3035] chảy xuyên đáy màn hình + 13f water_splash; đồng bộ Server/Worker, Godot Web & kiểm chứng OpenGL3."
+    },
+    {
+      "id": "MAP-TEINAN-SLOPE-V5-ORGANIC-WATER-SSJ-LOADING",
+      "timestamp": "2026-11-28T06:10:26Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Sườn núi Teinan v5: hoàn tác bậc thang vuông về đá-cỏ tự nhiên & sỏi sông 740px, 5 cây gốc (+30% cây thông, 5 cụm 2D sạch), asset waterfall_river.tres động 100% 4 vùng 0px rung bờ chậm -20%, khôi phục 13f water_splash, cổng kính 26px chạm thân thật, giữ SSJ1 Son Goku & thủ công, và hoạt ảnh loading 7 Ngọc Rồng."
+    },
+    {
+      "id": "MAP-TEINAN-SLOPE-V6-EMERALD-WATER-TREES-MOUND",
+      "timestamp": "2026-11-28T07:20:01Z",
+      "status": "ready_for_owner_human_test",
+      "summary": "Sườn núi Teinan v6: 1 khối asset thác+sông thống nhất màu xanh ngọc bích [27,171,147] phủ kín tới đáy phải (98.02% active ô vàng đáy, 0px rung/lem bờ), vẽ trực tiếp 5 cây vào nền map qua Codex CLI (+30% cỡ & +20% tán thông 1:1 z=-15 phủ thác, triệt 100% răng cưa & nhấp nháy trắng), đồi đá chắn đường cuối map khớp 785->678->570->682->792, và khôi phục tải nhanh đầu Sân Tập (-57.6% dung lượng atlas nước, chỉ giữ loading Login & chuyển cảnh)."
+    },
+    {
+      "id": "TASK-TEINAN-SLOPE-V7-AND-SHENRON-LAYER",
+      "timestamp": "2026-11-28T08:20:29Z",
+      "status": "pending_human_test",
+      "summary": "Hoàn thiện Sườn núi Teinan v7 (phủ 100% đầu nguồn & mép đáy sông iy=1349, giảm 15% tốc độ nước tpf=5.88, gờ dây leo/đá & tán thông z=-15 nguyên vẹn 100% đầu lá) + sửa thứ tự lớp ShenronWorldLayer (layer=5, z=95) nằm trên thanh HP/Mana và HUDLayer UI"
+    },
+    {
+      "id": "TASK-TEINAN-SLOPE-V8-SOFT-VEIL-AND-CLEAN-HEADWATER",
+      "timestamp": "2026-11-28T08:44:32Z",
+      "status": "pending_human_test",
+      "summary": "Hoàn thiện Sườn núi Teinan v8 theo chốt A1-A2 (đưa layer thác lên trên 2 vách cạnh thác kèm màn sương mờ dần 46-48px xóa chi tiết thừa & vết ghép, giữ tán thông z=-15 phía trên, cắt sạch 100% sóng lem trên cây/bờ đỉnh thác top_tree_bleed_max=0.0)"
+    },
+    {
+      "id": "TASK-RELEASE-v0.20.0-TEINAN-SLOPE-MIST-V9",
+      "timestamp": "2026-11-28T09:15:01Z",
+      "status": "completed",
+      "summary": "Hoàn thiện hoạt ảnh sương mù Sườn núi Teinan v9 (điểm nối thác–sông + 2 mặt bên hông vách đá, flowmap 2 pha C∞ không khựng vòng lặp), dọn file nháp dư, đồng bộ SemVer v0.20.0, chạy full kiểm thử, build lại client và đẩy CI/CD lên main."
     }
   ],
   "quick_resume_commands": [
@@ -1502,7 +1580,7 @@
     "review_evidence": "docs/contracts/",
     "latest_delivery": "assets/roster.json",
     "preview_url": "http://localhost:8080/?tab=arena",
-    "local_version": "0.19.0",
+    "local_version": "0.20.0",
     "handoff_guide": "docs/adr/0001-architecture-and-scale-roadmap.md"
   },
   "approved_workflows": [
@@ -1844,9 +1922,9 @@
     "drum_clips": 11,
     "default_scale": 1.0,
     "arena_url": "http://localhost:8080",
-    "release_version": "0.19.0",
+    "release_version": "0.20.0",
     "owner_approved": true,
     "floating_camera_in_roster": true
   },
-  "last_updated_utc": "2026-11-26T08:05:09Z"
+  "last_updated_utc": "2026-11-28T09:15:01Z"
 }

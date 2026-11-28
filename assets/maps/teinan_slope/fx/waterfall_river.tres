@@ -1,0 +1,67 @@
+[gd_resource type="SpriteFrames" load_steps=10 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/maps/teinan_slope/fx/waterfall_river_atlas.png" id="1_atlas"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf_00"]
+atlas = ExtResource("1_atlas")
+region = Rect2(0, 0, 1472, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf_01"]
+atlas = ExtResource("1_atlas")
+region = Rect2(1472, 0, 1472, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf_02"]
+atlas = ExtResource("1_atlas")
+region = Rect2(0, 1024, 1472, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf_03"]
+atlas = ExtResource("1_atlas")
+region = Rect2(1472, 1024, 1472, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf_04"]
+atlas = ExtResource("1_atlas")
+region = Rect2(0, 2048, 1472, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf_05"]
+atlas = ExtResource("1_atlas")
+region = Rect2(1472, 2048, 1472, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf_06"]
+atlas = ExtResource("1_atlas")
+region = Rect2(0, 3072, 1472, 1024)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf_07"]
+atlas = ExtResource("1_atlas")
+region = Rect2(1472, 3072, 1472, 1024)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 5.88,
+"texture": SubResource("AtlasTexture_wf_00")
+}, {
+"duration": 5.88,
+"texture": SubResource("AtlasTexture_wf_01")
+}, {
+"duration": 5.88,
+"texture": SubResource("AtlasTexture_wf_02")
+}, {
+"duration": 5.88,
+"texture": SubResource("AtlasTexture_wf_03")
+}, {
+"duration": 5.88,
+"texture": SubResource("AtlasTexture_wf_04")
+}, {
+"duration": 5.88,
+"texture": SubResource("AtlasTexture_wf_05")
+}, {
+"duration": 5.88,
+"texture": SubResource("AtlasTexture_wf_06")
+}, {
+"duration": 5.88,
+"texture": SubResource("AtlasTexture_wf_07")
+}],
+"loop": true,
+"name": &"flow",
+"speed": 60.0
+}]

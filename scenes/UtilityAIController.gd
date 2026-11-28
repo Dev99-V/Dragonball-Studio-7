@@ -392,7 +392,8 @@ static func evaluate_hero_auto(params: Dictionary) -> Dictionary:
 	if not bool(params.get("has_target", false)):
 		return {"intent": "idle", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "no_target"}
 	if is_goku and not is_ssj:
-		return {"intent": "transform_ssj", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "auto_transform_ssj"}
+		# Owner A4 rule: SSJ1 is strictly toggled manually by player; do not auto-activate SSJ in Base.
+		return {"intent": "idle", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "await_manual_ssj"}
 	if is_busy:
 		return {"intent": "busy", "move_dir": 0, "fly_vec": Vector2.ZERO, "jump": false, "reason": "executing_action"}
 

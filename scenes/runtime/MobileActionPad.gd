@@ -107,6 +107,10 @@ var _hero_bukadai_cd: float = 0.0
 var _hero_genki_cd: float = 0.0
 var _hero_airborne_for_genki: bool = false
 var _hero_on_ground: bool = true
+var _batch_updating: bool = false
+var _dirty_pending: bool = false
+var _is_mobile_touch: bool = false
+var _slot_state_cache: Dictionary = {}
 
 # Analog drag tracking
 var _analog_touch_idx: int = -1
@@ -116,6 +120,7 @@ var _knob_radius: float = 27.0
 
 
 func _ready() -> void:
+	_is_mobile_touch = OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios") or OS.has_feature("web_android") or OS.has_feature("web_ios")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_ui()
@@ -259,7 +264,7 @@ func _build_ui() -> void:
 	_buttons_root.add_child(_auto_btn)
 
 	_build_settings_modal()
-	_refresh_slot_buttons()
+	_refresh_slot_buttons(true)
 
 
 func _build_settings_modal() -> void:
@@ -389,7 +394,7 @@ func set_slot_binding(slot_id: int, action_id: String) -> void:
 		var saved: Dictionary = _custom_bindings_by_char.get(_configured_char_id, {})
 		saved[slot_id] = action_id
 		_custom_bindings_by_char[_configured_char_id] = saved
-	_refresh_slot_buttons()
+	_refresh_slot_buttons(true)
 	slot_binding_changed.emit(slot_id, action_id)
 
 
@@ -482,14 +487,33 @@ func configure_for_character(char_id: String, available_clips: PackedStringArray
 			if sid >= 2 and sid <= 7 and (act == "empty" or act == "pickup_items" or avail.has(act)):
 				_slot_bindings[sid] = act
 	_rebuild_settings_rows()
-	_refresh_slot_buttons()
+	_refresh_slot_buttons(true)
+
+
+func begin_batch_update() -> void:
+	_batch_updating = true
+	_dirty_pending = false
+
+
+func end_batch_update() -> void:
+	_batch_updating = false
+	if _dirty_pending:
+		_dirty_pending = false
+		_refresh_slot_buttons(false)
+
+
+func _request_slot_refresh() -> void:
+	if _batch_updating:
+		_dirty_pending = true
+	else:
+		_refresh_slot_buttons(false)
 
 
 func set_mana_and_pointer_state(mana: float, max_mana: float, pointer_kind: String) -> void:
 	_current_mana = mana
 	_max_mana = max_mana
 	_pointer_kind = pointer_kind
-	_refresh_slot_buttons()
+	_request_slot_refresh()
 
 
 func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool, can_attack_now: bool, fly_active: bool, combo_step: int, atomic_cd: float = 0.0, barrier_s: float = 0.0, barrier_cd: float = 0.0, recover_cd: float = 0.0, flurry_cd: float = 0.0, on_ground: bool = true) -> void:
@@ -505,7 +529,7 @@ func set_hero_stamina_and_state(stamina: float, max_stamina: float, is_ssj: bool
 	_hero_recover_cd = recover_cd
 	_hero_flurry_cd = flurry_cd
 	_hero_on_ground = on_ground
-	_refresh_slot_buttons()
+	_request_slot_refresh()
 
 
 func set_tapion_skill_cooldowns(kenta_cd: float, maha_cd: float, anta_cd: float, buka_cd: float) -> void:
@@ -513,22 +537,65 @@ func set_tapion_skill_cooldowns(kenta_cd: float, maha_cd: float, anta_cd: float,
 	_hero_mahasenko_cd = maha_cd
 	_hero_antamina_cd = anta_cd
 	_hero_bukadai_cd = buka_cd
-	_refresh_slot_buttons()
+	_request_slot_refresh()
 
 
 func set_hero_genki_state(genki_cd: float, airborne_ready: bool) -> void:
 	_hero_genki_cd = genki_cd
 	_hero_airborne_for_genki = airborne_ready
-	_refresh_slot_buttons()
+	_request_slot_refresh()
 
 
 func set_jump_available(enabled: bool, flight: bool = false) -> void:
 	_jump_enabled = enabled
 	_flight_mode = flight
-	_refresh_slot_buttons()
+	_request_slot_refresh()
 
 
-func _refresh_slot_buttons() -> void:
+func _compute_slot_visual_key(sid: int, act: String, disabled_val: bool) -> int:
+	var h: int = hash(sid) ^ hash(act) ^ (1 if disabled_val else 0)
+	if sid == 8:
+		return h
+	if sid == 1:
+		var c_max := 10 if _hero_is_tapion else 7
+		var c_step := ((_hero_combo_step % c_max) + 1) if _hero_is_songoku else 0
+		return h ^ hash(_pointer_kind) ^ (2 if _hero_is_songoku else 0) ^ (4 if _hero_can_attack else 0) ^ (c_step * 31)
+	var mp_i := int(floor(_current_mana))
+	var mpm_i := int(round(_max_mana))
+	if act == "jump":
+		return h ^ (8 if _flight_mode else 0) ^ (16 if _hero_is_ssj else 0)
+	elif act == "teleport":
+		return h ^ (int(floor(_hero_stamina)) * 17) ^ (int(round(_hero_max_stamina)) * 3) ^ (16 if _hero_is_ssj else 0)
+	elif act == "transform_ssj":
+		return h ^ (16 if _hero_is_ssj else 0)
+	elif act == "fly_toggle":
+		return h ^ (32 if _hero_fly_active else 0) ^ (16 if _hero_is_ssj else 0)
+	elif act == "power_up" or act == "kamehameha":
+		return h ^ (mp_i * 19) ^ (mpm_i * 7) ^ (16 if _hero_is_ssj else 0)
+	elif act == "atomic_blast":
+		return h ^ (int(ceilf(_hero_atomic_cd * 12.0)) * 23) ^ (16 if _hero_is_ssj else 0)
+	elif act == "genki":
+		return h ^ (int(ceilf(_hero_genki_cd * 12.0)) * 23) ^ (mp_i * 19) ^ (64 if _hero_airborne_for_genki else 0) ^ (16 if _hero_is_ssj else 0)
+	elif act == "flurry_kick":
+		return h ^ (int(ceilf(_hero_flurry_cd * 12.0)) * 23) ^ (16 if _hero_is_ssj else 0)
+	elif act == "barrier":
+		return h ^ (int(ceilf(_hero_barrier_active_s * 12.0)) * 29) ^ (int(ceilf(_hero_barrier_cd * 12.0)) * 23) ^ (16 if _hero_is_ssj else 0)
+	elif act == "energy_recover":
+		return h ^ (int(ceilf(_hero_recover_cd * 12.0)) * 23) ^ (128 if _hero_on_ground else 0) ^ (16 if _hero_is_ssj else 0)
+	elif act == "kentaima":
+		return h ^ (int(ceilf(_hero_kentaima_cd * 20.0)) * 23)
+	elif act == "mahasenko":
+		return h ^ (int(ceilf(_hero_mahasenko_cd * 20.0)) * 23)
+	elif act == "antamina":
+		return h ^ (int(ceilf(_hero_antamina_cd * 20.0)) * 23) ^ (mp_i * 19)
+	elif act == "bukadai":
+		return h ^ (int(ceilf(_hero_bukadai_cd * 20.0)) * 23)
+	return h
+
+
+func _refresh_slot_buttons(force_all: bool = false) -> void:
+	if force_all:
+		_slot_state_cache.clear()
 	for sid in [1, 2, 3, 4, 5, 6, 7, 8, 10, 11]:
 		var btn := _slot_buttons.get(sid) as Button
 		if btn == null:
@@ -537,100 +604,123 @@ func _refresh_slot_buttons() -> void:
 		if sid == 8:
 			btn.visible = true
 			btn.disabled = false
-			btn.tooltip_text = "Đổi mục tiêu (Tab)"
-			if vis != null:
-				vis.queue_redraw()
+			var key8 := _compute_slot_visual_key(8, "cycle_target", false)
+			if force_all or _slot_state_cache.get(8, -999999999) != key8:
+				_slot_state_cache[8] = key8
+				if not _is_mobile_touch:
+					btn.tooltip_text = "Đổi mục tiêu (Tab)"
+				if vis != null:
+					vis.queue_redraw()
 			continue
 		var act := str(_slot_bindings.get(sid, "empty"))
 		if sid >= 2 and act == "empty":
-			btn.visible = false
+			if btn.visible:
+				btn.visible = false
+			_slot_state_cache.erase(sid)
 			continue
-		btn.visible = true
+		if not btn.visible:
+			btn.visible = true
 		if sid == 1:
-			if _pointer_kind == "item":
-				btn.tooltip_text = "Nhặt vật phẩm"
-				btn.disabled = false
-			elif _pointer_kind == "npc":
-				btn.tooltip_text = "Nói chuyện"
-				btn.disabled = false
-			elif _hero_is_songoku and not _hero_can_attack:
-				btn.tooltip_text = "Đang ở dạng Base — Biến SSJ1 để tấn công"
-				btn.disabled = false
-			else:
-				var c_max := 10 if _hero_is_tapion else 7
-				btn.tooltip_text = "Đánh thường (Đòn %d/%d)" % [((_hero_combo_step % c_max) + 1), c_max] if _hero_is_songoku else "Đánh thường"
-				btn.disabled = false
-			if vis != null:
-				vis.queue_redraw()
-			continue
-		var lbl := str(ACTION_LABELS.get(act, act))
-		if act == "jump" and _flight_mode:
-			lbl = "Bay lên"
-		if act == "power_up":
-			btn.tooltip_text = "%s (%d/%d MP)" % [lbl, int(floor(_current_mana)), int(round(_max_mana))]
-			btn.disabled = _current_mana < 100.0
-		elif act == "jump":
-			btn.tooltip_text = lbl
-			btn.disabled = (not _jump_enabled) or (_hero_is_songoku and not _hero_is_ssj)
-		elif act == "fly_toggle":
-			btn.tooltip_text = "Hạ cánh" if _hero_fly_active else "Bay lên (Fly_Aura)"
-			btn.disabled = _hero_is_songoku and not _hero_is_ssj
-		elif act == "transform_ssj":
-			btn.tooltip_text = "Xả SSJ1 → Base" if _hero_is_ssj else "Biến hình SSJ1"
 			btn.disabled = false
+			var key1 := _compute_slot_visual_key(1, act, false)
+			if force_all or _slot_state_cache.get(1, -999999999) != key1:
+				_slot_state_cache[1] = key1
+				if not _is_mobile_touch:
+					if _pointer_kind == "item":
+						btn.tooltip_text = "Nhặt vật phẩm"
+					elif _pointer_kind == "npc":
+						btn.tooltip_text = "Nói chuyện"
+					elif _hero_is_songoku and not _hero_can_attack:
+						btn.tooltip_text = "Đang ở dạng Base — Biến SSJ1 để tấn công"
+					else:
+						var c_max := 10 if _hero_is_tapion else 7
+						btn.tooltip_text = "Đánh thường (Đòn %d/%d)" % [((_hero_combo_step % c_max) + 1), c_max] if _hero_is_songoku else "Đánh thường"
+				if vis != null:
+					vis.queue_redraw()
+			continue
+		var new_disabled := false
+		if act == "power_up":
+			new_disabled = _current_mana < 100.0
+		elif act == "jump":
+			new_disabled = (not _jump_enabled) or (_hero_is_songoku and not _hero_is_ssj)
+		elif act == "fly_toggle":
+			new_disabled = _hero_is_songoku and not _hero_is_ssj
+		elif act == "transform_ssj":
+			new_disabled = false
 		elif act == "teleport":
-			if _hero_is_songoku:
-				btn.tooltip_text = "Dịch chuyển (TL %d/%d · Tĩnh -75 / Di chuyển -25)" % [int(floor(_hero_stamina)), int(round(_hero_max_stamina))]
-				btn.disabled = (not _hero_is_ssj) or (_hero_stamina < 25.0)
+			new_disabled = ((not _hero_is_ssj) or (_hero_stamina < 25.0)) if _hero_is_songoku else false
+		elif act == "atomic_blast":
+			new_disabled = (not _hero_is_ssj) or _hero_atomic_cd > 0.0
+		elif act == "kamehameha":
+			new_disabled = (not _hero_is_ssj) or (_current_mana < 80.0)
+		elif act == "genki":
+			new_disabled = (not _hero_is_ssj) or (not _hero_airborne_for_genki) or (_hero_genki_cd > 0.0) or (_current_mana + 0.001 < 100.0)
+		elif act == "flurry_kick":
+			new_disabled = (not _hero_is_ssj) or _hero_flurry_cd > 0.0
+		elif act == "barrier":
+			new_disabled = (not _hero_is_ssj) or _hero_barrier_cd > 0.0
+		elif act == "energy_recover":
+			new_disabled = (not _hero_is_ssj) or (not _hero_on_ground) or _hero_recover_cd > 0.0
+		elif act == "kentaima":
+			new_disabled = _hero_kentaima_cd > 0.0
+		elif act == "mahasenko":
+			new_disabled = _hero_mahasenko_cd > 0.0
+		elif act == "antamina":
+			new_disabled = _hero_antamina_cd > 0.0 or (_current_mana + 0.001 < 100.0)
+		elif act == "bukadai":
+			new_disabled = _hero_bukadai_cd > 0.0
+		if btn.disabled != new_disabled:
+			btn.disabled = new_disabled
+		var vkey := _compute_slot_visual_key(sid, act, new_disabled)
+		if not force_all and _slot_state_cache.get(sid, -999999999) == vkey:
+			continue
+		_slot_state_cache[sid] = vkey
+		if not _is_mobile_touch:
+			var lbl := str(ACTION_LABELS.get(act, act))
+			if act == "jump" and _flight_mode:
+				lbl = "Bay lên"
+			if act == "power_up":
+				btn.tooltip_text = "%s (%d/%d MP)" % [lbl, int(floor(_current_mana)), int(round(_max_mana))]
+			elif act == "jump":
+				btn.tooltip_text = lbl
+			elif act == "fly_toggle":
+				btn.tooltip_text = "Hạ cánh" if _hero_fly_active else "Bay lên (Fly_Aura)"
+			elif act == "transform_ssj":
+				btn.tooltip_text = "Xả SSJ1 → Base" if _hero_is_ssj else "Biến hình SSJ1"
+			elif act == "teleport":
+				btn.tooltip_text = ("Dịch chuyển (TL %d/%d · Tĩnh -75 / Di chuyển -25)" % [int(floor(_hero_stamina)), int(round(_hero_max_stamina))]) if _hero_is_songoku else lbl
+			elif act == "atomic_blast":
+				btn.tooltip_text = "Antomic Blast (Hồi 12s)" if _hero_atomic_cd <= 0.0 else "Antomic Blast (%.1fs)" % _hero_atomic_cd
+			elif act == "kamehameha":
+				btn.tooltip_text = "Kamehameha (80 MP · Hiện có %d)" % int(floor(_current_mana))
+			elif act == "genki":
+				if not _hero_airborne_for_genki:
+					btn.tooltip_text = "Genki (Chỉ dùng khi đang trên không trung · 100 MP)"
+				elif _hero_genki_cd > 0.0:
+					btn.tooltip_text = "Genki (Hồi %.1fs · 100 MP)" % _hero_genki_cd
+				else:
+					btn.tooltip_text = "Genki — Tụ 5s trên không · Nổ đất 700px (100 MP · Hiện có %d)" % int(floor(_current_mana))
+			elif act == "flurry_kick":
+				btn.tooltip_text = "Đá liên hoàn (Choáng Boss/Quái/Tướng)" if _hero_flurry_cd <= 0.0 else "Đá liên hoàn (%.1fs)" % _hero_flurry_cd
+			elif act == "barrier":
+				btn.tooltip_text = "Khiên 10s (Đang bật %.1fs)" % _hero_barrier_active_s if _hero_barrier_active_s > 0.0 else ("Khiên bảo vệ 10s" if _hero_barrier_cd <= 0.0 else "Khiên (%.1fs)" % _hero_barrier_cd)
+			elif act == "energy_recover":
+				if not _hero_on_ground:
+					btn.tooltip_text = "Gồng hồi 3s (Chỉ dùng khi đứng mặt đất)"
+				elif _hero_recover_cd <= 0.0:
+					btn.tooltip_text = "Gồng hồi 3s (Máu + Giáp + Khinh công)"
+				else:
+					btn.tooltip_text = "Gồng hồi (%.1fs)" % _hero_recover_cd
+			elif act == "kentaima":
+				btn.tooltip_text = "Kentaima — Sóng kiếm 2500px/s · Đốt Kentai 5s" if _hero_kentaima_cd <= 0.0 else "Kentaima (%.1fs)" % _hero_kentaima_cd
+			elif act == "mahasenko":
+				btn.tooltip_text = "Mahasenko — Phóng 4 tia vàng nối đuôi 2500px/s" if _hero_mahasenko_cd <= 0.0 else "Mahasenko (%.1fs)" % _hero_mahasenko_cd
+			elif act == "antamina":
+				btn.tooltip_text = ("Antamina (%.1fs · 100 MP)" % _hero_antamina_cd) if _hero_antamina_cd > 0.0 else ("Antamina — Vận 2s bắn 5/7 tia 4000px/s (100 MP · Hiện có %d)" % int(floor(_current_mana)))
+			elif act == "bukadai":
+				btn.tooltip_text = "Bukadai — Tele choáng 2s · Tích Ấn ngục (5→Suy yếu)" if _hero_bukadai_cd <= 0.0 else "Bukadai (%.1fs)" % _hero_bukadai_cd
 			else:
 				btn.tooltip_text = lbl
-				btn.disabled = false
-		elif act == "atomic_blast":
-			btn.tooltip_text = "Antomic Blast (Hồi 12s)" if _hero_atomic_cd <= 0.0 else "Antomic Blast (%.1fs)" % _hero_atomic_cd
-			btn.disabled = (not _hero_is_ssj) or _hero_atomic_cd > 0.0
-		elif act == "kamehameha":
-			btn.tooltip_text = "Kamehameha (80 MP · Hiện có %d)" % int(floor(_current_mana))
-			btn.disabled = (not _hero_is_ssj) or (_current_mana < 80.0)
-		elif act == "genki":
-			if not _hero_airborne_for_genki:
-				btn.tooltip_text = "Genki (Chỉ dùng khi đang trên không trung · 100 MP)"
-			elif _hero_genki_cd > 0.0:
-				btn.tooltip_text = "Genki (Hồi %.1fs · 100 MP)" % _hero_genki_cd
-			else:
-				btn.tooltip_text = "Genki — Tụ 5s trên không · Nổ đất 700px (100 MP · Hiện có %d)" % int(floor(_current_mana))
-			btn.disabled = (not _hero_is_ssj) or (not _hero_airborne_for_genki) or (_hero_genki_cd > 0.0) or (_current_mana + 0.001 < 100.0)
-		elif act == "flurry_kick":
-			btn.tooltip_text = "Đá liên hoàn (Choáng Boss/Quái/Tướng)" if _hero_flurry_cd <= 0.0 else "Đá liên hoàn (%.1fs)" % _hero_flurry_cd
-			btn.disabled = (not _hero_is_ssj) or _hero_flurry_cd > 0.0
-		elif act == "barrier":
-			btn.tooltip_text = "Khiên 10s (Đang bật %.1fs)" % _hero_barrier_active_s if _hero_barrier_active_s > 0.0 else ("Khiên bảo vệ 10s" if _hero_barrier_cd <= 0.0 else "Khiên (%.1fs)" % _hero_barrier_cd)
-			btn.disabled = (not _hero_is_ssj) or _hero_barrier_cd > 0.0
-		elif act == "energy_recover":
-			if not _hero_on_ground:
-				btn.tooltip_text = "Gồng hồi 3s (Chỉ dùng khi đứng mặt đất)"
-			elif _hero_recover_cd <= 0.0:
-				btn.tooltip_text = "Gồng hồi 3s (Máu + Giáp + Khinh công)"
-			else:
-				btn.tooltip_text = "Gồng hồi (%.1fs)" % _hero_recover_cd
-			btn.disabled = (not _hero_is_ssj) or (not _hero_on_ground) or _hero_recover_cd > 0.0
-		elif act == "kentaima":
-			btn.tooltip_text = "Kentaima — Sóng kiếm 2500px/s · Đốt Kentai 5s" if _hero_kentaima_cd <= 0.0 else "Kentaima (%.1fs)" % _hero_kentaima_cd
-			btn.disabled = _hero_kentaima_cd > 0.0
-		elif act == "mahasenko":
-			btn.tooltip_text = "Mahasenko — Phóng 4 tia vàng nối đuôi 2500px/s" if _hero_mahasenko_cd <= 0.0 else "Mahasenko (%.1fs)" % _hero_mahasenko_cd
-			btn.disabled = _hero_mahasenko_cd > 0.0
-		elif act == "antamina":
-			if _hero_antamina_cd > 0.0:
-				btn.tooltip_text = "Antamina (%.1fs · 100 MP)" % _hero_antamina_cd
-			else:
-				btn.tooltip_text = "Antamina — Vận 2s bắn 5/7 tia 4000px/s (100 MP · Hiện có %d)" % int(floor(_current_mana))
-			btn.disabled = _hero_antamina_cd > 0.0 or (_current_mana + 0.001 < 100.0)
-		elif act == "bukadai":
-			btn.tooltip_text = "Bukadai — Tele choáng 2s · Tích Ấn ngục (5→Suy yếu)" if _hero_bukadai_cd <= 0.0 else "Bukadai (%.1fs)" % _hero_bukadai_cd
-			btn.disabled = _hero_bukadai_cd > 0.0
-		else:
-			btn.tooltip_text = lbl
-			btn.disabled = false
 		if vis != null:
 			vis.queue_redraw()
 
@@ -728,14 +818,14 @@ class _AnalogCanvas extends Control:
 		# Frosted translucent glass joystick referencing green region #1 of c5ebb08600d4cf82deaf6312bac7905a.jpg
 		draw_circle(center, base_r, Color(0.86, 0.92, 0.98, 0.18 if active_drag else 0.12))
 		draw_circle(center, base_r * 0.82, Color(0.08, 0.12, 0.18, 0.24 if active_drag else 0.18))
-		draw_arc(center, base_r, 0.0, TAU, 56, Color(0.96, 0.98, 1.0, 0.68 if active_drag else 0.48), 2.0, true)
-		draw_arc(center, base_r * 0.82, 0.0, TAU, 48, Color(0.95, 0.98, 1.0, 0.26), 1.0, true)
+		draw_arc(center, base_r, 0.0, TAU, 32, Color(0.96, 0.98, 1.0, 0.68 if active_drag else 0.48), 2.0, false)
+		draw_arc(center, base_r * 0.82, 0.0, TAU, 28, Color(0.95, 0.98, 1.0, 0.26), 1.2, false)
 		# Subtle frosted glass specular highlight on top-left rim
-		draw_arc(center, base_r - 2.0, -PI * 0.82, -PI * 0.26, 20, Color(1.0, 1.0, 1.0, 0.34), 1.6, true)
+		draw_arc(center, base_r - 2.0, -PI * 0.82, -PI * 0.26, 12, Color(1.0, 1.0, 1.0, 0.34), 1.6, false)
 		var knob_pos: Vector2 = center + pad_owner.analog_vector * (base_r - pad_owner._knob_radius * 0.4)
 		var knob_r: float = pad_owner._knob_radius * (0.94 if active_drag else 0.86)
 		draw_circle(knob_pos, knob_r, Color(0.92, 0.97, 1.0, 0.36 if active_drag else 0.22))
-		draw_arc(knob_pos, knob_r, 0.0, TAU, 36, Color(0.45, 0.96, 1.0, 0.92) if active_drag else Color(0.96, 0.98, 1.0, 0.72), 2.2, true)
+		draw_arc(knob_pos, knob_r, 0.0, TAU, 24, Color(0.45, 0.96, 1.0, 0.92) if active_drag else Color(0.96, 0.98, 1.0, 0.72), 2.2, false)
 
 
 class _SkillButtonVisual extends Control:
@@ -761,11 +851,11 @@ class _SkillButtonVisual extends Control:
 			var bg_c := Color(0.16, 0.46, 0.32, 0.52 if pressed_now else 0.42) if is_on else Color(0.10, 0.14, 0.22, 0.44 if pressed_now else 0.30)
 			var ring_c := Color(0.35, 0.98, 0.62, 0.95) if is_on else Color(0.94, 0.97, 1.0, 0.66)
 			draw_circle(center, r * 0.92, bg_c)
-			draw_arc(center, r * 0.92, -PI * 0.85, -PI * 0.22, 18, Color(1.0, 1.0, 1.0, 0.32), 1.4, true)
-			draw_arc(center, r * 0.92, 0.0, TAU, 36, ring_c, 2.6 if is_on else 1.8, true)
+			draw_arc(center, r * 0.92, -PI * 0.85, -PI * 0.22, 12, Color(1.0, 1.0, 1.0, 0.32), 1.4, false)
+			draw_arc(center, r * 0.92, 0.0, TAU, 24, ring_c, 2.6 if is_on else 1.8, false)
 			if is_on:
-				draw_arc(center, r * 0.72, -PI * 0.75, PI * 0.25, 18, Color(1.0, 0.90, 0.32, 0.92), 2.2, true)
-				draw_arc(center, r * 0.72, PI * 0.25, PI * 1.25, 18, Color(0.28, 0.98, 0.62, 0.92), 2.2, true)
+				draw_arc(center, r * 0.72, -PI * 0.75, PI * 0.25, 12, Color(1.0, 0.90, 0.32, 0.92), 2.2, false)
+				draw_arc(center, r * 0.72, PI * 0.25, PI * 1.25, 12, Color(0.28, 0.98, 0.62, 0.92), 2.2, false)
 			if font != null:
 				draw_string(font, Vector2(center.x - 24.0, center.y + 4.0), "AUTO", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 12, Color(1.0, 0.97, 0.50, 1.0) if is_on else Color(0.95, 0.98, 1.0, 0.94))
 				draw_string(font, Vector2(center.x - 24.0, size.y - 6.0), "BẬT" if is_on else "TAY", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 9, ring_c)
@@ -775,13 +865,13 @@ class _SkillButtonVisual extends Control:
 			# Frosted glass target reticle button
 			var col_g := Color(0.32, 0.98, 0.62, (0.98 if pressed_now else 0.92) * alpha_mul)
 			draw_circle(center, r * 0.90, Color(0.14, 0.20, 0.28, (0.50 if pressed_now else (0.38 if hovered_now else 0.28)) * alpha_mul))
-			draw_arc(center, r * 0.90, 0.0, TAU, 36, Color(0.94, 0.98, 1.0, 0.56 * alpha_mul), 1.6, true)
+			draw_arc(center, r * 0.90, 0.0, TAU, 24, Color(0.94, 0.98, 1.0, 0.56 * alpha_mul), 1.6, false)
 			for q in range(4):
 				var a0 := float(q) * PI * 0.5 + 0.20
 				var a1 := float(q + 1) * PI * 0.5 - 0.20
-				draw_arc(center, r * 0.70, a0, a1, 12, col_g, 2.4, true)
+				draw_arc(center, r * 0.70, a0, a1, 8, col_g, 2.4, false)
 			for dir_v in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
-				draw_line(center + dir_v * (r * 0.46), center + dir_v * (r * 0.84), col_g, 2.2, true)
+				draw_line(center + dir_v * (r * 0.46), center + dir_v * (r * 0.84), col_g, 2.2, false)
 			draw_circle(center, 3.0, col_g)
 			if font != null:
 				draw_string(font, Vector2(center.x - 16.0, size.y - 5.0), "TRỎ", HORIZONTAL_ALIGNMENT_CENTER, 32.0, 10, Color(0.96, 0.99, 1.0, alpha_mul))
@@ -794,8 +884,8 @@ class _SkillButtonVisual extends Control:
 		draw_circle(center, r, glass_bg)
 		# Inner frosted sheen + crisp thin glass rim
 		draw_circle(center, r * 0.86, Color(0.94, 0.98, 1.0, (0.14 if pressed_now else 0.07) * alpha_mul))
-		draw_arc(center, r, 0.0, TAU, 48, Color(0.96, 0.98, 1.0, (0.94 if pressed_now else 0.68) * alpha_mul), 2.4 if pressed_now else 1.8, true)
-		draw_arc(center, r * 0.88, -PI * 0.84, -PI * 0.20, 22, Color(1.0, 1.0, 1.0, 0.40 * alpha_mul), 1.4, true)
+		draw_arc(center, r, 0.0, TAU, 28, Color(0.96, 0.98, 1.0, (0.94 if pressed_now else 0.68) * alpha_mul), 2.4 if pressed_now else 1.8, false)
+		draw_arc(center, r * 0.88, -PI * 0.84, -PI * 0.20, 12, Color(1.0, 1.0, 1.0, 0.40 * alpha_mul), 1.4, false)
 
 		if slot_id == 1:
 			# Primary large frosted glass attack/interact circle
@@ -807,7 +897,7 @@ class _SkillButtonVisual extends Control:
 			for q in range(4):
 				var a0 := float(q) * PI * 0.5 + 0.26
 				var a1 := float(q + 1) * PI * 0.5 - 0.26
-				draw_arc(center, r * 0.72, a0, a1, 14, Color(accent_main.r, accent_main.g, accent_main.b, 0.65 * alpha_mul), 2.2, true)
+				draw_arc(center, r * 0.72, a0, a1, 10, Color(accent_main.r, accent_main.g, accent_main.b, 0.65 * alpha_mul), 2.2, false)
 			if pad_owner._pointer_kind == "item":
 				_draw_pickup_icon(center + Vector2(0.0, -5.0), r * 0.36, accent_main)
 				if font != null:
@@ -837,16 +927,16 @@ class _SkillButtonVisual extends Control:
 		elif act == "teleport":
 			if bool(pad_owner._hero_is_songoku):
 				var s_ratio: float = clampf(float(pad_owner._hero_stamina) / maxf(1.0, float(pad_owner._hero_max_stamina)), 0.0, 1.0)
-				draw_arc(center, r * 0.94, 0.0, TAU, 36, Color(0.20, 0.28, 0.36, 0.42), 3.0, true)
+				draw_arc(center, r * 0.94, 0.0, TAU, 24, Color(0.20, 0.28, 0.36, 0.42), 3.0, false)
 				if s_ratio > 0.005:
 					var s_col := Color(0.34, 0.98, 0.68, 0.95) if float(pad_owner._hero_stamina) >= 75.0 else (Color(0.36, 0.88, 1.0, 0.92) if float(pad_owner._hero_stamina) >= 25.0 else Color(1.0, 0.60, 0.24, 0.90))
-					draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * s_ratio, 36, s_col, 3.2, true)
+					draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * s_ratio, 24, s_col, 3.2, false)
 				short_lbl = "TL %d" % int(floor(float(pad_owner._hero_stamina)))
 			_draw_dash_icon(center + Vector2(0.0, -7.0), r * 0.40, icon_col, accent_col)
 		elif act == "transform_ssj":
 			var ssj_gold := Color(1.0, 0.88, 0.28, 0.98 * alpha_mul)
 			if bool(pad_owner._hero_is_ssj):
-				draw_arc(center, r * 0.94, 0.0, TAU, 36, ssj_gold, 2.8, true)
+				draw_arc(center, r * 0.94, 0.0, TAU, 24, ssj_gold, 2.8, false)
 				short_lbl = "XẢ SSJ"
 			else:
 				short_lbl = "SSJ1"
@@ -854,7 +944,7 @@ class _SkillButtonVisual extends Control:
 		elif act == "fly_toggle":
 			var fly_col := Color(1.0, 0.92, 0.36, 0.98 * alpha_mul) if bool(pad_owner._hero_fly_active) else icon_col
 			if bool(pad_owner._hero_fly_active):
-				draw_arc(center, r * 0.94, 0.0, TAU, 36, fly_col, 2.8, true)
+				draw_arc(center, r * 0.94, 0.0, TAU, 24, fly_col, 2.8, false)
 				short_lbl = "HẠ"
 			else:
 				short_lbl = "BAY"
@@ -862,7 +952,7 @@ class _SkillButtonVisual extends Control:
 		elif act == "power_up":
 			var ratio: float = clampf(pad_owner._current_mana / maxf(1.0, pad_owner._max_mana), 0.0, 1.0)
 			if ratio > 0.01:
-				draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ratio, 36, Color(0.28, 0.88, 1.0, 0.95 if ratio >= 1.0 else 0.68), 3.0, true)
+				draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ratio, 24, Color(0.28, 0.88, 1.0, 0.95 if ratio >= 1.0 else 0.68), 3.0, false)
 			_draw_ki_icon(center + Vector2(0.0, -8.0), r * 0.36, accent_col if ratio >= 1.0 else icon_col)
 			short_lbl = "%d/%d" % [int(floor(pad_owner._current_mana)), int(round(pad_owner._max_mana))]
 		elif act == "attack_heavy":
@@ -871,13 +961,13 @@ class _SkillButtonVisual extends Control:
 			var cd_a: float = float(pad_owner._hero_atomic_cd)
 			var ready_a: float = clampf(1.0 - cd_a / 12.0, 0.0, 1.0)
 			var gold_a := Color(1.0, 0.86, 0.20, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ready_a, 36, gold_a, 3.0, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ready_a, 24, gold_a, 3.0, false)
 			_draw_atomic_orbs_icon(center + Vector2(0.0, -7.0), r * 0.42, gold_a)
 			short_lbl = ("%ds" % int(ceilf(cd_a))) if cd_a > 0.05 else "ANTOMIC"
 		elif act == "kamehameha":
 			var mp_ratio: float = clampf(pad_owner._current_mana / 80.0, 0.0, 1.0)
 			var blue_k := Color(0.18, 0.72, 1.0, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * mp_ratio, 36, blue_k if mp_ratio >= 1.0 else Color(0.24, 0.66, 0.96, 0.62), 3.0, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * mp_ratio, 24, blue_k if mp_ratio >= 1.0 else Color(0.24, 0.66, 0.96, 0.62), 3.0, false)
 			# Dedicated blue Kamehameha beam icon on transparent frosted glass disc (Owner v10.6 HUD spec)
 			_draw_kame_beam_icon(center + Vector2(0.0, -7.0), r * 0.48, blue_k, alpha_mul)
 			short_lbl = "KAME" if mp_ratio >= 1.0 else "%d/80" % int(floor(pad_owner._current_mana))
@@ -886,11 +976,11 @@ class _SkillButtonVisual extends Control:
 			var mp_g: float = clampf(pad_owner._current_mana / 100.0, 0.0, 1.0)
 			var cyan_g := Color(0.22, 0.88, 1.0, 0.98 * alpha_mul)
 			var ring_g: float = clampf(1.0 - cd_g / 15.0, 0.0, 1.0) if cd_g > 0.05 else mp_g
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_g, 36, cyan_g if (mp_g >= 1.0 and bool(pad_owner._hero_airborne_for_genki)) else Color(0.24, 0.66, 0.96, 0.52), 3.0, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_g, 24, cyan_g if (mp_g >= 1.0 and bool(pad_owner._hero_airborne_for_genki)) else Color(0.24, 0.66, 0.96, 0.52), 3.0, false)
 			draw_circle(center + Vector2(0.0, -7.0), r * 0.34, Color(0.14, 0.72, 1.0, 0.60 * alpha_mul))
 			draw_circle(center + Vector2(0.0, -7.0), r * 0.20, Color(0.92, 0.99, 1.0, 0.98 * alpha_mul))
-			draw_arc(center + Vector2(0.0, -7.0), r * 0.44, -PI * 0.75, PI * 0.15, 16, cyan_g, 2.0, true)
-			draw_arc(center + Vector2(0.0, -7.0), r * 0.44, PI * 0.25, PI * 1.15, 16, Color(0.84, 0.97, 1.0, 0.90 * alpha_mul), 1.8, true)
+			draw_arc(center + Vector2(0.0, -7.0), r * 0.44, -PI * 0.75, PI * 0.15, 12, cyan_g, 2.0, false)
+			draw_arc(center + Vector2(0.0, -7.0), r * 0.44, PI * 0.25, PI * 1.15, 12, Color(0.84, 0.97, 1.0, 0.90 * alpha_mul), 1.8, false)
 			if cd_g > 0.05:
 				short_lbl = "%ds" % int(ceilf(cd_g))
 			elif not bool(pad_owner._hero_airborne_for_genki):
@@ -903,7 +993,7 @@ class _SkillButtonVisual extends Control:
 			var cd_f: float = float(pad_owner._hero_flurry_cd)
 			var ready_f: float = clampf(1.0 - cd_f / 6.0, 0.0, 1.0)
 			var amber_f := Color(1.0, 0.74, 0.24, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ready_f, 36, amber_f, 2.8, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ready_f, 24, amber_f, 2.8, false)
 			_draw_flurry_kick_icon(center + Vector2(0.0, -6.0), r * 0.42, amber_f)
 			short_lbl = ("%ds" % int(ceilf(cd_f))) if cd_f > 0.05 else "ĐÁ LH"
 		elif act == "barrier":
@@ -911,26 +1001,26 @@ class _SkillButtonVisual extends Control:
 			var cd_b: float = float(pad_owner._hero_barrier_cd)
 			var col_b := Color(1.0, 0.92, 0.34, 0.98 * alpha_mul) if act_b > 0.0 else Color(0.46, 0.92, 1.0, 0.95 * alpha_mul)
 			var ring_r: float = clampf(act_b / 10.0, 0.0, 1.0) if act_b > 0.0 else clampf(1.0 - cd_b / 16.0, 0.0, 1.0)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_r, 36, col_b, 2.8, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_r, 24, col_b, 2.8, false)
 			_draw_shield_icon(center + Vector2(0.0, -6.0), r * 0.40, col_b)
 			short_lbl = ("%.0fs" % ceilf(act_b)) if act_b > 0.05 else (("%ds" % int(ceilf(cd_b))) if cd_b > 0.05 else "KHIÊN")
 		elif act == "energy_recover":
 			var cd_r: float = float(pad_owner._hero_recover_cd)
 			var green_r := Color(0.32, 0.98, 0.56, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_r / 10.0, 0.0, 1.0), 36, green_r, 2.8, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_r / 10.0, 0.0, 1.0), 24, green_r, 2.8, false)
 			_draw_recover_icon(center + Vector2(0.0, -7.0), r * 0.40, green_r)
 			short_lbl = ("%ds" % int(ceilf(cd_r))) if cd_r > 0.05 else "HỒI 3S"
 		elif act == "kentaima":
 			var cd_kt: float = float(pad_owner._hero_kentaima_cd)
 			var cyan_kt := Color(0.24, 0.92, 1.0, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_kt / 1.5, 0.0, 1.0), 36, cyan_kt, 2.8, true)
-			draw_arc(center + Vector2(-r * 0.08, -6.0), r * 0.36, -PI * 0.42, PI * 0.42, 18, cyan_kt, 3.4, true)
-			draw_arc(center + Vector2(-r * 0.02, -6.0), r * 0.30, -PI * 0.36, PI * 0.36, 16, Color(0.92, 0.99, 1.0, 0.95 * alpha_mul), 1.8, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_kt / 1.5, 0.0, 1.0), 24, cyan_kt, 2.8, false)
+			draw_arc(center + Vector2(-r * 0.08, -6.0), r * 0.36, -PI * 0.42, PI * 0.42, 12, cyan_kt, 3.4, false)
+			draw_arc(center + Vector2(-r * 0.02, -6.0), r * 0.30, -PI * 0.36, PI * 0.36, 12, Color(0.92, 0.99, 1.0, 0.95 * alpha_mul), 1.8, false)
 			short_lbl = ("%.0fs" % ceilf(cd_kt)) if cd_kt > 0.05 else "KENTAIMA"
 		elif act == "mahasenko":
 			var cd_mh: float = float(pad_owner._hero_mahasenko_cd)
 			var gold_mh := Color(1.0, 0.88, 0.24, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_mh / 1.5, 0.0, 1.0), 36, gold_mh, 2.8, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_mh / 1.5, 0.0, 1.0), 24, gold_mh, 2.8, false)
 			_draw_kame_beam_icon(center + Vector2(0.0, -7.0), r * 0.46, gold_mh, alpha_mul)
 			short_lbl = ("%.0fs" % ceilf(cd_mh)) if cd_mh > 0.05 else "MAHASEN"
 		elif act == "antamina":
@@ -938,13 +1028,13 @@ class _SkillButtonVisual extends Control:
 			var mp_an: float = clampf(pad_owner._current_mana / 100.0, 0.0, 1.0)
 			var gold_an := Color(1.0, 0.82, 0.18, 0.98 * alpha_mul)
 			var ring_an: float = clampf(1.0 - cd_an / 2.0, 0.0, 1.0) if cd_an > 0.05 else mp_an
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_an, 36, gold_an if mp_an >= 1.0 else Color(0.95, 0.72, 0.22, 0.55), 3.0, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * ring_an, 24, gold_an if mp_an >= 1.0 else Color(0.95, 0.72, 0.22, 0.55), 3.0, false)
 			_draw_ki_icon(center + Vector2(0.0, -7.0), r * 0.40, gold_an)
 			short_lbl = ("%.0fs" % ceilf(cd_an)) if cd_an > 0.05 else ("ANTAMINA" if mp_an >= 1.0 else "%d/100" % int(floor(pad_owner._current_mana)))
 		elif act == "bukadai":
 			var cd_bk: float = float(pad_owner._hero_bukadai_cd)
 			var yel_bk := Color(1.0, 0.94, 0.34, 0.98 * alpha_mul)
-			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_bk / 1.8, 0.0, 1.0), 36, yel_bk, 2.8, true)
+			draw_arc(center, r * 0.94, -PI * 0.5, -PI * 0.5 + TAU * clampf(1.0 - cd_bk / 1.8, 0.0, 1.0), 24, yel_bk, 2.8, false)
 			_draw_heavy_icon(center + Vector2(0.0, -6.0), r * 0.40, yel_bk)
 			short_lbl = ("%.0fs" % ceilf(cd_bk)) if cd_bk > 0.05 else "BUKADAI"
 		elif act == "pickup_items":
@@ -975,7 +1065,7 @@ class _SkillButtonVisual extends Control:
 		draw_colored_polygon(core_beam, Color(0.84, 0.97, 1.0, 0.96 * alpha_mul))
 		draw_circle(orig, s * 0.30, Color(0.22, 0.76, 1.0, 0.85 * alpha_mul))
 		draw_circle(orig, s * 0.16, Color(1.0, 1.0, 1.0, 0.98 * alpha_mul))
-		draw_arc(orig, s * 0.42, -PI * 0.58, PI * 0.58, 14, col, 1.8, true)
+		draw_arc(orig, s * 0.42, -PI * 0.58, PI * 0.58, 10, col, 1.8, false)
 
 	func _draw_atomic_orbs_icon(c: Vector2, s: float, col: Color) -> void:
 		for off_v in [Vector2(-0.52, -0.22), Vector2(0.0, -0.40), Vector2(0.54, -0.10), Vector2(-0.18, 0.34), Vector2(0.42, 0.36)]:
@@ -983,7 +1073,7 @@ class _SkillButtonVisual extends Control:
 			var p: Vector2 = c + off * s
 			draw_circle(p, s * 0.19, Color(col.r, col.g, col.b, col.a * 0.55))
 			draw_circle(p, s * 0.10, Color(1.0, 1.0, 0.92, col.a))
-			draw_line(p - Vector2(s * 0.26, 0.0), p, Color(col.r, col.g, col.b, col.a * 0.85), 1.6, true)
+			draw_line(p - Vector2(s * 0.26, 0.0), p, Color(col.r, col.g, col.b, col.a * 0.85), 1.6, false)
 
 	func _draw_ssj_bolt_icon(c: Vector2, s: float, col: Color) -> void:
 		var bolt := PackedVector2Array([
@@ -999,8 +1089,8 @@ class _SkillButtonVisual extends Control:
 	func _draw_flurry_kick_icon(c: Vector2, s: float, col: Color) -> void:
 		for i in range(3):
 			var off_y := (float(i) - 1.0) * s * 0.34
-			draw_arc(c + Vector2(-s * 0.18, off_y), s * 0.52, -PI * 0.35, PI * 0.30, 12, col, 2.2, true)
-		draw_line(c + Vector2(-s * 0.55, s * 0.36), c + Vector2(s * 0.55, -s * 0.36), Color(1.0, 0.96, 0.86, col.a), 2.4, true)
+			draw_arc(c + Vector2(-s * 0.18, off_y), s * 0.52, -PI * 0.35, PI * 0.30, 10, col, 2.2, false)
+		draw_line(c + Vector2(-s * 0.55, s * 0.36), c + Vector2(s * 0.55, -s * 0.36), Color(1.0, 0.96, 0.86, col.a), 2.4, false)
 
 	func _draw_shield_icon(c: Vector2, s: float, col: Color) -> void:
 		var pts := PackedVector2Array([
@@ -1012,12 +1102,12 @@ class _SkillButtonVisual extends Control:
 			c + Vector2(-s * 0.64, -s * 0.48),
 		])
 		draw_colored_polygon(pts, Color(col.r, col.g, col.b, col.a * 0.24))
-		draw_polyline(pts + PackedVector2Array([pts[0]]), col, 2.2, true)
+		draw_polyline(pts + PackedVector2Array([pts[0]]), col, 2.2, false)
 
 	func _draw_recover_icon(c: Vector2, s: float, col: Color) -> void:
-		draw_line(c + Vector2(0.0, -s * 0.56), c + Vector2(0.0, s * 0.56), col, 3.0, true)
-		draw_line(c + Vector2(-s * 0.56, 0.0), c + Vector2(s * 0.56, 0.0), col, 3.0, true)
-		draw_arc(c, s * 0.76, -PI * 0.82, -PI * 0.18, 12, Color(col.r, col.g, col.b, col.a * 0.75), 1.8, true)
+		draw_line(c + Vector2(0.0, -s * 0.56), c + Vector2(0.0, s * 0.56), col, 3.0, false)
+		draw_line(c + Vector2(-s * 0.56, 0.0), c + Vector2(s * 0.56, 0.0), col, 3.0, false)
+		draw_arc(c, s * 0.76, -PI * 0.82, -PI * 0.18, 10, Color(col.r, col.g, col.b, col.a * 0.75), 1.8, false)
 
 	func _draw_fist_icon(c: Vector2, s: float, col: Color) -> void:
 		# Stylized angled fist outline (inspired by primary green attack icon in image copy 8.png)
@@ -1030,45 +1120,45 @@ class _SkillButtonVisual extends Control:
 			c + Vector2(s * 0.42, s * 0.68),
 			c + Vector2(-s * 0.35, s * 0.68),
 		])
-		draw_polyline(pts + PackedVector2Array([pts[0]]), col, 2.4, true)
+		draw_polyline(pts + PackedVector2Array([pts[0]]), col, 2.4, false)
 		for k in [-0.25, 0.08, 0.40]:
-			draw_line(c + Vector2(s * k - s * 0.12, -s * 0.42), c + Vector2(s * k + s * 0.10, -s * 0.05), col, 2.0, true)
+			draw_line(c + Vector2(s * k - s * 0.12, -s * 0.42), c + Vector2(s * k + s * 0.10, -s * 0.05), col, 2.0, false)
 
 	func _draw_jump_icon(c: Vector2, s: float, col: Color) -> void:
-		draw_arc(c + Vector2(0.0, s * 0.85), s * 0.95, PI * 1.18, PI * 1.82, 16, Color(col.r, col.g, col.b, col.a * 0.55), 2.0, true)
+		draw_arc(c + Vector2(0.0, s * 0.85), s * 0.95, PI * 1.18, PI * 1.82, 12, Color(col.r, col.g, col.b, col.a * 0.55), 2.0, false)
 		draw_circle(c + Vector2(s * 0.12, -s * 0.52), s * 0.20, col)
-		draw_line(c + Vector2(s * 0.05, -s * 0.30), c + Vector2(-s * 0.10, s * 0.14), col, 2.8, true)
-		draw_line(c + Vector2(-s * 0.38, -s * 0.16), c + Vector2(s * 0.42, -s * 0.26), col, 2.2, true)
-		draw_line(c + Vector2(-s * 0.10, s * 0.14), c + Vector2(-s * 0.42, s * 0.44), col, 2.4, true)
-		draw_line(c + Vector2(-s * 0.10, s * 0.14), c + Vector2(s * 0.32, s * 0.32), col, 2.4, true)
+		draw_line(c + Vector2(s * 0.05, -s * 0.30), c + Vector2(-s * 0.10, s * 0.14), col, 2.8, false)
+		draw_line(c + Vector2(-s * 0.38, -s * 0.16), c + Vector2(s * 0.42, -s * 0.26), col, 2.2, false)
+		draw_line(c + Vector2(-s * 0.10, s * 0.14), c + Vector2(-s * 0.42, s * 0.44), col, 2.4, false)
+		draw_line(c + Vector2(-s * 0.10, s * 0.14), c + Vector2(s * 0.32, s * 0.32), col, 2.4, false)
 
 	func _draw_dash_icon(c: Vector2, s: float, col: Color, portal_col: Color) -> void:
-		draw_arc(c + Vector2(s * 0.34, 0.0), s * 0.62, -PI * 0.46, PI * 0.46, 18, portal_col, 2.6, true)
+		draw_arc(c + Vector2(s * 0.34, 0.0), s * 0.62, -PI * 0.46, PI * 0.46, 12, portal_col, 2.6, false)
 		for sy in [-0.36, -0.10, 0.16]:
-			draw_line(c + Vector2(-s * 0.82, s * sy), c + Vector2(-s * 0.36, s * sy), col, 1.8, true)
+			draw_line(c + Vector2(-s * 0.82, s * sy), c + Vector2(-s * 0.36, s * sy), col, 1.8, false)
 		draw_circle(c + Vector2(s * 0.08, -s * 0.44), s * 0.18, col)
-		draw_line(c + Vector2(0.0, -s * 0.22), c + Vector2(-s * 0.18, s * 0.18), col, 2.6, true)
-		draw_line(c + Vector2(-s * 0.18, s * 0.18), c + Vector2(s * 0.24, s * 0.44), col, 2.2, true)
+		draw_line(c + Vector2(0.0, -s * 0.22), c + Vector2(-s * 0.18, s * 0.18), col, 2.6, false)
+		draw_line(c + Vector2(-s * 0.18, s * 0.18), c + Vector2(s * 0.24, s * 0.44), col, 2.2, false)
 
 	func _draw_ki_icon(c: Vector2, s: float, col: Color) -> void:
 		draw_circle(c, s * 0.48, Color(col.r, col.g, col.b, col.a * 0.30))
-		draw_arc(c, s * 0.48, 0.0, TAU, 24, col, 2.2, true)
+		draw_arc(c, s * 0.48, 0.0, TAU, 16, col, 2.2, false)
 		draw_circle(c, s * 0.22, Color(1.0, 1.0, 1.0, col.a))
 		for a in [0.0, PI * 0.5, PI, PI * 1.5, PI * 0.25, PI * 0.75, PI * 1.25, PI * 1.75]:
 			var dv := Vector2(cos(a), sin(a))
-			draw_line(c + dv * (s * 0.62), c + dv * (s * 0.92), col, 1.8, true)
+			draw_line(c + dv * (s * 0.62), c + dv * (s * 0.92), col, 1.8, false)
 
 	func _draw_heavy_icon(c: Vector2, s: float, col: Color) -> void:
-		draw_line(c + Vector2(-s * 0.62, -s * 0.52), c + Vector2(s * 0.56, s * 0.44), col, 3.0, true)
-		draw_line(c + Vector2(s * 0.48, -s * 0.48), c + Vector2(-s * 0.52, s * 0.48), col, 2.2, true)
-		draw_arc(c, s * 0.68, -PI * 0.2, PI * 0.7, 16, col, 2.0, true)
+		draw_line(c + Vector2(-s * 0.62, -s * 0.52), c + Vector2(s * 0.56, s * 0.44), col, 3.0, false)
+		draw_line(c + Vector2(s * 0.48, -s * 0.48), c + Vector2(-s * 0.52, s * 0.48), col, 2.2, false)
+		draw_arc(c, s * 0.68, -PI * 0.2, PI * 0.7, 12, col, 2.0, false)
 
 	func _draw_pickup_icon(c: Vector2, s: float, col: Color) -> void:
 		draw_circle(c + Vector2(0.0, s * 0.16), s * 0.38, Color(1.0, 0.74, 0.18, col.a * 0.85))
-		draw_arc(c + Vector2(0.0, s * 0.16), s * 0.38, 0.0, TAU, 20, col, 2.0, true)
-		draw_line(c + Vector2(0.0, -s * 0.72), c + Vector2(0.0, -s * 0.24), col, 2.2, true)
-		draw_line(c + Vector2(-s * 0.24, -s * 0.48), c + Vector2(0.0, -s * 0.72), col, 2.2, true)
-		draw_line(c + Vector2(s * 0.24, -s * 0.48), c + Vector2(0.0, -s * 0.72), col, 2.2, true)
+		draw_arc(c + Vector2(0.0, s * 0.16), s * 0.38, 0.0, TAU, 14, col, 2.0, false)
+		draw_line(c + Vector2(0.0, -s * 0.72), c + Vector2(0.0, -s * 0.24), col, 2.2, false)
+		draw_line(c + Vector2(-s * 0.24, -s * 0.48), c + Vector2(0.0, -s * 0.72), col, 2.2, false)
+		draw_line(c + Vector2(s * 0.24, -s * 0.48), c + Vector2(0.0, -s * 0.72), col, 2.2, false)
 
 	func _draw_talk_icon(c: Vector2, s: float, col: Color) -> void:
 		draw_rect(Rect2(c.x - s * 0.65, c.y - s * 0.45, s * 1.30, s * 0.82), Color(col.r, col.g, col.b, 0.22), true)
